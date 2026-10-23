@@ -6,8 +6,15 @@
 ## 0. 저장소 접근 권한 (선행 조건 — 여기서 막히면 뒤는 전부 안 됨)
 
 - 저장소는 **private**: `https://github.com/sterran123/eottae`
-- 팀원은 김민기에게 **본인 GitHub 영문 ID**를 알려주고, 김민기가 `Settings → Collaborators`에 추가해야 clone/push가 가능하다.
-- Collaborator 초대 메일/알림을 수락한 뒤 진행한다.
+- GitHub 계정이 없는 팀원: github.com에서 **가입 → 이메일 인증** 후 본인의 **영문 사용자명(username)**을 김민기에게 전달한다. (가입 이메일 주소가 아니라 프로필에 표시되는 영문 ID)
+- 김민기는 받은 ID로 `Settings → Collaborators → Add people`에 추가하거나, 아래 명령을 대신 실행한다:
+
+  ```bash
+  gh api -X PUT repos/sterran123/eottae/collaborators/{팀원ID} -f permission=push
+  ```
+
+- 초대를 받은 팀원은 GitHub 알림/이메일에서 **Accept invitation**을 누른 뒤 아래 절차를 진행한다.
+- 초대를 기다리는 동안 `1. 프로젝트 계획서/`의 RULES·요구사항 문서를 먼저 읽어둔다 (공유 폴더로도 열람 가능).
 
 ## 1. 환경 기준값
 
@@ -30,15 +37,17 @@ npm run typecheck                  # 반드시 PASS
 npm run build                      # 반드시 PASS
 ```
 
-### git 작성자 설정 (최초 1회, 본인 것)
+### git 작성자·인증 설정 (최초 1회, 본인 것)
 
 ```bash
 git config --global user.name "본인 이름"
 git config --global user.email "본인 GitHub 이메일 또는 noreply"
 ```
 
-- push할 때 브라우저 로그인 창이 뜨면(Git Credential Manager) 본인 계정으로 승인한다.
-- `gh`를 쓰고 싶으면 `winget install GitHub.cli` 후 `gh auth login` 한 번.
+인증 방법 둘 중 하나만 하면 된다:
+
+- **방법 A (권장, 추가 설치 없음)**: 처음 `git push`할 때 Git Credential Manager가 브라우저 로그인 창을 띄운다 → 본인 GitHub 계정으로 승인하면 이후 자동 인증.
+- **방법 B**: `winget install GitHub.cli` 설치 후 `gh auth login` 한 번 (브라우저 열려 GitHub 로그인). 저장소 관리(이슈/PR)에도 쓸 수 있어 편리.
 
 ## 3. 현재 구현 상태 (2026-10-23 기준)
 
@@ -86,5 +95,6 @@ git config --global user.email "본인 GitHub 이메일 또는 noreply"
 - 실기기 360/390/768/1440px 캡처 5장 이상 → `3. 구현 이미지` 폴더 (SEC-002)
 - 테마 수동 토글(사용자 설정 저장) — 브랜드 가이드상 별도 후속 과제
 - PWA 실기기 설치·Lighthouse 검증 (HTTPS 배포 후)
-- CODEOWNERS의 팀원 GitHub ID 교체
+- CODEOWNERS의 팀원 GitHub ID 교체 — ID 확정 후 김민기가 입력
+- 팀원 Collaborator 초대 완료 확인 (각자 계정 생성·ID 전달 필요)
 - 정식 PWA 아이콘 디자인 검수·제작 (현재는 로고 배치 임시 아이콘)
