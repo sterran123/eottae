@@ -1,0 +1,434 @@
+/* ============================================================
+   저장 경로: src/app/match/onboarding/match-onboarding.css
+   담당: 오하율 · MATCH-001 (취향/가치관 입력)
+   역할: 매칭 온보딩 전용 스타일. 공통 globals.css(김민기)는 수정하지 않음.
+   색상 토큰은 ../match-tokens.css 에서 공유한다.
+   ============================================================ */
+
+@import '../match-tokens.css';
+
+.mt-onb-page {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.mt-onb {
+  background: var(--match-bg);
+  border: 0.5px solid var(--match-line);
+  border-radius: 22px;
+  overflow: hidden;
+  color: var(--match-ink);
+  padding: 0 0 18px;
+}
+
+/* 진행 */
+.mt-onb__progress {
+  background: var(--match-paper);
+  padding: 14px 18px 12px;
+  border-bottom: 0.5px solid var(--match-line);
+}
+.mt-onb__eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--match-accent-deep);
+  font-weight: 500;
+}
+.mt-onb__bar {
+  margin-top: 10px;
+  height: 4px;
+  background: var(--match-track);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.mt-onb__bar-fill {
+  height: 100%;
+  background: var(--match-accent);
+  border-radius: 99px;
+}
+
+/* 인증 배지 */
+.mt-onb__verified {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--match-ok-bg);
+  border: 0.5px solid var(--match-ok-line);
+  border-radius: 10px;
+  padding: 9px 12px;
+  margin: 16px 18px;
+}
+/* 인라인 SVG 아이콘 크기 (currentColor 상속) */
+.mt-ico {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+}
+.mt-ico--sm {
+  width: 15px;
+  height: 15px;
+}
+.mt-ico--xs {
+  width: 13px;
+  height: 13px;
+}
+
+.mt-onb__verified > .mt-ico {
+  color: var(--match-ok-ink);
+}
+.mt-onb__verified-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.mt-onb__verified-text strong {
+  font-size: 12px;
+  color: var(--match-ok-ink);
+  font-weight: 500;
+}
+.mt-onb__verified-text span {
+  font-size: 10px;
+  color: var(--match-ok-sub);
+}
+.mt-onb__demo-tag {
+  font-size: 9px;
+  color: var(--match-hint);
+  border: 0.5px solid var(--match-line-soft);
+  border-radius: 6px;
+  padding: 2px 5px;
+}
+
+/* 타이틀 */
+.mt-onb__title {
+  font-size: 19px;
+  font-weight: 500;
+  margin: 0 18px 4px;
+  color: var(--match-ink);
+}
+.mt-onb__lead {
+  font-size: 13px;
+  color: var(--match-sub);
+  line-height: 1.6;
+  margin: 0 18px 18px;
+}
+
+/* 필드 공통 */
+.mt-onb__field {
+  border: none;
+  margin: 0;
+  padding: 0 18px;
+}
+.mt-onb__field + .mt-onb__field {
+  margin-top: 17px;
+  padding-top: 17px;
+  border-top: 1px solid var(--match-line);
+}
+.mt-onb__label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--match-ink);
+  padding: 0;
+}
+.mt-onb__accent {
+  color: var(--match-accent-deep);
+}
+.mt-onb__hint {
+  font-size: 11px;
+  color: var(--match-hint);
+  margin: 3px 0 9px;
+}
+
+/* (B) 관심사 잠금 안내 */
+.mt-onb__locked {
+  font-size: 11.5px;
+  color: var(--match-hint);
+  background: var(--match-soft);
+  border: 0.5px dashed var(--match-chip-line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 9px 0 0;
+  text-align: center;
+}
+
+/* MBTI 그리드 */
+.mt-onb__mbti-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.mt-onb__mbti-grid--avoid {
+  margin-top: 10px;
+}
+.mt-onb__mbti-actions {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+/* 칩 */
+.mt-chip {
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 99px;
+  background: var(--match-soft);
+  color: var(--match-accent-ink);
+  border: 0.5px solid transparent;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  transition: background 0.12s;
+}
+.mt-chip--square {
+  border-radius: 10px;
+  justify-content: center;
+  padding: 8px 0;
+  background: var(--match-paper);
+  border: 0.5px solid var(--match-line-soft);
+  color: var(--match-sub);
+}
+.mt-chip.is-on {
+  background: var(--match-accent);
+  color: #ffffff;
+  border-color: var(--match-accent);
+  font-weight: 500;
+}
+.mt-chip--avoid.is-on {
+  background: var(--match-accent-ink);
+  border-color: var(--match-accent-ink);
+}
+.mt-chip:disabled,
+.mt-chip.is-blocked {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* 알약 버튼 */
+.mt-pill {
+  font-size: 11px;
+  padding: 7px 13px;
+  border-radius: 99px;
+  background: var(--match-paper);
+  border: 0.5px solid var(--match-chip-line);
+  color: var(--match-accent-ink);
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.mt-pill--soft {
+  background: var(--match-soft);
+  border-color: transparent;
+}
+.mt-pill.is-on {
+  background: var(--match-accent);
+  color: #ffffff;
+}
+
+/* 피하고 싶은 MBTI */
+.mt-onb__avoid {
+  margin-top: 10px;
+  background: var(--match-paper);
+  border: 0.5px dashed var(--match-chip-line);
+  border-radius: 12px;
+  padding: 11px 13px;
+}
+.mt-onb__avoid-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--match-sub);
+  cursor: pointer;
+}
+.mt-onb__avoid-toggle .mt-ico {
+  color: var(--match-hint);
+}
+.mt-onb__opt {
+  font-size: 9px;
+  color: var(--match-hint);
+  border: 0.5px solid var(--match-line-soft);
+  border-radius: 5px;
+  padding: 1px 5px;
+}
+.mt-onb__avoid-note {
+  font-size: 10px;
+  color: var(--match-hint);
+  margin: 4px 0 0;
+}
+
+/* 만날 상대 */
+.mt-onb__target {
+  display: flex;
+  gap: 7px;
+}
+.mt-onb__target-opt {
+  flex: 1;
+  border: 0.5px solid var(--match-line-soft);
+  background: var(--match-paper);
+  border-radius: 12px;
+  padding: 11px 6px;
+  text-align: center;
+  font-family: inherit;
+  color: var(--match-sub);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.mt-onb__target-opt .mt-ico {
+  width: 18px;
+  height: 18px;
+  color: var(--match-hint);
+}
+.mt-onb__target-opt span {
+  font-size: 12px;
+}
+.mt-onb__target-opt.is-on {
+  border: 1.5px solid var(--match-accent);
+  background: var(--match-soft);
+  color: var(--match-accent-ink);
+  font-weight: 500;
+}
+.mt-onb__target-opt.is-on .mt-ico {
+  color: var(--match-accent-deep);
+}
+
+/* 관심사 — (A) 카테고리 아코디언 */
+.mt-onb__accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mt-acc {
+  border: 0.5px solid var(--match-line);
+  border-radius: 12px;
+  background: var(--match-paper);
+  overflow: hidden;
+}
+.mt-acc__head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px;
+  background: none;
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
+  color: var(--match-ink);
+}
+.mt-acc__head .mt-ico {
+  color: var(--match-hint);
+}
+.mt-acc__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.mt-acc__count {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 99px;
+  background: var(--match-accent);
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.mt-acc__body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 2px 14px 14px;
+}
+
+/* 안전 안내 */
+.mt-onb__safety {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--match-warn-bg);
+  border: 0.5px solid var(--match-warn-line);
+  border-radius: 10px;
+  padding: 8px 11px;
+  margin: 16px 18px;
+}
+.mt-onb__safety .mt-ico {
+  width: 16px;
+  height: 16px;
+  color: var(--match-warn-ink);
+}
+.mt-onb__safety span {
+  font-size: 10.5px;
+  color: var(--match-warn-ink);
+  line-height: 1.4;
+}
+
+/* 오류 */
+.mt-onb__errors {
+  margin: 0 18px 12px;
+  padding: 10px 12px 10px 28px;
+  background: var(--match-soft);
+  border-radius: 10px;
+  color: var(--match-err-ink);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* 액션 */
+.mt-onb__actions {
+  display: flex;
+  gap: 9px;
+  padding: 0 18px;
+}
+.mt-btn {
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+}
+.mt-btn--ghost {
+  flex: 0 0 auto;
+  padding: 12px 16px;
+  border: 0.5px solid var(--match-chip-line);
+  background: var(--match-paper);
+  color: var(--match-sub);
+  font-size: 13px;
+}
+.mt-btn--primary {
+  flex: 1;
+  background: var(--match-accent);
+  color: #ffffff;
+  font-weight: 500;
+}
+.mt-onb__demo-foot {
+  text-align: center;
+  margin: 9px 0 0;
+  font-size: 10px;
+  color: var(--match-hint);
+}
+
+/* 접근성: 키보드 포커스 표시 (CORE-002 인수조건) */
+.mt-onb button:focus-visible,
+.mt-onb__avoid-toggle:focus-visible {
+  outline: 2px solid var(--match-focus);
+  outline-offset: 2px;
+}
