@@ -22,12 +22,11 @@ const SHOTS = [
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function getTarget() {
-  const targets = await (await fetch(`${CDP}/json/list`)).json();
-  let page = targets.find((t) => t.type === "page");
-  if (!page) {
-    page = await (await fetch(`${CDP}/json/new?about:blank`, { method: "PUT" })).json();
-  }
-  return page.webSocketDebuggerUrl;
+  // 항상 새 탭을 열어 쓴다 — 기존 탭이 렌더러 고착·다른 클라이언트 점유 상태면 명령이 무응답이 된다.
+  const page = await (
+    await fetch(`${CDP}/json/new?about:blank`, { method: "PUT" })
+  ).json();
+  return { ws: page.webSocketDebuggerUrl, id: page.id };
 }
 
 function connect(wsUrl) {
@@ -56,24 +55,60 @@ function connect(wsUrl) {
   });
 }
 
-const cdp = await connect(await getTarget());
-await cdp.send("Page.enable");
+const withTimeout = (p, ms, tag) =>
+  Promise.race([
+    p,
+    new Promise((_, rej) => setTimeout(() => rej(new Error(`timeout: ${tag}`)), ms)),
+  ]);
+
+console.log("cdp 새 탭 생성…");
+const target = await getTarget();
+const cdp = await withTimeout(connect(target.ws), 10000, "ws-connect");
+console.log("ws 연결됨");
+await withTimeout(cdp.send("Page.enable"), 10000, "Page.enable");
+console.log("Page.enable 완료");
 mkdirSync(OUT, { recursive: true });
 
 for (const s of SHOTS) {
-  await cdp.send("Emulation.setDeviceMetricsOverride", {
-    width: s.w, height: s.h, deviceScaleFactor: s.dsf, mobile: s.mobile,
-  });
-  await cdp.send("Emulation.setEmulatedMedia", {
-    features: [{ name: "prefers-color-scheme", value: s.dark ? "dark" : "light" }],
-  });
-  await cdp.send("Page.navigate", { url: BASE + s.url });
+  console.log(`→ ${s.name} 에뮬레이션 설정`);
+  await withTimeout(
+    cdp.send("Emulation.setDeviceMetricsOverride", {
+      width: s.w, height: s.h, deviceScaleFactor: s.dsf, mobile: s.mobile,
+    }), 10000, `metrics ${s.name}`
+  );
+  await withTimeout(
+    cdp.send("Emulation.setEmulatedMedia", {
+      features: [{ name: "prefers-color-scheme", value: s.dark ? "dark" : "light" }],
+    }), 10000, `media ${s.name}`
+  );
+  await withTimeout(
+    cdp.send("Page.navigate", { url: BASE + s.url }), 20000, `navigate ${s.name}`
+  );
+  console.log(`… ${s.name} 렌더 대기`);
   await sleep(3500); // dev 서버 컴파일·폰트 로딩 대기
-  const { data } = await cdp.send("Page.captureScreenshot", {
-    format: "png", captureBeyondViewport: true,
-  });
+  // 뷰포트를 페이지 전체 높이로 확장: IntersectionObserver 리빌이 자연 발동하고,
+  // captureBeyondViewport에서 transformed 애니메이션·sticky 요소가 빠지는 결함을 회피한다.
+  const { result } = await withTimeout(
+    cdp.send("Runtime.evaluate", {
+      expression: "document.documentElement.scrollHeight",
+      returnByValue: true,
+    }), 10000, `height ${s.name}`
+  );
+  const fullH = Math.min(Math.max(result.value || s.h, s.h), 8000);
+  await withTimeout(
+    cdp.send("Emulation.setDeviceMetricsOverride", {
+      width: s.w, height: fullH, deviceScaleFactor: s.dsf, mobile: s.mobile,
+    }), 10000, `resize ${s.name}`
+  );
+  await sleep(1400); // 리빌 트랜지션·리플로 완료 대기
+  const { data } = await withTimeout(
+    cdp.send("Page.captureScreenshot", { format: "png" }),
+    20000,
+    `capture ${s.name}`
+  );
   writeFileSync(join(OUT, `${s.name}.png`), Buffer.from(data, "base64"));
   console.log(`✓ ${s.name}.png (${s.w}x${s.h} ${s.dark ? "dark" : "light"})`);
 }
+await fetch(`${CDP}/json/close/${target.id}`).catch(() => {});
 console.log("done");
 process.exit(0);

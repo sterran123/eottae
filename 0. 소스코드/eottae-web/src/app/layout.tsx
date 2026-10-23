@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import SiteHeader from '@/components/shared/site-header';
 import SiteFooter from '@/components/shared/site-footer';
 import SwRegister from '@/components/shared/sw-register';
+import ScrollReveal from '@/components/shared/scroll-reveal';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -43,13 +44,14 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ko">
+    <html lang="ko" suppressHydrationWarning>
       <body>
-        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
-        <link
-          rel="stylesheet"
-          precedence="default"
-          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
+        {/* 수동 테마(data-theme)를 첫 페인트 전에 적용해 깜빡임(FOUC) 방지 */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var t=localStorage.getItem('eottae-theme');if(t==='light'||t==='dark'){document.documentElement.dataset.theme=t}}catch(e){}",
+          }}
         />
         <a className="skip" href="#content">
           본문으로 건너뛰기
@@ -58,6 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main id="content">{children}</main>
         <SiteFooter />
         <SwRegister />
+        <ScrollReveal />
       </body>
     </html>
   );

@@ -4,6 +4,16 @@
                      Dark  #10101B/#F5EEFF/#A796D9
    ============================================================ */
 
+/* Pretendard Variable — 자체 호스팅 (외부 CDN 런타임 의존 제거).
+   다운로드 경로: tools 없이도 public/fonts/ 에 포함되어 배포된다. */
+@font-face {
+  font-family: 'Pretendard Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 45 920;
+  src: url('/fonts/PretendardVariable.woff2') format('woff2-variations');
+}
+
 :root {
   /* 라이트 테마 토큰 */
   --ink: #28213a;
@@ -45,8 +55,46 @@
   color-scheme: light;
 }
 
+/* 수동 'dark' 선택 또는 시스템 다크(수동 'light' 미지정)일 때 다크 토큰 적용 */
+:root[data-theme='dark'] {
+  --ink: #f5eeff;
+    --muted: #c8bfd9;
+    --brand: #a796d9;
+    --brand-dark: #d6bdfb;
+    --brand-soft: #b9a3e3;
+    --line: #3b344b;
+    --paper: #161423;
+    --bg: #10101b;
+    --soft: #201b2d;
+    --point: #5a4370;
+    --hero-a: #1d1830;
+    --hero-b: #3a2a52;
+    --hero-c: #5f4a80;
+    --hero-ink: #e6dcf7;
+    --accent-pink: #e8a4c9;
+    --warn-bg: #362c20;
+    --warn-line: #685438;
+    --warn-ink: #ffedc8;
+    --card-lav-a: #302440;
+    --card-lav-b: #231d33;
+    --card-blue-a: #1c334c;
+    --card-blue-b: #1b2435;
+    --card-pink-a: #3d263b;
+    --card-pink-b: #2c1e31;
+    --feature-bg: #1d1b2b;
+    --footer-bg: #191525;
+    --status-bg: rgba(255, 255, 255, 0.09);
+    --status-line: rgba(255, 255, 255, 0.19);
+    --status-ink: #efe5fb;
+    --chip-bg: #2a2340;
+    --chip-ink: #d4bdf7;
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-card-hover: 0 10px 28px rgba(0, 0, 0, 0.42);
+    color-scheme: dark;
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --ink: #f5eeff;
     --muted: #c8bfd9;
     --brand: #a796d9;
@@ -244,6 +292,67 @@ img {
   color: var(--muted);
 }
 
+/* 테마별 로고 — 수동 선택(data-theme)과 시스템(prefers-color-scheme)을 모두 반영 */
+.logo-dark {
+  display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .logo-dark {
+    display: block;
+  }
+
+  :root:not([data-theme='light']) .logo-light {
+    display: none;
+  }
+}
+
+:root[data-theme='dark'] .logo-dark {
+  display: block;
+}
+
+:root[data-theme='dark'] .logo-light {
+  display: none;
+}
+
+/* 테마 토글 버튼 */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  background: var(--paper);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.theme-toggle:hover {
+  color: var(--brand-dark);
+  border-color: var(--brand-soft);
+  background: var(--soft);
+}
+
+.theme-toggle:disabled {
+  opacity: 0.5;
+}
+
+.header-side {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
 /* 로그인 자리 — 실제 인증 구현 전 비활성 표시 */
 .nav .login-slot {
   padding: 9px 13px;
@@ -382,6 +491,210 @@ img {
   font-size: 12px;
   margin-top: 28px;
   color: #d8c9eb;
+}
+
+/* ---------- 히어로 파티클·진입 애니메이션 ---------- */
+
+.hero {
+  position: relative;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* ♡ ✦ ✉ 모티프가 천천히 떠다니는 배경 장식 */
+.hero-particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  color: #ffe9f7;
+  animation: particle-float var(--dur, 10s) ease-in-out var(--del, 0s) infinite;
+  text-shadow: 0 2px 14px rgba(255, 214, 242, 0.35);
+  user-select: none;
+}
+
+@keyframes particle-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-6deg);
+  }
+
+  50% {
+    transform: translateY(-22px) rotate(7deg);
+  }
+}
+
+/* 히어로 콘텐츠 진입 — 위에서 순차 페이드업 */
+.hero .eyebrow,
+.hero h1,
+.hero p,
+.hero .actions,
+.hero .notice {
+  animation: hero-rise 0.7s cubic-bezier(0.22, 0.8, 0.3, 1) both;
+}
+
+.hero h1 {
+  animation-delay: 0.08s;
+}
+
+.hero p {
+  animation-delay: 0.16s;
+}
+
+.hero .actions {
+  animation-delay: 0.24s;
+}
+
+.hero .notice {
+  animation-delay: 0.32s;
+}
+
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* 히어로 일러스트 카드 (데스크톱 전용) */
+.hero-visual {
+  position: absolute;
+  right: clamp(20px, 4vw, 64px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: clamp(240px, 26vw, 340px);
+  aspect-ratio: 1;
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(24, 14, 52, 0.35);
+  animation:
+    hero-rise 0.8s cubic-bezier(0.22, 0.8, 0.3, 1) 0.18s both,
+    hero-visual-sway 7s ease-in-out 1s infinite;
+}
+
+.hero-visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+@keyframes hero-visual-sway {
+  0%,
+  100% {
+    transform: translateY(-50%) rotate(-1.6deg);
+  }
+
+  50% {
+    transform: translateY(-53%) rotate(1.6deg);
+  }
+}
+
+/* ---------- 스크롤 리빌 ---------- */
+
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.55s ease var(--reveal-delay, 0ms),
+    transform 0.55s cubic-bezier(0.22, 0.8, 0.3, 1) var(--reveal-delay, 0ms);
+}
+
+[data-reveal].is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- 카드 장식 ---------- */
+
+/* 카드 모티프가 살짝 떠다니고, 호버 시 빛줄기가 스친다 */
+.service-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.service-card::after {
+  content: '';
+  position: absolute;
+  top: -60%;
+  left: -30%;
+  width: 45%;
+  height: 220%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 255, 255, 0.5),
+    transparent
+  );
+  transform: translateX(-160%) rotate(8deg);
+  transition: transform 0.7s ease;
+  pointer-events: none;
+}
+
+.service-card:hover::after {
+  transform: translateX(360%) rotate(8deg);
+}
+
+.motif {
+  animation: motif-bob 4.5s ease-in-out infinite;
+}
+
+.service-card:nth-child(2) .motif {
+  animation-delay: -1.5s;
+}
+
+.service-card:nth-child(3) .motif {
+  animation-delay: -3s;
+}
+
+@keyframes motif-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+/* 단계 칩 호버 댓글림 */
+.step {
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.step:hover {
+  transform: translateY(-2px);
+  border-color: var(--brand-soft);
+}
+
+/* 데스크톱에서만 히어로 일러스트 표시 + 텍스트와 겹치지 않게 여백 확보 */
+.hero-visual {
+  display: none;
+}
+
+@media (min-width: 1025px) {
+  .hero-visual {
+    display: block;
+  }
+
+  .hero .hero-content {
+    padding-right: clamp(300px, 32vw, 440px);
+  }
 }
 
 /* ---------- 섹션 ---------- */
@@ -785,6 +1098,14 @@ img {
   .sitebar-inner {
     display: block;
     padding: 12px 18px;
+    position: relative;
+  }
+
+  /* 모바일에서는 토글을 로고 오른쪽 상단에 고정 */
+  .header-side {
+    position: absolute;
+    top: 16px;
+    right: 18px;
   }
 
   .nav {
@@ -883,16 +1204,41 @@ img {
     animation: none;
   }
 
+  .particle,
+  .hero .eyebrow,
+  .hero h1,
+  .hero p,
+  .hero .actions,
+  .hero .notice,
+  .hero-visual,
+  .motif {
+    animation: none;
+  }
+
+  .hero-visual {
+    transform: translateY(-50%);
+  }
+
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
   .btn,
   .nav a,
   .service-card,
+  .service-card::after,
+  .step,
+  .theme-toggle,
   .faq summary::after,
   .faq details::details-content {
     transition: none;
   }
 
   .btn:hover,
-  .service-card:hover {
+  .service-card:hover,
+  .step:hover {
     transform: none;
   }
 }

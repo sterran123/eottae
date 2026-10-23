@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import ServiceCard from '@/components/shared/service-card';
 import type { ServiceCardProps } from '@/components/shared/service-card';
+import HeroParticles from '@/components/shared/hero-particles';
 
 const cards: ServiceCardProps[] = [
   {
@@ -42,6 +43,11 @@ export default function Home() {
   return (
     <>
       <section className="hero">
+        <HeroParticles />
+        {/* 브랜드 일러스트 — ima2-gen 생성 에셋(public/brand/) */}
+        <div className="hero-visual" aria-hidden="true">
+          <img src="/brand/hero-visual.webp" alt="" width={340} height={340} />
+        </div>
         <div className="shell hero-content">
           <div className="eyebrow">ONE WEB APP · THREE MOMENTS</div>
           <h1>
@@ -69,20 +75,22 @@ export default function Home() {
       </section>
 
       <section id="services" className="shell section">
-        <div className="section-head">
+        <div className="section-head" data-reveal>
           <span className="eyebrow dark">OUR PLATFORM</span>
           <h2>매칭 · 데이트·소모임 · 모바일 청첩장</h2>
           <p>하나의 회원 시스템과 공통 디자인으로 연결되는 세 가지 서비스</p>
         </div>
         <div className="card-grid">
-          {cards.map((c) => (
-            <ServiceCard key={c.index} {...c} />
+          {cards.map((c, i) => (
+            <div key={c.index} data-reveal style={{ '--reveal-delay': `${i * 90}ms` } as React.CSSProperties}>
+              <ServiceCard {...c} />
+            </div>
           ))}
         </div>
       </section>
 
       <section className="shell section narrow">
-        <div className="section-head">
+        <div className="section-head" data-reveal>
           <span className="eyebrow dark">HOW IT WORKS</span>
           <h2>첫 만남까지, 천천히</h2>
         </div>
@@ -92,8 +100,13 @@ export default function Home() {
             ['02', '공통 질문'],
             ['03', '쌍방 호감'],
             ['04', '대화 시작'],
-          ].map(([n, label]) => (
-            <div className="step" key={n}>
+          ].map(([n, label], i) => (
+            <div
+              className="step"
+              key={n}
+              data-reveal
+              style={{ '--reveal-delay': `${i * 70}ms` } as React.CSSProperties}
+            >
               <strong>{n}</strong>
               <span>{label}</span>
             </div>
@@ -101,7 +114,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="shell section safety-highlight">
+      <section className="shell section safety-highlight" data-reveal>
         <div>
           <span className="eyebrow dark">SAFETY FIRST</span>
           <h2>안전이 먼저인 만남</h2>
@@ -116,7 +129,7 @@ export default function Home() {
       </section>
 
       <section className="shell section narrow">
-        <div className="section-head">
+        <div className="section-head" data-reveal>
           <span className="eyebrow dark">FAQ</span>
           <h2>자주 묻는 질문</h2>
         </div>
