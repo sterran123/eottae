@@ -1,0 +1,23 @@
+{
+  "brand": "어때?",
+  "modules": [
+    {
+      "phase": 1,
+      "name": "매칭",
+      "route": "/match",
+      "releaseStatus": "planned-build"
+    },
+    {
+      "phase": 2,
+      "name": "데이트·소모임",
+      "route": "/activities",
+      "releaseStatus": "future"
+    },
+    {
+      "phase": 3,
+      "name": "모바일 청첩장",
+      "route": "/invitations",
+      "releaseStatus": "future"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "project-files": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "PROJECT_ROOT_ABSOLUTE_PATH_REPLACE_ME"
+      ]
+    }
+  }
+}

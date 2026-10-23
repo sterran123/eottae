@@ -1,0 +1,11 @@
+-- 0차: DB 테이블 초안/기획용 메모. 실제 실행/배포 금지.
+-- users(auth_subject UUID UNIQUE, adult_verified BOOL DEFAULT FALSE, account_status TEXT)
+-- profiles(user_id UUID PK, nickname, bio, photo_visibility)
+-- interests(id UUID PK, category, label); profile_interests(user_id, interest_id)
+-- likes(actor_id, target_id, action, UNIQUE(actor_id, target_id))
+-- matches(id UUID PK, state); match_members(match_id, user_id)
+-- conversations(id, match_id UNIQUE); messages(id, conversation_id, sender_id, body)
+-- blocks(blocker_id, blocked_id UNIQUE); reports(id, reporter_id, subject_id, state)
+-- consents(id, user_id, kind, version, accepted_at); audit_logs(...)
+-- AUTH + VERIFIED ADULT + BLOCK/GROUP AUTH + RLS POLICIES NOT IMPLEMENTED.
+-- Build proper reversible migrations & tests before applying any SQL.

@@ -1,0 +1,16 @@
+# Dependencies & build outputs
+**/node_modules/
+**/.next/
+**/out/
+**/.vercel/
+
+# Env files (examples are committed)
+**/.env
+**/.env.*
+!**/.env.example
+
+# Caches / logs / OS noise
+**/*.tsbuildinfo
+**/*.log
+**/.DS_Store
+**/Thumbs.db
