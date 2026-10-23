@@ -8,7 +8,9 @@ export default function SwRegister() {
     if (process.env.NODE_ENV !== 'production') return;
     if (!('serviceWorker' in navigator)) return;
 
-    navigator.serviceWorker.register('/sw.js').catch(() => {
+    // basePath(GitHub Pages /eottae) 아래에서도 스코프가 맞도록 경로를 붙인다
+    const swUrl = `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/sw.js`;
+    navigator.serviceWorker.register(swUrl).catch(() => {
       // 등록 실패는 치명적이지 않으므로 조용히 무시
     });
   }, []);

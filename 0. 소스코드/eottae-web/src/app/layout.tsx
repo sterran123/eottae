@@ -11,13 +11,13 @@ export const metadata: Metadata = {
     template: '%s | 어때?',
   },
   description: '매칭 · 데이트·소모임 · 모바일 청첩장, 세 가지 서비스를 하나로 연결하는 「어때?」 PWA 기획용 골격',
-  manifest: '/manifest.webmanifest',
+  manifest: '/eottae/manifest.webmanifest',
   icons: {
     icon: [
-      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+      { url: '/eottae/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/eottae/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
     ],
-    apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+    apple: [{ url: '/eottae/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
   },
   appleWebApp: {
     capable: true,

@@ -102,17 +102,24 @@ git config --global user.email "본인 GitHub 이메일 또는 noreply"
 
 - `npm.ps1` 실행 차단 → Git Bash 사용 또는 `npm.cmd`로 실행
 - 경로에 한글+공백(`0. 소스코드`) — 항상 따옴표로 감싼다
-- `LF→CRLF` 경고는 무시해도 됨 (`autocrlf=true`)
+- `LF→CRLF` 경고는 무시해도 됨 (`autocrlf=true`) — 단 `.gitattributes`가 `eol=lf`라 체크아웃은 항상 LF, MANIFEST.sha256 검증이 OS 무관하게 통한다
 - 서비스워커는 dev에서 등록 안 됨 — `npm run build && npm run start`로 확인
 - Pretendard 폰트는 `public/fonts/PretendardVariable.woff2` 자체 호스팅 — CDN 장애·오프라인과 무관하게 동작
 
 ## 7. 남은 과제 (다음 작업자용)
 
 - 실기기(에뮬레이션 아닌 실단말) 캡처 보강 → `3. 구현 이미지` 폴더 (현재 7장은 Chrome 에뮬레이션, SEC-002 충족 상태)
-- PWA 실기기 설치·Lighthouse 검증 (HTTPS 배포 후)
+- PWA 실기기 설치·Lighthouse 검증 (GitHub Pages 배포 완료 후 `https://sterran123.github.io/eottae/`에서 수행)
 - 정식 PWA 아이콘 디자인 검수·제작 (현재는 로고 배치 임시 아이콘)
 
-## 8. 주기적 자동 점검 (team-sync 스케줄러)
+## 8. GitHub Pages 배포
+
+- **URL**: https://sterran123.github.io/eottae/ (basePath `/eottae` — `next.config.mjs` 참조)
+- **자동 배포**: `.github/workflows/deploy-pages.yml` — main push 또는 Actions 탭 수동 실행 시 정적 export(out/)를 Pages에 배포.
+- **최초 1회 설정**: 저장소 Settings → Pages → Source를 **GitHub Actions**로 변경 (소유자가 웹에서). 미설정 상태의 첫 deploy 잡은 실패하며, 설정 후 재실행하면 된다.
+- **주의**: 정적 호스팅이라 서버 기능 불가 — `/api/health`는 `force-static`으로 정적 파일로만 존재. 자산 경로는 모두 `/eottae/` 접두사 필수(next.config.mjs 주석 참조).
+
+## 9. 주기적 자동 점검 (team-sync 스케줄러)
 
 - `.github/workflows/team-sync.yml`이 **매주 월요일 09:00 KST** 자동 실행된다 (매일로 바꾸려면 cron을 `0 0 * * *`로).
 - Actions 탭 → `team-sync` → **Run workflow**로 수동 실행 가능 (`days` 입력으로 집계 기간 조절).

@@ -130,3 +130,16 @@
 - [버그수정] tools/team_activity_report.mjs | '열린 PR' 카운트가 기간 내 갱신된 PR만 세던 문제 → `pulls?state=open` 별도 조회 후 PR 번호 합집합으로 stale 열린 PR도 집계
 - [변경] .github/workflows/team-sync.yml | checkout을 `ref: main`으로 고정 — dispatch를 다른 브랜치에서 실행해도 건강검사·리포트·auto/team-sync 기준이 항상 main과 일치
 - [검증] `REPORT_DAYS=abc|0|30` 실실행 통과, team-sync.yml YAML 파싱 OK(6 steps), 추출 셸 `bash -n` PASS, `sha256sum -c MANIFEST.sha256` 재검증
+
+## 2026-10-23 GitHub Pages 정적 배포 파이프라인 (김민기 작업)
+- [신규] eottae-web/next.config.mjs | `output:'export'` + `basePath:'/eottae'` + `trailingSlash:true` + `images.unoptimized` + `NEXT_PUBLIC_BASE_PATH` 주입 — Pages 프로젝트 사이트(sterran123.github.io/eottae)용 정적 export
+- [신규] .github/workflows/deploy-pages.yml | main push/dispatch → npm ci→typecheck→build → out/을 pages artifact로 업로드 → deploy-pages 잡 배포. permissions에 contents:read 명시(지정 시 미명시 스코프는 none이라 checkout이 죽음)
+- [버그수정] api/health/route.ts | 정적 export에서 API 라우트는 빌드 실패 원인 → `force-static`으로 빌드타임 정적 파일(out/api/health) 전환, 헬스 체크 기능 보존
+- [버그수정] 절대경로 자산 참조 전수 수정 — basePath 아래에서 404 나던 항목: globals.css @font-face, layout manifest/icons 메타, site-header 로고 2종, page.tsx 히어로, manifest.webmanifest(start_url/scope/icons), error.tsx `<a href="/">`→Link
+- [버그수정] public/sw.js | 루트 기준 경로(`/offline`·PRECACHE·자산 정규식)가 '/eottae/' 스코프에서 전부 어긋나던 결함 → `self.registration.scope` 기준 상대경로로 재작성(루트/서브경로 공용), 캐시 v2→v3
+- [변경] sw-register.tsx | `NEXT_PUBLIC_BASE_PATH`로 '/eottae/sw.js' 등록 — 스코프 일치
+- [신규] .gitattributes `* text=auto eol=lf` | Windows autocrlf 체크아웃(CRLF)과 리눅스 러너(LF)에서 MANIFEST.sha256 검증이 깨지던 크로스플랫폼 결함 → 작업트리 바이트를 LF로 통일
+- [검증] `npm run typecheck` PASS, `npm run build` PASS — out/ 정적 산출물 11페이지+api/health 확인, HTML 내 모든 자산/링크에 /eottae 접두사·후행슬래시 확인
+- [검증] 배포 경로 모의 서빙(out/을 /eottae/ 아래 http.server) — /eottae/·match/·offline/·match(301)·manifest·sw.js·api/health·font 200 확인
+- [미구현/보류] 저장소 Settings → Pages → Source=GitHub Actions 전환은 웹 UI에서 수동 1회 필요 (gh CLI 미설치로 API 설정 불가) — 설정 전 첫 deploy 잡은 실패하며 이후 재실행 필요
+- [미구현/보류] 실사이트 HTTPS 상에서 SW 설치·오프라인·Lighthouse 검증은 배포 완료 후 수행

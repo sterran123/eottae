@@ -1,8 +1,8 @@
 {
   "name": "어때? — 매칭·데이트·소모임·청첩장",
   "short_name": "어때?",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "/eottae/",
+  "scope": "/eottae/",
   "display": "standalone",
   "background_color": "#faf9fe",
   "theme_color": "#7454c4",
@@ -10,19 +10,19 @@
   "description": "어때? 하나의 PWA에서 매칭·데이트·소모임·모바일 청첩장을 단계적으로 제공하는 서비스. 현재는 기획 골격.",
   "icons": [
     {
-      "src": "/icons/icon-192.png",
+      "src": "/eottae/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "/eottae/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/maskable-512.png",
+      "src": "/eottae/icons/maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

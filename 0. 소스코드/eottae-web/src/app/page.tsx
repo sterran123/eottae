@@ -46,7 +46,7 @@ export default function Home() {
         <HeroParticles />
         {/* 브랜드 일러스트 — ima2-gen 생성 에셋(public/brand/) */}
         <div className="hero-visual" aria-hidden="true">
-          <img src="/brand/hero-visual.webp" alt="" width={340} height={340} />
+          <img src="/eottae/brand/hero-visual.webp" alt="" width={340} height={340} />
         </div>
         <div className="shell hero-content">
           <div className="eyebrow">ONE WEB APP · THREE MOMENTS</div>

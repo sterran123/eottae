@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect } from 'react';
 
 export default function Error({ error, reset }: { error: Error; reset: () => void }) {
@@ -18,9 +19,9 @@ export default function Error({ error, reset }: { error: Error; reset: () => voi
         <button className="btn primary" onClick={reset} type="button">
           다시 시도
         </button>
-        <a className="btn outline" href="/">
+        <Link className="btn outline" href="/">
           ← 통합 홈으로
-        </a>
+        </Link>
       </div>
     </section>
   );

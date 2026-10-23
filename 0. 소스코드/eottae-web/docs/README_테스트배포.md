@@ -14,7 +14,7 @@
 | iOS apple-touch-icon·appleWebApp | 메타+아이콘 구성 완료 |
 | 서비스워커·오프라인 캐시 | `public/sw.js` 구현 완료 — 문서 network-first→`/offline`, 정적 자산 cache-first. 실기기 검증은 미실행 |
 | 푸시·백그라운드 동기화 | **미구현** — 별도 과제 |
-| HTTPS 배포(설치 요건) | 로컬 dev만 확인, 배포 미실행 |
+| HTTPS 배포(설치 요건) | GitHub Pages 파이프라인 구축 완료 — `.github/workflows/deploy-pages.yml`이 main push 시 `https://sterran123.github.io/eottae/` 로 자동 배포 (최초 1회 Settings→Pages→Source=GitHub Actions 필요). 실사이트 SW·Lighthouse 검증은 배포 후 수행 |
 
 ### iOS 설치 가이드(안내 문구 초안)
 iPhone·iPad의 Chrome/Edge는 PWA 설치를 지원하지 않는 경우가 많으므로 **Safari**로 접속 → 하단 공유 버튼 → '홈 화면에 추가' 순서로 안내한다. iOS 웹푸시는 홈 화면 앱 + OS 16.4+ + 별도 권한 요청이 필요하며 현재 미구현.
