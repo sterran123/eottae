@@ -116,7 +116,7 @@ git config --global user.email "본인 GitHub 이메일 또는 noreply"
 
 - **URL**: https://sterran123.github.io/eottae/ (basePath `/eottae` — `next.config.mjs` 참조)
 - **자동 배포**: `.github/workflows/deploy-pages.yml` — main push 또는 Actions 탭 수동 실행 시 정적 export(out/)를 Pages에 배포.
-- **최초 1회 설정**: 저장소 Settings → Pages → Source를 **GitHub Actions**로 변경 (소유자가 웹에서). 미설정 상태의 첫 deploy 잡은 실패하며, 설정 후 재실행하면 된다.
+- **상태**: 배포 완료·실사이트 응답 확인됨 (Pages source = GitHub Actions 설정). main push 때마다 자동 재배포.
 - **주의**: 정적 호스팅이라 서버 기능 불가 — `/api/health`는 `force-static`으로 정적 파일로만 존재. 자산 경로는 모두 `/eottae/` 접두사 필수(next.config.mjs 주석 참조).
 
 ## 9. 주기적 자동 점검 (team-sync 스케줄러)
