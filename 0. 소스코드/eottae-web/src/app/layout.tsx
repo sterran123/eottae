@@ -53,6 +53,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               "try{var t=localStorage.getItem('eottae-theme');if(t==='light'||t==='dark'){document.documentElement.dataset.theme=t}}catch(e){}",
           }}
         />
+        {/* JS 비활성 시 스크롤 리빌이 없으므로 [data-reveal] 숨김을 해제한다 */}
+        <noscript>
+          <style>{`[data-reveal]{opacity:1;transform:none}`}</style>
+        </noscript>
         <a className="skip" href="#content">
           본문으로 건너뛰기
         </a>

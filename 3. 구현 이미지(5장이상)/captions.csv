@@ -1,0 +1,8 @@
+﻿file,captured_at,environment,requirement_id,note
+01_공통_홈_데스크톱.png,2026-10-23,Windows + Chrome 에뮬레이션 1440x900 · next start 프로덕션 빌드 · tools/capture_screenshots.mjs,SEC-002 / CORE-002,통합 홈 라이트 — 3모듈 내비·히어로·파티클·브랜드 일러스트
+02_공통_홈_모바일.png,2026-10-23,Windows + Chrome 에뮬레이션 390x844 모바일 · next start 프로덕션 빌드,SEC-002 / CORE-002,통합 홈 모바일 라이트 — 반응형 헤더·테마 토글
+03_공통_홈_데스크톱_다크.png,2026-10-23,Windows + Chrome 에뮬레이션 1440x900 · prefers-color-scheme: dark,SEC-002 / CORE-002,통합 홈 다크 — 토큰·다크 로고 스왑(BRAND-004)
+04_매칭_진입_모바일.png,2026-10-23,Windows + Chrome 에뮬레이션 390x844 모바일 · next start 프로덕션 빌드,SEC-002,/match 1차 개발 대상 진입 화면 (실기능 미구현 명시)
+05_준비중_모듈_데이트소모임_모바일.png,2026-10-23,Windows + Chrome 에뮬레이션 390x844 모바일 · next start 프로덕션 빌드,SEC-002,/activities 2차 준비중 화면
+06_준비중_모듈_청첩장_모바일.png,2026-10-23,Windows + Chrome 에뮬레이션 390x844 모바일 · next start 프로덕션 빌드,SEC-002,/invitations 3차 준비중 화면
+07_오프라인_폴백_모바일.png,2026-10-23,Windows + Chrome 에뮬레이션 390x844 모바일 · next start 프로덕션 빌드,SEC-002 / CORE-003,/offline PWA 폴백 — 서비스워커 오프라인 실검증 대상
