@@ -14,7 +14,9 @@ import { fileURLToPath } from "node:url";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = join(ROOT, "0. 소스코드", "eottae-web", "docs", "TEAM_ACTIVITY.md");
 const REPO = process.env.GITHUB_REPOSITORY || "sterran123/eottae";
-const DAYS = Math.max(1, Number(process.env.REPORT_DAYS || 7));
+const daysInput = Number(process.env.REPORT_DAYS || 7);
+// workflow_dispatch days 입력은 자유 텍스트 — 숫자가 아니면 NaN → toISOString이 RangeError로 잡을 죽인다
+const DAYS = Number.isFinite(daysInput) && daysInput >= 1 ? Math.floor(daysInput) : 7;
 const TOKEN = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || "";
 
 // GitHub ID → 팀원 실명 매핑 (HANDOFF_김민기.md 초대 표와 동기화)
@@ -60,9 +62,11 @@ const kst = (d) => new Date(d).toLocaleString("ko-KR", { timeZone: "Asia/Seoul",
 const today = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Seoul" }).format(new Date());
 
 // --- 수집 ---
-const [commits, prs, branches] = await Promise.all([
+const [commits, prs, openPrs, branches] = await Promise.all([
   api(`repos/${REPO}/commits?sha=main&since=${sinceIso}&per_page=100`).catch(() => []),
   api(`repos/${REPO}/pulls?state=all&sort=updated&direction=desc&per_page=50`).catch(() => []),
+  // 오래된 열린 PR은 updated 기준 top-50 밖으로 밀려날 수 있어 state=open으로 따로 가져온다
+  api(`repos/${REPO}/pulls?state=open&per_page=100`).catch(() => []),
   api(`repos/${REPO}/branches?per_page=100`).catch(() => []),
 ]);
 
@@ -70,7 +74,6 @@ const mainHead = commits[0];
 const mainChecks = await api(`repos/${REPO}/commits/main/check-runs?per_page=20`).catch(() => null);
 const mainCi = mainChecks?.check_runs?.find((r) => r.name === "check") || mainChecks?.check_runs?.[0];
 
-const openPrs = prs.filter((p) => p.state === "open");
 const mergedPrs = prs.filter((p) => p.merged_at && new Date(p.merged_at) >= since);
 const recentPrs = prs.filter((p) => new Date(p.updated_at) >= since);
 
@@ -95,7 +98,10 @@ for (const c of commits) {
     otherActivity.push(`${nameOf(login)} — ${String(c.commit.message).split("\n")[0]}`);
   }
 }
-for (const p of recentPrs) {
+// 열린 PR과 기간 내 갱신 PR을 번호 기준으로 합쳐 한 번만 집계한다
+const seenPrs = new Map();
+for (const p of [...openPrs, ...recentPrs]) if (!seenPrs.has(p.number)) seenPrs.set(p.number, p);
+for (const p of seenPrs.values()) {
   const login = p.user?.login;
   if (!login || !stat[login]) continue;
   if (p.state === "open") stat[login].prsOpened++;

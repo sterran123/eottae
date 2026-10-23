@@ -26,6 +26,9 @@ permissions:
   contents: write
   pull-requests: write
   statuses: write
+  # 리포트의 main/PR CI 상태는 check-runs API를 읽는다 — 이 권한이 없으면
+  # 스케줄 실행에서 403 → 리포트가 항상 '기록 없음'으로 나온다
+  checks: read
 
 concurrency:
   group: team-sync
@@ -37,7 +40,10 @@ jobs:
     env:
       REPORT_DAYS: ${{ github.event.inputs.days || '7' }}
     steps:
+      # dispatch를 다른 브랜치에서 실행해도 건강검사·auto/team-sync 기준은 항상 main
       - uses: actions/checkout@v4
+        with:
+          ref: main
 
       - uses: actions/setup-node@v4
         with:

@@ -123,3 +123,10 @@
 - [변경] docs/HANDOFF_김민기.md — §8 스케줄러 안내 추가 + stale 항목 정리(테마 토글 완료·폰트 자체호스팅·CODEOWNERS 실계정·초대 수락 완료 반영)
 - [변경] docs/AI_에이전트_협업_가이드.md — §8 자동 주기 점검 절차 추가
 - [미구현/보류] 팀원 실제 push/PR 발생 시의 리포트 다변화는 자동 실행 후 확인 — 현재 3명 활동 없음이 정상 집계됨
+
+## 2026-10-23 team-sync 코드리뷰 결함 수정 (김민기 작업)
+- [버그수정] .github/workflows/team-sync.yml | permissions에 `checks: read` 누락 — check-runs API가 스케줄 실행에서 403 → main/열린 PR CI 상태가 항상 '기록 없음'으로 빠지던 결함. 로컬은 public 비인증이라 통과해 드러나지 않았음
+- [버그수정] tools/team_activity_report.mjs | `REPORT_DAYS`에 숫자 아닌 값이 들어오면 `Math.max(1, NaN)`→`toISOString()` RangeError로 잡 전체 실패 → `Number.isFinite`+`>=1` 검증 후 7일 폴백 (abc·0 입력 재현 확인)
+- [버그수정] tools/team_activity_report.mjs | '열린 PR' 카운트가 기간 내 갱신된 PR만 세던 문제 → `pulls?state=open` 별도 조회 후 PR 번호 합집합으로 stale 열린 PR도 집계
+- [변경] .github/workflows/team-sync.yml | checkout을 `ref: main`으로 고정 — dispatch를 다른 브랜치에서 실행해도 건강검사·리포트·auto/team-sync 기준이 항상 main과 일치
+- [검증] `REPORT_DAYS=abc|0|30` 실실행 통과, team-sync.yml YAML 파싱 OK(6 steps), 추출 셸 `bash -n` PASS, `sha256sum -c MANIFEST.sha256` 재검증
