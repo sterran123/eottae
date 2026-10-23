@@ -5,7 +5,8 @@
 
 ## 0. 저장소 접근 권한 (선행 조건 — 여기서 막히면 뒤는 전부 안 됨)
 
-- 저장소는 **private**: `https://github.com/sterran123/eottae`
+- 저장소는 **public** (2026-10-23 포트폴리오 목적으로 공개 전환): `https://github.com/sterran123/eottae`
+- **clone/열람은 누구나 가능**. 단 **push·PR에는 Collaborator 권한이 필요**하므로 팀원은 아래 절차를 거친다. (초대 전이라도 `git clone`과 로컬 실행은 바로 된다)
 - GitHub 계정이 없는 팀원: github.com에서 **가입 → 이메일 인증** 후 본인의 **영문 사용자명(username)**을 김민기에게 전달한다. (가입 이메일 주소가 아니라 프로필에 표시되는 영문 ID)
 - 김민기는 받은 ID로 `Settings → Collaborators → Add people`에 추가하거나, 아래 명령을 대신 실행한다:
 
@@ -14,15 +15,21 @@
   ```
 
 - 초대를 받은 팀원은 GitHub 알림/이메일에서 **Accept invitation**을 누른 뒤 아래 절차를 진행한다.
-- 초대를 기다리는 동안 `1. 프로젝트 계획서/`의 RULES·요구사항 문서를 먼저 읽어둔다 (공유 폴더로도 열람 가능).
+- 초대를 기다리는 동안 `1. 프로젝트 계획서/`의 RULES·요구사항 문서를 먼저 읽어둔다.
+
+### main 브랜치 보호 (2026-10-23 적용)
+
+- `main`은 보호 브랜치: **팀원의 직접 push 불가** — 반드시 `feat/이슈ID-설명` 브랜치 → PR
+- PR 머지 조건: **CI `check` 통과 + 리뷰 승인 1건** (CODEOWNERS가 담당 영역 리뷰어 자동 지정)
+- force push·브랜치 삭제 차단. 소유자(김민기, admin)만 긴급 시 우회 가능
 
 ### 현재 초대 상태 (2026-10-23 갱신)
 
 | 팀원 | GitHub ID | 상태 |
 |---|---|---|
-| 오하율 | @HaYul0611 | **수락 완료** — clone 가능 |
-| 주한태 | @gksxogksxo1001-sketch | 초대 발송됨 — 수락 대기 |
-| 손준혁 | @sonjunhyek2 | **수락 완료** — clone 가능 |
+| 오하율 | @HaYul0611 | **수락 완료** — push 가능 |
+| 주한태 | @gksxogksxo1001-sketch | 초대 발송됨 — 수락 대기 (부재중, clone/로컬작업은 초대 없이 가능) |
+| 손준혁 | @sonjunhyek2 | **수락 완료** — push 가능 |
 
 ## 1. 환경 기준값
 
