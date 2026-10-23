@@ -28,7 +28,7 @@
 | 팀원 | GitHub ID | 상태 |
 |---|---|---|
 | 오하율 | @HaYul0611 | **수락 완료** — push 가능 |
-| 주한태 | @gksxogksxo1001-sketch | 초대 발송됨 — 수락 대기 (부재중, clone/로컬작업은 초대 없이 가능) |
+| 주한태 | @gksxogksxo1001-sketch | **수락 완료** — push 가능 |
 | 손준혁 | @sonjunhyek2 | **수락 완료** — push 가능 |
 
 ## 1. 환경 기준값
