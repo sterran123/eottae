@@ -38,18 +38,27 @@
 
 태그 종류: `[신규]` `[변경]` `[버그수정]` `[검증]` `[보안]` `[보존]` `[통합]` `[배포]` `[제안]` `[미구현/보류]`
 
-## 3. 커밋·브랜치 규칙
+## 3. 커밋·브랜치 규칙 (저장소에서 강제되는 부분 포함)
 
 - 브랜치: `feat/{ID}-{설명}` (예: `feat/MATCH-002-card-ui`)
 - 커밋 메시지: `feat(MATCH-002): 추천 카드 컴포넌트` 형태로 요구사항 ID 포함
 - `main`에 직접 push 금지 — PR로 올리고 최소 1명 리뷰
 - 커밋 전 필수: `npm run typecheck` 통과, `.env`/실키 없음 확인
+- **CI 강제**: 저장소 루트 `.github/workflows/ci.yml`이 모든 push/PR에서 `npm ci → typecheck → build`를 자동 실행한다. CI 실패 PR은 머지 금지.
+- **PR 자동 요소**: 루트 `.github/pull_request_template.md` 양식 자동 적용 + `.github/CODEOWNERS` 리뷰 자동 요청(팀원 ID 확정 후 교체).
+
+## 3-1. 저장소 구조와 경로
+
+- 저장소 루트 = 프로젝트 폴더 (`git clone` 시 `eottae/` 디렉터리 생성)
+- 앱 코드: `eottae/0. 소스코드/eottae-web/` — npm 명령은 이 경로에서 실행
+- 기획·지시 문서(`1. 프로젝트 계획서/` 등)도 같은 저장소에 포함
+- 에이전트에게 경로를 말할 때 저장소 루트 기준 상대경로로 지시할 것
 
 ## 4. 파일 소유 경계 (침범 금지)
 
 | 담당 | 소유 영역 | 비고 |
 |---|---|---|
-| 김민기 | `src/app/layout.tsx`, `page.tsx`, `globals.css`, `src/components/shared/`, `public/`, PWA(sw.js·manifest), `docs/`, 루트 설정 | 공통 셸 변경은 팀 합의 필요 |
+| 김민기 | `src/app/layout.tsx`, `page.tsx`, `globals.css`, `src/components/shared/`, `public/`, PWA(sw.js·manifest), `docs/`, `.github/`, 루트 설정 | 공통 셸 변경은 팀 합의 필요 |
 | 오하율 | `src/app/match/**` 실구현, `src/components/match/`, MATCH-001/002/009, ACT-001, INV-001 UI | 공통 CSS 토큰만 재사용, globals.css 직접 수정 금지 |
 | 주한태 | `supabase/**`, `src/lib/server/`, 인증·성인게이트·DB·API 라우트, MATCH-003~006, ACT-002, INV-002 | API 계약 문서와 동기화 필수 |
 | 손준혁 | 채팅·신고·RSVP·알림, MATCH-007/008, ACT-003, INV-003 | 실시간 기능은 별도 설계 리뷰 후 착수 |

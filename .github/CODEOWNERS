@@ -1,0 +1,22 @@
+# 「어때?」 CODEOWNERS — PR 시 해당 영역 담당자에게 리뷰가 자동 요청된다.
+# 주의: GitHub CODEOWNERS는 경로 공백을 지원하지 않아 `0. 소스코드`를 `0.?소스코드` 와일드카드로 매칭한다.
+# 팀원 GitHub ID가 확정되면 아래 TODO의 @계정명을 실제 ID로 교체한다.
+
+# 김민기 — 공통 셸/브랜드/반응형/PWA/문서/CI
+0.?소스코드/eottae-web/src/app/layout.tsx        @sterran123
+0.?소스코드/eottae-web/src/app/globals.css       @sterran123
+0.?소스코드/eottae-web/src/components/shared/    @sterran123
+0.?소스코드/eottae-web/public/                   @sterran123
+0.?소스코드/eottae-web/docs/                     @sterran123
+.github/                                          @sterran123
+
+# 오하율 — 매칭/모임/청첩장 UI (MATCH-001/002/009, ACT-001, INV-001)
+# 0.?소스코드/eottae-web/src/components/match/     @오하율ID_TODO
+# 0.?소스코드/eottae-web/src/app/match/            @오하율ID_TODO
+
+# 주한태 — 인증/성인게이트/DB/API (MATCH-003~006, ACT-002, INV-002)
+# 0.?소스코드/eottae-web/supabase/                 @주한태ID_TODO
+# 0.?소스코드/eottae-web/src/lib/server/           @주한태ID_TODO
+
+# 손준혁 — 채팅/신고/RSVP/알림 (MATCH-007/008, ACT-003, INV-003)
+# 0.?소스코드/eottae-web/src/components/chat/      @손준혁ID_TODO
