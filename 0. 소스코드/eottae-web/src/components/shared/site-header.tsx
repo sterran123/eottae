@@ -7,8 +7,8 @@ export default function SiteHeader() {
       <div className="sitebar-inner">
         <Link href="/" className="brand" aria-label="어때? 홈">
           <picture>
-            <source media="(prefers-color-scheme: dark)" srcSet="/eottae-logo-dark.png" />
-            {/* 원본 로고 1678x937 — 비율 유지, 다크 로고는 검정 불투명 배경(BRAND-004 미완) */}
+            <source media="(prefers-color-scheme: dark)" srcSet="/eottae-logo-dark-transparent.png" />
+            {/* 다크 로고: BRAND-004 투명·파스텔 변형(tools/make_dark_logo.py로 재생성 가능) */}
             <img
               className="brand-logo"
               src="/eottae-logo-light.png"

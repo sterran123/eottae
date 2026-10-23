@@ -41,6 +41,7 @@
   --chip-bg: #f3eefc;
   --chip-ink: #5a4891;
   --shadow-card: 0 1px 2px rgba(40, 33, 58, 0.04);
+  --shadow-card-hover: 0 10px 28px rgba(40, 33, 58, 0.1);
   color-scheme: light;
 }
 
@@ -78,6 +79,7 @@
     --chip-bg: #2a2340;
     --chip-ink: #d4bdf7;
     --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-card-hover: 0 10px 28px rgba(0, 0, 0, 0.42);
     color-scheme: dark;
   }
 }
@@ -90,15 +92,31 @@
 
 html {
   scroll-behavior: smooth;
+  /* 고정 헤더 아래로 앵커가 가려지지 않도록 스크롤 여백 확보 */
+  scroll-padding-top: 96px;
 }
 
 body {
   margin: 0;
   color: var(--ink);
-  font-family: Arial, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  font-family:
+    'Pretendard Variable',
+    Pretendard,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Apple SD Gothic Neo',
+    'Malgun Gothic',
+    'Segoe UI',
+    sans-serif;
   background: var(--bg);
   font-size: 16px;
   line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--point);
+  color: var(--ink);
 }
 
 a {
@@ -207,6 +225,9 @@ img {
   border-radius: 10px;
   white-space: nowrap;
   color: var(--ink);
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .nav a:hover {
@@ -243,6 +264,27 @@ img {
   font-weight: 800;
   border: 1px solid transparent;
   min-height: 44px;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn.primary:hover {
+  box-shadow: 0 6px 18px rgba(116, 84, 196, 0.28);
+}
+
+.btn[aria-disabled='true']:hover {
+  transform: none;
 }
 
 /* CTA는 라이트·다크 동일하게 밝은 포인트 배경 + 어두운 텍스트(WCAG 대비 확보) */
@@ -275,11 +317,23 @@ img {
 
 .hero {
   background: linear-gradient(115deg, var(--hero-a), var(--hero-b) 55%, var(--hero-c));
+  background-size: 180% 180%;
   color: #fff;
   min-height: 440px;
   display: flex;
   align-items: center;
   overflow: hidden;
+  animation: hero-drift 18s ease-in-out infinite alternate;
+}
+
+@keyframes hero-drift {
+  from {
+    background-position: 0% 50%;
+  }
+
+  to {
+    background-position: 100% 50%;
+  }
 }
 
 .hero-content {
@@ -369,11 +423,14 @@ img {
   min-height: 320px;
   border: 1px solid var(--line);
   box-shadow: var(--shadow-card);
-  transition: transform 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .service-card:hover {
   transform: translateY(-3px);
+  box-shadow: var(--shadow-card-hover);
 }
 
 .service-card.lav {
@@ -600,6 +657,35 @@ img {
   align-items: center;
 }
 
+.faq summary::after {
+  content: '';
+  margin-left: auto;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.faq details[open] summary::after {
+  transform: rotate(225deg);
+}
+
+/* 지원 브라우저에서 details 펼침을 부드럽게 (점진적 향상) */
+.faq details::details-content {
+  block-size: 0;
+  overflow: hidden;
+  transition:
+    block-size 0.25s ease,
+    content-visibility 0.25s ease allow-discrete;
+}
+
+.faq details[open]::details-content {
+  block-size: auto;
+}
+
 .faq details p {
   margin: 0 0 14px;
   color: var(--muted);
@@ -793,10 +879,19 @@ img {
     scroll-behavior: auto;
   }
 
-  .service-card {
+  .hero {
+    animation: none;
+  }
+
+  .btn,
+  .nav a,
+  .service-card,
+  .faq summary::after,
+  .faq details::details-content {
     transition: none;
   }
 
+  .btn:hover,
   .service-card:hover {
     transform: none;
   }

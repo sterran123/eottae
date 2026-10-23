@@ -12,7 +12,8 @@
 | manifest.webmanifest | 구성 완료(name/scope/display/theme/icons) |
 | 설치 아이콘 192·512·maskable | 개발용 임시 아이콘 생성 완료(원본 로고 배치) — 정식 아이콘 디자인 검수 필요 |
 | iOS apple-touch-icon·appleWebApp | 메타+아이콘 구성 완료 |
-| 서비스워커·오프라인 캐시·푸시 | **미구현** — 설치-ready/오프라인 지원으로 표기 금지 |
+| 서비스워커·오프라인 캐시 | `public/sw.js` 구현 완료 — 문서 network-first→`/offline`, 정적 자산 cache-first. 실기기 검증은 미실행 |
+| 푸시·백그라운드 동기화 | **미구현** — 별도 과제 |
 | HTTPS 배포(설치 요건) | 로컬 dev만 확인, 배포 미실행 |
 
 ### iOS 설치 가이드(안내 문구 초안)

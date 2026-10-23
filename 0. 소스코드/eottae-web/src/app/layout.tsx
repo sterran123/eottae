@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import SiteHeader from '@/components/shared/site-header';
 import SiteFooter from '@/components/shared/site-footer';
+import SwRegister from '@/components/shared/sw-register';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -44,12 +45,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ko">
       <body>
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
+        <link
+          rel="stylesheet"
+          precedence="default"
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
+        />
         <a className="skip" href="#content">
           본문으로 건너뛰기
         </a>
         <SiteHeader />
         <main id="content">{children}</main>
         <SiteFooter />
+        <SwRegister />
       </body>
     </html>
   );
