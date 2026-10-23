@@ -1,0 +1,108 @@
+# 「어때?」 팀 동기화 스케줄러 — 팀원 활동 점검 + 문서 자동 갱신
+#
+# 주기: 매주 월요일 09:00 KST (cron은 UTC 기준 → 월 00:00 UTC)
+#   - 매일 점검으로 바꾸려면 cron을 '0 0 * * *' 로 수정
+#   - Actions 탭에서 "Run workflow"로 언제든 수동 실행 가능 (집계 기간 입력 가능)
+#
+# 하는 일:
+#   1) main 건강검사 — npm ci → typecheck → build (실패 시 작업 중단, 리포트 없음)
+#   2) 팀원별 커밋·PR·요구사항 ID·CI 상태를 모아 docs/TEAM_ACTIVITY.md 갱신
+#   3) FILE_INDEX.csv / MANIFEST.sha256 재생성 (리포트의 최신 해시가 들어가도록 순서 고정)
+#   4) 변경분을 auto/team-sync 브랜치로 push → PR 자동 생성/갱신
+#      (main 보호 규칙상 머지는 리뷰 승인 후 사람이 수행)
+name: team-sync
+
+on:
+  schedule:
+    - cron: "0 0 * * 1"
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "활동 집계 기간(일)"
+        required: false
+        default: "7"
+
+permissions:
+  contents: write
+  pull-requests: write
+  statuses: write
+
+concurrency:
+  group: team-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      REPORT_DAYS: ${{ github.event.inputs.days || '7' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: "0. 소스코드/eottae-web/package-lock.json"
+
+      - name: main 건강검사 (ci.yml과 동일 절차)
+        working-directory: "0. 소스코드/eottae-web"
+        run: |
+          npm ci
+          npm run typecheck
+          npm run build
+
+      - name: 팀 활동 리포트 생성
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node tools/team_activity_report.mjs
+
+      # 리포트 생성 후에 재생성해야 TEAM_ACTIVITY.md의 최신 해시가 매니페스트에 들어간다
+      - name: 제출 매니페스트 재생성
+        run: python3 tools/update_package_manifest.py
+
+      - name: 변경분을 auto/team-sync 브랜치 PR로 반영
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git checkout -B auto/team-sync
+          git add "0. 소스코드/eottae-web/docs/TEAM_ACTIVITY.md" FILE_INDEX.csv MANIFEST.sha256
+
+          if git diff --cached --quiet; then
+            echo "갱신할 변경 없음 — PR 생성 건너뜀"
+            exit 0
+          fi
+
+          git commit -m "chore(team-sync): 팀 활동 리포트·매니페스트 자동 갱신 ($(date +%F))"
+          git push -f origin auto/team-sync
+
+          # GITHUB_TOKEN이 연 PR은 워크플로를 다시 트리거하지 못해 CI check가 안 돈다.
+          # 이 잡에서 동일 검증(npm ci→typecheck→build)을 통과했으므로
+          # 필수 상태 'check'를 런 링크와 함께 직접 기록한다.
+          SHA=$(git rev-parse HEAD)
+          gh api "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
+            -f state=success -f context=check \
+            -f target_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            -f description="team-sync 잡에서 npm ci→typecheck→build 통과" || true
+
+          PR_URL=$(gh pr list --head auto/team-sync --json url -q '.[0].url' || true)
+          if [ -z "$PR_URL" ]; then
+          cat > /tmp/team-sync-pr-body.md <<'EOF'
+          ## 자동 생성 PR (team-sync 스케줄러)
+
+          - `docs/TEAM_ACTIVITY.md`: 팀원별 커밋·PR·요구사항 ID·CI 상태 집계
+          - `FILE_INDEX.csv` / `MANIFEST.sha256`: 제출 패키지 해시 재생성
+          - 건강검사: 이 워크플로 잡에서 `npm ci → typecheck → build` 통과
+
+          머지는 리뷰 후 사람이 진행합니다 (main 보호 규칙).
+          EOF
+          gh pr create --base main --head auto/team-sync \
+            --title "🤖 팀 활동 리포트·매니페스트 자동 갱신 ($(date +%F))" \
+            --body-file /tmp/team-sync-pr-body.md
+          else
+            echo "기존 PR 유지: $PR_URL"
+          fi

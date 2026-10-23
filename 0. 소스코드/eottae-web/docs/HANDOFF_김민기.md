@@ -71,9 +71,10 @@ git config --global user.email "본인 GitHub 이메일 또는 noreply"
 | 통합 홈 `/`, 헤더/푸터/내비 | 구현 | 김민기 |
 | `/match` `/activities` `/invitations` | 진입·준비중 화면만 | 실기능은 아래 담당자 |
 | `/safety` `/privacy` `/offline` | 구현 | 김민기 |
-| 라이트/다크 테마 | 구현 (시스템 연동, 수동 토글은 후속 과제) | 김민기 |
+| 라이트/다크 테마 | 구현 (시스템 연동 + 수동 3단 토글·localStorage 유지) | 김민기 |
 | 다크 로고 투명 변형 | 구현 (BRAND-004) | 김민기 |
-| PWA manifest·아이콘·sw.js 오프라인 셸 | 구현 (실기기 검증 미실시) | 김민기 |
+| PWA manifest·아이콘·sw.js 오프라인 셸 | 구현 (프로덕션 실검증 완료, 실기기 검증 미실시) | 김민기 |
+| Pretendard Variable 웹폰트 | 구현 (public/fonts 자체 호스팅, CDN 의존 없음) | 김민기 |
 | 로그인·성인 인증·매칭·채팅·DB·결제 | **미구현 — 건드리지 말 것** | 오하율·주한태·손준혁 |
 
 ## 4. 작업 절차 — 강제 항목
@@ -103,13 +104,18 @@ git config --global user.email "본인 GitHub 이메일 또는 noreply"
 - 경로에 한글+공백(`0. 소스코드`) — 항상 따옴표로 감싼다
 - `LF→CRLF` 경고는 무시해도 됨 (`autocrlf=true`)
 - 서비스워커는 dev에서 등록 안 됨 — `npm run build && npm run start`로 확인
-- Pretendard 폰트는 jsDelivr CDN — 오프라인 개발 시 시스템 폰트로 폴백됨(정상)
+- Pretendard 폰트는 `public/fonts/PretendardVariable.woff2` 자체 호스팅 — CDN 장애·오프라인과 무관하게 동작
 
 ## 7. 남은 과제 (다음 작업자용)
 
-- 실기기 360/390/768/1440px 캡처 5장 이상 → `3. 구현 이미지` 폴더 (SEC-002)
-- 테마 수동 토글(사용자 설정 저장) — 브랜드 가이드상 별도 후속 과제
+- 실기기(에뮬레이션 아닌 실단말) 캡처 보강 → `3. 구현 이미지` 폴더 (현재 7장은 Chrome 에뮬레이션, SEC-002 충족 상태)
 - PWA 실기기 설치·Lighthouse 검증 (HTTPS 배포 후)
-- CODEOWNERS의 팀원 GitHub ID 교체 — ID 확정 후 김민기가 입력
-- 팀원 Collaborator 초대 완료 확인 (각자 계정 생성·ID 전달 필요)
 - 정식 PWA 아이콘 디자인 검수·제작 (현재는 로고 배치 임시 아이콘)
+
+## 8. 주기적 자동 점검 (team-sync 스케줄러)
+
+- `.github/workflows/team-sync.yml`이 **매주 월요일 09:00 KST** 자동 실행된다 (매일로 바꾸려면 cron을 `0 0 * * *`로).
+- Actions 탭 → `team-sync` → **Run workflow**로 수동 실행 가능 (`days` 입력으로 집계 기간 조절).
+- 하는 일: main 건강검사(npm ci→typecheck→build) → `docs/TEAM_ACTIVITY.md` 갱신(팀원별 커밋·PR·요구사항 ID·CI 상태·비활동 팀원) → `FILE_INDEX.csv`/`MANIFEST.sha256` 재생성 → `auto/team-sync` 브랜치로 **PR 자동 생성**.
+- 봇이 올린 PR도 **리뷰 승인 후 사람이 머지**한다 (main 보호 규칙 그대로).
+- 로컬에서 같은 리포트를 만들려면: `node tools/team_activity_report.mjs` (gh 로그인 또는 `GH_TOKEN` 필요 — 없으면 public 비인증 조회).

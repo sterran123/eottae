@@ -82,3 +82,14 @@
 
 처음 저장소를 받은 팀원은 `docs/HANDOFF_김민기.md`의 "최초 셋업" 절차를 그대로 따라 하면 된다.
 추천 MCP/도구는 `docs/AI_도구_MCP_권장.md` 참조.
+
+## 8. 자동 주기 점검 — team-sync 스케줄러
+
+저장소에 **매주 월요일 09:00 KST** 자동 실행되는 동기화 워크플로(`.github/workflows/team-sync.yml`)가 있다.
+
+- **확인**: 팀원별 main 커밋·열린/머지된 PR·다룬 요구사항 ID·CI 상태를 집계하고, 활동이 없는 팀원을 표시한다.
+- **갱신**: 결과를 `docs/TEAM_ACTIVITY.md`에 기록하고 `FILE_INDEX.csv`·`MANIFEST.sha256`을 재생성한다.
+- **반영**: 변경분을 `auto/team-sync` 브랜치로 push하고 PR을 자동 생성한다 — 봇 PR이라도 **리뷰 승인 후 사람이 머지**한다.
+- **수동 실행**: GitHub → Actions → `team-sync` → Run workflow (`days`로 집계 기간 조절). 로컬에서는 `node tools/team_activity_report.mjs`.
+
+주의: 리포트가 "팀원의 작업 자체"를 대신 검증해주지는 않는다. 실제 코드 리뷰·실행 검증은 PR 리뷰어가 해야 한다.
