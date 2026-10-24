@@ -17,6 +17,9 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
   pull_request_review:    # 사람이 승인하면 조건 충족 시 즉시 머지 시도
     types: [submitted]
+  workflow_run:           # CI(check) 완료 시 재판정 — push 직후엔 check가 아직 없어서
+    workflows: [ci]       # pull_request 이벤트 판정이 'CI 대기'로 끝나는 공백을 메운다
+    types: [completed]
   workflow_dispatch:      # Actions 탭에서 수동 실행 가능
 
 permissions:
