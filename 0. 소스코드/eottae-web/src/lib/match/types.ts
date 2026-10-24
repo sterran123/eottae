@@ -133,6 +133,12 @@ export interface RecommendProfile {
   distance: DistanceBand;
   recency: ActivityRecency;
   relation: RecommendRelation;
+  /**
+   * 프로필 문답에서 겹친 답 개수(사실). 둘 다 문답에 답한 경우에만 존재.
+   * [블라인드] 추천 단계에서는 개수만 노출, 상대 답 내용은 공개하지 않는다.
+   * 점수·% 금지(브랜드 가이드). 실제 값은 주한태가 집계해 내려준다.
+   */
+  qnaSharedCount?: number;
 }
 
 /** 추천 리스트 로딩 단계. UI 상태 분기용. */
@@ -197,3 +203,11 @@ export interface CompatibilitySummary {
   sharedCount: number;
   bothAnswered: number;
 }
+
+/**
+ * 공통 질문(블라인드) 상태.
+ *  unanswered : 내가 아직 안 답함.
+ *  waiting    : 나만 답함, 상대 대기(상대 답 가림).
+ *  revealed   : 둘 다 답함, 공개.
+ */
+export type CommonQuestionState = 'unanswered' | 'waiting' | 'revealed';
