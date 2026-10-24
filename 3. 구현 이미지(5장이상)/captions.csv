@@ -6,3 +6,11 @@
 05_준비중_모듈_데이트소모임_모바일.png,2026-10-23,Windows + Chrome 에뮬레이션 390x844 모바일 · next start 프로덕션 빌드,SEC-002,/activities 2차 준비중 화면
 06_준비중_모듈_청첩장_모바일.png,2026-10-23,Windows + Chrome 에뮬레이션 390x844 모바일 · next start 프로덕션 빌드,SEC-002,/invitations 3차 준비중 화면
 07_오프라인_폴백_모바일.png,2026-10-23,Windows + Chrome 에뮬레이션 390x844 모바일 · next start 프로덕션 빌드,SEC-002 / CORE-003,/offline PWA 폴백 — 서비스워커 오프라인 실검증 대상
+08_매칭_온보딩_모바일.png,2026-10-24,Windows + Chrome 390x844 모바일 서빙,/match/onboarding (MATCH-001),1차 매칭 취향 온보딩 모바일 라이트 · 카테고리별 아코디언 선택 폼
+09_매칭_온보딩_데스크톱.png,2026-10-24,Windows + Chrome 1440x900 데스크톱 서빙,/match/onboarding (MATCH-001),1차 매칭 취향 온보딩 데스크톱 라이트 · 반응형 와이드 레이아웃
+10_매칭_추천_모바일.png,2026-10-24,Windows + Chrome 390x844 모바일 서빙,/match/recommend (MATCH-002),오늘의 추천 카드 리스트 모바일 라이트 · 문답 궁합(통했어요) 및 취향 일치 태그
+11_매칭_추천_데스크톱.png,2026-10-24,Windows + Chrome 1440x900 데스크톱 서빙,/match/recommend (MATCH-002),오늘의 추천 카드 리스트 데스크톱 라이트 · 2열 그리드 배치
+12_매칭_문답_모바일_라이트.png,2026-10-24,Windows + Chrome 390x844 모바일 라이트 서빙,/match/qna (MATCH-009),프로필 문답 40문항 목록 모바일 라이트 · 카테고리 칩 및 질문 카드
+13_매칭_문답_모바일_다크.png,2026-10-24,Windows + Chrome 390x844 모바일 다크 서빙,/match/qna (MATCH-009),프로필 문답 40문항 목록 모바일 다크 · 피치 악센트 다크 테마
+14_매칭_공통질문_모바일_라이트.png,2026-10-24,Windows + Chrome 390x844 모바일 라이트 서빙,/match/common (MATCH-009),공통 질문 블라인드 비교 모바일 라이트 · 상단 궁합 토스트 알림
+15_매칭_공통질문_모바일_다크.png,2026-10-24,Windows + Chrome 390x844 모바일 다크 서빙,/match/common (MATCH-009),공통 질문 블라인드 비교 모바일 다크 · 블라인드 잠금 및 답변 비교

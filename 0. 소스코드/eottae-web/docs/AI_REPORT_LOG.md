@@ -144,3 +144,27 @@
 - [검증] 저장소 Pages 활성화 — `POST /repos/sterran123/eottae/pages` build_type=workflow (201) 후 실패 런 재실행 → build·deploy 잡 모두 success
 - [검증] 실사이트 확인 — https://sterran123.github.io/eottae/ 및 match/·offline/·manifest·sw.js·api/health(JSON 실응답)·아이콘·폰트 전부 200
 - [미구현/보류] 실사이트 HTTPS 상에서 SW 설치·오프라인 전환·Lighthouse 검증은 별도 수행 (배포 자체는 완료)
+
+## 2026-10-24 1차 매칭 온보딩·추천·문답 UI 구현 (오하율 작업)
+- [신규] src/lib/match/types.ts | 매칭 DTO, 프로필 문답/궁합(CompatibilitySummary, CommonQuestionState) 및 RecommendProfile.qnaSharedCount 정의
+- [신규] src/lib/match/demo-data.ts | 취향 온보딩 폼 선택지(관심사/대화스타일/MBTI/연령대/거리) 및 데모 데이터
+- [신규] src/lib/match/demo-recommendations.ts | 오늘의 추천 카드 데모 데이터 및 문답 겹친 개수(qnaSharedCount) 반영
+- [신규] src/lib/match/demo-qna.ts | 프로필 문답 40문항 + 공통 질문 10문항 데모 데이터 및 관심사/카테고리 매핑
+- [신규] src/components/match/icons.tsx | 매칭 모듈 전용 인라인 SVG 아이콘 모음 (외부 폰트/CDN 미의존)
+- [신규] src/components/match/OnboardingForm.tsx | 취향 온보딩 폼 (카테고리별 아코디언, 태그 복수선택, 프로그레스 바)
+- [신규] src/components/match/RecommendCard.tsx | 추천 상대 1명 카드 컴포넌트 (사진 블라인드/미리보기, 취향 공통 태그, 문답 궁합 뱃지)
+- [신규] src/components/match/RecommendList.tsx | 추천 카드 리스트 및 상태(로딩 스켈레톤/빈 상태/에러) 처리
+- [신규] src/components/match/QnaQuestionCard.tsx | 프로필 문답 질문/선택지 카드 컴포넌트
+- [신규] src/components/match/ProfileQna.tsx | 프로필 문답 40문항 목록 및 모달 컴포넌트
+- [신규] src/components/match/CompatToast.tsx | 공통 질문 상단 궁합 알림 토스트 컴포넌트 ("N개 통했어요")
+- [신규] src/components/match/CommonQna.tsx | 공통 질문 블라인드 답변 비교 및 일치 배지 컴포넌트
+- [신규] src/app/match/match-tokens.css | 매칭 모듈 전용 피치 톤 컬러 토큰 정의
+- [신규] src/app/match/onboarding/page.tsx & match-onboarding.css | 취향 온보딩 라우트 (/match/onboarding)
+- [신규] src/app/match/recommend/page.tsx & match-recommend.css | 추천 리스트 라우트 (/match/recommend)
+- [신규] src/app/match/qna/page.tsx & match-qna.css | 프로필 문답 라우트 (/match/qna)
+- [신규] src/app/match/common/page.tsx & match-common.css | 공통 질문 라우트 (/match/common)
+- [신규] docs/참고_상용앱_문답구조_분석.md | 상용 데이팅 앱 18장 벤치마크 및 문답 구조 분석 보고서 (주한태·손준혁 공유용)
+- [신규] 3. 구현 이미지(5장이상)/ | 실제 구현 화면 캡처 8장(08~15) 배치 및 captions.csv 메타데이터 갱신
+- [픽스] Next.js 런타임 캐시 오류(Cannot find module './897.js') 해소 — feat/MATCH-009-common 브랜치 병합, .next 캐시 정리 및 클린 재빌드
+- [검증] npm run build PASS (정적 15개 라우트 프리렌더 완료), 브라우저 CDP 실검증 완료
+- [미결/위임] 성인 인증 게이트(MATCH-003/004) 및 추천/문답 API(MATCH-005/006/009) 연동 -> 주한태 서버 작업 완료 후 연동 예정
