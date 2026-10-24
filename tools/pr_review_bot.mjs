@@ -85,6 +85,8 @@ const MAX_PAGES = 30; // 목록 페이지네이션 상한 (3000건 — GitHub PR
 // push 직후에는 check-run 등록이 지연될 수 있다 — 이 시간을 넘겨도 check가 없으면
 // CI가 안 도는 것으로 보고 작성자에게 코멘트한다 (봇이 올린 head에는 check가 영원히 없다)
 const CI_GRACE_MS = 30 * 60 * 1000;
+// 판정 코멘트를 단 PR이 이 기간 동안 아무 변동 없이 열려 있으면 작성자에게 핑을 보낸다
+const REMIND_MS = 3 * 24 * 60 * 60 * 1000;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -294,6 +296,22 @@ async function main() {
         }
         return true;
       };
+
+      // 오래된 열린 PR 리마인드 — 이 sha에 이미 판정 코멘트를 달았는데 일정 기간
+      // 변동이 없으면 작성자 핑을 보낸다(sha당 1회). 리마인드 후에도 아래 판정은 계속한다.
+      const judged = (comments || []).some(
+        (c) =>
+          typeof c.body === "string" &&
+          c.body.includes(`<!-- pr-review-bot:${sha.slice(0, 10)}`),
+      );
+      const staleMs = Date.now() - Date.parse(pr.updated_at || "");
+      if (judged && Number.isFinite(staleMs) && staleMs > REMIND_MS) {
+        const days = Math.floor(staleMs / 86400000);
+        await say(
+          "remind",
+          `**${days}일째 변동 없이 열려 있습니다.** @${pr.user?.login} — 위 코멘트의 조치(충돌 해결·CI 수정·수동 리뷰 요청 등)를 확인하고 push하거나 답글을 남겨 주세요. push하면 자동으로 다시 판정합니다. 더 이상 진행하지 않는 PR이면 닫아 주세요.`,
+        );
+      }
 
       // 자동 판정 범위는 main 대상 PR — 다른 base 대상은 방치하지 않고 한 번 안내만 한다
       if (pr.base?.ref !== "main") {

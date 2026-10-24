@@ -1,0 +1,38 @@
+# 「어때?」 실사이트 헬스체크 — Pages 배포 후 + 매일 실제 URL이 살아있는지 확인한다.
+#   workflow_run: deploy-pages 완료 직후 — 배포가 깨진 채 끝나면 바로 이슈로 알린다
+#   schedule: 매일 — 배포 없이도 CDN/Pages 장애를 잡는다
+# 실패 시 이슈를 열고(중복 열지 않음), 전부 복구되면 그 이슈를 자동으로 닫는다.
+
+name: site-health
+
+on:
+  workflow_run:
+    workflows: [deploy-pages]
+    types: [completed]
+  schedule:
+    - cron: "33 9 * * *" # 매일 18:33 KST (UTC 09:33)
+  workflow_dispatch:
+
+permissions:
+  issues: write # 장애 이슈 생성·갱신·닫기
+
+concurrency:
+  group: site-health
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: 실사이트 헬스체크
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node tools/site_health_check.mjs

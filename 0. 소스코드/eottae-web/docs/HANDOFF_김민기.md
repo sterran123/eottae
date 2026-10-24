@@ -160,3 +160,8 @@ git config --global user.email "본인 GitHub 이메일 또는 noreply"
 자동화가 main을 직접 바꾸므로(봇 머지·Devin 세션) 로컬은 주기적으로 당겨줘야 한다. `tools/sync_repo.mjs`가 fetch→뒤처짐·깨끗 여부 판정→`--ff-only` pull을 수행한다(미커밋 변경·분기·다른 브랜치면 안전하게 건너뜀). 두 경로로 자동 실행된다:
 - **Devin CLI 세션 시작** — `.devin/hooks.v1.json`의 SessionStart 훅이 이 스크립트를 실행하고 결과를 세션 컨텍스트에 주입한다.
 - **Windows 작업 스케줄러** — 작업 `eottae-repo-sync`(매시간)가 `tools/sync_repo.cmd`를 실행해 `.repo-sync.log`에 누적한다. 재등록: `schtasks /create /tn "eottae-repo-sync" /tr "<repo>\tools\sync_repo.cmd" /sc hourly /f`.
+
+## 13. 실사이트 헬스체크 + PR 리마인드
+
+- `.github/workflows/site-health.yml` + `tools/site_health_check.mjs` — deploy-pages 완료 직후와 매일(18:33 KST) 실사이트 8개 핵심 경로(홈·match·offline·manifest·sw·api/health·아이콘·폰트)의 200+content-type을 검사한다. 실패하면 이슈를 열고(마커 dedupe — 열린 이슈가 있으면 갱신), 전부 복구되면 그 이슈에 복구 코멘트를 달고 자동으로 닫는다.
+- `tools/pr_review_bot.mjs` — 판정 코멘트를 단 PR이 3일 이상 변동 없이 열려 있으면 작성자 핑 코멘트를 단다(sha당 1회, `remind` 마커).
