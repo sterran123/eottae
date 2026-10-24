@@ -36,21 +36,21 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#7454c4' },
-    { media: '(prefers-color-scheme: dark)', color: '#10101b' },
-  ],
+  // 단일 theme-color — 선택된 테마에 맞춰 인라인 스크립트·ThemeToggle이 content를 동기화한다
+  // (기본 라이트 브랜드 #7454c4)
+  themeColor: '#7454c4',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko" suppressHydrationWarning>
       <body>
-        {/* 수동 테마(data-theme)를 첫 페인트 전에 적용해 깜빡임(FOUC) 방지 */}
+        {/* 저장된 테마(data-theme)를 첫 페인트 전에 적용해 깜빡임(FOUC) 방지.
+            'system'만 OS 설정을 따르고 미저장·잘못된 값은 기본 'light'로 동작한다 */}
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "try{var t=localStorage.getItem('eottae-theme');if(t==='light'||t==='dark'){document.documentElement.dataset.theme=t}}catch(e){}",
+              "try{var t=localStorage.getItem('eottae-theme');if('light cupcake cyberpunk disney dark system'.split(' ').indexOf(t)>=0){document.documentElement.dataset.theme=t;var C={light:'#7454c4',cupcake:'#c2578e',cyberpunk:'#0a0a14',disney:'#2f62b1',dark:'#10101b'},c=t==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?C.dark:C.light):C[t],m=document.querySelector('meta[name=theme-color]');if(m)m.content=c}}catch(e){}",
           }}
         />
         {/* JS 비활성 시 스크롤 리빌이 없으므로 [data-reveal] 숨김을 해제한다 */}

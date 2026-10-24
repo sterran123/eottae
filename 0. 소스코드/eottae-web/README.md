@@ -32,13 +32,16 @@ npm run build
 ## 구조
 - `src/app/layout.tsx` — 공통 shell, 메타데이터(manifest·theme-color·apple), 스킵 링크
 - `src/components/shared/` — `site-header`/`site-nav`(현재 페이지 표시)/`site-footer`/`service-card`
-- `src/app/globals.css` — 라이트·다크 토큰, 360/760/1024px 반응형, 접근성 포커스
+- `src/app/globals.css` — 6테마 토큰 + 아기자기 스킨(스캘럽 물결선·스티커 테이프·점선 원·스프링 모션), 360/760/1024px 반응형, 접근성 포커스·모션 감소 대응
 - `public/` — 로고 원본·PWA 아이콘·manifest
 
 ## 로고
 `public/eottae-logo-light.png`: 사용자 원본 보존(1678×937, 투명 배경 일부).
 `public/eottae-logo-dark.png`: 사용자 제공 원본(검정 불투명 배경, 보존용).
 `public/eottae-logo-dark-transparent.png`: BRAND-004 산출물 — 원본을 `tools/make_dark_logo.py`로 투명 알파+차분한 파스텔 변환. 헤더 다크모드에서는 이 파일을 사용.
+
+## 테마 (6종)
+헤더 피커에서 선택 — **라이트(기본)** · 컵케잌(파스텔) · 사이버펑크(다크+네온) · 디즈니(캐슬블루+골드) · 다크 · 시스템(OS 추적). `data-theme` 속성 + localStorage(`eottae-theme`) 저장, globals.css 토큰 기반이라 전 페이지에 적용. FOUC 방지 인라인 스크립트가 첫 페인트 전에 적용하고 `theme-color` 메타도 테마색으로 동기화.
 
 ## PWA (CORE-003)
 - `public/manifest.webmanifest`: name·start_url·display·theme_color·**icons(192/512/maskable)** 구성.
