@@ -13,8 +13,21 @@ import type {
   InterestCategory,
   InterestOption,
   MbtiType,
+  RelationGoal,
   VerifiedIdentity,
 } from './types';
+
+// ---- 찾는 관계 목적 옵션 (성별 선택 후 노출) ----
+export const RELATION_OPTIONS: ReadonlyArray<{
+  value: RelationGoal;
+  label: string;
+  emoji: string;
+}> = [
+  { value: 'neighbor_friend', label: '부담 없는 동네 친구', emoji: '🏡' },
+  { value: 'casual', label: '두근두근 썸부터', emoji: '💓' },
+  { value: 'serious', label: '진지한 연애를 시작하고 싶어요', emoji: '💍' },
+  { value: 'open', label: '정해두지 않고 느낌 가는 대로', emoji: '⭐' },
+];
 
 // ---- DEMO: 검증된 인증 정보 (실제로는 주한태가 세션으로 제공) ----
 export const DEMO_IDENTITY: VerifiedIdentity = {

@@ -227,3 +227,43 @@ export function IconAcorn(p: IconProps) {
     </svg>
   );
 }
+
+// ---- MATCH-009 문답 아이콘 ----
+
+export function IconRefresh(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      {p.title && <title>{p.title}</title>}
+      <path d="M20 11a8 8 0 1 0 -2 5" />
+      <path d="M20 4v7h-7" />
+    </svg>
+  );
+}
+
+export function IconTrash(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      {p.title && <title>{p.title}</title>}
+      <path d="M4 7h16M10 11v6M14 11v6M5 7l1 13h12l1 -13M9 7V4h6v3" />
+    </svg>
+  );
+}
+
+export function IconPencil(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      {p.title && <title>{p.title}</title>}
+      <path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0 -3 -3L5 17v3z" />
+      <path d="M13.5 6.5l3 3" />
+    </svg>
+  );
+}
+
+export function IconSparkle(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      {p.title && <title>{p.title}</title>}
+      <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" />
+    </svg>
+  );
+}

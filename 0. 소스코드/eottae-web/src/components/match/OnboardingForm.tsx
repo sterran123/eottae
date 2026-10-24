@@ -19,6 +19,7 @@ import {
   INTEREST_CATEGORIES,
   INTEREST_LABELS,
   MBTI_PREVIEW_COUNT,
+  RELATION_OPTIONS,
 } from '@/lib/match/demo-data';
 import {
   INTEREST_RULES,
@@ -27,6 +28,7 @@ import {
   type MbtiType,
   type MyMbti,
   type OnboardingDraft,
+  type RelationGoal,
   type VerifiedIdentity,
 } from '@/lib/match/types';
 import {
@@ -79,6 +81,7 @@ export default function OnboardingForm({
   const [showAllMbti, setShowAllMbti] = useState(false);
   const [showAvoid, setShowAvoid] = useState(false);
   const [target, setTarget] = useState<MatchTargetPreference | null>(null);
+  const [relationGoal, setRelationGoal] = useState<RelationGoal | null>(null);
   const [interests, setInterests] = useState<string[]>([]);
   // 펼쳐진 관심사 카테고리(아코디언). 기본은 첫 카테고리만 열림.
   const [openCats, setOpenCats] = useState<Set<InterestCategoryId>>(
@@ -90,19 +93,21 @@ export default function OnboardingForm({
     ? ALL_MBTI
     : ALL_MBTI.slice(0, MBTI_PREVIEW_COUNT);
 
-  // (B) MBTI·상대를 먼저 고르면 관심사 섹션이 열린다.
-  const basicsDone = myMbti !== null && target !== null;
+  // (B) 단계 노출: 성별 선택 → 관계 섹션, 관계까지 선택 → 관심사 섹션.
+  const targetDone = target !== null;
+  const basicsDone = myMbti !== null && target !== null && relationGoal !== null;
 
   // ---- 유효성 (파생 상태) ----
   const errors = useMemo(() => {
     const list: string[] = [];
     if (myMbti === null) list.push('MBTI를 선택해 주세요.');
     if (target === null) list.push('만나고 싶은 상대를 선택해 주세요.');
+    if (relationGoal === null) list.push('찾는 관계를 선택해 주세요.');
     if (interests.length < INTEREST_RULES.min) {
       list.push(`관심사를 ${INTEREST_RULES.min}개 이상 골라 주세요.`);
     }
     return list;
-  }, [myMbti, target, interests]);
+  }, [myMbti, target, relationGoal, interests]);
 
   const isValid = errors.length === 0;
   const interestFull = interests.length >= INTEREST_RULES.max;
@@ -155,6 +160,7 @@ export default function OnboardingForm({
       myMbti,
       avoidMbti,
       targetPreference: target,
+      relationGoal,
       interestIds: interests,
     };
     if (onSubmit) onSubmit(draft);
@@ -300,6 +306,35 @@ export default function OnboardingForm({
             </button>
           ))}
         </div>
+
+        {/* (B) 성별 선택 후 관계 목적 노출 — 화면 짧게 유지 */}
+        {targetDone && (
+          <div className="mt-onb__relation">
+            <div className="mt-onb__label mt-onb__label--sub">
+              어떤 관계를 찾나요 <span className="mt-onb__new">NEW</span>
+            </div>
+            <p className="mt-onb__hint">맞춤 질문을 추천해 드려요</p>
+            <div role="radiogroup" aria-label="찾는 관계">
+              {RELATION_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={relationGoal === opt.value}
+                  className={`mt-onb__relation-opt${
+                    relationGoal === opt.value ? ' is-on' : ''
+                  }`}
+                  onClick={() => setRelationGoal(opt.value)}
+                >
+                  <span className="mt-onb__relation-emoji" aria-hidden="true">
+                    {opt.emoji}
+                  </span>
+                  <span>{opt.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </fieldset>
 
       {/* 관심사 — (B) MBTI·상대 선택 후 열림, (A) 카테고리 아코디언 */}

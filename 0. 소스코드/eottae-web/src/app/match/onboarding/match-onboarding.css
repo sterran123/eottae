@@ -304,6 +304,51 @@
   color: var(--match-accent-deep);
 }
 
+/* (B) 어떤 관계를 찾나요 — 성별 선택 후 노출 */
+.mt-onb__relation {
+  margin-top: 16px;
+}
+.mt-onb__label--sub {
+  display: block;
+  margin-bottom: 2px;
+}
+.mt-onb__new {
+  font-size: 10px;
+  color: var(--match-accent-deep);
+  font-weight: 500;
+  margin-left: 2px;
+}
+.mt-onb__relation [role='radiogroup'] {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.mt-onb__relation-opt {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  text-align: left;
+  border: 0.5px solid var(--match-line-soft);
+  background: var(--match-paper);
+  border-radius: 12px;
+  padding: 10px 13px;
+  font-size: 12px;
+  color: var(--match-sub);
+  font-family: inherit;
+  cursor: pointer;
+}
+.mt-onb__relation-opt.is-on {
+  border: 1.5px solid var(--match-accent);
+  background: var(--match-soft);
+  color: var(--match-accent-ink);
+  font-weight: 500;
+}
+.mt-onb__relation-emoji {
+  font-size: 14px;
+  flex: 0 0 auto;
+}
+
 /* 관심사 — (A) 카테고리 아코디언 */
 .mt-onb__accordion {
   display: flex;
