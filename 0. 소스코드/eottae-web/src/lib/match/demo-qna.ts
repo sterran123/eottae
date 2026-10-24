@@ -205,3 +205,36 @@ export const DEMO_MY_ANSWERS: Record<string, { optionId: string | null; customTe
 /** 전체 문항 수 · 답변 수(진행률 표시). */
 export const DEMO_QNA_TOTAL = DEMO_QUESTIONS.length;
 export const DEMO_QNA_ANSWERED = Object.keys(DEMO_MY_ANSWERS).length;
+
+// ---- DEMO: 상대(가을)의 답변 — 공통 질문/궁합 계산용 ----
+//  실제로는 주한태가 '겹친 개수'만 내려주며, 상대 답 내용은 공개 단계에서만.
+//  DEMO 에서는 블라인드 공개 흐름을 시연하기 위해 로컬에 둔다.
+export const DEMO_PARTNER_ANSWERS: Record<string, { optionId: string | null; customText?: string }> = {
+  lv1: { optionId: 'b' }, // 나와 같음 (중요한 것만 공유)
+  lv6: { optionId: 'a' }, // 나와 같음 (신뢰)
+  ls1: { optionId: 'b' }, // 나와 다름
+  ls3: { optionId: 'a' }, // 나와 같음
+  dt1: { optionId: 'b' }, // 나와 같음 (전시·문화)
+  mr1: { optionId: 'a' }, // 나와 다름
+  ls2: { optionId: 'a' }, // 상대만 답함
+};
+
+/**
+ * DEMO 궁합 집계. 내 답 + 상대 답에서 '둘 다 답하고 같은 보기'를 센다.
+ * 자유입력(customText)은 비교 제외(1차 미지원). 개수만 반환(점수·% 금지).
+ */
+export function demoCompatibility(
+  mine: Record<string, { optionId: string | null; customText?: string }>,
+  partner: Record<string, { optionId: string | null; customText?: string }>,
+): { sharedCount: number; bothAnswered: number } {
+  let shared = 0;
+  let both = 0;
+  for (const qid of Object.keys(mine)) {
+    const a = mine[qid];
+    const b = partner[qid];
+    if (!b) continue;
+    both += 1;
+    if (a.optionId !== null && a.optionId === b.optionId) shared += 1;
+  }
+  return { sharedCount: shared, bothAnswered: both };
+}
