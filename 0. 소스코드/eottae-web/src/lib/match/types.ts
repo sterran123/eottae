@@ -197,3 +197,11 @@ export interface CompatibilitySummary {
   sharedCount: number;
   bothAnswered: number;
 }
+
+/**
+ * 공통 질문(블라인드) 상태.
+ *  unanswered : 내가 아직 안 답함.
+ *  waiting    : 나만 답함, 상대 대기(상대 답 가림).
+ *  revealed   : 둘 다 답함, 공개.
+ */
+export type CommonQuestionState = 'unanswered' | 'waiting' | 'revealed';

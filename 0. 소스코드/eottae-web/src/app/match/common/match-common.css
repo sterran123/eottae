@@ -1,0 +1,251 @@
+/* ============================================================
+   저장 경로: src/app/match/common/match-common.css
+   담당: 오하율 · MATCH-009 (공통 질문 · 궁합 토스트)
+   역할: 공통 질문 블라인드 화면 + 궁합 토스트 스타일. 토큰은 ../match-tokens.css.
+   ============================================================ */
+
+@import '../match-tokens.css';
+
+.mt-cq-page {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.mt-cq {
+  position: relative;
+  background: var(--match-bg);
+  border: 0.5px solid var(--match-line);
+  border-radius: 20px;
+  overflow: hidden;
+  color: var(--match-ink);
+}
+
+/* ---- 궁합 토스트 ---- */
+.mt-toast {
+  position: sticky;
+  top: 8px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 10px 0;
+  padding: 10px 12px;
+  background: var(--match-paper);
+  border: 1px solid var(--match-chip-line);
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(230, 120, 140, 0.18);
+  animation: mt-toast-in 0.26s ease;
+}
+.mt-toast.is-leaving {
+  animation: mt-toast-out 0.26s ease forwards;
+}
+.mt-toast__ico {
+  width: 16px;
+  height: 16px;
+  color: var(--match-accent);
+  flex: 0 0 auto;
+}
+.mt-toast__text {
+  flex: 1;
+  font-size: 12px;
+  color: var(--match-ink);
+}
+.mt-toast__text strong {
+  color: var(--match-accent-ink);
+  font-weight: 500;
+}
+.mt-toast__close {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--match-hint);
+  padding: 2px;
+  display: flex;
+  flex: 0 0 auto;
+}
+@keyframes mt-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes mt-toast-out {
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mt-toast,
+  .mt-toast.is-leaving {
+    animation: none;
+  }
+}
+
+/* ---- 헤더 ---- */
+.mt-cq__head {
+  background: var(--match-paper);
+  padding: 13px 16px;
+  border-bottom: 0.5px solid var(--match-line);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.mt-cq__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #ffd9c7, #ffc0d4);
+  flex: 0 0 auto;
+}
+.mt-cq__title {
+  font-size: 14px;
+  font-weight: 500;
+}
+.mt-cq__sub {
+  font-size: 10.5px;
+  color: var(--match-hint);
+}
+
+/* ---- 질문 리스트 ---- */
+.mt-cq__body {
+  padding: 13px;
+}
+.mt-cq-item {
+  background: var(--match-paper);
+  border: 0.5px solid var(--match-line);
+  border-radius: 15px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.mt-cq-item.is-revealed {
+  border: 1px solid var(--match-chip-line);
+}
+.mt-cq-item:last-child {
+  margin-bottom: 0;
+}
+.mt-cq-item__q-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.mt-cq-item__q {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.mt-cq-item__hit {
+  flex: 0 0 auto;
+  font-size: 9.5px;
+  color: var(--match-mutual-ink);
+  background: var(--match-mutual-bg);
+  border-radius: 99px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+/* 답 전 — 보기 */
+.mt-cq-item__opts {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mt-cq-item__opt {
+  width: 100%;
+  text-align: left;
+  padding: 9px 12px;
+  border: 0.5px solid var(--match-line-soft);
+  border-radius: 10px;
+  background: var(--match-paper);
+  font-size: 12px;
+  color: var(--match-sub);
+  font-family: inherit;
+  cursor: pointer;
+}
+.mt-cq-item__opt:hover {
+  border-color: var(--match-accent);
+  background: var(--match-soft);
+  color: var(--match-accent-ink);
+}
+
+/* 답변 공개/대기 */
+.mt-cq-item__answers {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.mt-cq-ans {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 10px;
+  padding: 9px 12px;
+}
+.mt-cq-ans__who {
+  flex: 0 0 auto;
+  font-size: 9px;
+  background: var(--match-paper);
+  border-radius: 5px;
+  padding: 2px 6px;
+}
+.mt-cq-ans__text {
+  font-size: 12px;
+  font-weight: 500;
+}
+.mt-cq-ans--mine {
+  background: var(--match-soft);
+}
+.mt-cq-ans--mine .mt-cq-ans__who {
+  color: var(--match-accent-ink);
+}
+.mt-cq-ans--mine .mt-cq-ans__text {
+  color: var(--match-accent-ink);
+}
+.mt-cq-ans--locked {
+  background: var(--match-line);
+}
+.mt-cq-ans--locked .mt-cq-ans__who {
+  color: var(--match-hint);
+}
+.mt-cq-ans__lock {
+  font-size: 11.5px;
+  color: var(--match-hint);
+}
+.mt-cq-ans--theirs {
+  background: var(--match-line);
+}
+.mt-cq-ans--theirs .mt-cq-ans__who {
+  color: var(--match-sub);
+}
+.mt-cq-ans--theirs .mt-cq-ans__text {
+  color: var(--match-sub);
+}
+.mt-cq-ans--hit {
+  background: var(--match-mutual-bg);
+}
+.mt-cq-ans--hit .mt-cq-ans__who {
+  color: var(--match-mutual-ink);
+}
+.mt-cq-ans--hit .mt-cq-ans__text {
+  color: var(--match-mutual-ink);
+}
+
+.mt-cq__demo {
+  text-align: center;
+  font-size: 10px;
+  color: var(--match-hint);
+  margin: 0 0 12px;
+}
+
+/* 접근성: 키보드 포커스 */
+.mt-cq button:focus-visible {
+  outline: 2px solid var(--match-focus);
+  outline-offset: 2px;
+}
