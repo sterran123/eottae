@@ -24,6 +24,7 @@ import {
   IconClock,
   IconHeartFill,
   IconPin,
+  IconSparkle,
   IconUserSilhouette,
   IconX,
 } from './icons';
@@ -129,6 +130,15 @@ export default function RecommendCard({
               )}
             </div>
           )}
+
+          {/* 문답 궁합 — 겹친 개수만(사실). 둘 다 답한 경우에만 표시 */}
+          {typeof profile.qnaSharedCount === 'number' &&
+            profile.qnaSharedCount > 0 && (
+              <div className="mt-rec__compat">
+                <IconSparkle className="mt-ico mt-ico--xs" />
+                문답 {profile.qnaSharedCount}개 통했어요
+              </div>
+            )}
 
           {/* 액션 */}
           {!isMutual && (

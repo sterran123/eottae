@@ -57,6 +57,7 @@ export const DEMO_RECOMMENDATIONS: RecommendProfile[] = [
     distance: 'within_3km',
     recency: 'now',
     relation: 'none',
+    qnaSharedCount: 7,
   },
   {
     id: 'rec_haneul',
@@ -69,6 +70,7 @@ export const DEMO_RECOMMENDATIONS: RecommendProfile[] = [
     distance: 'same_town',
     recency: 'today',
     relation: 'none',
+    qnaSharedCount: 11,
   },
   {
     id: 'rec_gaeul',
@@ -81,6 +83,7 @@ export const DEMO_RECOMMENDATIONS: RecommendProfile[] = [
     distance: 'within_5km',
     recency: 'days_2',
     relation: 'mutual',
+    qnaSharedCount: 4,
   },
   {
     id: 'rec_doyun',
@@ -93,5 +96,6 @@ export const DEMO_RECOMMENDATIONS: RecommendProfile[] = [
     distance: 'within_10km',
     recency: 'days_3plus',
     relation: 'liked_by_me',
+    // 아직 문답 답이 적어 궁합 미집계(undefined) — 표시 안 함
   },
 ];
