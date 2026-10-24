@@ -2,61 +2,10 @@
    저장 경로: src/app/match/onboarding/match-onboarding.css
    담당: 오하율 · MATCH-001 (취향/가치관 입력)
    역할: 매칭 온보딩 전용 스타일. 공통 globals.css(김민기)는 수정하지 않음.
-
-   [색상 토큰] 매칭 모듈 전용 피치 톤. 공통 브랜드(보라)와 분리.
-   팀 합의로 브랜드 전체를 밝게 바꾸게 되면 이 :root 블록만 교체.
-   다크 모드는 globals.css 와 동일하게 :root[data-theme='dark'] 기준.
+   색상 토큰은 ../match-tokens.css 에서 공유한다.
    ============================================================ */
 
-:root {
-  --match-ink: #3f2f33;
-  --match-sub: #8a7378;
-  --match-hint: #a98c93;
-  --match-accent: #f2859d;
-  --match-accent-deep: #e8738f;
-  --match-accent-ink: #c25f78;
-  --match-soft: #fdeef1;
-  --match-bg: #fff7f3;
-  --match-paper: #ffffff;
-  --match-line: #f3e2da;
-  --match-line-soft: #f0ddd5;
-  --match-chip-line: #f0d0d8;
-  --match-track: #fbe4e9;
-  --match-focus: #e8738f;
-  --match-ok-bg: #f3fbf4;
-  --match-ok-line: #c7e9ce;
-  --match-ok-ink: #2f6b3e;
-  --match-ok-sub: #79a583;
-  --match-warn-bg: #fff6e8;
-  --match-warn-line: #f0d9a8;
-  --match-warn-ink: #9a6a1e;
-  --match-err-ink: #c0392b;
-}
-
-:root[data-theme='dark'] {
-  --match-ink: #f6e9ec;
-  --match-sub: #c7a9af;
-  --match-hint: #a98891;
-  --match-accent: #e8738f;
-  --match-accent-deep: #f2859d;
-  --match-accent-ink: #f2a6b8;
-  --match-soft: #3a222b;
-  --match-bg: #1c141a;
-  --match-paper: #241a20;
-  --match-line: #3b2a31;
-  --match-line-soft: #44313a;
-  --match-chip-line: #4a333c;
-  --match-track: #3a222b;
-  --match-focus: #f2859d;
-  --match-ok-bg: #1d2a20;
-  --match-ok-line: #38563f;
-  --match-ok-ink: #9fd3ac;
-  --match-ok-sub: #7ba487;
-  --match-warn-bg: #352a1a;
-  --match-warn-line: #5f4a2a;
-  --match-warn-ink: #e8c68a;
-  --match-err-ink: #f0998e;
-}
+@import '../match-tokens.css';
 
 .mt-onb-page {
   max-width: 480px;
@@ -189,6 +138,18 @@
   margin: 3px 0 9px;
 }
 
+/* (B) 관심사 잠금 안내 */
+.mt-onb__locked {
+  font-size: 11.5px;
+  color: var(--match-hint);
+  background: var(--match-soft);
+  border: 0.5px dashed var(--match-chip-line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 9px 0 0;
+  text-align: center;
+}
+
 /* MBTI 그리드 */
 .mt-onb__mbti-grid {
   display: grid;
@@ -218,6 +179,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  white-space: nowrap;
   transition: background 0.12s;
 }
 .mt-chip--square {
@@ -342,20 +304,103 @@
   color: var(--match-accent-deep);
 }
 
-/* 관심사 */
-.mt-onb__cat {
-  margin-bottom: 12px;
+/* (B) 어떤 관계를 찾나요 — 성별 선택 후 노출 */
+.mt-onb__relation {
+  margin-top: 16px;
 }
-.mt-onb__cat-label {
-  font-size: 11px;
+.mt-onb__label--sub {
+  display: block;
+  margin-bottom: 2px;
+}
+.mt-onb__new {
+  font-size: 10px;
+  color: var(--match-accent-deep);
+  font-weight: 500;
+  margin-left: 2px;
+}
+.mt-onb__relation [role='radiogroup'] {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.mt-onb__relation-opt {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  text-align: left;
+  border: 0.5px solid var(--match-line-soft);
+  background: var(--match-paper);
+  border-radius: 12px;
+  padding: 10px 13px;
+  font-size: 12px;
+  color: var(--match-sub);
+  font-family: inherit;
+  cursor: pointer;
+}
+.mt-onb__relation-opt.is-on {
+  border: 1.5px solid var(--match-accent);
+  background: var(--match-soft);
   color: var(--match-accent-ink);
   font-weight: 500;
-  margin-bottom: 6px;
 }
-.mt-onb__tags {
+.mt-onb__relation-emoji {
+  font-size: 14px;
+  flex: 0 0 auto;
+}
+
+/* 관심사 — (A) 카테고리 아코디언 */
+.mt-onb__accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mt-acc {
+  border: 0.5px solid var(--match-line);
+  border-radius: 12px;
+  background: var(--match-paper);
+  overflow: hidden;
+}
+.mt-acc__head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px;
+  background: none;
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
+  color: var(--match-ink);
+}
+.mt-acc__head .mt-ico {
+  color: var(--match-hint);
+}
+.mt-acc__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.mt-acc__count {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 99px;
+  background: var(--match-accent);
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.mt-acc__body {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  padding: 2px 14px 14px;
 }
 
 /* 안전 안내 */

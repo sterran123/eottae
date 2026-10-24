@@ -19,13 +19,16 @@ import {
   INTEREST_CATEGORIES,
   INTEREST_LABELS,
   MBTI_PREVIEW_COUNT,
+  RELATION_OPTIONS,
 } from '@/lib/match/demo-data';
 import {
   INTEREST_RULES,
+  type InterestCategoryId,
   type MatchTargetPreference,
   type MbtiType,
   type MyMbti,
   type OnboardingDraft,
+  type RelationGoal,
   type VerifiedIdentity,
 } from '@/lib/match/types';
 import {
@@ -78,26 +81,45 @@ export default function OnboardingForm({
   const [showAllMbti, setShowAllMbti] = useState(false);
   const [showAvoid, setShowAvoid] = useState(false);
   const [target, setTarget] = useState<MatchTargetPreference | null>(null);
+  const [relationGoal, setRelationGoal] = useState<RelationGoal | null>(null);
   const [interests, setInterests] = useState<string[]>([]);
+  // 펼쳐진 관심사 카테고리(아코디언). 기본은 첫 카테고리만 열림.
+  const [openCats, setOpenCats] = useState<Set<InterestCategoryId>>(
+    () => new Set([INTEREST_CATEGORIES[0]?.id].filter(Boolean) as InterestCategoryId[]),
+  );
   const [submitted, setSubmitted] = useState(false);
 
   const visibleMbti = showAllMbti
     ? ALL_MBTI
     : ALL_MBTI.slice(0, MBTI_PREVIEW_COUNT);
 
+  // (B) 단계 노출: 성별 선택 → 관계 섹션, 관계까지 선택 → 관심사 섹션.
+  const targetDone = target !== null;
+  const basicsDone = myMbti !== null && target !== null && relationGoal !== null;
+
   // ---- 유효성 (파생 상태) ----
   const errors = useMemo(() => {
     const list: string[] = [];
     if (myMbti === null) list.push('MBTI를 선택해 주세요.');
     if (target === null) list.push('만나고 싶은 상대를 선택해 주세요.');
+    if (relationGoal === null) list.push('찾는 관계를 선택해 주세요.');
     if (interests.length < INTEREST_RULES.min) {
       list.push(`관심사를 ${INTEREST_RULES.min}개 이상 골라 주세요.`);
     }
     return list;
-  }, [myMbti, target, interests]);
+  }, [myMbti, target, relationGoal, interests]);
 
   const isValid = errors.length === 0;
   const interestFull = interests.length >= INTEREST_RULES.max;
+
+  // 카테고리별 선택 개수(아코디언 헤더 표시용).
+  const countByCat = useMemo(() => {
+    const map = new Map<InterestCategoryId, number>();
+    for (const cat of INTEREST_CATEGORIES) {
+      map.set(cat.id, cat.interestIds.filter((id) => interests.includes(id)).length);
+    }
+    return map;
+  }, [interests]);
 
   // ---- 핸들러 ----
   function toggleInterest(id: string) {
@@ -105,6 +127,15 @@ export default function OnboardingForm({
       if (prev.includes(id)) return prev.filter((x) => x !== id);
       if (prev.length >= INTEREST_RULES.max) return prev; // 최대치 초과 무시
       return [...prev, id];
+    });
+  }
+
+  function toggleCat(id: InterestCategoryId) {
+    setOpenCats((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
     });
   }
 
@@ -129,6 +160,7 @@ export default function OnboardingForm({
       myMbti,
       avoidMbti,
       targetPreference: target,
+      relationGoal,
       interestIds: interests,
     };
     if (onSubmit) onSubmit(draft);
@@ -274,43 +306,106 @@ export default function OnboardingForm({
             </button>
           ))}
         </div>
+
+        {/* (B) 성별 선택 후 관계 목적 노출 — 화면 짧게 유지 */}
+        {targetDone && (
+          <div className="mt-onb__relation">
+            <div className="mt-onb__label mt-onb__label--sub">
+              어떤 관계를 찾나요 <span className="mt-onb__new">NEW</span>
+            </div>
+            <p className="mt-onb__hint">맞춤 질문을 추천해 드려요</p>
+            <div role="radiogroup" aria-label="찾는 관계">
+              {RELATION_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={relationGoal === opt.value}
+                  className={`mt-onb__relation-opt${
+                    relationGoal === opt.value ? ' is-on' : ''
+                  }`}
+                  onClick={() => setRelationGoal(opt.value)}
+                >
+                  <span className="mt-onb__relation-emoji" aria-hidden="true">
+                    {opt.emoji}
+                  </span>
+                  <span>{opt.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </fieldset>
 
-      {/* 관심사 */}
-      <fieldset className="mt-onb__field">
+      {/* 관심사 — (B) MBTI·상대 선택 후 열림, (A) 카테고리 아코디언 */}
+      <fieldset className="mt-onb__field" aria-disabled={!basicsDone}>
         <legend className="mt-onb__label">
           관심사 <span className="mt-onb__accent">{INTEREST_RULES.min}개 이상</span>
         </legend>
-        <p className="mt-onb__hint">
-          최소 {INTEREST_RULES.min}개, 최대 {INTEREST_RULES.max}개 · 겹치는 취향으로
-          추천해요 ({interests.length}/{INTEREST_RULES.max})
-        </p>
-        {INTEREST_CATEGORIES.map((cat) => (
-          <div key={cat.id} className="mt-onb__cat">
-            <div className="mt-onb__cat-label">{cat.label}</div>
-            <div className="mt-onb__tags">
-              {cat.interestIds.map((id) => {
-                const on = interests.includes(id);
-                const blocked = !on && interestFull;
+
+        {!basicsDone ? (
+          <p className="mt-onb__locked">
+            MBTI와 만나고 싶은 상대를 먼저 골라주세요.
+          </p>
+        ) : (
+          <>
+            <p className="mt-onb__hint">
+              최소 {INTEREST_RULES.min}개, 최대 {INTEREST_RULES.max}개 · 겹치는
+              취향으로 추천해요 ({interests.length}/{INTEREST_RULES.max})
+            </p>
+            <div className="mt-onb__accordion">
+              {INTEREST_CATEGORIES.map((cat) => {
+                const open = openCats.has(cat.id);
+                const count = countByCat.get(cat.id) ?? 0;
                 return (
-                  <button
-                    key={id}
-                    type="button"
-                    aria-pressed={on}
-                    disabled={blocked}
-                    className={`mt-chip${on ? ' is-on' : ''}${
-                      blocked ? ' is-blocked' : ''
-                    }`}
-                    onClick={() => toggleInterest(id)}
-                  >
-                    {INTEREST_LABELS[id] ?? id}
-                    {on && <IconCheck className="mt-ico mt-ico--xs" />}
-                  </button>
+                  <div key={cat.id} className="mt-acc">
+                    <button
+                      type="button"
+                      className="mt-acc__head"
+                      aria-expanded={open}
+                      onClick={() => toggleCat(cat.id)}
+                    >
+                      <span className="mt-acc__title">
+                        {cat.label}
+                        {count > 0 && (
+                          <span className="mt-acc__count">{count}</span>
+                        )}
+                      </span>
+                      {open ? (
+                        <IconChevronUp className="mt-ico mt-ico--sm" />
+                      ) : (
+                        <IconChevronDown className="mt-ico mt-ico--sm" />
+                      )}
+                    </button>
+                    {open && (
+                      <div className="mt-acc__body">
+                        {cat.interestIds.map((id) => {
+                          const on = interests.includes(id);
+                          const blocked = !on && interestFull;
+                          return (
+                            <button
+                              key={id}
+                              type="button"
+                              aria-pressed={on}
+                              disabled={blocked}
+                              className={`mt-chip${on ? ' is-on' : ''}${
+                                blocked ? ' is-blocked' : ''
+                              }`}
+                              onClick={() => toggleInterest(id)}
+                            >
+                              {INTEREST_LABELS[id] ?? id}
+                              {on && <IconCheck className="mt-ico mt-ico--xs" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
-          </div>
-        ))}
+          </>
+        )}
       </fieldset>
 
       {/* 안전 안내 */}

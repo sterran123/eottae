@@ -126,3 +126,144 @@ export function IconShieldHeart(p: IconProps) {
     </svg>
   );
 }
+
+// ---- MATCH-002 추천 아이콘 ----
+
+export function IconPin(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      {p.title && <title>{p.title}</title>}
+      <path d="M12 21s-7 -5.5 -7 -11a7 7 0 0 1 14 0c0 5.5 -7 11 -7 11z" />
+      <circle cx="12" cy="10" r="2.2" />
+    </svg>
+  );
+}
+
+export function IconClock(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      {p.title && <title>{p.title}</title>}
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </svg>
+  );
+}
+
+export function IconX(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      {p.title && <title>{p.title}</title>}
+      <path d="M6 6l12 12M18 6L6 18" />
+    </svg>
+  );
+}
+
+export function IconBlock(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      {p.title && <title>{p.title}</title>}
+      <circle cx="12" cy="12" r="9" />
+      <path d="M6 6l12 12" />
+    </svg>
+  );
+}
+
+/** 사람 실루엣(사진 비공개 자리표시). 채움 아이콘. */
+export function IconUserSilhouette(p: IconProps) {
+  const { title, ...rest } = p;
+  return (
+    <svg
+      width={36}
+      height={36}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden={title ? undefined : true}
+      role={title ? 'img' : undefined}
+      {...rest}
+    >
+      {title && <title>{title}</title>}
+      <circle cx="12" cy="8.5" r="4" />
+      <path d="M5 20a7 7 0 0 1 14 0z" />
+    </svg>
+  );
+}
+
+/** 하트(채움). 좋아요 버튼용. */
+export function IconHeartFill(p: IconProps) {
+  const { title, ...rest } = p;
+  return (
+    <svg
+      width={16}
+      height={16}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden={title ? undefined : true}
+      role={title ? 'img' : undefined}
+      {...rest}
+    >
+      {title && <title>{title}</title>}
+      <path d="M12 21C5.5 15.5 3 12.5 3 9a4 4 0 0 1 7 -2.6A4 4 0 0 1 17 9c0 3.5 -2.5 6.5 -9 12z" />
+    </svg>
+  );
+}
+
+/** 도토리(재화). 화면 표기 '도토리', 식별자 acorn. 채움 아이콘. */
+export function IconAcorn(p: IconProps) {
+  const { title, ...rest } = p;
+  return (
+    <svg
+      width={16}
+      height={16}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden={title ? undefined : true}
+      role={title ? 'img' : undefined}
+      {...rest}
+    >
+      {title && <title>{title}</title>}
+      <ellipse cx="12" cy="14.5" rx="6" ry="7" fill="#c58a4a" />
+      <ellipse cx="12" cy="10.8" rx="5.7" ry="1.8" fill="#8a6230" />
+      <path d="M12 9.3V6.5" stroke="#5f3f1c" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// ---- MATCH-009 문답 아이콘 ----
+
+export function IconRefresh(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      {p.title && <title>{p.title}</title>}
+      <path d="M20 11a8 8 0 1 0 -2 5" />
+      <path d="M20 4v7h-7" />
+    </svg>
+  );
+}
+
+export function IconTrash(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      {p.title && <title>{p.title}</title>}
+      <path d="M4 7h16M10 11v6M14 11v6M5 7l1 13h12l1 -13M9 7V4h6v3" />
+    </svg>
+  );
+}
+
+export function IconPencil(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      {p.title && <title>{p.title}</title>}
+      <path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0 -3 -3L5 17v3z" />
+      <path d="M13.5 6.5l3 3" />
+    </svg>
+  );
+}
+
+export function IconSparkle(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      {p.title && <title>{p.title}</title>}
+      <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" />
+    </svg>
+  );
+}
