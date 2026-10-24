@@ -103,7 +103,7 @@ git config --global user.email "본인 GitHub 이메일 또는 noreply"
 - `npm.ps1` 실행 차단 → Git Bash 사용 또는 `npm.cmd`로 실행
 - 경로에 한글+공백(`0. 소스코드`) — 항상 따옴표로 감싼다
 - `LF→CRLF` 경고는 무시해도 됨 (`autocrlf=true`) — 단 `.gitattributes`가 `eol=lf`라 체크아웃은 항상 LF, MANIFEST.sha256 검증이 OS 무관하게 통한다
-- 서비스워커는 dev에서 등록 안 됨 — `npm run build && npm run start`로 확인
+- 서비스워커는 dev에서 등록 안 됨 — `npm run build && npm run start`로 확인. 단 `output:'export'`라 `next start`는 동작하지 않는다 — start는 out/을 `/eottae/` 경로로 서빙하는 로컬 정적 서버(`tools/serve_pages_preview.mjs`)다
 - Pretendard 폰트는 `public/fonts/PretendardVariable.woff2` 자체 호스팅 — CDN 장애·오프라인과 무관하게 동작
 
 ## 7. 남은 과제 (다음 작업자용)
@@ -126,3 +126,37 @@ git config --global user.email "본인 GitHub 이메일 또는 noreply"
 - 하는 일: main 건강검사(npm ci→typecheck→build) → `docs/TEAM_ACTIVITY.md` 갱신(팀원별 커밋·PR·요구사항 ID·CI 상태·비활동 팀원) → `FILE_INDEX.csv`/`MANIFEST.sha256` 재생성 → `auto/team-sync` 브랜치로 **PR 자동 생성**.
 - 봇이 올린 PR도 **리뷰 승인 후 사람이 머지**한다 (main 보호 규칙 그대로).
 - 로컬에서 같은 리포트를 만들려면: `node tools/team_activity_report.mjs` (gh 로그인 또는 `GH_TOKEN` 필요 — 없으면 public 비인증 조회).
+
+## 10. PR 자동 리뷰 봇 (pr-review 스케줄러)
+
+- `.github/workflows/pr-review.yml`이 **2시간마다** 자동 실행된다 (`tools/pr_review_bot.mjs`). Actions 탭 → `pr-review` → Run workflow로 수동 실행 가능.
+- 스케줄 워크플로는 **저장소 활동이 60일 없으면 GitHub이 자동으로 끈다** — 봇이 안 돌면 Actions 탭에서 워크플로 재활성화.
+- 자동 판정 범위는 **main 대상 PR**이다 — 다른 base 대상 PR에는 "사람이 직접 리뷰" 안내 코멘트를 sha당 1회 달고 넘어간다.
+- 하는 일(열린 PR마다):
+  - 팀 협력자(OWNER/MEMBER/COLLABORATOR)가 아니면 사람 확인 요청 코멘트
+  - `.github/` 전체·임의 위치 CODEOWNERS·스케줄 잡이 실행하는 자동화 스크립트(`tools/pr_review_bot.mjs`·`team_activity_report.mjs`·`update_package_manifest.py`·`devin_pr_watch.mjs`)·**패키지/빌드 설정**(`package.json`·lock 파일·`.npmrc`·`next.config.*`·`tsconfig*`·babel/postcss/tailwind 설정 — `npm ci`/`npm run`/`next build`가 이 파일들이 정의한 코드를 실행한다)·`.env`/`secret`/`credential` 포함 경로·`id_rsa`류·`*.pem/key/p8/keystore/tfvars` 등 키 파일이 섞이면 자동 승인 금지 + 수동 리뷰 요청 코멘트
+  - GitHub이 머지 가능 상태를 아직 계산 중이면 다음 주기로 보류, 머지 충돌이면 해결 요청 코멘트
+  - **behind(main보다 뒤처짐)여도 그대로 머지를 시도**한다 — head 커밋의 CI는 작성자 push 때 이미 검증됐다. `update-branch`(main을 PR에 머지)는 쓰지 않는다 — GITHUB_TOKEN으로 한 갱신 push는 pull_request 워크플로를 다시 트리거하지 못해 새 sha에 `check`가 영원히 안 생기고, check가 필수 상태면 사람 머지까지 막힌다. "브랜치 최신화 요구" 보호 규칙이 켜져 있으면 GitHub이 머지를 거부해 자연히 사람에게 넘어간다.
+  - CI(`check` 잡) 진행 중이면 조용히 다음 주기, push 후 30분이 지나도 check-run이 없으면 "CI 없음" 안내 코멘트, 실패면 재현 절차 코멘트
+  - **CI 통과+충돌 없음이면 자동 승인 후 squash 머지 시도** — 승인은 `commit_id`로 판정 sha에 고정하고, 머지는 `sha` 조건을 걸어 중간에 새 push가 오면 API가 거부한다 (승인의 commit_id는 거부가 아니라 stale 리뷰로 기록되므로 실제 차단 게이트는 머지의 sha 조건). 거부되면 다음 점검이 새 커밋을 재판정
+  - CODEOWNERS 등 보호 규칙에 막히면 "승인 완료·사람 머지 필요" 코멘트로 넘긴다
+- 파일·코멘트·리뷰·check-run 목록은 전 페이지를 조회한다 (첫 페이지만 보면 100개 이후에 민감 파일을 숨겨 우회 가능). 이름이 바뀐 파일은 옛 경로(`previous_filename`)도 함께 검사한다 — `.github/` 파일을 무해한 이름으로 rename해 스캔을 우회하는 경로를 막기 위해서다.
+- 같은 커밋에는 같은 코멘트를 반복하지 않는다(마커 태그 dedupe — Actions에선 `github-actions[bot]`, 로컬 실행에선 토큰 사용자 자신의 코멘트까지 인정). 새 push가 올라오면 다시 판정.
+- 머지가 한 건이라도 되면 `deploy-pages`·`team-sync`를 자동 dispatch해 사이트·리포트·매니페스트를 갱신한다 (GITHUB_TOKEN 머지는 push 이벤트를 못 일으키므로).
+- 로컬 점검: `DRY_RUN=1 node tools/pr_review_bot.mjs` (조회·판정만), 실제 동작은 `GH_TOKEN` 필요.
+
+## 11. Devin 자동화 — PR 점검(주기+실시간)과 멘션 응답
+
+- GitHub Actions 봇(§10)과 별개로 **Devin 측 자동화 2개**를 둔다:
+  - `eottae-pr-watch` — Devin 세션이 열린 PR을 직접 열어 diff 코드 리뷰까지 수행한다 (Actions 봇은 규칙 판정만 — 이쪽이 실제 품질 검토). 트리거 2개: **2시간 주기 스케줄**(RRULE `FREQ=HOURLY;INTERVAL=2`) + **`github:pull_request` 이벤트**(opened·synchronize·reopened·ready_for_review) — PR이 올라오거나 새 push가 되면 즉시 세션이 뜬다. 이벤트 실행은 페이로드의 그 PR만 처리한다.
+  - `eottae-pr-mentions` — PR·이슈 댓글(리뷰 댓글 포함)에서 **@devin 멘션**(`mentioned=true` — 모든 댓글이 아니라 호출할 때만 반응, 봇 간 무한 답글 방지)이 달리면 세션이 댓글 내용을 읽고 `post_response`로 그 스레드에 자동 답글한다. 응답 전용 — 승인·머지·커밋은 안 한다.
+- 프롬프트 원본: `.devin/automations/eottae-pr-watch.md`, `eottae-pr-mentions.md` — 프롬프트를 바꾸면 `UPDATE=1`로 재등록해야 반영된다.
+- 등록: 루트 `.env` 또는 `.devin/.env`에 `DEVIN_API_KEY=`(Settings > Devin API > Service users 탭에서 발급, ManageOrgAutomations 권한 — `cog_` 접두사)·`DEVIN_ORG_ID=`(같은 페이지 상단, `org-*`)를 적고 `node tools/devin_pr_watch.mjs` 실행. 스크립트가 두 자동화를 이름 기준으로 생성/갱신한다(UPDATE=1이면 갱신, DRY_RUN=1이면 페이로드만 출력). 셸 환경변수로 줘도 된다 — 환경변수가 .env보다 우선.
+- 참고: GitHub 트리거가 발화하려면 Devin GitHub 연동이 이 저장소에 설치돼 있어야 한다(본 저장소는 이미 devin-ai-integration[bot]이 PR을 만들 수 있는 상태라 연동됨). 댓글 트리거가 전혀 안 먹으면 Settings > Integrations에서 GitHub 연동의 저장소 범위를 확인.
+- 세션에 GitHub 쓰기 권한(연동된 계정 또는 `GH_TOKEN` 시크릿)이 없으면 읽기 전용 점검+요약 보고만 한다 — 코멘트·승인·머지는 토큰이 있는 경우에만.
+
+## 12. 로컬 저장소 자동 동기화
+
+자동화가 main을 직접 바꾸므로(봇 머지·Devin 세션) 로컬은 주기적으로 당겨줘야 한다. `tools/sync_repo.mjs`가 fetch→뒤처짐·깨끗 여부 판정→`--ff-only` pull을 수행한다(미커밋 변경·분기·다른 브랜치면 안전하게 건너뜀). 두 경로로 자동 실행된다:
+- **Devin CLI 세션 시작** — `.devin/hooks.v1.json`의 SessionStart 훅이 이 스크립트를 실행하고 결과를 세션 컨텍스트에 주입한다.
+- **Windows 작업 스케줄러** — 작업 `eottae-repo-sync`(매시간)가 `tools/sync_repo.cmd`를 실행해 `.repo-sync.log`에 누적한다. 재등록: `schtasks /create /tn "eottae-repo-sync" /tr "<repo>\tools\sync_repo.cmd" /sc hourly /f`.

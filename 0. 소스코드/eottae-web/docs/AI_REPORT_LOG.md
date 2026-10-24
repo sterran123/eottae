@@ -145,6 +145,97 @@
 - [검증] 실사이트 확인 — https://sterran123.github.io/eottae/ 및 match/·offline/·manifest·sw.js·api/health(JSON 실응답)·아이콘·폰트 전부 200
 - [미구현/보류] 실사이트 HTTPS 상에서 SW 설치·오프라인 전환·Lighthouse 검증은 별도 수행 (배포 자체는 완료)
 
+## 2026-10-23 Pages 전환 후속 — 깨진 로컬 미리보기 경로 정리 (리뷰 반영)
+- [버그수정] eottae-web/package.json `start` | `output:'export'` 전환으로 `next start`가 즉시 실패(`"next start" does not work with "output: export"` 재현) → `node ../../tools/serve_pages_preview.mjs`로 교체
+- [신규] tools/serve_pages_preview.mjs | out/을 '/eottae/' 하위로 서빙하는 무의존 정적 서버 — Pages와 동일 경로라 SW 스코프까지 재현, 커스텀 404.html 폴백·out/ 밖 경로 이탈(403) 차단
+- [버그수정] HANDOFF_김민기.md §6 | SW 확인 명령이 깨진 `next start`를 가리키던 안내 → 새 start 동작(미리보기 서버) 명시
+- [검증] `npm run start` 실실행 — / → /eottae/ 302, /eottae/·match/·manifest·sw.js(text/javascript)·font 200, api/health JSON 실응답, 미존재 경로 404.html, /eottae/ 밖 경로 404, %2e%2e 이탈 차단 확인
+- [미실행] 실사이트 SW 설치·오프라인 전환·Lighthouse (위 보류 항목과 동일)
+
+## 2026-10-23 미리보기 서버 디렉터리 301 누락 수정 (2차 리뷰 반영)
+- [버그수정] tools/serve_pages_preview.mjs | 확장자 없는 디렉터리 URL(`/eottae/match`·`/eottae/offline`)이 404를 반환하던 결함 → Pages와 동일하게 `pathname + '/'`로 301 (query 보존). sw.js precache의 `${BASE}offline`(슬래시 없음)이 404 → `cache.addAll` 거부 → SW install 실패하던 문제와 capture_screenshots.mjs의 `/match` 등 무슬래시 경로가 404를 찍던 문제를 동시 해소
+- [보완] PORT 비숫자 입력 시 즉시 명확한 오류로 종료, listen 바인드를 127.0.0.1로 제한
+- [검증] `npm run start` 실실행(PORT=3317) — `/eottae/match`·`/eottae/offline`·`/eottae/activities`·`/eottae/invitations` 301→200, `?x=1` query 보존, `/eottae/api/health` 200(octet-stream, Pages와 동일), `/eottae/api/health/` 404, `..%2f`·`..%5c`·`%2e%2e` 이탈 차단 유지, `PORT=abc` 오류 종료 확인
+- [미실행] 실사이트 SW 설치·오프라인 전환·Lighthouse (기존 보류 항목과 동일)
+
+## 2026-10-23 다중 테마 시스템 — 라이트 기본 + 6테마 피커 (사용자 요청)
+- [변경] globals.css | 히어로 텍스트 하드코딩(#fff·#cfc1ff·#d8c9eb·#ffe9f7·btn.light rgba) → --hero-title/--hero-eyebrow/--hero-notice/--particle/--hero-btn-* 토큰화. 사용처가 히어로 한정임을 tsx 전수 확인 후 적용
+- [신규] globals.css 테마 블록 3종 | `[data-theme='cupcake']` 크림+민트/핑크 파스텔(파스텔 히어로라 히어로 텍스트 자두색 반전), `[data-theme='cyberpunk']` 다크+네온(CTA 네온옐로·상태칩 시안 아웃라인), `[data-theme='disney']` 캐슬 로열 블루+골드 CTA
+- [버그수정] globals.css | 시스템 다크 셀렉터 `:root:not([data-theme='light'])` → `:root[data-theme='system']` — 기본값이 라이트인 요구사항과 충돌(미선택+다크OS가 다크로 나오던 결함). `:root[data-theme='system']{color-scheme:light dark}` 추가
+- [변경] globals.css 로고 스왑 | 다크 크롬 테마는 dark·cyberpunk 2종 + 시스템 다크만 다크 로고, cupcake/disney는 라이트 로고 유지
+- [변경] theme-toggle.tsx | 3단 순환 버튼 → 네이티브 `<select>` 6옵션 피커(라이트·컵케잌·사이버펑크·디즈니·다크·시스템). 'system'도 data-theme/system 저장값으로 명시 유지해 기본 라이트와 구분. 팔레트 SVG 아이콘
+- [신규] theme-color 메타 테마 동기화 | layout.tsx viewport를 단일 #7454c4로 단순화 + FOUC 스크립트·syncChrome()이 선택 테마 대표색으로 content 갱신 — 'system'은 OS 다크/라이트에 따라 #10101b/#7454c4, matchMedia change 리스너로 OS 전환 실시간 추적
+- [변경] layout.tsx FOUC 스크립트 | 화이트리스트를 6테마로 확장 + 잘못된 저장값 무시(기본 라이트) + theme-color 동기화
+- [검증] `npm run typecheck` PASS, `npm run build` PASS — out/ 재생성
+- [검증] 미리보기 서버(PORT=3318)+실브라우저 6테마 실전환 — 라이트 #faf9fe / 컵케잌 #faf6f2+파스텔히어로+자두텍스트 / 사이버펑크 #0a0a14+네온옐로CTA+다크로고 / 디즈니 #f7faff+캐슬그라데이션+골드CTA / 다크 #10101b / 시스템 CDP에뮬레이션으로 OS다크↔라이트 양방향 전환·메타 동기화 확인. localStorage 영속(전체 네비게이션 후 유지), 잘못된 값 'sepia-bogus'→라이트 폴백 확인
+- [미실행] 신규 테마의 실사이트 배포 확인·스크린샷 문서 갱신 — main push 배포 후 확인 필요
+
+## 2026-10-24 아기자기 디자인 패스 — 스티커·스캘럽·스프링 모션 (사용자 요청)
+- [신규] globals.css | `--spring`(cubic-bezier 0.34,1.56,0.64,1) 공통 이징 토큰 — 버튼·카드·스텝·리빌·모티프·FAQ 아이콘 호버/진입에 적용해 통통 튀는 감각 통일
+- [신규] 스캘럽 물결선 | 히어로 하단(`.hero::after`, --bg색 반원 홈)·푸터 상단(`.footer::before`, --footer-bg 반원 볼록) radial-gradient 반복 타일 — 6테마 토큰 자동 추적. 기존 footer border-top 제거
+- [신규] 배경 도트 패턴 | body에 `color-mix(in srgb, --ink 5%)` 1.1px 도트(22px 타일) — 종이 질감 수준 은은함
+- [변경] 히어로 | 일러스트를 유기 블롭 형태(46%/54% 혼합 라디우스)로 자르고 `--hero-btn-line` 점선 스티커 프레임(::before, 2.5° 어긋남) 추가 — overflow:hidden 제거 후 img에 radius 상속. 강조 문구에 `--hero-title` 물결 밑줄(wavy, offset 9px), 안내 문구를 `--hero-btn-*` 토큰 필로 변환
+- [신규] 장식 모티프 | `.eyebrow::before/::after` ✦ 양끝 반짝이, `.section-head h2`·`.subpage h1` 꼬리 ♡(--accent-pink), `.safety-highlight::after` 큰 ♡ 워터마크(14%), `.bottom::before` '· ♡ ·' 중앙 구분선 + bottom 섹션 가운데 정렬
+- [변경] 버튼 | 전 종류 완전 pill(99px), 호버 translateY(-2px) scale(1.03)·CTA는 rotate(-1deg) 추가·활성 scale(0.96). `.btn.primary` 하드코딩 보라 그림자 → `color-mix(--cta-bg 55%)` 글로우로 교체해 6테마 CTA색 추적
+- [신규] 카드 테이프 | `.service-card::before` 상단 마스킹 테이프(--point, -3°, 상단 -7px 클리핑), 호버 -6px 리프트+ -0.6° 기울임, 카드 링크 5px 전진, 모티프 --point 글로우 + 호버 시 무한 bob→1회 motif-pop 교체
+- [변경] 뱃지·칩 | 카드 `.index` 원형 뱃지(chip-bg), `.status` 인라인 플렉스+currentColor 도트(`.dev`만 status-blink 2.2s 깜빡임), `.step` 번호 점선 원(dashed --brand-soft)+호버 -10° 흔들림, `.feature > span` 알약 뱃지('CORE-004' 긴 라벨 호환)
+- [버그수정] `.step strong` | inline-flex+margin:auto는 인라인 배치돼 원이 라벨 옆으로 붙던 결함 → block flex로 수정, 원 위·라벨 아래 세로 배치 복원 (실브라우저 캡처로 발견·수정 확인)
+- [변경] FAQ·경고 | details 16px 라운드+호버/열림 brand-soft 테두리, 셰브론 → '+' → 열리면 45° 회전(× 변형). `.warn`/`.info` 16px 라운드 + 원형 !/i 아이콘(52px 들여쓰기)
+- [보완] prefers-reduced-motion | motif-pop·status-blink·브랜드 로고 흔들림·카드 링크·스텝 원 등 신규 모션 전부 정지 목록에 추가
+- [검증] `npm run typecheck` PASS, `npm run build` PASS — out/ 재생성
+- [검증] 미리보기 서버(PORT=3321)+실브라우저 1440px·390px 실전환 — 라이트/컵케잌/사이버펑크/디즈니/다크 전 테마에서 스캘럽·블롭 프레임·테이프·뱃지·물결 밑줄·워터마크 확인, 시스템 테마 OS 추적 유지
+- [미실행] 스크린샷 문서 갱신·실사이트 반영 확인 — main push 배포 후
+
+## 2026-10-24 PR 자동 리뷰 봇 — 주기 점검·승인·머지·코멘트 (사용자 요청)
+- [신규] tools/pr_review_bot.mjs | 열린 PR 순회 자동 판정: 봇/드래프트 스킵 → 비협력자 코멘트 → 워크플로/시크릿 파일 수동리뷰 코멘트 → 충돌 코멘트 → behind면 update-branch → CI(check) 실패 코멘트 → 전부 통과 시 승인(sha별 1회)+squash 머지, CODEOWNERS 등에 막히면 '승인 완료·사람 머지 필요' 코멘트. 같은 sha에 같은 코멘트 반복 차단(마커 dedupe). 머지 발생 시 deploy-pages·team-sync dispatch(GITHUB_TOKEN 머지는 push 이벤트 미발생이라 수동 트리거 필요)
+- [신규] .github/workflows/pr-review.yml | 2시간 주기 cron + workflow_dispatch. 권한: contents/pull-requests/issues write + checks read + actions write(머지 후 dispatch용). checkout main으로 봇 스크립트 고정. DRY_RUN=1 지원(조회·판정만)
+- [검증] `node --check` 통과, `DRY_RUN=1` 실실행 — 열린 PR 2건(#1 취향 온보딩·#2 온보딩+추천, @HaYul0611, COLLABORATOR) 조회·파일 목록·check-run success·mergeable clean 판정 전부 정상, 승인+머지 예정 출력 확인 (쓰기 없이 검증)
+- [검증] 판정 교차확인 — 익명 API로 #1(6파일)·#2(12파일) 전부 match/ 경로(하율 CODEOWNERS 영역·자기 PR), check:completed/success, mergeable:true clean 일치 확인
+- [미실행] 실제 승인·머지·코멘트는 로컬 토큰 없음으로 미검증 — main push 후 첫 스케줄/수동 실행에서 동작 확인 필요. CODEOWNERS 필수리뷰가 켜져 있으면 자동 머지 대신 안내 코멘트로 떨어짐
+
+## 2026-10-24 PR 리뷰 봇 보안·정합성 보강 (코드 리뷰 반영)
+- [버그수정] pr_review_bot.mjs | 파일 목록 `per_page=100` 첫 페이지만 조회하던 결함 → files/comments/reviews/check-runs 전부 전 페이지 조회(`apiAll`, 최대 30페이지) — 100번째 이후 위치에 워크플로·키 파일을 숨겨 민감 파일 검사를 우회하던 경로 차단. `detail.changed_files`와 조회 건수가 다르면(조회 한계 초과) 자동 승인 대신 수동 리뷰 코멘트로 보류
+- [보완] 민감 영역 확장 | `.github/workflows/`만 막던 것을 `.github/` 전체 + 임의 위치 CODEOWNERS + 스케줄 잡이 write 토큰으로 실행하는 자동화 스크립트(tools/pr_review_bot.mjs·team_activity_report.mjs·update_package_manifest.py)로 확장 — 워크플로 YAML 대신 실행 스크립트를 수정해 같은 권한을 얻는 자기수정 우회 차단. CODEOWNERS 단독 변경(리뷰 정책 무력화)도 차단
+- [버그수정] pr_review_bot.mjs | 목록 API의 지연 계산 mergeable(null/'unknown')을 그대로 판정해 충돌 PR을 승인하고 '보호 규칙'이라는 잘못된 코멘트를 달 수 있던 결함 → PR 상세를 재조회(null이면 2s 간격 최대 2회 재시도)하고 mergeable null/'unknown'이면 다음 주기 보류로 변경. author_association도 최신 상세 값으로 판정
+- [보완] TOCTOU 가드 | update-branch에 `expected_head_sha`, merge에 `sha` 조건 추가 — 판정과 쓰기 사이 새 push가 오면 API가 거부해 다음 점검이 새 커밋을 재판정
+- [변경] CI 판정 | 'check' check-run만 인정(없으면 보류) — 다른 워크플로의 성공 check-run으로 필수 CI를 대체 판정하지 않음
+- [검증] `node --check` 통과, `DRY_RUN=1` 실실행 — 열린 PR 2건(#1·#2, @HaYul0611 COLLABORATOR) 상세 조회·전체 파일 목록·'check' success·mergeable clean 판정 전부 정상, 승인+머지 예정 출력 확인 (쓰기 없이 검증)
+- [미실행] 실제 승인·머지·코멘트·update-branch는 토큰 없음으로 미검증 — main push 후 첫 실행에서 확인 필요 (직전 항목과 동일)
+
+## 2026-10-24 PR 리뷰 봇 2차 리뷰 반영 — behind 고착·민감영역 확장·CI 미기록 안내
+- [버그수정] pr_review_bot.mjs | behind PR에 `update-branch`(GITHUB_TOKEN으로 main을 head에 머지)를 쓰면 토큰 push는 pull_request 워크플로를 재트리거하지 못해 새 sha에 `check`가 영원히 없음 → 이후 매 주기 'CI 미기록' 보류로 **영구 고착**(check 필수 시 사람 머지 버튼까지 차단) 되던 결함 → 갱신 단계 제거, behind는 head sha CI(작성자 push 때 검증됨)를 그대로 쓰고 바로 머지 시도. '브랜치 최신화 요구' 보호 규칙이 켜져 있으면 merge API 거부 → 기존 await-merge 코멘트로 사람에게 넘김
+- [보완] 민감 영역 2차 확장 | `BUILD_CONTROL` 추가 — `package.json`/lock(npm-shrinkwrap·yarn·pnpm·bun)·`.npmrc`/`.yarnrc`/`pnpmfile`·`next.config.*`·`tsconfig*`/`jsconfig*`·babel/postcss/tailwind 설정을 임의 깊이에서 차단. 스케줄 잡(team-sync·deploy-pages)의 `npm ci`/`npm run`/`next build`가 이 파일들이 정의한 코드를 실행 — 진입점 스크립트만 막으면 postinstall 한 줄로 쓰기 토큰 작업에 코드 주입 가능했던 경로 차단
+- [보완] SENSITIVE 확장 | `.env*`, `*.pem/key/p12/pfx/asc` 외에 `secret`/`credential` 포함 경로 세그먼트·`id_rsa`/`id_ed25519`/`id_ecdsa`/`id_dsa` 등 확장자 없는 키·`.netrc`/`pgpass`/`pypirc`/`htpasswd`·`*.p8/keystore/jks/tfvars/ovpn/kdbx` 추가 — 공개 저장소에 실수로 올린 키가 자동 머지되면 그대로 공개되므로 오탐 감수하고 넓게 차단(코멘트로 사람 리뷰 요청)
+- [변경] 판정 범위 | `base=main` 필터 제거 → 모든 열린 PR을 순회하되 main 외 대상은 'base' 안내 코멘트(sha당 1회)만 — 침묵 방치 해소
+- [버그수정] CI 미기록 판정 | 'check' check-run 부재 시 무음 보류만 하던 것 → 커밋 시각 기준 30분 유예 후에도 없으면 'ci-missing' 코멘트로 에스컬레이션(토큰이 올린 head처럼 CI가 절대 안 도는 경우 대응). 진행 중/유예 중은 기존대로 조용히 다음 주기
+- [보완] 승인 TOCTOU | reviews POST에 `commit_id` 추가 — 승인도 판정 sha에 고정, 중간 새 push면 API 거부·다음 주기 재판정 (머지의 sha 가드와 동일 수준)
+- [보완] API 호출 절감 | base/협력자 판정을 files/reviews 조회 전으로 이동 — 범위 밖·외부 PR은 상세+코멘트만 조회
+- [문서] HANDOFF §10·워크플로 주석 갱신 — main 한정 범위·behind 직접 머지·확장된 민감 목록·스케줄 60일 비활성화 주의 명시
+- [검증] `node --check` 통과, `DRY_RUN=1` 실실행 — 열린 PR 2건(#1·#2, @HaYul0611 COLLABORATOR, base=main) 전 단계 통과 후 승인+머지 예정 출력, SENSITIVE/BUILD_CONTROL/FORBIDDEN/CODEOWNERS 정규식 24건 차단·12건 통과 교차검증
+- [미실행] 실제 승인·머지·코멘트·dispatch는 토큰 없음으로 미검증 — main push 후 첫 실행에서 확인 필요. CODEOWNERS 필수리뷰 켜져 있으면 안내 코멘트로 떨어짐
+
+## 2026-10-24 리뷰 지적 수정 — reduced-motion 점 등 미세 정정
+- [버그수정] globals.css | `prefers-reduced-motion` 정지 목록의 `.status::before`(0,1,1)가 `.status.dev::before`(0,2,1)의 `status-blink`에 특정도에서 져 /match '개발 대상' 점이 계속 깜빡이던 결함 → 정지 셀렉터를 `.status.dev::before`로 교체
+- [문서] pr_review_bot.mjs·HANDOFF_김민기.md | "승인 commit_id도 새 push면 API 거부"는 과장 — GitHub은 옛 commit_id 승인을 거부하지 않고 stale 리뷰로 기록한다. 실제 차단 게이트는 머지의 sha 조건임을 주석·문서에 정정
+- [문서] pr-review.yml | `contents: write` 주석의 '브랜치 업데이트' 제거 — update-branch 단계는 2차 리뷰에서 삭제돼 남은 설명이 부정확
+- [검증] `node --check` 통과, `npm run typecheck` PASS, FILE_INDEX·MANIFEST 재생성 반영
+
+## 2026-10-24 Devin 주기 PR 점검 자동화 — schedule:recurring Automation (사용자 요청)
+- [신규] .devin/automations/eottae-pr-watch.md | Devin 스케줄 세션용 프롬프트 원본 — tools/pr_review_bot.mjs 판정 규칙 전부 + diff 직접 리뷰(봇과 차별점) + 토큰 없으면 읽기 전용 폴백 명시
+- [신규] tools/devin_pr_watch.mjs | Devin v3 Automations API 등록기 — POST /v3/organizations/{org}/automations에 schedule:recurring(RRULE FREQ=HOURLY;INTERVAL=N, 기본 2h)·start_session 액션·max_concurrent_runs=1 페이로드 전송. GET /self로 run_as 자동 감지(서비스 사용자→organization, 개인 토큰→creator), 같은 이름 존재 시 스킵·UPDATE=1이면 PATCH 갱신, DRY_RUN=1 또는 키 없으면 UI 등록 절차+페이로드 출력 후 종료(키 없음 exit 2)
+- [보완] pr_review_bot.mjs PIPELINE_TOOLS | tools/devin_pr_watch.mjs 추가 — 스케줄 작업 등록기라 동일 보호 영역
+- [문서] HANDOFF_김민기.md §11 신설 | Devin 자동화 역할(봇이 못 보는 코드 품질 리뷰)·등록 방법(API·UI)·프롬프트 원본 위치·쓰기 토큰 없을 때 읽기 전용 동작 명시, §10 민감 목록에 devin_pr_watch.mjs 반영
+- [검증] `node --check` 통과, `DRY_RUN=1` 실실행 — 프롬프트 본문 추출·RRULE·run_as·triggers/actions 페이로드 출력 정상, UI 등록 절차 출력 확인
+- [미실행] 실제 자동화 생성은 DEVIN_API_KEY·DEVIN_ORG_ID 없음으로 미검증 — 키 발급 후 `node tools/devin_pr_watch.mjs` 또는 UI 등록 필요 (docs.devin.ai v3 automations 스키마 기준 구현)
+
+## 2026-10-24 코드 리뷰 반영 — rename 우회 차단·로컬 dedupe·종료 안정성
+- [버그수정] pr_review_bot.mjs | 민감 파일 스캔이 `f.filename`(새 경로)만 봐서 rename으로 보호 영역 우회 가능하던 결함 — `.github/workflows/ci.yml`→`x.yml` 같은 rename은 새 경로가 무해해 보여 자동 승인·머지될 수 있었다 → `previous_filename`까지 스캔 대상에 포함(flatMap). 잘림 판정은 엔트리 건수(files.length)로 유지 — names는 rename당 2건이라 비교 기준 부적합
+- [보완] pr_review_bot.mjs | 마커 dedupe가 `github-actions[bot]` 작성 코멘트만 인정 → 로컬 `GH_TOKEN`/gh 인증 실행은 자기 코멘트를 못 알아봐 반복 실행마다 중복 코멘트되던 결함 → `authors()`가 `/user`로 쓰기 주체 로그인을 1회 조회해 인정 집합에 추가 (앱 토큰은 /user 403 → 자동으로 BOT만 유지)
+- [버그수정] pr_review_bot.mjs | 치명 오류 경로 `process.exit(1)` → `process.exitCode = 1` — 진행 중인 fetch 소켓 정리를 끊어 Windows에서 libuv assert(UV_HANDLE_CLOSING)로 비정상 종료되던 문제. 403/429 시 GH_TOKEN 인증 힌트 출력 추가
+- [문서] eottae-pr-watch.md 규칙 3·HANDOFF_김민기.md §10 — rename 검사(previous_filename)·로컬 dedupe 인정 범위를 동일 규칙으로 명시
+- [검증] `node --check` 통과, `npm run typecheck` PASS, 스캔 로직 교차검증 — 실파일에서 FORBIDDEN/CODEOWNERS/BUILD_CONTROL/SENSITIVE 정규식을 추출해 rename 케이스(`.github/workflows/ci.yml`→`x.yml` 등) 차단 확인, FILE_INDEX·MANIFEST 재생성 반영
+- [미실행] 실제 승인·머지·코멘트·dispatch는 토큰 없음으로 미검증 (기존 보류 항목과 동일)
+
 ## 2026-10-24 1차 매칭 온보딩·추천·문답 UI 구현 (오하율 작업)
 - [신규] src/lib/match/types.ts | 매칭 DTO, 프로필 문답/궁합(CompatibilitySummary, CommonQuestionState) 및 RecommendProfile.qnaSharedCount 정의
 - [신규] src/lib/match/demo-data.ts | 취향 온보딩 폼 선택지(관심사/대화스타일/MBTI/연령대/거리) 및 데모 데이터
