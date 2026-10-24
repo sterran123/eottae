@@ -55,6 +55,9 @@ for (const envPath of [join(ROOT, ".env"), join(ROOT, ".devin", ".env")]) {
 const REPO = process.env.GITHUB_REPOSITORY || "sterran123/eottae";
 const TOKEN = process.env.GH_TOKEN || process.env.GITHUB_TOKEN || "";
 const DRY = process.env.DRY_RUN === "1";
+// FORCE_COMMENT=1 — 같은 sha의 기존 봇 코멘트를 찾아 내용을 갱신한다
+// (코멘트 형식을 바꿨을 때 옛 코멘트를 새 형식으로 바꾸는 용도)
+const FORCE = process.env.FORCE_COMMENT === "1";
 const BOT = "github-actions[bot]";
 
 const MEMBER_ASSOC = new Set(["OWNER", "MEMBER", "COLLABORATOR"]);
@@ -87,6 +90,84 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // 같은 커밋에 같은 종류의 코멘트를 반복하지 않기 위한 마커
 const mark = (sha, cat) => `<!-- pr-review-bot:${sha.slice(0, 10)}:${cat} -->`;
+
+// 검사 결과 표 — 모든 코멘트에 어떤 검사를 했고 어디서 걸렸는지 보여준다
+const table = (rows) =>
+  ["| 검사 항목 | 결과 |", "|---|---|", ...rows.map(([k, v]) => `| ${k} | ${v} |`)].join("\n");
+
+// 민감 파일이 어떤 규칙에 걸렸는지 라벨 — 작성자가 왜 막혔는지 알아야 옮길 수 있다
+const whyBlocked = (f) => {
+  if (FORBIDDEN.test(f)) return "`.github/` — 워크플로·권한 설정은 사람이 검토";
+  if (CODEOWNERS.test(f)) return "`CODEOWNERS` — 리뷰 정책 파일";
+  if (PIPELINE_TOOLS.has(f)) return "자동화 진입점 스크립트 — 스케줄 잡이 write 토큰으로 실행";
+  if (BUILD_CONTROL.test(f)) return "패키지·빌드 설정 — npm/next가 정의한 코드를 실행";
+  if (SENSITIVE.test(f)) return "환경설정·키류 — 공개 저장소라 즉시 공개됨";
+  return "보호 영역";
+};
+
+// 실제 충돌 파일 목록 — git merge-tree로 로컬에서 시험 머지(작업트리는 안 건드림).
+// git이 없거나 sha fetch가 안 되면 API 비교로 '양쪽이 다 건드린 파일'로 근사한다.
+function conflictFilesViaGit(prNum) {
+  try {
+    // 얕은 체크아웃(Actions 기본 fetch-depth=1)이면 공통 조상이 없어 merge가 거부된다
+    const shallow =
+      execFileSync("git", ["rev-parse", "--is-shallow-repository"], {
+        cwd: ROOT,
+        encoding: "utf8",
+      }).trim() === "true";
+    if (shallow) {
+      execFileSync("git", ["fetch", "--unshallow", "origin"], {
+        cwd: ROOT,
+        stdio: ["ignore", "pipe", "ignore"],
+      });
+    }
+    execFileSync("git", ["fetch", "origin", `refs/pull/${prNum}/head`], {
+      cwd: ROOT,
+      stdio: ["ignore", "pipe", "ignore"],
+    });
+    let out = "";
+    try {
+      // quotePath=false — 한글 경로가 \354\206 옥탯 이스케이프로 나오는 것을 막는다
+      out = execFileSync(
+        "git",
+        ["-c", "core.quotePath=false", "merge-tree", "--write-tree", "origin/main", "FETCH_HEAD"],
+        { cwd: ROOT, encoding: "utf8" },
+      );
+    } catch (e) {
+      out = e.stdout?.toString() || ""; // 충돌이 있으면 exit 1이지만 출력은 온다
+    }
+    const paths = new Set();
+    for (const line of out.split("\n")) {
+      const m = line.match(/^\d+ [0-9a-f]{40} \d+\t(.+)$/); // "<mode> <sha> <stage>\t<path>"
+      if (m) paths.add(m[1].replace(/^"|"$/g, ""));
+    }
+    return [...paths];
+  } catch {
+    return null;
+  }
+}
+
+async function conflictFilesViaApi(headSha, prFiles) {
+  try {
+    const cmp = await api(`repos/${REPO}/compare/main...${headSha}`);
+    const base = cmp?.merge_base_commit?.sha;
+    if (!base) return null;
+    const side = await api(`repos/${REPO}/compare/${base}...main`);
+    const mainChanged = new Set(
+      (side?.files || []).flatMap((f) => [f.filename, f.previous_filename].filter(Boolean)),
+    );
+    const hits = [
+      ...new Set(
+        (prFiles || [])
+          .flatMap((f) => [f.filename, f.previous_filename].filter(Boolean))
+          .filter((f) => mainChanged.has(f)),
+      ),
+    ];
+    return hits;
+  } catch {
+    return null;
+  }
+}
 
 // 코멘트 작성 주체 로그인 — Actions에서는 github-actions[bot], 로컬 GH_TOKEN 실행에서는
 // 그 사용자. 로컬 반복 실행에서도 마커 dedupe가 동작하도록 자기 로그인을 함께 인정한다.
@@ -176,9 +257,9 @@ async function main() {
       // 코멘트 마커는 head sha 기준 — 목록 응답의 sha로 먼저 잡고 상세 조회 후 최신으로 갱신한다
       let sha = pr.head?.sha || "";
       const comments = await apiAll(`repos/${REPO}/issues/${n}/comments`);
-      const already = async (cat) => {
+      const findMarked = async (cat) => {
         const who = await authors();
-        return (comments || []).some(
+        return (comments || []).find(
           (c) =>
             who.has(c.user?.login) &&
             typeof c.body === "string" &&
@@ -186,20 +267,31 @@ async function main() {
         );
       };
       const say = async (cat, body) => {
-        if (await already(cat)) {
+        const full = `${mark(sha, cat)}\n🤖 PR 리뷰 봇 — ${body}`;
+        const existing = await findMarked(cat);
+        if (existing && !FORCE) {
           console.log(`- ${title}: '${cat}' 코멘트 이미 존재 — 생략`);
           return false;
         }
         commented++;
         if (DRY) {
-          console.log(`- ${title}: [DRY] 코멘트 예정 — ${cat}`);
+          console.log(`- ${title}: [DRY] ${existing ? "코멘트 갱신" : "코멘트"} 예정 — ${cat}`);
           return true;
         }
-        await api(`repos/${REPO}/issues/${n}/comments`, {
-          method: "POST",
-          fields: { body: `${mark(sha, cat)}\n🤖 PR 리뷰 봇 — ${body}` },
-        });
-        console.log(`- ${title}: 코멘트 작성 (${cat})`);
+        if (existing) {
+          // FORCE 모드 — 같은 마커의 기존 코멘트를 새 내용으로 갱신(중복 생성 안 함)
+          await api(`repos/${REPO}/issues/comments/${existing.id}`, {
+            method: "PATCH",
+            fields: { body: full },
+          });
+          console.log(`- ${title}: 코멘트 갱신 (${cat})`);
+        } else {
+          await api(`repos/${REPO}/issues/${n}/comments`, {
+            method: "POST",
+            fields: { body: full },
+          });
+          console.log(`- ${title}: 코멘트 작성 (${cat})`);
+        }
         return true;
       };
 
@@ -207,7 +299,8 @@ async function main() {
       if (pr.base?.ref !== "main") {
         await say(
           "base",
-          `이 봇은 main 브랜치 대상 PR만 자동 승인·머지합니다(base: \`${pr.base?.ref}\`). 이 PR은 담당 팀원이 직접 리뷰·머지해 주세요.`,
+          `**자동 판정 범위 밖입니다 — base 브랜치가 \`${pr.base?.ref}\`입니다.**\n\n` +
+            `이 봇은 **main 대상 PR만** 자동 승인·머지합니다. base를 바꿔야 하면 PR 상단 Edit에서 base를 \`main\`으로 변경하거나, 의도된 base라면 담당 팀원이 직접 리뷰·머지해 주세요.`,
         );
         continue;
       }
@@ -225,7 +318,11 @@ async function main() {
       if (!MEMBER_ASSOC.has(detail.author_association)) {
         await say(
           "external",
-          `작성자가 팀 협력자가 아니라 자동 승인하지 않습니다(association=${detail.author_association}). 팀원이 내용을 확인해 주세요.`,
+          `**자동 승인 불가 — 작성자가 저장소 협력자가 아닙니다.**\n\n` +
+            table([
+              ["작성자 권한", `❌ \`${detail.author_association}\` (@${pr.user?.login}) — OWNER·MEMBER·COLLABORATOR만 자동 승인`],
+            ]) +
+            `\n\n외부 기여는 코드를 실제로 읽은 팀원의 수동 리뷰가 필요합니다. 승인 전 확인할 것: 실행 가능한 스크립트·외부 URL·환경변수 참조가 숨어 있지 않은지.`,
         );
         continue;
       }
@@ -245,7 +342,12 @@ async function main() {
       if ((files || []).length < (detail.changed_files ?? (files || []).length)) {
         await say(
           "scope",
-          `변경 파일이 ${detail.changed_files}개라 전부 조회하지 못했습니다 — 민감 파일 포함 여부를 사람이 확인해 주세요.`,
+          `**자동 승인 불가 — 변경 파일 전부를 조회하지 못했습니다.**\n\n` +
+            table([
+              ["작성자 권한", `✅ 협력자 (@${pr.user?.login})`],
+              ["민감 파일", `⚠️ 판정 불가 — ${detail.changed_files}개 중 ${(files || []).length}개만 조회됨`],
+            ]) +
+            `\n\nAPI 조회 한계를 넘는 대형 PR이라 보이지 않는 파일에 보호 영역 변경이 숨어 있을 수 있습니다. 민감 파일 포함 여부를 사람이 확인해 주세요.`,
         );
         continue;
       }
@@ -261,7 +363,17 @@ async function main() {
       if (blocked.length) {
         await say(
           "scope",
-          `민감 영역 파일이 포함돼 자동 승인하지 않습니다: \`${blocked.join("`, `")}\`. 파이프라인·빌드 설정·리뷰 정책·환경설정·키 관련 변경은 담당자 수동 리뷰가 필요합니다.`,
+          `**자동 승인 불가 — 보호 영역 파일이 포함돼 있습니다.**\n\n` +
+            table([
+              ["작성자 권한", `✅ 협력자 (@${pr.user?.login})`],
+              ["민감 파일", `❌ ${blocked.length}개 발견`],
+              ["머지 가능성", "⏸️ 미검사"],
+              ["CI `check`", "⏸️ 미검사"],
+            ]) +
+            `\n\n**걸린 파일과 사유:**\n` +
+            [...new Set(blocked)].map((f) => `- \`${f}\` — ${whyBlocked(f)}`).join("\n") +
+            `\n\n**처리 방법:** 이 파일들은 자동화 우회·시크릿 유출을 막기 위해 사람만 승인할 수 있습니다. ` +
+            `① 의도된 변경이면 담당자 수동 리뷰를 요청하거나, ② 해당 파일 변경을 이 PR에서 빼고 별도 PR로 분리하면 나머지는 자동 판정됩니다.`,
         );
         continue;
       }
@@ -273,9 +385,53 @@ async function main() {
       }
 
       if (detail.mergeable === false || detail.mergeable_state === "dirty") {
+        // 실제 충돌 파일 목록 — git 시험 머지가 정확, 안 되면 API 근사치
+        let cfiles = conflictFilesViaGit(n);
+        let exact = true;
+        if (cfiles === null) {
+          cfiles = await conflictFilesViaApi(sha, files);
+          exact = false;
+        }
+        const runsNow = await apiAll(`repos/${REPO}/commits/${sha}/check-runs`, "check_runs").catch(
+          () => [],
+        );
+        const checkNow = runsNow.filter((r) => r.name === "check");
+        const ciState = !checkNow.length
+          ? "⚠️ 기록 없음 — push 후 등록 지연이면 다음 점검에서 확인"
+          : checkNow.some((r) => r.status !== "completed")
+            ? "⏳ 진행 중"
+            : checkNow.every((r) => ["success", "skipped", "neutral"].includes(r.conclusion))
+              ? "✅ 통과"
+              : "❌ 실패 — 충돌 해결과 별개로 수정 필요";
         await say(
           "conflict",
-          `main과 머지 충돌이 있습니다. 최신 main을 머지하거나 리베이스해서 충돌을 해결한 뒤 push 해주세요.`,
+          `**main과 머지 충돌이 있어 자동 머지할 수 없습니다.**\n\n` +
+            table([
+              ["작성자 권한", `✅ 협력자 (@${pr.user?.login})`],
+              ["민감 파일", `✅ 없음 (${(files || []).length}개 검사)`],
+              ["머지 가능성", `❌ **충돌** (\`${detail.mergeable_state}\`)`],
+              ["CI `check`", ciState],
+            ]) +
+            (cfiles?.length
+              ? `\n\n**충돌${exact ? "" : " 추정"} 파일 (${cfiles.length}개):**\n` +
+                cfiles.map((f) => `- \`${f}\``).join("\n")
+              : `\n\n충돌 파일 목록을 추출하지 못했습니다 — 로컬에서 \`git merge origin/main\`을 실행하면 충돌 위치가 표시됩니다.`) +
+            `\n\n**해결 방법 (택 1):**\n` +
+            "```bash\n" +
+            "# A. 최신 main을 이 브랜치에 머지\n" +
+            `git checkout ${detail.head.ref}\n` +
+            "git fetch origin\n" +
+            "git merge origin/main          # <<<<< 표시된 충돌 수정\n" +
+            "git add <해결한 파일>\n" +
+            "git commit\n" +
+            "git push\n\n" +
+            "# B. 리베이스 (커밋 이력을 최신 main 위로)\n" +
+            `git checkout ${detail.head.ref}\n` +
+            "git fetch origin\n" +
+            "git rebase origin/main         # 충돌 해결 → git add → git rebase --continue\n" +
+            "git push --force-with-lease\n" +
+            "```\n" +
+            `push되면 다음 점검에서 자동으로 다시 판정합니다.`,
         );
         continue;
       }
@@ -298,7 +454,17 @@ async function main() {
         if (Date.now() - pushedAt > CI_GRACE_MS) {
           await say(
             "ci-missing",
-            `CI(\`check\`) 기록이 없습니다. ci.yml은 main 대상 PR의 push에서 자동 실행됩니다 — 최신 커밋을 다시 push하거나 Actions 탭에서 워크플로 실행 여부를 확인해 주세요.`,
+            `**자동 승인 불가 — 필수 CI(\`check\`) 기록이 없습니다.**\n\n` +
+              table([
+                ["작성자 권한", `✅ 협력자 (@${pr.user?.login})`],
+                ["민감 파일", `✅ 없음 (${(files || []).length}개 검사)`],
+                ["머지 가능성", "✅ 충돌 없음"],
+                ["CI `check`", `❌ check-run 미등록 (커밋 후 ${Math.round((Date.now() - pushedAt) / 60000)}분 경과)`],
+              ]) +
+              `\n\n**가능한 원인:**\n` +
+              `- push가 워크플로를 트리거하지 못함(봇 계정 push·Actions 비활성)\n` +
+              `- ci.yml이 이 브랜치/main에 없거나 구문 오류로 시작 실패\n\n` +
+              `**처리:** 최신 커밋을 다시 push하거나, Actions 탭에서 \`ci\` 워크플로가 이 커밋(\`${sha.slice(0, 7)}\`)에서 실행됐는지 확인해 주세요.`,
           );
         } else {
           console.log(`- ${title}: CI(check) 미등록(유예 중) — 다음 주기에 재점검`);
@@ -315,7 +481,23 @@ async function main() {
       if (failed.length) {
         await say(
           "ci-fail",
-          `CI 실패: ${failed.map((r) => `\`${r.name}\``).join(", ")}. 로컬에서 \`npm ci\` → \`npm run typecheck\` → \`npm run build\`로 재현 확인 후 push 해주세요.`,
+          `**자동 승인 불가 — CI(\`check\`) 실패.**\n\n` +
+            table([
+              ["작성자 권한", `✅ 협력자 (@${pr.user?.login})`],
+              ["민감 파일", `✅ 없음 (${(files || []).length}개 검사)`],
+              ["머지 가능성", "✅ 충돌 없음"],
+              ["CI `check`", `❌ ${failed.map((r) => `\`${r.conclusion}\``).join(", ")}`],
+            ]) +
+            `\n\n**실패한 잡 로그:**\n` +
+            failed.map((r) => `- [check — ${r.conclusion}](${r.html_url})`).join("\n") +
+            `\n\n**로컬 재현 절차:**\n` +
+            "```bash\n" +
+            "cd \"0. 소스코드/eottae-web\"\n" +
+            "npm ci\n" +
+            "npm run typecheck\n" +
+            "npm run build\n" +
+            "```\n" +
+            `로그에서 실패한 단계의 오류를 수정해 push하면 다음 점검에서 자동 재판정합니다.`,
         );
         continue;
       }
@@ -334,7 +516,15 @@ async function main() {
               // 승인을 판정한 head에 고정 — GitHub은 옛 commit_id를 거부하지 않고 stale 리뷰로
               // 기록하므로, 새 push 차단의 실제 게이트는 아래 merge의 sha 조건이다
               commit_id: sha,
-              body: "🤖 PR 리뷰 봇 — CI 통과·머지 충돌 없음·민감 파일 미포함을 확인해 승인합니다.",
+              body:
+                `🤖 PR 리뷰 봇 — **자동 승인합니다.**\n\n` +
+                table([
+                  ["작성자 권한", `✅ 협력자 (@${pr.user?.login}, ${detail.author_association})`],
+                  ["민감 파일", `✅ 없음 (${(files || []).length}개 파일 검사)`],
+                  ["머지 가능성", `✅ \`${detail.mergeable_state}\``],
+                  ["CI `check`", "✅ 통과"],
+                ]) +
+                `\n\n코드 품질 리뷰는 Devin 세션(eottae-pr-watch)에서 별도 진행됩니다.`,
             },
           });
         }
@@ -362,7 +552,16 @@ async function main() {
       } catch (e) {
         await say(
           "await-merge",
-          `승인은 완료됐지만 자동 머지가 거부됐습니다 — 보호 규칙(CODEOWNERS 리뷰·브랜치 최신화 요구 등) 또는 판정 중 새 push 때문일 수 있습니다. 조건이 충족되면 다음 점검에서 다시 판정하거나 사람이 머지해 주세요. (${e.status || "오류"})`,
+          `**승인 완료 — 자동 머지는 GitHub이 거부했습니다.**\n\n` +
+            table([
+              ["작성자 권한", `✅ 협력자 (@${pr.user?.login})`],
+              ["민감 파일", `✅ 없음 (${(files || []).length}개 검사)`],
+              ["머지 가능성", `✅ \`${detail.mergeable_state}\``],
+              ["CI `check`", "✅ 통과"],
+              ["자동 머지", `❌ API 거부 (${e.status || "오류"})`],
+            ]) +
+            `\n\n**가능한 원인:** CODEOWNERS 지정 리뷰어 승인 요구 · '브랜치 최신화 필수' 보호 규칙 · 판정과 머지 사이 새 push.` +
+            `\n\n조건이 충족되면 다음 점검에서 다시 시도합니다 — 급하면 보호 규칙을 충족한 뒤 사람이 머지 버튼을 눌러 주세요.`,
         );
       }
     } catch (e) {
