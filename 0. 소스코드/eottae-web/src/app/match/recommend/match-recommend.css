@@ -1,0 +1,389 @@
+/* ============================================================
+   저장 경로: src/app/match/recommend/match-recommend.css
+   담당: 오하율 · MATCH-002 (추천 카드·질문 UI)
+   역할: 추천 리스트/카드/상태 스타일. 토큰은 ../match-tokens.css 공유.
+   ============================================================ */
+
+@import '../match-tokens.css';
+
+.mt-rec-page {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.mt-rec-list {
+  background: var(--match-bg);
+  border: 0.5px solid var(--match-line);
+  border-radius: 20px;
+  overflow: hidden;
+  color: var(--match-ink);
+}
+
+/* 헤더 */
+.mt-rec-list__head {
+  background: var(--match-paper);
+  padding: 13px 16px;
+  border-bottom: 0.5px solid var(--match-line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.mt-rec-list__title {
+  font-size: 15px;
+  font-weight: 500;
+  margin: 0;
+}
+.mt-rec-list__sub {
+  font-size: 10.5px;
+  color: var(--match-hint);
+  margin: 2px 0 0;
+}
+.mt-rec-list__acorn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--match-acorn-bg);
+  border: 0.5px solid var(--match-acorn-line);
+  border-radius: 99px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--match-acorn-ink);
+}
+
+.mt-rec-list__notice {
+  margin: 10px 12px 0;
+  padding: 9px 12px;
+  background: var(--match-soft);
+  border-radius: 10px;
+  font-size: 11.5px;
+  color: var(--match-accent-ink);
+  line-height: 1.5;
+}
+
+.mt-rec-list__body {
+  padding: 12px;
+}
+.mt-rec-list__demo {
+  text-align: center;
+  font-size: 10px;
+  color: var(--match-hint);
+  margin: 0 0 12px;
+}
+
+/* ---- 카드 ---- */
+.mt-rec {
+  background: var(--match-paper);
+  border: 0.5px solid var(--match-line);
+  border-radius: 16px;
+  padding: 12px;
+  margin-bottom: 11px;
+}
+.mt-rec--mutual {
+  border: 1px solid var(--match-chip-line);
+}
+.mt-rec:last-child {
+  margin-bottom: 0;
+}
+.mt-rec__top {
+  display: flex;
+  gap: 12px;
+}
+
+/* 사진 */
+.mt-rec__photo {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  border-radius: 14px;
+  flex: 0 0 auto;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--match-soft);
+}
+.mt-rec__photo--revealed {
+  background: linear-gradient(135deg, #ffd9c7, #ffc0d4);
+}
+.mt-rec__avatar {
+  width: 36px;
+  height: 36px;
+  color: #eeb9c8;
+}
+.mt-rec__photo--revealed .mt-rec__avatar {
+  color: rgba(255, 255, 255, 0.85);
+}
+.mt-rec__blur {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(2px);
+  background: rgba(251, 233, 239, 0.3);
+}
+.mt-rec__preview-tag {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 99px;
+  padding: 2px 6px;
+  font-size: 8.5px;
+  color: var(--match-acorn-ink);
+  font-weight: 500;
+}
+
+/* 본문 */
+.mt-rec__body {
+  flex: 1;
+  min-width: 0;
+}
+.mt-rec__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.mt-rec__ident {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.mt-rec__name {
+  font-size: 15px;
+  font-weight: 500;
+}
+.mt-rec__age {
+  font-size: 12px;
+  color: var(--match-sub);
+}
+.mt-rec__mbti {
+  font-size: 10px;
+  padding: 1px 7px;
+  border-radius: 99px;
+  background: var(--match-mbti-bg);
+  color: var(--match-mbti-ink);
+  font-weight: 500;
+}
+.mt-rec__mutual-tag {
+  font-size: 10px;
+  padding: 1px 7px;
+  border-radius: 99px;
+  background: var(--match-mutual-bg);
+  color: var(--match-mutual-ink);
+  font-weight: 500;
+}
+.mt-rec__block {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--match-hint);
+  padding: 2px;
+  display: flex;
+}
+
+.mt-rec__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 5px;
+  font-size: 10.5px;
+  color: var(--match-hint);
+}
+.mt-rec__meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.mt-rec__meta-item svg {
+  color: var(--match-hint);
+}
+
+.mt-rec__intro {
+  font-size: 11px;
+  color: var(--match-sub);
+  line-height: 1.4;
+  margin: 0 0 7px;
+}
+
+.mt-rec__shared {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.mt-rec__tag {
+  font-size: 10.5px;
+  padding: 3px 8px;
+  border-radius: 99px;
+  background: var(--match-soft);
+  color: var(--match-accent-ink);
+}
+.mt-rec__tag--more {
+  background: var(--match-line);
+  color: var(--match-hint);
+}
+
+/* 액션 */
+.mt-rec__actions {
+  display: flex;
+  gap: 7px;
+}
+.mt-rec__btn {
+  height: 33px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: none;
+}
+.mt-rec__btn--later {
+  flex: 1;
+  border: 0.5px solid var(--match-line-soft);
+  background: var(--match-paper);
+  color: var(--match-sub);
+}
+.mt-rec__btn--acorn {
+  flex: 1;
+  font-size: 11px;
+  border: 0.5px solid var(--match-acorn-line);
+  background: var(--match-acorn-bg);
+  color: var(--match-acorn-ink);
+}
+.mt-rec__btn--like {
+  flex: 1.4;
+  background: var(--match-accent);
+  color: #ffffff;
+  font-weight: 500;
+}
+
+/* 공통 질문 */
+.mt-rec__ask {
+  margin-top: 11px;
+  background: var(--match-bg);
+  border: 0.5px solid var(--match-line);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.mt-rec__ask-label {
+  font-size: 10.5px;
+  color: var(--match-hint);
+  margin-bottom: 5px;
+}
+.mt-rec__ask-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.mt-rec__ask-chip {
+  font-size: 11px;
+  padding: 6px 11px;
+  border-radius: 99px;
+  background: var(--match-paper);
+  border: 0.5px solid var(--match-chip-line);
+  color: var(--match-accent-ink);
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* ---- 상태(빈/에러) ---- */
+.mt-rec-state {
+  background: var(--match-paper);
+  border: 0.5px solid var(--match-line);
+  border-radius: 16px;
+  padding: 28px 18px;
+  text-align: center;
+}
+.mt-rec-state__title {
+  font-size: 13px;
+  font-weight: 500;
+  margin: 0 0 5px;
+  color: var(--match-ink);
+}
+.mt-rec-state__desc {
+  font-size: 11px;
+  color: var(--match-hint);
+  line-height: 1.5;
+  margin: 0 0 12px;
+}
+.mt-rec-state__link {
+  display: inline-block;
+  font-size: 12px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 0.5px solid var(--match-chip-line);
+  background: var(--match-paper);
+  color: var(--match-accent-ink);
+  text-decoration: none;
+}
+
+/* ---- 로딩 스켈레톤 ---- */
+.mt-rec-skel {
+  display: flex;
+  gap: 12px;
+  background: var(--match-paper);
+  border: 0.5px solid var(--match-line);
+  border-radius: 16px;
+  padding: 12px;
+  margin-bottom: 11px;
+}
+.mt-rec-skel__photo {
+  width: 84px;
+  height: 84px;
+  border-radius: 14px;
+  background: var(--match-soft);
+  flex: 0 0 auto;
+}
+.mt-rec-skel__lines {
+  flex: 1;
+  padding-top: 4px;
+}
+.mt-rec-skel__line {
+  display: block;
+  height: 10px;
+  border-radius: 6px;
+  background: var(--match-soft);
+  margin-bottom: 8px;
+}
+.mt-rec-skel__line--title {
+  width: 45%;
+  height: 12px;
+}
+.mt-rec-skel__line--short {
+  width: 65%;
+}
+.mt-rec-skel__photo,
+.mt-rec-skel__line {
+  animation: mt-rec-pulse 1.3s ease-in-out infinite;
+}
+@keyframes mt-rec-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* 접근성: 키보드 포커스 */
+.mt-rec-list button:focus-visible,
+.mt-rec-list a:focus-visible {
+  outline: 2px solid var(--match-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mt-rec-skel__photo,
+  .mt-rec-skel__line {
+    animation: none;
+  }
+}

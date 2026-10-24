@@ -1,0 +1,74 @@
+/* ============================================================
+   저장 경로: src/app/match/match-tokens.css
+   담당: 오하율 · MATCH 모듈 공통
+   역할: 매칭 모듈 전용 색상 토큰(피치 톤). 공통 globals.css(김민기) 불변.
+
+   [색상 전환] 팀 합의로 브랜드 톤을 바꾸면 이 파일만 교체.
+   매칭의 온보딩·추천 등 모든 하위 페이지가 이 토큰을 공유한다.
+   다크 모드는 globals.css 와 동일하게 :root[data-theme='dark'] 기준.
+   ============================================================ */
+
+:root {
+  --match-ink: #3f2f33;
+  --match-sub: #8a7378;
+  --match-hint: #a98c93;
+  --match-accent: #f2859d;
+  --match-accent-deep: #e8738f;
+  --match-accent-ink: #c25f78;
+  --match-soft: #fdeef1;
+  --match-bg: #fff7f3;
+  --match-paper: #ffffff;
+  --match-line: #f3e2da;
+  --match-line-soft: #f0ddd5;
+  --match-chip-line: #f0d0d8;
+  --match-track: #fbe4e9;
+  --match-focus: #e8738f;
+  --match-ok-bg: #f3fbf4;
+  --match-ok-line: #c7e9ce;
+  --match-ok-ink: #2f6b3e;
+  --match-ok-sub: #79a583;
+  --match-warn-bg: #fff6e8;
+  --match-warn-line: #f0d9a8;
+  --match-warn-ink: #9a6a1e;
+  --match-err-ink: #c0392b;
+  /* 재화(도토리) 톤 */
+  --match-acorn-bg: #fbf1e2;
+  --match-acorn-line: #ecd6ad;
+  --match-acorn-ink: #8a5a22;
+  --match-mutual-bg: #e4f3ea;
+  --match-mutual-ink: #3b8a4e;
+  --match-mbti-bg: #ede8fb;
+  --match-mbti-ink: #6b58b8;
+}
+
+:root[data-theme='dark'] {
+  --match-ink: #f6e9ec;
+  --match-sub: #c7a9af;
+  --match-hint: #a98891;
+  --match-accent: #e8738f;
+  --match-accent-deep: #f2859d;
+  --match-accent-ink: #f2a6b8;
+  --match-soft: #3a222b;
+  --match-bg: #1c141a;
+  --match-paper: #241a20;
+  --match-line: #3b2a31;
+  --match-line-soft: #44313a;
+  --match-chip-line: #4a333c;
+  --match-track: #3a222b;
+  --match-focus: #f2859d;
+  --match-ok-bg: #1d2a20;
+  --match-ok-line: #38563f;
+  --match-ok-ink: #9fd3ac;
+  --match-ok-sub: #7ba487;
+  --match-warn-bg: #352a1a;
+  --match-warn-line: #5f4a2a;
+  --match-warn-ink: #e8c68a;
+  --match-err-ink: #f0998e;
+  --match-acorn-bg: #352a1a;
+  --match-acorn-line: #5f4a2a;
+  --match-acorn-ink: #e8c68a;
+  --match-mutual-bg: #1d2a20;
+  --match-mutual-ink: #9fd3ac;
+  --match-mbti-bg: #2e2740;
+  --match-mbti-ink: #c3b4ee;
+}
