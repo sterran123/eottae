@@ -154,3 +154,9 @@ git config --global user.email "본인 GitHub 이메일 또는 noreply"
 - 등록: 루트 `.env` 또는 `.devin/.env`에 `DEVIN_API_KEY=`(Settings > Devin API > Service users 탭에서 발급, ManageOrgAutomations 권한 — `cog_` 접두사)·`DEVIN_ORG_ID=`(같은 페이지 상단, `org-*`)를 적고 `node tools/devin_pr_watch.mjs` 실행. 스크립트가 두 자동화를 이름 기준으로 생성/갱신한다(UPDATE=1이면 갱신, DRY_RUN=1이면 페이로드만 출력). 셸 환경변수로 줘도 된다 — 환경변수가 .env보다 우선.
 - 참고: GitHub 트리거가 발화하려면 Devin GitHub 연동이 이 저장소에 설치돼 있어야 한다(본 저장소는 이미 devin-ai-integration[bot]이 PR을 만들 수 있는 상태라 연동됨). 댓글 트리거가 전혀 안 먹으면 Settings > Integrations에서 GitHub 연동의 저장소 범위를 확인.
 - 세션에 GitHub 쓰기 권한(연동된 계정 또는 `GH_TOKEN` 시크릿)이 없으면 읽기 전용 점검+요약 보고만 한다 — 코멘트·승인·머지는 토큰이 있는 경우에만.
+
+## 12. 로컬 저장소 자동 동기화
+
+자동화가 main을 직접 바꾸므로(봇 머지·Devin 세션) 로컬은 주기적으로 당겨줘야 한다. `tools/sync_repo.mjs`가 fetch→뒤처짐·깨끗 여부 판정→`--ff-only` pull을 수행한다(미커밋 변경·분기·다른 브랜치면 안전하게 건너뜀). 두 경로로 자동 실행된다:
+- **Devin CLI 세션 시작** — `.devin/hooks.v1.json`의 SessionStart 훅이 이 스크립트를 실행하고 결과를 세션 컨텍스트에 주입한다.
+- **Windows 작업 스케줄러** — 작업 `eottae-repo-sync`(매시간)가 `tools/sync_repo.cmd`를 실행해 `.repo-sync.log`에 누적한다. 재등록: `schtasks /create /tn "eottae-repo-sync" /tr "<repo>\tools\sync_repo.cmd" /sc hourly /f`.
