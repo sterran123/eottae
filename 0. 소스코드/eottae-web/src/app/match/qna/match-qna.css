@@ -135,7 +135,7 @@
 }
 .mt-qna__tab.is-on {
   background: var(--match-accent);
-  color: #ffffff;
+  color: var(--match-on-accent);
   font-weight: 500;
 }
 
@@ -269,7 +269,7 @@
 }
 .mt-qna-opt.is-on .mt-qna-opt__radio {
   border: 4.5px solid var(--match-accent);
-  background: #ffffff;
+  background: var(--match-paper);
 }
 
 /* 자유 입력 */
@@ -375,7 +375,7 @@
   border: none;
   border-radius: 11px;
   background: var(--match-accent);
-  color: #ffffff;
+  color: var(--match-on-accent);
   font-size: 12.5px;
   font-weight: 500;
   font-family: inherit;
@@ -394,7 +394,7 @@
 .mt-qna__modal-dim {
   position: absolute;
   inset: 0;
-  background: rgba(40, 30, 35, 0.45);
+  background: var(--match-dim);
 }
 .mt-qna__modal-body {
   position: relative;

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import SubpageHero from '@/components/shared/subpage-hero';
 
 export const metadata: Metadata = {
   title: '데이트·소모임',
@@ -15,36 +16,40 @@ const features = [
 
 export default function ActivitiesPage() {
   return (
-    <section className="shell subpage">
-      <span className="eyebrow dark">MODULE 02 · ACTIVITIES</span>
-      <span className="status big">2차 MVP · 준비 중</span>
-      <h1>데이트와 소모임, 함께하는 하루</h1>
-      <p className="lead">
+    <>
+      <SubpageHero
+        eyebrow="MODULE 02 · ACTIVITIES"
+        status={{ label: '2차 MVP · 준비 중' }}
+        title="데이트와 소모임, 함께하는 하루"
+        motif="✦"
+      >
         매칭으로 연결된 사람들과 취향이 맞는 사람들이 오프라인에서도 만날 수 있도록, 데이트
         코스·소모임·일정 관리를 2차 MVP에서 구현합니다.
-      </p>
+      </SubpageHero>
+      <section className="shell subpage">
 
-      <div className="feature-grid">
-        {features.map(([n, title, desc]) => (
-          <article className="feature" key={n}>
-            <span>{n}</span>
-            <h3>{title}</h3>
-            <p>{desc}</p>
-          </article>
-        ))}
-      </div>
+        <div className="feature-grid">
+          {features.map(([n, title, desc]) => (
+            <article className="feature" key={n}>
+              <span>{n}</span>
+              <h3>{title}</h3>
+              <p>{desc}</p>
+            </article>
+          ))}
+        </div>
 
-      <aside className="warn">
-        <strong>현재는 서비스 입구와 계획 안내만 제공합니다</strong>
-        <p>
-          모임 생성·참가·투표 등 실제 사용자 기능은 개발하지 않았습니다. 1차 매칭 모듈이 안정화된
-          뒤 순차적으로 개통합니다.
-        </p>
-      </aside>
+        <aside className="warn">
+          <strong>현재는 서비스 입구와 계획 안내만 제공합니다</strong>
+          <p>
+            모임 생성·참가·투표 등 실제 사용자 기능은 개발하지 않았습니다. 1차 매칭 모듈이 안정화된
+            뒤 순차적으로 개통합니다.
+          </p>
+        </aside>
 
-      <Link className="btn outline" href="/">
-        ← 통합 홈으로
-      </Link>
-    </section>
+        <Link className="btn outline" href="/">
+          ← 통합 홈으로
+        </Link>
+      </section>
+    </>
   );
 }

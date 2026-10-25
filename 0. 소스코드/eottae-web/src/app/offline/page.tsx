@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import SubpageHero from '@/components/shared/subpage-hero';
 
 export const metadata: Metadata = {
   title: '오프라인',
@@ -8,16 +9,16 @@ export const metadata: Metadata = {
 
 export default function OfflinePage() {
   return (
-    <section className="shell subpage">
-      <span className="eyebrow dark">OFFLINE</span>
-      <h1>지금은 오프라인이에요</h1>
-      <p className="lead">
+    <>
+      <SubpageHero eyebrow="OFFLINE" title="지금은 오프라인이에요" motif="✉">
         네트워크 연결을 확인한 뒤 다시 시도해 주세요. 이전에 열어둔 화면은 캐시된 상태로 계속 볼 수
         있습니다.
-      </p>
-      <Link className="btn outline" href="/">
-        ← 통합 홈으로
-      </Link>
-    </section>
+      </SubpageHero>
+      <section className="shell subpage">
+        <Link className="btn outline" href="/">
+          ← 통합 홈으로
+        </Link>
+      </section>
+    </>
   );
 }
