@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import SubpageHero from '@/components/shared/subpage-hero';
 
 export const metadata: Metadata = {
   title: '안전센터',
@@ -15,35 +16,35 @@ const policies = [
 
 export default function SafetyPage() {
   return (
-    <section className="shell subpage">
-      <span className="eyebrow dark">TRUST &amp; SAFETY</span>
-      <h1>안전센터 · 정책 초안</h1>
-      <p className="lead">
+    <>
+      <SubpageHero eyebrow="TRUST & SAFETY" title="안전센터 · 정책 초안" motif="♡">
         성인 전용 1:1 데이팅, 상호 동의, 개인정보 최소화, 차단·신고를 개발 최우선 조건으로
         정했습니다.
-      </p>
+      </SubpageHero>
+      <section className="shell subpage">
 
-      <div className="feature-grid">
-        {policies.map(([title, desc], i) => (
-          <article className="feature" key={title}>
-            <span>0{i + 1}</span>
-            <h3>{title}</h3>
-            <p>{desc}</p>
-          </article>
-        ))}
-      </div>
+        <div className="feature-grid">
+          {policies.map(([title, desc], i) => (
+            <article className="feature" key={title}>
+              <span>0{i + 1}</span>
+              <h3>{title}</h3>
+              <p>{desc}</p>
+            </article>
+          ))}
+        </div>
 
-      <aside className="warn">
-        <strong>현재는 운영 전 초안입니다</strong>
-        <p>
-          실제 신고 접수·연령 확인은 아직 가동되지 않았습니다. 실사용자 대상 공개 서비스 전 정책과
-          기능을 완성해야 합니다.
-        </p>
-      </aside>
+        <aside className="warn">
+          <strong>현재는 운영 전 초안입니다</strong>
+          <p>
+            실제 신고 접수·연령 확인은 아직 가동되지 않았습니다. 실사용자 대상 공개 서비스 전 정책과
+            기능을 완성해야 합니다.
+          </p>
+        </aside>
 
-      <Link className="btn outline" href="/">
-        ← 홈으로
-      </Link>
-    </section>
+        <Link className="btn outline" href="/">
+          ← 홈으로
+        </Link>
+      </section>
+    </>
   );
 }

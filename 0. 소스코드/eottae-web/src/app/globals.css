@@ -549,6 +549,45 @@ img {
   background: var(--paper);
 }
 
+/* 현재 테마 팔레트 스와치 — 겹친 점 3개(브랜드·CTA·카드), 테마를 바꾸면 통통 팝 */
+.theme-swatch {
+  display: inline-flex;
+  align-items: center;
+  padding-left: 4px;
+  animation: swatch-pop 0.45s var(--spring);
+}
+
+.theme-swatch i {
+  width: 11px;
+  height: 11px;
+  margin-left: -4px;
+  border-radius: 50%;
+  border: 1.5px solid var(--paper);
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+.theme-swatch i:nth-child(1) {
+  background: var(--brand);
+}
+
+.theme-swatch i:nth-child(2) {
+  background: var(--cta-bg);
+}
+
+.theme-swatch i:nth-child(3) {
+  background: var(--card-blue-a);
+}
+
+@keyframes swatch-pop {
+  0% {
+    transform: scale(0.6) rotate(-20deg);
+  }
+
+  100% {
+    transform: none;
+  }
+}
+
 .header-side {
   display: flex;
   align-items: center;
@@ -644,8 +683,9 @@ img {
   animation: hero-drift 18s ease-in-out infinite alternate;
 }
 
-/* 히어로 하단 스캘럽 물결선 — 반원 홈이 파인 끝단, 아기자기 시그니처 */
-.hero::after {
+/* 히어로 하단 스캘럽 물결선 — 반원 홈이 파인 끝단, 아기자기 시그니처 (서브페이지 머리 공용) */
+.hero::after,
+.subhero::after {
   content: '';
   position: absolute;
   left: 0;
@@ -1011,7 +1051,8 @@ img {
 
 /* 제목 꼬리 하트 — 섹션·서브페이지 공통 */
 .section-head h2::after,
-.subpage h1::after {
+.subpage h1::after,
+.subhero h1::after {
   content: '♡';
   color: var(--accent-pink);
   font-size: 0.62em;
@@ -1217,10 +1258,41 @@ img {
 }
 
 .feature {
+  position: relative;
   border: 1px solid var(--line);
   border-radius: 18px;
   padding: 23px;
   background: var(--feature-bg);
+  transition:
+    transform 0.28s var(--spring),
+    border-color 0.15s ease,
+    box-shadow 0.2s ease;
+}
+
+/* 카드 윗면 마스킹 테이프 — 서비스 카드와 같은 모티프, 카드마다 각도를 살짝 달리 */
+.feature::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  left: 28px;
+  width: 46px;
+  height: 14px;
+  transform: rotate(-4deg);
+  background: var(--point);
+  border-radius: 4px;
+  opacity: 0.6;
+}
+
+.feature:nth-child(even)::before {
+  left: auto;
+  right: 28px;
+  transform: rotate(5deg);
+}
+
+.feature:hover {
+  transform: translateY(-4px) rotate(-0.5deg);
+  border-color: var(--brand-soft);
+  box-shadow: var(--shadow-card-hover);
 }
 
 /* 번호·라벨 공통 — 작은 알약 뱃지 */
@@ -1438,10 +1510,148 @@ img {
   min-height: 610px;
 }
 
-.subpage h1 {
+.subpage h1,
+.subhero h1 {
   font-size: clamp(30px, 4vw, 48px);
   letter-spacing: -0.05em;
   margin: 22px 0 12px;
+}
+
+/* 서브페이지 머리 — 파스텔 카드 토큰 그라데이션 + 도트, 아래는 히어로와 같은 스캘럽 */
+.subhero {
+  position: relative;
+  padding: 64px 0 60px;
+  background:
+    radial-gradient(color-mix(in srgb, var(--brand) 10%, transparent) 1.1px, transparent 1.2px) 0 0 / 22px
+      22px,
+    linear-gradient(150deg, var(--card-lav-a), var(--card-pink-a) 62%, var(--card-blue-a));
+}
+
+.subhero-inner {
+  position: relative;
+}
+
+.subhero .lead {
+  margin: 0;
+}
+
+.subhero .eyebrow,
+.subhero h1,
+.subhero .lead,
+.subhero .status {
+  animation: hero-rise 0.6s var(--spring) both;
+}
+
+.subhero h1 {
+  animation-delay: 0.06s;
+}
+
+.subhero .lead {
+  animation-delay: 0.12s;
+}
+
+/* 오른쪽 점선 스티커 — 페이지별 모티프 글리프, 위에 테이프 한 조각 (데스크톱 전용) */
+.subhero-motif {
+  display: none;
+  position: absolute;
+  right: 24px;
+  top: 50%;
+  width: 128px;
+  height: 128px;
+  align-items: center;
+  justify-content: center;
+  font-size: 56px;
+  line-height: 1;
+  color: var(--brand-soft);
+  background: color-mix(in srgb, var(--paper) 72%, transparent);
+  border: 2px dashed var(--brand-soft);
+  border-radius: 46% 54% 52% 48% / 50% 46% 54% 50%;
+  /* 위치 transform을 sway가 쥐고 있으므로 진입은 투명도만 */
+  animation:
+    subhero-fade 0.6s ease 0.15s both,
+    subhero-sway 6s ease-in-out infinite;
+}
+
+.subhero-motif::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  width: 54px;
+  height: 15px;
+  transform: translateX(-50%) rotate(-6deg);
+  background: var(--point);
+  border-radius: 4px;
+  opacity: 0.75;
+}
+
+@keyframes subhero-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes subhero-sway {
+  0%,
+  100% {
+    transform: translateY(-50%) rotate(-6deg);
+  }
+
+  50% {
+    transform: translateY(-56%) rotate(4deg);
+  }
+}
+
+@media (min-width: 1025px) {
+  .subhero-motif {
+    display: flex;
+  }
+
+  .subhero-inner {
+    padding-right: 200px;
+  }
+}
+
+/* 머리 띠 아래 본문은 위 여백을 줄인다 */
+.subhero + .subpage {
+  padding-top: 44px;
+  min-height: 0;
+}
+
+.subhero + .subpage > :first-child {
+  margin-top: 0;
+}
+
+/* 로딩 — 하트 세 개가 차례로 통통 */
+.loader-hearts {
+  display: flex;
+  gap: 10px;
+  font-size: 26px;
+  color: var(--accent-pink);
+}
+
+.loader-hearts span {
+  animation: heart-hop 1s var(--spring) infinite;
+}
+
+.loader-hearts span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.loader-hearts span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes heart-hop {
+  0%,
+  60%,
+  100% {
+    transform: none;
+  }
+
+  30% {
+    transform: translateY(-10px) scale(1.12);
+  }
 }
 
 .lead {
@@ -1625,6 +1835,14 @@ img {
   .subpage {
     padding-top: 56px;
   }
+
+  .subhero {
+    padding: 44px 0 46px;
+  }
+
+  .subhero + .subpage {
+    padding-top: 30px;
+  }
 }
 
 /* 360px 이하 초소형 */
@@ -1663,8 +1881,19 @@ img {
   .hero-visual,
   .motif,
   .service-card:hover .motif,
-  .status.dev::before {
+  .status.dev::before,
+  .theme-swatch,
+  .subhero .eyebrow,
+  .subhero h1,
+  .subhero .lead,
+  .subhero .status,
+  .subhero-motif,
+  .loader-hearts span {
     animation: none;
+  }
+
+  .subhero-motif {
+    transform: translateY(-50%) rotate(-6deg);
   }
 
   .hero-visual {
@@ -1688,6 +1917,7 @@ img {
   .motif,
   .theme-toggle,
   .theme-picker,
+  .feature,
   .faq summary::after,
   .faq details::details-content {
     transition: none;
@@ -1697,6 +1927,7 @@ img {
   .service-card:hover,
   .step:hover,
   .step:hover strong,
+  .feature:hover,
   .brand:hover .brand-logo,
   .service-card:hover .card-link {
     transform: none;

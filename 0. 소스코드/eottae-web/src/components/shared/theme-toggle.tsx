@@ -39,24 +39,15 @@ function apply(theme: Theme) {
   syncChrome();
 }
 
-// 팔레트 아이콘 — 최소 인라인 SVG (원 + 점 3개)
-function Icon() {
+// 현재 테마 팔레트 미리보기 — 점 3개가 globals.css 토큰(브랜드·CTA·카드)을 그대로 칠한다.
+// 색을 tsx에 두지 않으므로 테마가 바뀌면 CSS가 알아서 따라가고, key 교체로 통통 튀는 팝만 재생한다.
+function Swatch() {
   return (
-    <svg
-      width={15}
-      height={15}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      aria-hidden
-    >
-      <circle cx="12" cy="12" r="8.5" />
-      <circle cx="9" cy="10" r="1.4" fill="currentColor" stroke="none" />
-      <circle cx="15" cy="10" r="1.4" fill="currentColor" stroke="none" />
-      <circle cx="12" cy="15" r="1.4" fill="currentColor" stroke="none" />
-    </svg>
+    <span className="theme-swatch" aria-hidden>
+      <i />
+      <i />
+      <i />
+    </span>
   );
 }
 
@@ -84,7 +75,7 @@ export default function ThemeToggle() {
 
   return (
     <label className="theme-picker">
-      <Icon />
+      <Swatch key={theme} />
       <select
         aria-label="테마 선택"
         value={theme}

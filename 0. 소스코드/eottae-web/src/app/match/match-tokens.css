@@ -6,6 +6,11 @@
    [색상 전환] 팀 합의로 브랜드 톤을 바꾸면 이 파일만 교체.
    매칭의 온보딩·추천 등 모든 하위 페이지가 이 토큰을 공유한다.
    다크 모드는 globals.css 와 동일하게 :root[data-theme='dark'] 기준.
+
+   [테마 추적 — 김민기 디자인 패스] 피치 톤(팀 합의)은 유지하고 명암만 셸을 따른다.
+   - 라이트 계열(light·cupcake·disney·system 라이트): 기본 :root 피치 라이트
+   - 다크 계열(dark·cyberpunk·system 다크): 피치 다크 세트
+   - cyberpunk: 다크 세트 + 표면색만 셸의 네이비에 맞춤(피치 액센트 유지)
    ============================================================ */
 
 :root {
@@ -39,9 +44,20 @@
   --match-mutual-ink: #3b8a4e;
   --match-mbti-bg: #ede8fb;
   --match-mbti-ink: #6b58b8;
+  /* 사진 자리·오버레이 — match/*.css 하드코딩 hex를 토큰화 */
+  --match-photo-a: #ffd9c7;
+  --match-photo-b: #ffc0d4;
+  --match-avatar-ink: #eeb9c8;
+  --match-avatar-revealed: rgba(255, 255, 255, 0.85);
+  --match-veil: rgba(251, 233, 239, 0.3);
+  --match-tag-bg: rgba(255, 255, 255, 0.92);
+  --match-on-accent: #ffffff;
+  --match-dim: rgba(40, 30, 35, 0.45);
+  --match-toast-shadow: rgba(230, 120, 140, 0.18);
 }
 
-:root[data-theme='dark'] {
+:root[data-theme='dark'],
+:root[data-theme='cyberpunk'] {
   --match-ink: #f6e9ec;
   --match-sub: #c7a9af;
   --match-hint: #a98891;
@@ -71,4 +87,73 @@
   --match-mutual-ink: #9fd3ac;
   --match-mbti-bg: #2e2740;
   --match-mbti-ink: #c3b4ee;
+  --match-photo-a: #5a3a44;
+  --match-photo-b: #6b3a4f;
+  --match-avatar-ink: #7a5560;
+  --match-avatar-revealed: rgba(255, 233, 239, 0.7);
+  --match-veil: rgba(28, 20, 26, 0.35);
+  --match-tag-bg: rgba(36, 26, 32, 0.92);
+  --match-on-accent: #ffffff;
+  --match-dim: rgba(0, 0, 0, 0.6);
+  --match-toast-shadow: rgba(0, 0, 0, 0.45);
+}
+
+/* 'system' + OS 다크 — globals.css와 같은 조건으로 다크 세트를 적용 */
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] {
+    --match-ink: #f6e9ec;
+    --match-sub: #c7a9af;
+    --match-hint: #a98891;
+    --match-accent: #e8738f;
+    --match-accent-deep: #f2859d;
+    --match-accent-ink: #f2a6b8;
+    --match-soft: #3a222b;
+    --match-bg: #1c141a;
+    --match-paper: #241a20;
+    --match-line: #3b2a31;
+    --match-line-soft: #44313a;
+    --match-chip-line: #4a333c;
+    --match-track: #3a222b;
+    --match-focus: #f2859d;
+    --match-ok-bg: #1d2a20;
+    --match-ok-line: #38563f;
+    --match-ok-ink: #9fd3ac;
+    --match-ok-sub: #7ba487;
+    --match-warn-bg: #352a1a;
+    --match-warn-line: #5f4a2a;
+    --match-warn-ink: #e8c68a;
+    --match-err-ink: #f0998e;
+    --match-acorn-bg: #352a1a;
+    --match-acorn-line: #5f4a2a;
+    --match-acorn-ink: #e8c68a;
+    --match-mutual-bg: #1d2a20;
+    --match-mutual-ink: #9fd3ac;
+    --match-mbti-bg: #2e2740;
+    --match-mbti-ink: #c3b4ee;
+    --match-photo-a: #5a3a44;
+    --match-photo-b: #6b3a4f;
+    --match-avatar-ink: #7a5560;
+    --match-avatar-revealed: rgba(255, 233, 239, 0.7);
+    --match-veil: rgba(28, 20, 26, 0.35);
+    --match-tag-bg: rgba(36, 26, 32, 0.92);
+    --match-on-accent: #ffffff;
+    --match-dim: rgba(0, 0, 0, 0.6);
+    --match-toast-shadow: rgba(0, 0, 0, 0.45);
+  }
+}
+
+/* 사이버펑크 — 표면·선은 셸 토큰을 그대로 따라 네이비 위에 얹히게, 액센트는 피치 유지 */
+:root[data-theme='cyberpunk'] {
+  --match-bg: var(--paper);
+  --match-paper: var(--soft);
+  --match-line: var(--line);
+  --match-line-soft: #383458;
+  --match-chip-line: #44325e;
+  --match-soft: #33152e;
+  --match-track: #33152e;
+  --match-photo-a: #3a2350;
+  --match-photo-b: #5a1f48;
+  --match-avatar-ink: #6e5590;
+  --match-veil: rgba(20, 18, 34, 0.35);
+  --match-tag-bg: rgba(20, 18, 34, 0.92);
 }

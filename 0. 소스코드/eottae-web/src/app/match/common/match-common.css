@@ -34,7 +34,7 @@
   background: var(--match-paper);
   border: 1px solid var(--match-chip-line);
   border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(230, 120, 140, 0.18);
+  box-shadow: 0 6px 18px var(--match-toast-shadow);
   animation: mt-toast-in 0.26s ease;
 }
 .mt-toast.is-leaving {
@@ -100,7 +100,7 @@
   width: 36px;
   height: 36px;
   border-radius: 11px;
-  background: linear-gradient(135deg, #ffd9c7, #ffc0d4);
+  background: linear-gradient(135deg, var(--match-photo-a), var(--match-photo-b));
   flex: 0 0 auto;
 }
 .mt-cq__title {

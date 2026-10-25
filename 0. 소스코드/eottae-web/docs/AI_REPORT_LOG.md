@@ -259,3 +259,19 @@
 - [픽스] Next.js 런타임 캐시 오류(Cannot find module './897.js') 해소 — feat/MATCH-009-common 브랜치 병합, .next 캐시 정리 및 클린 재빌드
 - [검증] npm run build PASS (정적 15개 라우트 프리렌더 완료), 브라우저 CDP 실검증 완료
 - [미결/위임] 성인 인증 게이트(MATCH-003/004) 및 추천/문답 API(MATCH-005/006/009) 연동 -> 주한태 서버 작업 완료 후 연동 예정
+
+## 2026-10-25 디자인 패스 1차 — 테마 완결(A)·서브페이지 통일(B) (김민기 작업)
+- [변경] src/app/match/match-tokens.css | 6테마 추적 매핑 추가 — 기존 다크 세트를 `cyberpunk`와 `system`+OS 다크(`@media (prefers-color-scheme: dark)`)에도 적용, cyberpunk는 표면·선만 셸 토큰(`--paper`/`--soft`/`--line`)을 따르게 오버라이드. 피치 액센트(팀 합의 톤)·기존 토큰명은 전부 유지. 수정 전 실캡처에서 cyberpunk·system 다크일 때 매칭 4라우트만 흰 피치 카드로 남던 결함 확인
+- [변경] src/app/match/{onboarding,recommend,qna,common}/*.css | 하드코딩 색 16곳을 신규 토큰(`--match-photo-a/b`·`--match-avatar-ink`·`--match-avatar-revealed`·`--match-veil`·`--match-tag-bg`·`--match-on-accent`·`--match-dim`·`--match-toast-shadow`)으로 치환 — 스타일 레이어만, 컴포넌트·로직 불변. 다크에서 사진 자리 그라데이션이 형광 핑크로 뜨던 것·미리보기 태그(흰 배경+밝은 글자) 대비 붕괴 해소
+- [변경] src/components/shared/theme-toggle.tsx | 팔레트 아이콘 → 현재 테마 스와치(브랜드·CTA·카드 토큰 점 3개, 테마 변경 시 스프링 팝). 네이티브 select·저장 키 `eottae-theme`·`data-theme` 계약 그대로
+- [신규] src/components/shared/subpage-hero.tsx | 서브페이지 공통 머리 — 파스텔 카드 토큰 그라데이션+도트, 히어로와 같은 스캘럽 하단, eyebrow 반짝이·h1 ♡ 꼬리, 데스크톱 점선 스티커+테이프 모티프(♡ ✦ ✉)
+- [변경] privacy·safety·offline·invitations·activities·error·not-found·loading | SubpageHero 적용(본문·문구 불변), loading은 하트 3개 통통 로더 추가
+- [변경] src/app/globals.css | `.feature` 카드에 마스킹 테이프(짝/홀 각도 교차)+스프링 호버 리프트, 스캘럽 규칙을 `.hero::after, .subhero::after` 공용으로, 신규 모션(스와치 팝·서브히어로 진입/스웨이·하트 로더·feature 호버) 전부 prefers-reduced-motion 정지 목록에 추가
+- [검증] `npm ci`·`npm run typecheck`·`npm run build` PASS (정적 15라우트) — 실행 중인 dev 서버가 node_modules의 next-swc 바이너리를 잠가 저장소 내 `npm ci`가 EPERM이라, 동일 소스·lock을 별도 폴더에 복사해 실행
+- [검증] 빌드 산출물(out/)을 `/eottae/` 경로 미리보기 서버로 띄우고 헤드리스 Chrome(CDP)로 실캡처 — match 4라우트 × 7모드(light·cupcake·cyberpunk·disney·dark·system 라이트·system 다크) 390px 수정 전/후 비교, invitations·offline 390px 7모드, safety·404 1440px 7모드, activities·privacy·404·offline 390px 4테마, invitations 1440px cyberpunk·disney. 캡처는 reduced-motion 에뮬레이션 상태
+- [미실행] loading.tsx 실화면(정적 export에서 직접 진입 경로 없음), error.tsx 실화면(런타임 오류 유발 필요) — 빌드·타입만 확인
+- [미실행] 모션 켜진 상태의 스웨이·팝 애니메이션 육안 확인, 실기기(iOS/Android) 확인, 실사이트(Pages) 반영 확인
+- [미결/회신] /match 소개 페이지(src/app/match/page.tsx)는 권한표상 match/* "스타일만" 영역이라 SubpageHero 마크업 전환을 보류 — CSS 공통 부분(feature 테이프)만 반영됨. 통일하려면 오하율 합의 필요
+- [미결/회신] 매칭 CTA의 흰 글자(#fff) on 피치 액센트(#f2859d) 대비 약 2.4:1로 WCAG AA 미달 — 팀 합의 톤 변경 사안이라 손대지 않음(C.6 접근성 PR에서 결정 필요)
+- [미결/회신] match 라우트 page.tsx가 `<main>`을 렌더해 레이아웃의 `<main id="content">` 안에 main이 중첩됨(랜드마크 중복) — match 영역 마크업이라 오하율 담당으로 이관
+- [미결/회신] 지시서 A.2의 저장 키 표기 `theme`는 실제 코드의 `eottae-theme`와 다름 — 코드 기준 유지
