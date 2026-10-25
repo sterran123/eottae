@@ -72,6 +72,8 @@ match 모듈(`오하율` 담당)은 기능 코드를 바꾸지 않는다 — 시
 
 - 브랜치: `feat/design-*` 브랜치에서 작업 → PR 생성. PR 열면 자동 리뷰 봇이 판정하고 Devin이 코드 리뷰함 — 통과하면 자동 승인·머지
 - 커밋 메시지: 기존 규칙(`feat(BRAND-004): …` 형태, 관련 요구사항 ID 표기)
+- 파일을 추가·삭제·이동했으면 저장소 루트(`어때_TEAM_PROJECT_FINAL_v1/`)에서 `python tools/update_package_manifest.py`를 실행해 `FILE_INDEX.csv`·`MANIFEST.sha256`을 갱신하고 같이 커밋
+- `gh` CLI가 없으면 PR 생성이 안 될 수 있다 — 그 경우 `feat/design-pass` push까지만 하고 멈춘 뒤 "PR 생성 필요"라고 응답에 남길 것 (사람이 열어줌)
 - 색상 변경은 토큰으로만 — tsx에 hex 직접 삽입 금지
 - 확신 없는 팀 합의 사항(예: match 피치 톤을 브랜드 보라로 바꿀지)은 **바꾸지 말고 지시서에 회신**
 - 검증 표기: 실행한 것만 PASS로 기록, 브라우저 실검증 못 한 항목은 `[미실행]` 표기
