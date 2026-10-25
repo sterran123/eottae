@@ -25,6 +25,8 @@
 | 서브페이지 라우트(privacy·safety·offline·invitations·activities) | | 워크플로·tools·민감 파일(건드리면 PR 리뷰 보류됨) |
 | `public/` 에셋(아이콘·폰트·manifest) | | |
 
+민감 파일(수정 시 자동 리뷰 보류 → 사람 승인 필요): `package.json`·lock 파일·`.github/**`·`tools/**`·`next.config.*`·`tsconfig*`·`.env*`·`CODEOWNERS`. **이 작업에서는 손대지 않는다.**
+
 match 모듈(`오하율` 담당)은 기능 코드를 바꾸지 않는다 — 시각 토큰 매핑·간격·레디우스 같은 **스타일 레이어만** 다듬는다.
 
 ## 3. 현재 상태 (2026-10-25 기준)
@@ -70,7 +72,11 @@ match 모듈(`오하율` 담당)은 기능 코드를 바꾸지 않는다 — 시
 
 ## 5. 작업 방식 규칙
 
+- 시작 전: `git checkout main && git pull` — 항상 최신 main에서 분기한다
 - 브랜치: `feat/design-*` 브랜치에서 작업 → PR 생성. PR 열면 자동 리뷰 봇이 판정하고 Devin이 코드 리뷰함 — 통과하면 자동 승인·머지
+- **PR 단위**: 4장 작업을 한 번에 다 하지 말고 단계별로 끊는다 — 1차 PR은 **A(테마 완결)+B(서브페이지 통일)**까지만. 나머지는 별도 PR
+- 실검증 방법: `npm run build` 후 `npm run start`(정적 미리보기 서버)로 페이지를 열어 확인. 브라우저 자동화 도구가 없으면 실행하지 못한 항목을 `[미실행]`으로 기록
+- `AI_REPORT_LOG.md` 기록 형식: 기존 엔트리(`## YYYY-MM-DD 주제 (김민기 작업)` + `- [신규]/[변경]/[검증]/[미실행]` 불릿)를 따라 파일 **맨 아래에 추가**
 - 커밋 메시지: 기존 규칙(`feat(BRAND-004): …` 형태, 관련 요구사항 ID 표기)
 - 파일을 추가·삭제·이동했으면 저장소 루트(`어때_TEAM_PROJECT_FINAL_v1/`)에서 `python tools/update_package_manifest.py`를 실행해 `FILE_INDEX.csv`·`MANIFEST.sha256`을 갱신하고 같이 커밋
 - `gh` CLI가 없으면 PR 생성이 안 될 수 있다 — 그 경우 `feat/design-pass` push까지만 하고 멈춘 뒤 "PR 생성 필요"라고 응답에 남길 것 (사람이 열어줌)
