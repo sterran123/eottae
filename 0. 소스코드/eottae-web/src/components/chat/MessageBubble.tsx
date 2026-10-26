@@ -1,3 +1,5 @@
+'use client';
+
 // ============================================================
 //  저장 경로: src/components/chat/MessageBubble.tsx
 //  담당: 손준혁 · MATCH-007
@@ -5,6 +7,7 @@
 //  [보안] 본문은 React 텍스트 노드로만 렌더링 (dangerouslySetInnerHTML 금지).
 // ============================================================
 
+import { useState } from 'react';
 import type { ChatMessage } from '@/lib/chat/types';
 
 interface MessageBubbleProps {
