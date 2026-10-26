@@ -275,3 +275,17 @@
 - [미결/회신] 매칭 CTA의 흰 글자(#fff) on 피치 액센트(#f2859d) 대비 약 2.4:1로 WCAG AA 미달 — 팀 합의 톤 변경 사안이라 손대지 않음(C.6 접근성 PR에서 결정 필요)
 - [미결/회신] match 라우트 page.tsx가 `<main>`을 렌더해 레이아웃의 `<main id="content">` 안에 main이 중첩됨(랜드마크 중복) — match 영역 마크업이라 오하율 담당으로 이관
 - [미결/회신] 지시서 A.2의 저장 키 표기 `theme`는 실제 코드의 `eottae-theme`와 다름 — 코드 기준 유지
+
+## 2026-10-26 1차 매칭 1:1 채팅 UI 및 인터랙션 구현 (손준혁 작업)
+- [신규] src/lib/chat/types.ts | 채팅 DTO(ChatMessage, ChatPartner, MessageStatus, MAX_MESSAGE_LENGTH=500) 및 전송 상태 정의 (API_계약_초안 /conversations/:id/messages 호환 구조)
+- [신규] src/lib/chat/demo-data.ts | DEMO 가상 상대 정보, 초기 안내 메시지, 순환 자동 응답 목업 데이터 (RULES 7 격리 준수)
+- [신규] src/components/chat/MessageBubble.tsx | 1:1 채팅 말풍선 컴포넌트 (내/상대 구분 정렬, 전송 상태/시간 포맷, 텍스트 노드 안전 렌더링)
+- [신규] src/components/chat/MessageComposer.tsx | 메시지 입력창 컴포넌트 (Enter 전송, Shift+Enter 줄바꿈, 한글 IME 조합 중복 전송 방지, 500자 제한, 차단 연동 대비 disabled 속성 지원)
+- [신규] src/components/chat/ChatRoom.tsx | 1:1 채팅방 컨테이너 (헤더, DEMO 안내 노출, 메시지 자동 스크롤, sending→sent 및 1.2초 지연 자동 응답 인터랙션)
+- [신규] src/app/match/chat/page.tsx & match-chat.css | 1:1 채팅 라우트 (/match/chat) 및 match-tokens.css 기반 6테마 추적 반응형 스타일 (globals.css 무변경)
+- [검증] `npm run typecheck` PASS / `npm run build` PASS (정적 16개 라우트 프리렌더 완료)
+- [검증] 브라우저 /match/chat 대화 목업 인터랙션(메시지 전송, 상태 전이, 자동 스크롤, 상대 타이핑 점 인디케이터) 동작 정상 확인
+- [보안] 메시지 본문 HTML 삽입 배제(순수 텍스트 렌더링), DEMO 라벨 및 실제 미전송 안내문구 명시(RULES 6·7 준수)
+- [미구현/보류] MATCH-008 차단·신고 모달 및 헤더 더보기 메뉴 연동 — 후속 작업 예정
+- [미구현/보류] 성인 인증 게이트(MATCH-003/004) 및 실시간 WebSocket/서버 API(주한태 담당) 연동 대기
+
