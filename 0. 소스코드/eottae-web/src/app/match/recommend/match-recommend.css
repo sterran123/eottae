@@ -46,10 +46,20 @@
   background: var(--match-acorn-bg);
   border: 0.5px solid var(--match-acorn-line);
   border-radius: 99px;
-  padding: 4px 10px;
+  padding: 4px 11px;
   font-size: 12px;
   font-weight: 500;
   color: var(--match-acorn-ink);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+.mt-rec-list__acorn:hover {
+  background: #f5e4ce;
+  transform: translateY(-1px);
+}
+.mt-rec-list__acorn:active {
+  transform: translateY(0);
 }
 
 .mt-rec-list__notice {
@@ -479,13 +489,13 @@
   }
 }
 
-/* ---- 신고 모달 다이얼로그 ---- */
+/* ---- 리뉴얼: 프리미엄 신고 모달 다이얼로그 ---- */
 .mt-report-modal-backdrop {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: rgba(40, 33, 58, 0.45);
-  backdrop-filter: blur(4px);
+  background: rgba(30, 24, 40, 0.55);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -494,14 +504,16 @@
 }
 .mt-report-modal {
   width: 100%;
-  max-width: 360px;
+  max-width: 380px;
   background: var(--match-paper);
   border: 1px solid var(--match-line);
-  border-radius: 20px;
-  padding: 20px 18px;
-  box-shadow: 0 12px 32px rgba(40, 33, 58, 0.18);
+  border-radius: 24px;
+  padding: 24px 22px 20px;
+  box-shadow: 0 16px 40px rgba(40, 33, 58, 0.24);
   color: var(--match-ink);
-  animation: mt-scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: mt-scale-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
 }
 @keyframes mt-fade-in {
   from { opacity: 0; }
@@ -511,57 +523,158 @@
   from { opacity: 0; transform: scale(0.95) translateY(8px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
+.mt-report-modal__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.mt-report-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #ff4757;
+  background: rgba(255, 71, 87, 0.1);
+  padding: 3px 8px;
+  border-radius: 99px;
+  margin-bottom: 6px;
+}
 .mt-report-title {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 700;
-  margin: 0 0 6px;
+  margin: 0;
+  color: var(--match-ink);
+}
+.mt-report-close-btn {
+  border: none;
+  background: var(--match-soft);
+  color: var(--match-sub);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
-.mt-report-desc {
+.mt-report-close-btn:hover {
+  background: var(--match-line);
+  color: var(--match-ink);
+}
+.mt-report-target-box {
+  background: var(--match-soft);
+  border: 1px solid var(--match-line-soft);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
   font-size: 12px;
   color: var(--match-sub);
-  margin: 0 0 14px;
-  line-height: 1.4;
+  line-height: 1.45;
+}
+.mt-report-target-box strong {
+  color: var(--match-ink);
+  font-weight: 600;
 }
 .mt-report-options {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 .mt-report-opt {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 12.5px;
-  padding: 8px 10px;
-  border-radius: 8px;
+  gap: 10px;
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 12px;
   background: var(--match-soft);
+  border: 1px solid transparent;
   cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.mt-report-opt:hover {
+  background: color-mix(in srgb, var(--match-soft) 80%, var(--match-paper));
+}
+.mt-report-opt.is-selected {
+  background: var(--match-paper);
+  border-color: #ff6b81;
+  box-shadow: 0 2px 8px rgba(255, 107, 129, 0.15);
+  font-weight: 500;
+}
+.mt-report-opt input[type='radio'] {
+  accent-color: #ff4757;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+}
+.mt-report-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 6px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--match-line);
+  background: var(--match-paper);
+  font-size: 12.5px;
+  font-family: inherit;
+  color: var(--match-ink);
+  resize: vertical;
+  min-height: 72px;
+  outline: none;
+  transition: border-color 0.15s;
+  animation: mt-expand 0.2s ease;
+}
+.mt-report-textarea:focus {
+  border-color: #ff6b81;
+  box-shadow: 0 0 0 3px rgba(255, 107, 129, 0.12);
+}
+@keyframes mt-expand {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 .mt-report-actions {
   display: flex;
   gap: 8px;
+  margin-top: 4px;
 }
 .mt-report-btn {
   flex: 1;
-  padding: 10px;
-  border-radius: 10px;
-  font-size: 13px;
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 13.5px;
   font-weight: 600;
   border: none;
   cursor: pointer;
   font-family: inherit;
+  transition: all 0.15s ease;
 }
 .mt-report-btn--cancel {
   background: var(--match-soft);
   color: var(--match-sub);
 }
+.mt-report-btn--cancel:hover {
+  background: var(--match-line);
+  color: var(--match-ink);
+}
 .mt-report-btn--submit {
   background: #ff4757;
   color: #ffffff;
+  box-shadow: 0 4px 12px rgba(255, 71, 87, 0.28);
+}
+.mt-report-btn--submit:hover {
+  background: #ff2e44;
+  transform: translateY(-1px);
+}
+.mt-report-btn--submit:active {
+  transform: translateY(0);
 }
 
 /* 플로팅 토스트 */
