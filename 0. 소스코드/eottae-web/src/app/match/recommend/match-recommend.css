@@ -256,17 +256,24 @@
   gap: 7px;
 }
 .mt-rec__btn {
-  height: 35px;
+  height: 36px;
   border-radius: 10px;
-  font-size: 11.5px;
+  font-size: 12px;
   font-family: inherit;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 6px;
   border: none;
   white-space: nowrap;
+}
+.mt-rec__btn svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  display: inline-block;
+  vertical-align: middle;
 }
 .mt-rec__btn--later {
   flex: 0.85;

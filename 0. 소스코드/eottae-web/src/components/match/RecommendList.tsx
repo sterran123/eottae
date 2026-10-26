@@ -11,6 +11,7 @@
 // ============================================================
 
 import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   DEMO_ACORN,
   DEMO_RECOMMENDATIONS,
@@ -35,7 +36,8 @@ export default function RecommendList({
   acorn = DEMO_ACORN,
   status = 'ready',
 }: RecommendListProps) {
-  // 패스('나중에')한 카드는 현재 리스트에서 숨김(재조회 시 복원 가능).
+  const router = useRouter();
+  // 패스('나중에') 또는 차단한 카드는 현재 리스트에서 숨김.
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -57,8 +59,17 @@ export default function RecommendList({
   function handlePreview() {
     setNotice('사진 미리보기는 준비 중이에요. 결제는 아직 열리지 않았어요.');
   }
-  function handleBlock() {
-    setNotice('차단 기능은 안전팀 영역과 연동 예정이에요. (DEMO)');
+  function handleBlock(id: string) {
+    const target = initialItems.find((p) => p.id === id);
+    setSkipped((prev) => new Set(prev).add(id));
+    setNotice(`${target?.nickname ?? '해당 상대'} 님을 차단했어요. 추천 목록에서 제외되었습니다. (안전 보호 적용)`);
+  }
+  function handleAskQuestion(id: string, question: string) {
+    const target = initialItems.find((p) => p.id === id);
+    setNotice(`'${target?.nickname ?? '상대'}' 님과의 1:1 대화방으로 질문을 전달하여 이동합니다...`);
+    setTimeout(() => {
+      router.push(`/match/chat?partner=${id}&q=${encodeURIComponent(question)}`);
+    }, 400);
   }
 
   return (
@@ -117,6 +128,7 @@ export default function RecommendList({
               onSkip={handleSkip}
               onBlock={handleBlock}
               onPreview={handlePreview}
+              onAskQuestion={handleAskQuestion}
             />
           ))}
       </div>

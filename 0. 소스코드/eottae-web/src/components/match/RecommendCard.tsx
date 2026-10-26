@@ -95,6 +95,7 @@ export default function RecommendCard({
                 type="button"
                 className="mt-rec__block"
                 aria-label={`${profile.nickname} 차단`}
+                title="상대방 차단"
                 onClick={() => onBlock?.(profile.id)}
               >
                 <IconBlock width={16} height={16} />
@@ -156,7 +157,7 @@ export default function RecommendCard({
                   className="mt-rec__btn mt-rec__btn--acorn"
                   onClick={() => onPreview?.(profile.id)}
                 >
-                  <IconAcorn width={12} height={12} /> 사진 미리보기
+                  <IconAcorn width={15} height={15} /> 사진 미리보기
                 </button>
               )}
               <button
@@ -164,7 +165,7 @@ export default function RecommendCard({
                 className="mt-rec__btn mt-rec__btn--like"
                 onClick={() => onLike?.(profile.id)}
               >
-                <IconHeartFill width={13} height={13} /> 관심
+                <IconHeartFill width={15} height={15} /> 관심
               </button>
             </div>
           )}

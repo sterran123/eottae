@@ -152,12 +152,21 @@ export default function MessageComposer({
 
   return (
     <form className="mt-chat-composer" onSubmit={handleSubmit}>
-      {/* 2, 3번 이미지: 녹음 중 상태 바 (Recording... 0:01 ⏹️ ✕) */}
+      {/* 음성 녹음 중 상태 바: 실시간 높낮이 음성 파형 애니메이션 포함 */}
       {isRecording && (
         <div className="mt-chat-rec-bar" role="status" aria-live="polite">
           <div className="mt-chat-rec-left">
             <span className="mt-chat-rec-dot" aria-hidden="true" />
-            <span className="mt-chat-rec-label">Recording...</span>
+            <span className="mt-chat-rec-label">음성 녹음 중...</span>
+            <div className="mt-chat-rec-waves-live" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
             <span className="mt-chat-rec-time">{recMin}:{recSec}</span>
           </div>
           <div className="mt-chat-rec-right">
@@ -166,7 +175,6 @@ export default function MessageComposer({
               className="mt-chat-rec-btn mt-chat-rec-btn--stop"
               onClick={finishRecording}
               aria-label="녹음 완료 및 전송"
-              title="녹음 완료"
             >
               <span className="mt-chat-rec-stop-square" />
             </button>
@@ -175,7 +183,6 @@ export default function MessageComposer({
               className="mt-chat-rec-btn mt-chat-rec-btn--cancel"
               onClick={cancelRecording}
               aria-label="녹음 취소"
-              title="녹음 취소"
             >
               ✕
             </button>
@@ -197,7 +204,6 @@ export default function MessageComposer({
           type="button"
           className="mt-chat-media-btn"
           aria-label="사진 첨부"
-          title="사진 첨부"
           disabled={disabled || isRecording}
           onClick={() => fileInputRef.current?.click()}
         >
@@ -216,12 +222,10 @@ export default function MessageComposer({
           </svg>
         </button>
 
-        {/* 2번 이미지: Record Audio 툴팁, 3번 이미지: 활성 녹음 토글 */}
         <button
           type="button"
           className={`mt-chat-media-btn ${isRecording ? 'is-recording' : ''}`}
-          aria-label={isRecording ? 'Recording (녹음 중)' : 'Record Audio'}
-          title={isRecording ? 'Recording' : 'Record Audio'}
+          aria-label={isRecording ? '음성 녹음 완료 및 전송' : '음성 메모 녹음'}
           disabled={disabled}
           onClick={handleMicClick}
         >

@@ -270,6 +270,41 @@ body:has(.mt-chat-page) .footer::before {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
 }
+/* 녹음 중 실시간 보이스 파형 비주얼라이저 (높낮이 애니메이션) */
+.mt-chat-rec-waves-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 16px;
+  padding: 0 4px;
+}
+.mt-chat-rec-waves-live span {
+  display: inline-block;
+  width: 3px;
+  height: 6px;
+  background: #ff6b81;
+  border-radius: 99px;
+  animation: mt-rec-wave-live 0.75s ease-in-out infinite alternate;
+}
+.mt-chat-rec-waves-live span:nth-child(1) { animation-delay: 0.1s; height: 8px; }
+.mt-chat-rec-waves-live span:nth-child(2) { animation-delay: 0.35s; height: 14px; background: #ff4757; }
+.mt-chat-rec-waves-live span:nth-child(3) { animation-delay: 0.15s; height: 10px; }
+.mt-chat-rec-waves-live span:nth-child(4) { animation-delay: 0.5s; height: 16px; background: #ff4757; }
+.mt-chat-rec-waves-live span:nth-child(5) { animation-delay: 0.25s; height: 12px; }
+.mt-chat-rec-waves-live span:nth-child(6) { animation-delay: 0.4s; height: 15px; background: #ff4757; }
+.mt-chat-rec-waves-live span:nth-child(7) { animation-delay: 0.2s; height: 7px; }
+
+@keyframes mt-rec-wave-live {
+  0% {
+    transform: scaleY(0.35);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scaleY(1.35);
+    opacity: 1;
+  }
+}
+
 .mt-chat-rec-time {
   font-family: monospace;
   font-size: 13px;
