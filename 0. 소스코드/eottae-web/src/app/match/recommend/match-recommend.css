@@ -478,3 +478,115 @@
     animation: none;
   }
 }
+
+/* ---- 신고 모달 다이얼로그 ---- */
+.mt-report-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(40, 33, 58, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: mt-fade-in 0.2s ease;
+}
+.mt-report-modal {
+  width: 100%;
+  max-width: 360px;
+  background: var(--match-paper);
+  border: 1px solid var(--match-line);
+  border-radius: 20px;
+  padding: 20px 18px;
+  box-shadow: 0 12px 32px rgba(40, 33, 58, 0.18);
+  color: var(--match-ink);
+  animation: mt-scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes mt-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes mt-scale-in {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.mt-report-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mt-report-desc {
+  font-size: 12px;
+  color: var(--match-sub);
+  margin: 0 0 14px;
+  line-height: 1.4;
+}
+.mt-report-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.mt-report-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--match-soft);
+  cursor: pointer;
+}
+.mt-report-actions {
+  display: flex;
+  gap: 8px;
+}
+.mt-report-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+.mt-report-btn--cancel {
+  background: var(--match-soft);
+  color: var(--match-sub);
+}
+.mt-report-btn--submit {
+  background: #ff4757;
+  color: #ffffff;
+}
+
+/* 플로팅 토스트 */
+.mt-rec-floating-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 90;
+  max-width: 90%;
+  width: 380px;
+  background: rgba(36, 26, 32, 0.94);
+  backdrop-filter: blur(8px);
+  color: #ffffff;
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-size: 12.5px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  animation: mt-toast-up 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes mt-toast-up {
+  from { opacity: 0; transform: translate(-50%, 12px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}

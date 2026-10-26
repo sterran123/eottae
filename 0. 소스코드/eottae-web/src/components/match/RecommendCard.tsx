@@ -99,7 +99,10 @@ export default function RecommendCard({
                   className="mt-rec__more-btn"
                   aria-label={`${profile.nickname} 더보기 메뉴`}
                   aria-expanded={menuOpen}
-                  onClick={() => setMenuOpen((v) => !v)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setMenuOpen((v) => !v);
+                  }}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <circle cx="12" cy="5" r="2" />
@@ -108,12 +111,13 @@ export default function RecommendCard({
                   </svg>
                 </button>
                 {menuOpen && (
-                  <div className="mt-rec__dropdown-menu" role="menu">
+                  <div className="mt-rec__dropdown-menu" role="menu" onClick={(e) => e.stopPropagation()}>
                     <button
                       type="button"
                       className="mt-rec__dropdown-item"
                       role="menuitem"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setMenuOpen(false);
                         onReport?.(profile.id);
                       }}
@@ -124,7 +128,8 @@ export default function RecommendCard({
                       type="button"
                       className="mt-rec__dropdown-item mt-rec__dropdown-item--danger"
                       role="menuitem"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setMenuOpen(false);
                         onBlock?.(profile.id);
                       }}

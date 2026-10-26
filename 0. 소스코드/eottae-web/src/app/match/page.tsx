@@ -52,9 +52,16 @@ export default function MatchPage() {
           <img
             src="/eottae/brand/hero-visual.webp"
             alt="어때? 캐릭터"
-            width={96}
-            height={96}
-            style={{ objectFit: 'contain', filter: 'drop-shadow(0 4px 10px rgba(116, 84, 196, 0.2))' }}
+            width={114}
+            height={114}
+            style={{
+              width: '114px',
+              height: '114px',
+              borderRadius: '50%',
+              objectFit: 'cover',
+              display: 'block',
+              boxShadow: '0 2px 8px rgba(116, 84, 196, 0.15)',
+            }}
           />
         }
       >
