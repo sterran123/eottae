@@ -7,18 +7,26 @@
 
 @import '../match-tokens.css';
 
+/* 1:1 채팅 화면 — 메신저 UI 특성상 몰입감을 위해 하단 글로벌 푸터 숨김 (회색선 제거) */
+body:has(.mt-chat-page) .footer {
+  display: none !important;
+}
+
 .mt-chat-page {
   background: var(--match-bg);
-  padding: 20px 16px 64px;
+  min-height: calc(100dvh - 72px);
+  padding: 16px 16px 24px;
   display: flex;
   justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
 }
 
 .mt-chat {
   width: 100%;
   max-width: 640px;
-  height: min(720px, calc(100dvh - 160px));
-  min-height: 420px;
+  height: min(720px, calc(100dvh - 110px));
+  min-height: 440px;
   display: flex;
   flex-direction: column;
   background: var(--match-paper);
@@ -235,8 +243,8 @@
 }
 
 @media (max-width: 480px) {
-  .mt-chat-page { padding: 12px 12px 64px; }
-  .mt-chat { border-radius: 14px; height: calc(100dvh - 130px); }
+  .mt-chat-page { padding: 8px 8px 16px; }
+  .mt-chat { border-radius: 14px; height: calc(100dvh - 88px); }
   .mt-chat-row { max-width: 88%; }
   .mt-chat-media-btn { width: 34px; height: 34px; min-width: 34px; }
   .mt-chat-media-btn svg { width: 17px; height: 17px; }
