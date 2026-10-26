@@ -17,10 +17,12 @@ import { useRouter } from 'next/navigation';
 import {
   ALL_MBTI,
   DEMO_IDENTITY,
+  DISTANCE_PREFERENCE_OPTIONS,
   INTEREST_CATEGORIES,
   INTEREST_LABELS,
   MBTI_PREVIEW_COUNT,
   RELATION_OPTIONS,
+  type DistancePreference,
 } from '@/lib/match/demo-data';
 import {
   INTEREST_RULES,
@@ -84,6 +86,8 @@ export default function OnboardingForm({
   const [target, setTarget] = useState<MatchTargetPreference | null>(null);
   const [relationGoal, setRelationGoal] = useState<RelationGoal | null>(null);
   const [interests, setInterests] = useState<string[]>([]);
+  const [preferredDistance, setPreferredDistance] =
+    useState<DistancePreference>('within_10km');
   // 펼쳐진 관심사 카테고리(아코디언). 기본은 첫 카테고리만 열림.
   const [openCats, setOpenCats] = useState<Set<InterestCategoryId>>(
     () => new Set([INTEREST_CATEGORIES[0]?.id].filter(Boolean) as InterestCategoryId[]),
@@ -170,6 +174,7 @@ export default function OnboardingForm({
       targetPreference: target,
       relationGoal,
       interestIds: interests,
+      preferredDistance,
     };
     if (onSubmit) {
       onSubmit(draft);
@@ -420,6 +425,42 @@ export default function OnboardingForm({
                       </div>
                     )}
                   </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </fieldset>
+
+      {/* 선호하는 거리 유형 — (B) 기본 정보 완료 후 오픈 */}
+      <fieldset className="mt-onb__field" aria-disabled={!basicsDone}>
+        <legend className="mt-onb__label">
+          선호하는 거리 <span className="mt-onb__accent">만남 범위</span>
+        </legend>
+
+        {!basicsDone ? (
+          <p className="mt-onb__locked">
+            기본 정보와 관심사를 먼저 골라주세요.
+          </p>
+        ) : (
+          <>
+            <p className="mt-onb__hint">
+              어느 정도 거리의 상대와 매칭되기를 원하시나요?
+            </p>
+            <div className="mt-onb__dist-grid">
+              {DISTANCE_PREFERENCE_OPTIONS.map((opt) => {
+                const on = preferredDistance === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    aria-pressed={on}
+                    className={`mt-onb__dist-card${on ? ' is-on' : ''}`}
+                    onClick={() => setPreferredDistance(opt.value)}
+                  >
+                    <span className="mt-onb__dist-title">{opt.label}</span>
+                    <span className="mt-onb__dist-desc">{opt.desc}</span>
+                  </button>
                 );
               })}
             </div>

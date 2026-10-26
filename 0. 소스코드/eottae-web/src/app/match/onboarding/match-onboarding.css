@@ -403,6 +403,49 @@
   padding: 2px 14px 14px;
 }
 
+/* 선호 거리 유형 */
+.mt-onb__dist-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 4px;
+}
+.mt-onb__dist-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--match-paper);
+  border: 1px solid var(--match-line);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+.mt-onb__dist-card:hover {
+  border-color: var(--match-sub);
+  background: var(--match-soft);
+}
+.mt-onb__dist-card.is-on {
+  background: var(--match-paper);
+  border: 1.5px solid var(--match-accent-solid);
+  box-shadow: 0 2px 8px rgba(255, 107, 129, 0.12);
+}
+.mt-onb__dist-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--match-ink);
+}
+.mt-onb__dist-card.is-on .mt-onb__dist-title {
+  color: var(--match-accent-solid);
+}
+.mt-onb__dist-desc {
+  font-size: 11px;
+  color: var(--match-hint);
+}
+
 /* 안전 안내 */
 .mt-onb__safety {
   display: flex;

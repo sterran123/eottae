@@ -489,29 +489,36 @@
   }
 }
 
-/* ---- 리뉴얼: 프리미엄 신고 모달 다이얼로그 ---- */
+/* 점 세개 메뉴 백드롭 (외부 클릭 감지) */
+.mt-rec__dropdown-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 28;
+  background: transparent;
+}
+
+/* ---- 신고 모달 다이얼로그 (일반적이고 단정한 표준 스타일) ---- */
 .mt-report-modal-backdrop {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: rgba(30, 24, 40, 0.55);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
-  animation: mt-fade-in 0.2s ease;
+  animation: mt-fade-in 0.18s ease;
 }
 .mt-report-modal {
   width: 100%;
-  max-width: 380px;
-  background: var(--match-paper);
-  border: 1px solid var(--match-line);
-  border-radius: 24px;
-  padding: 24px 22px 20px;
-  box-shadow: 0 16px 40px rgba(40, 33, 58, 0.24);
-  color: var(--match-ink);
-  animation: mt-scale-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: 360px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 20px 20px 18px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+  color: #111827;
+  animation: mt-scale-in 0.2s ease;
   display: flex;
   flex-direction: column;
 }
@@ -520,37 +527,25 @@
   to { opacity: 1; }
 }
 @keyframes mt-scale-in {
-  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  from { opacity: 0; transform: scale(0.96) translateY(6px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
-.mt-report-modal__head {
+.mt-report-header {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-.mt-report-badge {
-  display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  font-weight: 600;
-  color: #ff4757;
-  background: rgba(255, 71, 87, 0.1);
-  padding: 3px 8px;
-  border-radius: 99px;
-  margin-bottom: 6px;
+  justify-content: space-between;
+  margin-bottom: 8px;
 }
 .mt-report-title {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 700;
+  color: #111827;
   margin: 0;
-  color: var(--match-ink);
 }
 .mt-report-close-btn {
   border: none;
-  background: var(--match-soft);
-  color: var(--match-sub);
+  background: #f3f4f6;
+  color: #6b7280;
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -562,83 +557,76 @@
   transition: all 0.15s ease;
 }
 .mt-report-close-btn:hover {
-  background: var(--match-line);
-  color: var(--match-ink);
+  background: #e5e7eb;
+  color: #111827;
 }
-.mt-report-target-box {
-  background: var(--match-soft);
-  border: 1px solid var(--match-line-soft);
-  border-radius: 12px;
-  padding: 10px 14px;
-  margin-bottom: 16px;
-  font-size: 12px;
-  color: var(--match-sub);
+.mt-report-desc {
+  font-size: 12.5px;
+  color: #6b7280;
   line-height: 1.45;
+  margin: 0 0 14px;
 }
-.mt-report-target-box strong {
-  color: var(--match-ink);
+.mt-report-desc strong {
+  color: #111827;
   font-weight: 600;
 }
 .mt-report-options {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 .mt-report-opt {
   display: flex;
   align-items: center;
   gap: 10px;
   font-size: 13px;
-  padding: 10px 14px;
-  border-radius: 12px;
-  background: var(--match-soft);
-  border: 1px solid transparent;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  color: #374151;
   cursor: pointer;
   transition: all 0.15s ease;
   user-select: none;
 }
 .mt-report-opt:hover {
-  background: color-mix(in srgb, var(--match-soft) 80%, var(--match-paper));
+  background: #f3f4f6;
+  border-color: #d1d5db;
 }
 .mt-report-opt.is-selected {
-  background: var(--match-paper);
-  border-color: #ff6b81;
-  box-shadow: 0 2px 8px rgba(255, 107, 129, 0.15);
-  font-weight: 500;
+  background: #ffffff;
+  border-color: #111827;
+  color: #111827;
+  font-weight: 600;
 }
 .mt-report-opt input[type='radio'] {
-  accent-color: #ff4757;
-  width: 16px;
-  height: 16px;
+  accent-color: #111827;
+  width: 15px;
+  height: 15px;
   margin: 0;
   cursor: pointer;
 }
 .mt-report-textarea {
   width: 100%;
   box-sizing: border-box;
-  margin-top: 6px;
-  margin-bottom: 14px;
+  margin-top: 4px;
+  margin-bottom: 12px;
   padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid var(--match-line);
-  background: var(--match-paper);
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
   font-size: 12.5px;
   font-family: inherit;
-  color: var(--match-ink);
+  color: #111827;
   resize: vertical;
-  min-height: 72px;
+  min-height: 70px;
   outline: none;
   transition: border-color 0.15s;
-  animation: mt-expand 0.2s ease;
 }
 .mt-report-textarea:focus {
-  border-color: #ff6b81;
-  box-shadow: 0 0 0 3px rgba(255, 107, 129, 0.12);
-}
-@keyframes mt-expand {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+  border-color: #111827;
+  box-shadow: 0 0 0 2px rgba(17, 24, 39, 0.08);
 }
 .mt-report-actions {
   display: flex;
@@ -647,9 +635,9 @@
 }
 .mt-report-btn {
   flex: 1;
-  padding: 12px;
-  border-radius: 12px;
-  font-size: 13.5px;
+  padding: 11px;
+  border-radius: 10px;
+  font-size: 13px;
   font-weight: 600;
   border: none;
   cursor: pointer;
@@ -657,24 +645,20 @@
   transition: all 0.15s ease;
 }
 .mt-report-btn--cancel {
-  background: var(--match-soft);
-  color: var(--match-sub);
+  background: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
 }
 .mt-report-btn--cancel:hover {
-  background: var(--match-line);
-  color: var(--match-ink);
+  background: #e5e7eb;
+  color: #111827;
 }
 .mt-report-btn--submit {
-  background: #ff4757;
+  background: #ef4444;
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(255, 71, 87, 0.28);
 }
 .mt-report-btn--submit:hover {
-  background: #ff2e44;
-  transform: translateY(-1px);
-}
-.mt-report-btn--submit:active {
-  transform: translateY(0);
+  background: #dc2626;
 }
 
 /* 플로팅 토스트 */

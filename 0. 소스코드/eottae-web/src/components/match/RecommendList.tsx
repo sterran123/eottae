@@ -171,7 +171,7 @@ export default function RecommendList({
         DEMO · 샘플 추천 · 거리/접속은 대략 표시 · 결제(도토리)는 준비중
       </p>
 
-      {/* 리뉴얼된 프리미엄 신고 다이얼로그 모달 */}
+      {/* 신고 다이얼로그 모달 */}
       {reportingTarget && (
         <div
           className="mt-report-modal-backdrop"
@@ -181,28 +181,24 @@ export default function RecommendList({
           onClick={() => setReportingTarget(null)}
         >
           <div className="mt-report-modal" onClick={(e) => e.stopPropagation()}>
-            <button
-              type="button"
-              className="mt-report-close-btn"
-              onClick={() => setReportingTarget(null)}
-              aria-label="닫기"
-            >
-              ✕
-            </button>
-
-            <div className="mt-report-modal__head">
-              <span className="mt-report-badge">안전센터 접수</span>
+            <div className="mt-report-header">
               <h2 id="mt-report-title" className="mt-report-title">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
-                  <line x1="4" y1="22" x2="4" y2="15" />
-                </svg>
                 사용자 신고하기
               </h2>
-              <p className="mt-report-desc">
-                <strong>{reportingTarget.nickname}</strong> 님의 계정을 안전 기준 위반으로 신고합니다. 접수 즉시 해당 사용자는 차단되며 운영진이 검토합니다.
-              </p>
+              <button
+                type="button"
+                className="mt-report-close-btn"
+                onClick={() => setReportingTarget(null)}
+                aria-label="닫기"
+              >
+                ✕
+              </button>
             </div>
+
+            <p className="mt-report-desc">
+              <strong>{reportingTarget.nickname}</strong> 님의 계정을 신고합니다.<br />
+              접수 즉시 해당 사용자는 차단되며 관리자가 검토합니다.
+            </p>
 
             <div className="mt-report-options">
               {[
