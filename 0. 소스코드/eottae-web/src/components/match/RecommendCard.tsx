@@ -11,6 +11,7 @@
 //  [범위] 도토리 미리보기 결제는 1차 미구현(준비중). 흐름만.
 // ============================================================
 
+import { useEffect, useRef, useState } from 'react';
 import {
   DISTANCE_LABELS,
   RECENCY_LABELS,
@@ -20,13 +21,11 @@ import { INTEREST_LABELS } from '@/lib/match/demo-data';
 import type { RecommendProfile } from '@/lib/match/types';
 import {
   IconAcorn,
-  IconBlock,
   IconClock,
   IconHeartFill,
   IconPin,
   IconSparkle,
   IconUserSilhouette,
-  IconX,
 } from './icons';
 
 interface RecommendCardProps {
@@ -34,6 +33,7 @@ interface RecommendCardProps {
   onLike?: (id: string) => void;
   onSkip?: (id: string) => void;
   onBlock?: (id: string) => void;
+  onReport?: (id: string) => void;
   /** 도토리 미리보기 요청(1차 준비중). */
   onPreview?: (id: string) => void;
   /** 공통 질문 선택. */
@@ -45,9 +45,28 @@ export default function RecommendCard({
   onLike,
   onSkip,
   onBlock,
+  onReport,
   onPreview,
   onAskQuestion,
 }: RecommendCardProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleClickOutside(e: MouseEvent | TouchEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [menuOpen]);
+
   const { photo, relation } = profile;
   const isMutual = relation === 'mutual';
   const shared = profile.sharedInterestIds;
@@ -90,16 +109,70 @@ export default function RecommendCard({
                 <span className="mt-rec__mutual-tag">서로 관심 ✓</span>
               )}
             </div>
-            {isMutual && (
+            <div className="mt-rec__more-wrapper" ref={menuRef}>
               <button
                 type="button"
-                className="mt-rec__block"
-                aria-label={`${profile.nickname} 차단`}
-                onClick={() => onBlock?.(profile.id)}
+                className="mt-rec__more-btn"
+                aria-label={`${profile.nickname} 더보기 메뉴`}
+                aria-expanded={menuOpen}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMenuOpen((v) => !v);
+                }}
               >
-                <IconBlock width={16} height={16} />
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <circle cx="12" cy="5" r="2" />
+                  <circle cx="12" cy="12" r="2" />
+                  <circle cx="12" cy="19" r="2" />
+                </svg>
               </button>
-            )}
+              {menuOpen && (
+                <>
+                  <div
+                    className="mt-rec__dropdown-backdrop"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMenuOpen(false);
+                    }}
+                    aria-hidden="true"
+                  />
+                  <div className="mt-rec__dropdown-menu" role="menu" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      className="mt-rec__dropdown-item"
+                      role="menuitem"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuOpen(false);
+                        onReport?.(profile.id);
+                      }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                        <line x1="4" y1="22" x2="4" y2="15" />
+                      </svg>
+                      <span>신고하기</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="mt-rec__dropdown-item mt-rec__dropdown-item--danger"
+                      role="menuitem"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuOpen(false);
+                        onBlock?.(profile.id);
+                      }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                      </svg>
+                      <span>차단하기</span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
           <div className="mt-rec__meta">
@@ -156,7 +229,7 @@ export default function RecommendCard({
                   className="mt-rec__btn mt-rec__btn--acorn"
                   onClick={() => onPreview?.(profile.id)}
                 >
-                  <IconAcorn width={12} height={12} /> 사진 미리보기
+                  <IconAcorn width={15} height={15} /> 사진 미리보기
                 </button>
               )}
               <button
@@ -164,7 +237,7 @@ export default function RecommendCard({
                 className="mt-rec__btn mt-rec__btn--like"
                 onClick={() => onLike?.(profile.id)}
               >
-                <IconHeartFill width={13} height={13} /> 관심
+                <IconHeartFill width={15} height={15} /> 관심
               </button>
             </div>
           )}

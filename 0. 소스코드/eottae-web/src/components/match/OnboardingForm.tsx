@@ -17,10 +17,13 @@ import { useRouter } from 'next/navigation';
 import {
   ALL_MBTI,
   DEMO_IDENTITY,
+  DISTANCE_PREFERENCE_OPTIONS,
   INTEREST_CATEGORIES,
   INTEREST_LABELS,
   MBTI_PREVIEW_COUNT,
   RELATION_OPTIONS,
+  type DistanceIconType,
+  type DistancePreference,
 } from '@/lib/match/demo-data';
 import {
   INTEREST_RULES,
@@ -57,6 +60,45 @@ interface OnboardingFormProps {
 
 type SvgIcon = ComponentType<SVGProps<SVGSVGElement>>;
 
+function renderDistanceIcon(type: DistanceIconType) {
+  switch (type) {
+    case 'pin':
+      return (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+      );
+    case 'coffee':
+      return (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+          <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
+          <line x1="6" y1="1" x2="6" y2="4" />
+          <line x1="10" y1="1" x2="10" y2="4" />
+          <line x1="14" y1="1" x2="14" y2="4" />
+        </svg>
+      );
+    case 'subway':
+      return (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <rect x="3" y="3" width="18" height="15" rx="3" />
+          <line x1="3" y1="11" x2="21" y2="11" />
+          <circle cx="8" cy="15" r="1" />
+          <circle cx="16" cy="15" r="1" />
+          <path d="m5 21 2-3" />
+          <path d="m19 21-2-3" />
+        </svg>
+      );
+    case 'sparkle':
+      return (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+        </svg>
+      );
+  }
+}
+
 const TARGET_OPTIONS: ReadonlyArray<{
   value: MatchTargetPreference;
   label: string;
@@ -84,6 +126,8 @@ export default function OnboardingForm({
   const [target, setTarget] = useState<MatchTargetPreference | null>(null);
   const [relationGoal, setRelationGoal] = useState<RelationGoal | null>(null);
   const [interests, setInterests] = useState<string[]>([]);
+  const [preferredDistance, setPreferredDistance] =
+    useState<DistancePreference>('within_10km');
   // 펼쳐진 관심사 카테고리(아코디언). 기본은 첫 카테고리만 열림.
   const [openCats, setOpenCats] = useState<Set<InterestCategoryId>>(
     () => new Set([INTEREST_CATEGORIES[0]?.id].filter(Boolean) as InterestCategoryId[]),
@@ -122,6 +166,16 @@ export default function OnboardingForm({
     }
     return map;
   }, [interests]);
+
+  // 선호 거리 게이지바 파생 상태
+  const distIndex = Math.max(
+    0,
+    DISTANCE_PREFERENCE_OPTIONS.findIndex((o) => o.value === preferredDistance),
+  );
+  const currentDistOption =
+    DISTANCE_PREFERENCE_OPTIONS[distIndex] ?? DISTANCE_PREFERENCE_OPTIONS[1];
+  const distPercent =
+    (distIndex / (DISTANCE_PREFERENCE_OPTIONS.length - 1)) * 100;
 
   // ---- 핸들러 ----
   function toggleInterest(id: string) {
@@ -170,6 +224,7 @@ export default function OnboardingForm({
       targetPreference: target,
       relationGoal,
       interestIds: interests,
+      preferredDistance,
     };
     if (onSubmit) {
       onSubmit(draft);
@@ -422,6 +477,120 @@ export default function OnboardingForm({
                   </div>
                 );
               })}
+            </div>
+          </>
+        )}
+      </fieldset>
+
+      {/* 선호하는 거리 유형 — (B) 기본 정보 완료 후 오픈 */}
+      <fieldset className="mt-onb__field" aria-disabled={!basicsDone}>
+        <legend className="mt-onb__label">
+          선호하는 거리 <span className="mt-onb__accent">만남 범위</span>
+        </legend>
+
+        {!basicsDone ? (
+          <p className="mt-onb__locked">
+            기본 정보와 관심사를 먼저 골라주세요.
+          </p>
+        ) : (
+          <>
+            <p className="mt-onb__hint">
+              게이지 바를 움직여 만남 희망 거리를 조절해 보세요.
+            </p>
+
+            <div className="mt-dist-gauge">
+              {/* 캐릭터 말풍선 & 움직이는 마스코트 핀 */}
+              <div
+                className={`mt-dist-gauge__char-wrapper step-${distIndex}`}
+                style={{ left: `calc(28px + (100% - 56px) * (${distIndex} / 3))` }}
+              >
+                <div className="mt-dist-gauge__speech" role="status">
+                  <span className="mt-dist-gauge__speech-icon">
+                    {renderDistanceIcon(currentDistOption.iconType)}
+                  </span>
+                  <span>{currentDistOption.speech}</span>
+                </div>
+                <div className="mt-dist-gauge__char-pin">
+                  <img
+                    src="/eottae/brand/hero-visual.webp"
+                    alt="어때? 캐릭터"
+                    className="mt-dist-gauge__char-img"
+                  />
+                </div>
+              </div>
+
+              {/* 게이지 트랙 및 슬라이더 */}
+              <div className="mt-dist-gauge__track-area">
+                <div className="mt-dist-gauge__track-bg" />
+                <div
+                  className="mt-dist-gauge__track-fill"
+                  style={{ width: `${distPercent}%` }}
+                />
+
+                {/* 단계별 눈금 점 (Step Dots) */}
+                <div className="mt-dist-gauge__dots">
+                  {DISTANCE_PREFERENCE_OPTIONS.map((opt, idx) => {
+                    const isActive = idx <= distIndex;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        className={`mt-dist-gauge__dot${isActive ? ' is-active' : ''}`}
+                        onClick={() => setPreferredDistance(opt.value)}
+                        aria-label={`${opt.label} 선택`}
+                      />
+                    );
+                  })}
+                </div>
+
+                {/* 네이티브 투명 레인지 인풋 (드래그/터치/키보드 완벽 연동) */}
+                <input
+                  type="range"
+                  min={0}
+                  max={DISTANCE_PREFERENCE_OPTIONS.length - 1}
+                  step={1}
+                  value={distIndex}
+                  onChange={(e) => {
+                    const idx = Number(e.target.value);
+                    const chosen = DISTANCE_PREFERENCE_OPTIONS[idx];
+                    if (chosen) setPreferredDistance(chosen.value);
+                  }}
+                  className="mt-dist-gauge__input"
+                  aria-label="선호 거리 조절 슬라이더"
+                />
+              </div>
+
+              {/* 눈금 하단 라벨 (클릭 시 해당 위치로 점프) */}
+              <div className="mt-dist-gauge__labels">
+                {DISTANCE_PREFERENCE_OPTIONS.map((opt, idx) => {
+                  const isCurrent = idx === distIndex;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      className={`mt-dist-gauge__label-btn${isCurrent ? ' is-current' : ''}`}
+                      onClick={() => setPreferredDistance(opt.value)}
+                    >
+                      <span className="mt-dist-gauge__label-txt">{opt.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* 현재 선택된 거리 정보 요약 카드 */}
+              <div className="mt-dist-gauge__summary">
+                <div className="mt-dist-gauge__summary-head">
+                  <strong className="mt-dist-gauge__summary-title">
+                    {currentDistOption.label}
+                  </strong>
+                  <span className="mt-dist-gauge__summary-badge">
+                    {currentDistOption.badge}
+                  </span>
+                </div>
+                <p className="mt-dist-gauge__summary-desc">
+                  {currentDistOption.desc}
+                </p>
+              </div>
             </div>
           </>
         )}

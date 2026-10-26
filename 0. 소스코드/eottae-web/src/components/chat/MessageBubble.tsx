@@ -5,6 +5,7 @@
 //  [보안] 본문은 React 텍스트 노드로만 렌더링 (dangerouslySetInnerHTML 금지).
 // ============================================================
 
+import { useState } from 'react';
 import type { ChatMessage } from '@/lib/chat/types';
 
 interface MessageBubbleProps {
@@ -25,14 +26,44 @@ const STATUS_LABEL: Record<ChatMessage['status'], string> = {
 };
 
 export default function MessageBubble({ message }: MessageBubbleProps) {
+  const [isPlaying, setIsPlaying] = useState(false);
   const mine = message.sender === 'me';
   const time = timeFormatter.format(new Date(message.createdAt));
   const statusLabel = STATUS_LABEL[message.status];
 
+  const isVoice = message.body.startsWith('🎙️ 음성 메모');
+  const voiceDur = isVoice ? message.body.match(/\((.*?)\)/)?.[1] || '0:05' : '';
+
+  function togglePlay() {
+    setIsPlaying((p) => !p);
+  }
+
   return (
     <li className={`mt-chat-row ${mine ? 'is-me' : 'is-partner'}`}>
       <div className="mt-chat-bubble" data-status={message.status}>
-        {message.body}
+        {isVoice ? (
+          <div className="mt-chat-voice-msg">
+            <button
+              type="button"
+              className="mt-chat-voice-play-btn"
+              onClick={togglePlay}
+              aria-label={isPlaying ? '음성 메모 일시정지' : '음성 메모 재생'}
+            >
+              {isPlaying ? '❚❚' : '▶'}
+            </button>
+            <div className={`mt-chat-voice-waves ${isPlaying ? 'is-playing' : ''}`} aria-hidden="true">
+              <span />
+              <span />
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
+            <span className="mt-chat-voice-dur">{voiceDur}</span>
+          </div>
+        ) : (
+          message.body
+        )}
       </div>
       <span className="mt-chat-meta">
         {statusLabel && <span className="mt-chat-status">{statusLabel} · </span>}

@@ -69,6 +69,8 @@ export interface OnboardingDraft {
   relationGoal: RelationGoal | null;
   /** 선택한 관심사 id 목록. 최소/최대는 INTEREST_RULES 참조. */
   interestIds: string[];
+  /** 선호하는 거리 유형 (예: 5km 이내, 거리 무관 등) */
+  preferredDistance?: string | null;
 }
 
 // ---- 유효성 규칙 (UI와 서버가 공유) ----
@@ -85,6 +87,7 @@ export interface SaveOnboardingRequest {
   targetPreference: MatchTargetPreference;
   relationGoal: RelationGoal;
   interestIds: string[];
+  preferredDistance?: string | null;
 }
 
 // ---- 표준 에러 형식 (API_계약_초안.md 준수) ----

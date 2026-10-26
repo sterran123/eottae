@@ -11,6 +11,7 @@
 // ============================================================
 
 import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   DEMO_ACORN,
   DEMO_RECOMMENDATIONS,
@@ -35,9 +36,13 @@ export default function RecommendList({
   acorn = DEMO_ACORN,
   status = 'ready',
 }: RecommendListProps) {
-  // 패스('나중에')한 카드는 현재 리스트에서 숨김(재조회 시 복원 가능).
+  const router = useRouter();
+  // 패스('나중에') 또는 차단한 카드는 현재 리스트에서 숨김.
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
   const [notice, setNotice] = useState<string | null>(null);
+  const [reportingTarget, setReportingTarget] = useState<RecommendProfile | null>(null);
+  const [reportReason, setReportReason] = useState('부적절하거나 불쾌한 프로필');
+  const [etcDetail, setEtcDetail] = useState('');
 
   const items = useMemo(
     () => initialItems.filter((p) => !skipped.has(p.id)),
@@ -53,12 +58,50 @@ export default function RecommendList({
   function handleLike(_id: string) {
     // DEMO: 실제로는 POST /match/likes (주한태). 여기선 안내만.
     setNotice('관심을 보냈어요. 상대도 관심을 누르면 대화가 열려요. (DEMO)');
+    setTimeout(() => setNotice(null), 3500);
   }
   function handlePreview() {
     setNotice('사진 미리보기는 준비 중이에요. 결제는 아직 열리지 않았어요.');
+    setTimeout(() => setNotice(null), 3500);
   }
-  function handleBlock() {
-    setNotice('차단 기능은 안전팀 영역과 연동 예정이에요. (DEMO)');
+  function handleAcornClick() {
+    setNotice('🌰 도토리 충전 및 결제 서비스는 준비 중이에요. 정식 오픈 후 이용하실 수 있습니다.');
+    setTimeout(() => setNotice(null), 3500);
+  }
+  function handleBlock(id: string) {
+    const target = initialItems.find((p) => p.id === id);
+    setSkipped((prev) => new Set(prev).add(id));
+    setNotice(`${target?.nickname ?? '해당 상대'} 님을 차단했어요. 추천 목록에서 제외되었습니다.`);
+    setTimeout(() => setNotice(null), 3500);
+  }
+  function handleReport(id: string) {
+    const target = initialItems.find((p) => p.id === id);
+    if (target) {
+      setReportingTarget(target);
+      setReportReason('부적절하거나 불쾌한 프로필');
+      setEtcDetail('');
+    }
+  }
+  function confirmReport() {
+    if (!reportingTarget) return;
+    const target = reportingTarget;
+    const isEtc = reportReason === '기타 사유 (직접 입력)';
+    const finalReason = isEtc
+      ? (etcDetail.trim() ? `기타: ${etcDetail.trim()}` : '기타 사유')
+      : reportReason;
+
+    setSkipped((prev) => new Set(prev).add(target.id));
+    setReportingTarget(null);
+    setEtcDetail('');
+    setNotice(`'${target.nickname}' 님에 대한 신고(${finalReason})가 안전센터에 접수되었습니다. 상대방은 즉시 차단되었습니다.`);
+    setTimeout(() => setNotice(null), 4000);
+  }
+  function handleAskQuestion(id: string, question: string) {
+    const target = initialItems.find((p) => p.id === id);
+    setNotice(`'${target?.nickname ?? '상대'}' 님과의 1:1 대화방으로 질문을 전달하여 이동합니다...`);
+    setTimeout(() => {
+      router.push(`/match/chat?partner=${id}&q=${encodeURIComponent(question)}`);
+    }, 400);
   }
 
   return (
@@ -68,14 +111,15 @@ export default function RecommendList({
           <h1 className="mt-rec-list__title">오늘의 추천</h1>
           <p className="mt-rec-list__sub">취향이 겹치는 순서로 보여드려요</p>
         </div>
-        <div
+        <button
+          type="button"
           className="mt-rec-list__acorn"
-          aria-label={`보유 도토리 ${acorn.acorn}개`}
-          title="도토리 (준비중)"
+          onClick={handleAcornClick}
+          aria-label={`보유 도토리 ${acorn.acorn}개 (충전 준비 중)`}
         >
           <IconAcorn width={15} height={15} />
           <span>{acorn.acorn}</span>
-        </div>
+        </button>
       </header>
 
       {notice && (
@@ -116,7 +160,9 @@ export default function RecommendList({
               onLike={handleLike}
               onSkip={handleSkip}
               onBlock={handleBlock}
+              onReport={handleReport}
               onPreview={handlePreview}
+              onAskQuestion={handleAskQuestion}
             />
           ))}
       </div>
@@ -124,6 +170,105 @@ export default function RecommendList({
       <p className="mt-rec-list__demo">
         DEMO · 샘플 추천 · 거리/접속은 대략 표시 · 결제(도토리)는 준비중
       </p>
+
+      {/* 신고 다이얼로그 모달 */}
+      {reportingTarget && (
+        <div
+          className="mt-report-modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="mt-report-title"
+          onClick={() => setReportingTarget(null)}
+        >
+          <div className="mt-report-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="mt-report-header">
+              <h2 id="mt-report-title" className="mt-report-title">
+                사용자 신고하기
+              </h2>
+              <button
+                type="button"
+                className="mt-report-close-btn"
+                onClick={() => setReportingTarget(null)}
+                aria-label="닫기"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="mt-report-desc">
+              <strong>{reportingTarget.nickname}</strong> 님의 계정을 신고합니다.<br />
+              접수 즉시 해당 사용자는 차단되며 관리자가 검토합니다.
+            </p>
+
+            <div className="mt-report-options">
+              {[
+                '부적절하거나 불쾌한 프로필',
+                '사진 도용 또는 허위 프로필',
+                '광고/스팸 또는 상업적 유도',
+                '기타 사유 (직접 입력)',
+              ].map((r) => {
+                const isChecked = reportReason === r;
+                return (
+                  <label key={r} className={`mt-report-opt ${isChecked ? 'is-selected' : ''}`}>
+                    <input
+                      type="radio"
+                      name="reportReason"
+                      value={r}
+                      checked={isChecked}
+                      onChange={(e) => setReportReason(e.target.value)}
+                    />
+                    <span className="mt-report-opt__label">{r}</span>
+                  </label>
+                );
+              })}
+            </div>
+
+            {reportReason === '기타 사유 (직접 입력)' && (
+              <textarea
+                className="mt-report-textarea"
+                rows={3}
+                placeholder="상세한 신고 사유를 입력해 주세요. (예: 외부 메신저 유도, 비매너 언행 등)"
+                value={etcDetail}
+                onChange={(e) => setEtcDetail(e.target.value)}
+                maxLength={200}
+                autoFocus
+              />
+            )}
+
+            <div className="mt-report-actions">
+              <button
+                type="button"
+                className="mt-report-btn mt-report-btn--cancel"
+                onClick={() => setReportingTarget(null)}
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                className="mt-report-btn mt-report-btn--submit"
+                onClick={confirmReport}
+              >
+                신고 접수하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 화면 어디서나 보이는 플로팅 알림 토스트 */}
+      {notice && (
+        <div className="mt-rec-floating-toast" role="status">
+          <span>{notice}</span>
+          <button
+            type="button"
+            style={{ background: 'none', border: 'none', color: '#ffffff', cursor: 'pointer', padding: '2px 6px', fontSize: '14px' }}
+            onClick={() => setNotice(null)}
+            aria-label="알림 닫기"
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </section>
   );
 }

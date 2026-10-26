@@ -8,6 +8,7 @@
 //         화면에 미구현 상태를 명시한다 (RULES 3, 6).
 // ============================================================
 
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import ChatRoom from '@/components/chat/ChatRoom';
 import './match-chat.css';
@@ -21,7 +22,9 @@ export default function MatchChatPage() {
   return (
     // 레이아웃이 이미 <main id="content">를 제공하므로 main 중첩을 피해 section 사용
     <section className="mt-chat-page">
-      <ChatRoom />
+      <Suspense fallback={<div style={{ textAlign: 'center', padding: '40px', color: 'var(--match-hint)' }}>채팅방을 준비하고 있어요...</div>}>
+        <ChatRoom />
+      </Suspense>
     </section>
   );
 }
