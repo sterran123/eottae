@@ -30,6 +30,8 @@ export default function ChatRoom() {
   const listEndRef = useRef<HTMLLIElement>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const replyIdx = useRef(0);
+  // 아직 응답이 오지 않은 내 메시지 수 — 연속 전송 시 '입력 중' 표시가 먼저 꺼지지 않게 한다.
+  const pendingReplies = useRef(0);
 
   // 새 메시지·입력중 표시마다 맨 아래로 스크롤
   useEffect(() => {
@@ -43,12 +45,19 @@ export default function ChatRoom() {
   }, []);
 
   const later = useCallback((fn: () => void, ms: number) => {
-    timers.current.push(setTimeout(fn, ms));
+    const t = setTimeout(() => {
+      // 실행이 끝난 타이머는 배열에서 제거해 누적을 막는다.
+      const i = timers.current.indexOf(t);
+      if (i !== -1) timers.current.splice(i, 1);
+      fn();
+    }, ms);
+    timers.current.push(t);
   }, []);
 
   const sendMessage = useCallback(
     (body: string) => {
       const id = nextId();
+      pendingReplies.current += 1;
       setMessages((prev) => [
         ...prev,
         { id, sender: 'me', body, createdAt: new Date().toISOString(), status: 'sending' },
@@ -64,7 +73,8 @@ export default function ChatRoom() {
 
       later(() => {
         const reply = DEMO_REPLIES[replyIdx.current++ % DEMO_REPLIES.length];
-        setTyping(false);
+        pendingReplies.current -= 1;
+        setTyping(pendingReplies.current > 0);
         setMessages((prev) => [
           ...prev,
           {

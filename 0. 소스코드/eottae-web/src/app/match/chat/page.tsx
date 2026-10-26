@@ -19,8 +19,9 @@ export const metadata: Metadata = {
 
 export default function MatchChatPage() {
   return (
-    <main className="mt-chat-page">
+    // 레이아웃이 이미 <main id="content">를 제공하므로 main 중첩을 피해 section 사용
+    <section className="mt-chat-page">
       <ChatRoom />
-    </main>
+    </section>
   );
 }

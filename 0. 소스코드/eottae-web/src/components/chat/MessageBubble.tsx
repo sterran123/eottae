@@ -11,9 +11,11 @@ interface MessageBubbleProps {
   message: ChatMessage;
 }
 
+// 빌드 서버(UTC)와 브라우저(KST)의 시간대 차이로 SSG HTML과 hydration 결과가 달라지지 않도록 고정.
 const timeFormatter = new Intl.DateTimeFormat('ko-KR', {
   hour: 'numeric',
   minute: '2-digit',
+  timeZone: 'Asia/Seoul',
 });
 
 const STATUS_LABEL: Record<ChatMessage['status'], string> = {
@@ -34,7 +36,7 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
       </div>
       <span className="mt-chat-meta">
         {statusLabel && <span className="mt-chat-status">{statusLabel} · </span>}
-        <time dateTime={message.createdAt}>{time}</time>
+        <time dateTime={message.createdAt} suppressHydrationWarning>{time}</time>
       </span>
     </li>
   );

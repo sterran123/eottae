@@ -289,3 +289,12 @@
 - [미구현/보류] MATCH-008 차단·신고 모달 및 헤더 더보기 메뉴 연동 — 후속 작업 예정
 - [미구현/보류] 성인 인증 게이트(MATCH-003/004) 및 실시간 WebSocket/서버 API(주한태 담당) 연동 대기
 
+## 2026-10-26 MATCH-007 PR #9 코드리뷰(Devin) 피드백 반영 (손준혁 작업)
+- [버그수정] src/components/chat/MessageBubble.tsx | `Intl.DateTimeFormat`에 `timeZone: 'Asia/Seoul'` 미지정 → CI(UTC) 빌드 HTML은 "오전 3:00", KST 브라우저는 "오후 12:00"으로 달라져 hydration 불일치 가능. 시간대를 Asia/Seoul로 고정하고 `<time>`에 `suppressHydrationWarning` 추가
+- [버그수정] src/components/chat/ChatRoom.tsx | 연속 전송 시 첫 응답 타이머가 `setTyping(false)`를 호출해 두 번째 응답 대기 중 '입력 중' 점이 사라지던 결함 → `pendingReplies` 카운터로 대기 응답이 남아 있으면 유지
+- [변경] src/components/chat/ChatRoom.tsx | 실행 끝난 타이머를 `timers` 배열에서 제거해 누적 방지
+- [변경] src/app/match/chat/page.tsx | `<main>` → `<section>` — 레이아웃의 `<main id="content">`와 랜드마크 중첩 해소 (채팅 페이지 범위만 수정)
+- [검증] `npm run typecheck` PASS / `npm run build` PASS (정적 16개 라우트)
+- [미실행] UTC 시간대 빌드의 out/match/chat/index.html 시간 표기 재확인, 연속 전송 시 '입력 중' 유지 브라우저 육안 확인
+- [미구현/보류] /match → /match/chat 진입 링크 — match/page.tsx는 오하율 담당이라 합의 후 추가
+- [미결/회신] 다른 match 페이지들의 `<main>` 중첩은 기존 이관 사항 그대로 (오하율 담당)
