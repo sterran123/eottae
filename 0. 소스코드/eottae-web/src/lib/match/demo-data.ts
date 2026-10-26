@@ -47,38 +47,38 @@ export const ALL_MBTI: MbtiType[] = [
 /** 온보딩에서 접힌 상태로 먼저 보여줄 대표 8개. 나머지는 '더보기'. */
 export const MBTI_PREVIEW_COUNT = 8;
 
-// ---- 관심사 카테고리 5종 + 항목 50개 (각 10개) ----
+// ---- 관심사 카테고리 5종 + 항목 50개 (2030 트렌드 반영) ----
 export const INTEREST_CATEGORIES: InterestCategory[] = [
   {
     id: 'place',
     label: '장소',
     interestIds: [
       'cafe',
+      'hotplace',
       'exhibition',
       'park',
-      'restaurant',
-      'bar',
-      'library',
+      'pub',
       'popstore',
+      'bookcafe',
       'drive',
-      'walk',
-      'shopping',
+      'selectshop',
+      'lounge',
     ],
   },
   {
     id: 'music',
     label: '음악',
     interestIds: [
-      'indie',
       'kpop',
+      'indie',
       'hiphop',
+      'jpop',
+      'trot',
       'festival',
-      'classic',
-      'band',
-      'ballad',
       'pop',
-      'acoustic',
-      'edm',
+      'citypop',
+      'ballad',
+      'lofi',
     ],
   },
   {
@@ -86,15 +86,15 @@ export const INTEREST_CATEGORIES: InterestCategory[] = [
     label: '음식',
     interestIds: [
       'dessert',
+      'omakase',
       'wine',
       'spicy',
+      'brunch',
+      'streetfood',
       'homecook',
       'vegan',
+      'delivery',
       'coffee',
-      'streetfood',
-      'meat',
-      'asian',
-      'brunch',
     ],
   },
   {
@@ -103,13 +103,13 @@ export const INTEREST_CATEGORIES: InterestCategory[] = [
     interestIds: [
       'spontaneous',
       'planned',
+      'hotel',
       'camping',
       'longstay',
-      'hotel',
-      'backpack',
-      'resort',
+      'walk',
       'photospot',
-      'glamping',
+      'resort',
+      'daytrip',
       'local',
     ],
   },
@@ -119,14 +119,14 @@ export const INTEREST_CATEGORIES: InterestCategory[] = [
     interestIds: [
       'minimal',
       'street',
-      'fitness',
+      'running',
+      'crossfit',
       'pet',
-      'gaming',
-      'photo',
-      'vintage',
-      'reading',
-      'craft',
+      'filmcamera',
       'boardgame',
+      'perfume',
+      'onedayclass',
+      'gaming',
     ],
   },
 ];
@@ -134,78 +134,104 @@ export const INTEREST_CATEGORIES: InterestCategory[] = [
 // ---- 관심사 id -> 표시 라벨 (총 50개) ----
 export const INTEREST_LABELS: Record<string, string> = {
   // 장소 (10)
-  cafe: '카페 투어',
+  cafe: '감성 카페 투어',
+  hotplace: '성수·연남 핫플',
   exhibition: '전시 · 미술관',
-  park: '한강 · 공원',
-  restaurant: '맛집 탐방',
-  bar: '바 · 포차',
-  library: '도서관 · 북카페',
+  park: '한강 · 피크닉',
+  pub: '와인바 · 이자카야',
   popstore: '팝업스토어',
+  bookcafe: '조용한 북카페',
   drive: '드라이브 코스',
-  walk: '골목 산책',
-  shopping: '쇼핑몰 · 편집샵',
+  selectshop: '소품샵 · 편집샵',
+  lounge: 'LP바 · 뮤직펍',
 
   // 음악 (10)
+  kpop: 'K-POP 아이돌',
   indie: '인디 · 밴드',
-  kpop: 'K-POP',
   hiphop: '힙합 · R&B',
-  festival: '페스티벌',
-  classic: '클래식 · 재즈',
-  band: '록 · 메탈',
+  jpop: 'J-POP',
+  trot: '트로트',
+  festival: '페스티벌 · 콘서트',
+  pop: '팝 · 빌보드',
+  citypop: '시티팝 · 재즈',
   ballad: '감성 발라드',
-  pop: '해외 팝송',
-  acoustic: '어쿠스틱 · 포크',
-  edm: 'EDM · 일렉',
+  lofi: 'Lo-Fi · 이지리스닝',
 
   // 음식 (10)
   dessert: '디저트 · 베이킹',
-  wine: '맥주 · 와인',
-  spicy: '매운맛 러버',
+  omakase: '오마카세 · 맛집',
+  wine: '내추럴와인 · 하이볼',
+  spicy: '마라 · 매운맛 러버',
+  brunch: '브런치 · 베이글',
+  streetfood: '야장 · 노포 맛집',
   homecook: '홈쿡 · 요리',
-  vegan: '비건 · 건강식',
-  coffee: '핸드드립 · 커피',
-  streetfood: '길거리 분식',
-  meat: '고기 · 바베큐',
-  asian: '일식 · 아시안푸드',
-  brunch: '브런치',
+  vegan: '샐러드 · 포케',
+  delivery: '야식 · 배달음식',
+  coffee: '커피 · 에스프레소바',
 
   // 여행 (10)
-  spontaneous: '즉흥 여행',
+  spontaneous: '즉흥 무계획 여행',
   planned: '계획형 투어',
-  camping: '캠핑 · 자연',
+  hotel: '감성숙소 · 호캉스',
+  camping: '캠핑 · 글램핑',
   longstay: '해외 한달살기',
-  hotel: '호캉스',
-  backpack: '배낭여행 · 뚜벅이',
-  resort: '휴양지 리조트',
+  walk: '뚜벅이 골목투어',
   photospot: '인생샷 스팟 투어',
-  glamping: '글램핑 · 불멍',
-  local: '소도시 · 로컬 여행',
+  resort: '휴양지 힐링',
+  daytrip: '드라이브 당일치기',
+  local: '로컬 소도시 여행',
 
   // 스타일 · 취미 (10)
-  minimal: '미니멀룩',
-  street: '스트릿',
-  fitness: '러닝 · 헬스',
-  pet: '반려동물',
-  gaming: '게임 · 애니',
-  photo: '필름 · 사진 촬영',
-  vintage: '빈티지 · 구제',
-  reading: '독서 · 글쓰기',
-  craft: 'DIY · 공방 체험',
+  minimal: '미니멀 · 놈코어',
+  street: '고프코어 · 스트릿',
+  running: '러닝 크루 · 오운완',
+  crossfit: '크로스핏 · 필라테스',
+  pet: '반려동물 집사',
+  filmcamera: '필름카메라 · 사진',
   boardgame: '보드게임 · 방탈출',
+  perfume: '향수 · 디퓨저',
+  onedayclass: '원데이 클래스 · 공방',
+  gaming: '게임 · 애니메이션',
 };
 
-// ---- 선호 거리 유형 ----
+// ---- 선호 거리 게이지바 스텝 옵션 ----
 export type DistancePreference = 'within_5km' | 'within_10km' | 'within_25km' | 'anywhere';
 
 export const DISTANCE_PREFERENCE_OPTIONS: ReadonlyArray<{
   value: DistancePreference;
   label: string;
+  badge: string;
   desc: string;
+  speech: string;
 }> = [
-  { value: 'within_5km', label: '5km 이내', desc: '가까운 동네 이웃' },
-  { value: 'within_10km', label: '10km 이내', desc: '자주 가는 생활권' },
-  { value: 'within_25km', label: '25km 이내', desc: '동일 지역권' },
-  { value: 'anywhere', label: '거리 무관', desc: '거리보다 취향 우선' },
+  {
+    value: 'within_5km',
+    label: '5km 이내',
+    badge: '도보 15분',
+    desc: '가까운 동네에서 편하게 만나요',
+    speech: '가까운 곳이 제일 편해요! 👟',
+  },
+  {
+    value: 'within_10km',
+    label: '10km 이내',
+    badge: '대중교통 30분',
+    desc: '자주 가는 핵심 생활권 주변이에요',
+    speech: '부담 없이 가볍게 만나요! ☕',
+  },
+  {
+    value: 'within_25km',
+    label: '25km 이내',
+    badge: '광역 1시간',
+    desc: '동일 지역권 어디든 괜찮아요',
+    speech: '서울·수도권 어디든 좋아요! 🚇',
+  },
+  {
+    value: 'anywhere',
+    label: '거리 무관',
+    badge: '전국 어디든',
+    desc: '거리보다 나와 맞는 취향과 마음이 먼저예요',
+    speech: '취향만 통하면 어디든 갈래요! 💖',
+  },
 ];
 
 /** 전체 관심사 옵션 평탄화 (유효성 검사·역참조용). */

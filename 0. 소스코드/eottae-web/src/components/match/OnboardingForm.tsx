@@ -127,6 +127,16 @@ export default function OnboardingForm({
     return map;
   }, [interests]);
 
+  // 선호 거리 게이지바 파생 상태
+  const distIndex = Math.max(
+    0,
+    DISTANCE_PREFERENCE_OPTIONS.findIndex((o) => o.value === preferredDistance),
+  );
+  const currentDistOption =
+    DISTANCE_PREFERENCE_OPTIONS[distIndex] ?? DISTANCE_PREFERENCE_OPTIONS[1];
+  const distPercent =
+    (distIndex / (DISTANCE_PREFERENCE_OPTIONS.length - 1)) * 100;
+
   // ---- 핸들러 ----
   function toggleInterest(id: string) {
     setInterests((prev) => {
@@ -445,24 +455,99 @@ export default function OnboardingForm({
         ) : (
           <>
             <p className="mt-onb__hint">
-              어느 정도 거리의 상대와 매칭되기를 원하시나요?
+              게이지 바를 움직여 만남 희망 거리를 조절해 보세요.
             </p>
-            <div className="mt-onb__dist-grid">
-              {DISTANCE_PREFERENCE_OPTIONS.map((opt) => {
-                const on = preferredDistance === opt.value;
-                return (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    aria-pressed={on}
-                    className={`mt-onb__dist-card${on ? ' is-on' : ''}`}
-                    onClick={() => setPreferredDistance(opt.value)}
-                  >
-                    <span className="mt-onb__dist-title">{opt.label}</span>
-                    <span className="mt-onb__dist-desc">{opt.desc}</span>
-                  </button>
-                );
-              })}
+
+            <div className="mt-dist-gauge">
+              {/* 캐릭터 말풍선 & 움직이는 마스코트 핀 */}
+              <div
+                className="mt-dist-gauge__char-wrapper"
+                style={{ left: `${distPercent}%` }}
+              >
+                <div className="mt-dist-gauge__speech" role="status">
+                  <span>{currentDistOption.speech}</span>
+                </div>
+                <div className="mt-dist-gauge__char-pin">
+                  <img
+                    src="/eottae/brand/hero-visual.webp"
+                    alt="어때? 캐릭터"
+                    className="mt-dist-gauge__char-img"
+                  />
+                </div>
+              </div>
+
+              {/* 게이지 트랙 및 슬라이더 */}
+              <div className="mt-dist-gauge__track-area">
+                <div className="mt-dist-gauge__track-bg" />
+                <div
+                  className="mt-dist-gauge__track-fill"
+                  style={{ width: `${distPercent}%` }}
+                />
+
+                {/* 단계별 눈금 점 (Step Dots) */}
+                <div className="mt-dist-gauge__dots">
+                  {DISTANCE_PREFERENCE_OPTIONS.map((opt, idx) => {
+                    const isActive = idx <= distIndex;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        className={`mt-dist-gauge__dot${isActive ? ' is-active' : ''}`}
+                        onClick={() => setPreferredDistance(opt.value)}
+                        aria-label={`${opt.label} 선택`}
+                      />
+                    );
+                  })}
+                </div>
+
+                {/* 네이티브 투명 레인지 인풋 (드래그/터치/키보드 완벽 연동) */}
+                <input
+                  type="range"
+                  min={0}
+                  max={DISTANCE_PREFERENCE_OPTIONS.length - 1}
+                  step={1}
+                  value={distIndex}
+                  onChange={(e) => {
+                    const idx = Number(e.target.value);
+                    const chosen = DISTANCE_PREFERENCE_OPTIONS[idx];
+                    if (chosen) setPreferredDistance(chosen.value);
+                  }}
+                  className="mt-dist-gauge__input"
+                  aria-label="선호 거리 조절 슬라이더"
+                />
+              </div>
+
+              {/* 눈금 하단 라벨 (클릭 시 해당 위치로 점프) */}
+              <div className="mt-dist-gauge__labels">
+                {DISTANCE_PREFERENCE_OPTIONS.map((opt, idx) => {
+                  const isCurrent = idx === distIndex;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      className={`mt-dist-gauge__label-btn${isCurrent ? ' is-current' : ''}`}
+                      onClick={() => setPreferredDistance(opt.value)}
+                    >
+                      <span className="mt-dist-gauge__label-txt">{opt.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* 현재 선택된 거리 정보 요약 카드 */}
+              <div className="mt-dist-gauge__summary">
+                <div className="mt-dist-gauge__summary-head">
+                  <strong className="mt-dist-gauge__summary-title">
+                    {currentDistOption.label}
+                  </strong>
+                  <span className="mt-dist-gauge__summary-badge">
+                    {currentDistOption.badge}
+                  </span>
+                </div>
+                <p className="mt-dist-gauge__summary-desc">
+                  {currentDistOption.desc}
+                </p>
+              </div>
             </div>
           </>
         )}
