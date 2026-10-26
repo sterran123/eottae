@@ -11,6 +11,7 @@
 //  [범위] 도토리 미리보기 결제는 1차 미구현(준비중). 흐름만.
 // ============================================================
 
+import { useState } from 'react';
 import {
   DISTANCE_LABELS,
   RECENCY_LABELS,
@@ -20,13 +21,11 @@ import { INTEREST_LABELS } from '@/lib/match/demo-data';
 import type { RecommendProfile } from '@/lib/match/types';
 import {
   IconAcorn,
-  IconBlock,
   IconClock,
   IconHeartFill,
   IconPin,
   IconSparkle,
   IconUserSilhouette,
-  IconX,
 } from './icons';
 
 interface RecommendCardProps {
@@ -34,6 +33,7 @@ interface RecommendCardProps {
   onLike?: (id: string) => void;
   onSkip?: (id: string) => void;
   onBlock?: (id: string) => void;
+  onReport?: (id: string) => void;
   /** 도토리 미리보기 요청(1차 준비중). */
   onPreview?: (id: string) => void;
   /** 공통 질문 선택. */
@@ -45,9 +45,11 @@ export default function RecommendCard({
   onLike,
   onSkip,
   onBlock,
+  onReport,
   onPreview,
   onAskQuestion,
 }: RecommendCardProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
   const { photo, relation } = profile;
   const isMutual = relation === 'mutual';
   const shared = profile.sharedInterestIds;
@@ -91,15 +93,47 @@ export default function RecommendCard({
               )}
             </div>
             {isMutual && (
-              <button
-                type="button"
-                className="mt-rec__block"
-                aria-label={`${profile.nickname} 차단`}
-                title="상대방 차단"
-                onClick={() => onBlock?.(profile.id)}
-              >
-                <IconBlock width={16} height={16} />
-              </button>
+              <div className="mt-rec__more-wrapper">
+                <button
+                  type="button"
+                  className="mt-rec__more-btn"
+                  aria-label={`${profile.nickname} 더보기 메뉴`}
+                  aria-expanded={menuOpen}
+                  onClick={() => setMenuOpen((v) => !v)}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <circle cx="12" cy="5" r="2" />
+                    <circle cx="12" cy="12" r="2" />
+                    <circle cx="12" cy="19" r="2" />
+                  </svg>
+                </button>
+                {menuOpen && (
+                  <div className="mt-rec__dropdown-menu" role="menu">
+                    <button
+                      type="button"
+                      className="mt-rec__dropdown-item"
+                      role="menuitem"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        onReport?.(profile.id);
+                      }}
+                    >
+                      🚨 신고하기
+                    </button>
+                    <button
+                      type="button"
+                      className="mt-rec__dropdown-item mt-rec__dropdown-item--danger"
+                      role="menuitem"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        onBlock?.(profile.id);
+                      }}
+                    >
+                      🚫 차단하기
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
           </div>
 

@@ -64,6 +64,10 @@ export default function RecommendList({
     setSkipped((prev) => new Set(prev).add(id));
     setNotice(`${target?.nickname ?? '해당 상대'} 님을 차단했어요. 추천 목록에서 제외되었습니다. (안전 보호 적용)`);
   }
+  function handleReport(id: string) {
+    const target = initialItems.find((p) => p.id === id);
+    setNotice(`'${target?.nickname ?? '상대'}' 님에 대한 신고가 접수되었습니다. 안전팀에서 24시간 내 검토합니다. (DEMO)`);
+  }
   function handleAskQuestion(id: string, question: string) {
     const target = initialItems.find((p) => p.id === id);
     setNotice(`'${target?.nickname ?? '상대'}' 님과의 1:1 대화방으로 질문을 전달하여 이동합니다...`);
@@ -81,8 +85,7 @@ export default function RecommendList({
         </div>
         <div
           className="mt-rec-list__acorn"
-          aria-label={`보유 도토리 ${acorn.acorn}개`}
-          title="도토리 (준비중)"
+          aria-label={`보유 도토리 ${acorn.acorn}개 (준비 중)`}
         >
           <IconAcorn width={15} height={15} />
           <span>{acorn.acorn}</span>
@@ -127,6 +130,7 @@ export default function RecommendList({
               onLike={handleLike}
               onSkip={handleSkip}
               onBlock={handleBlock}
+              onReport={handleReport}
               onPreview={handlePreview}
               onAskQuestion={handleAskQuestion}
             />

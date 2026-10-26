@@ -43,7 +43,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ko" suppressHydrationWarning>
+    <html lang="ko" suppressHydrationWarning data-scroll-behavior="smooth">
       <body>
         {/* 저장된 테마(data-theme)를 첫 페인트 전에 적용해 깜빡임(FOUC) 방지.
             'system'만 OS 설정을 따르고 미저장·잘못된 값은 기본 'light'로 동작한다 */}

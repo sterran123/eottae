@@ -119,9 +119,9 @@
   padding: 0 18px;
 }
 .mt-onb__field + .mt-onb__field {
-  margin-top: 17px;
-  padding-top: 17px;
-  border-top: 1px solid var(--match-line);
+  margin-top: 22px;
+  padding-top: 0;
+  border-top: none;
 }
 .mt-onb__label {
   font-size: 13px;

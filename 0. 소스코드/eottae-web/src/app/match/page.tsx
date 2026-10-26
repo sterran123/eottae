@@ -45,7 +45,19 @@ const modules = [
 export default function MatchPage() {
   return (
     <>
-      <SubpageHero eyebrow="MODULE 01 · MATCH" title="취향 먼저, 얼굴은 나중에." motif="♡">
+      <SubpageHero
+        eyebrow="MODULE 01 · MATCH"
+        title="취향 먼저, 얼굴은 나중에."
+        motif={
+          <img
+            src="/eottae/brand/hero-visual.webp"
+            alt="어때? 캐릭터"
+            width={96}
+            height={96}
+            style={{ objectFit: 'contain', filter: 'drop-shadow(0 4px 10px rgba(116, 84, 196, 0.2))' }}
+          />
+        }
+      >
         마음에 드는 영화와 음악, 좋아하는 대화 방식으로 서로를 알아가고, 두 사람의 동의 후에만
         대화를 시작합니다.
       </SubpageHero>
@@ -61,7 +73,20 @@ export default function MatchPage() {
               <h3>{title}</h3>
               <p>{desc}</p>
               <div style={{ marginTop: '14px' }}>
-                <Link className="btn outline" href={href} style={{ fontSize: '12px', padding: '6px 14px' }}>
+                <Link
+                  className="btn outline"
+                  href={href}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '12px',
+                    height: '32px',
+                    minHeight: '32px',
+                    padding: '0 14px',
+                    lineHeight: '1',
+                  }}
+                >
                   {cta} →
                 </Link>
               </div>

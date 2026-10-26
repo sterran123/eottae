@@ -4,8 +4,8 @@ type Props = {
   eyebrow: string;
   title: React.ReactNode;
   status?: { label: string; dev?: boolean };
-  // 데스크톱 오른쪽 스티커에 들어가는 모티프 글리프 (♡ ✦ ✉ 등, 장식이라 스크린리더 제외)
-  motif?: string;
+  // 데스크톱 오른쪽 스티커에 들어가는 모티프 (캐릭터 일러스트 또는 ♡ ✦ ✉ 글리프)
+  motif?: React.ReactNode;
   children?: React.ReactNode;
 };
 

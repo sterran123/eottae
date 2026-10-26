@@ -12,6 +12,7 @@
 // ============================================================
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import type { ChatMessage } from '@/lib/chat/types';
 import {
   DEMO_INITIAL_MESSAGES,
@@ -25,6 +26,10 @@ let seq = 0;
 const nextId = () => `local-${Date.now()}-${seq++}`;
 
 export default function ChatRoom() {
+  const searchParams = useSearchParams();
+  const initialQuestion = searchParams.get('q');
+  const hasHandledQuestion = useRef(false);
+
   const [messages, setMessages] = useState<ChatMessage[]>(DEMO_INITIAL_MESSAGES);
   const [typing, setTyping] = useState(false);
   const listEndRef = useRef<HTMLLIElement>(null);
@@ -89,6 +94,14 @@ export default function ChatRoom() {
     },
     [later],
   );
+
+  // 추천 카드에서 "가볍게 물어보기" 버튼 클릭하여 진입한 경우, 해당 질문을 즉시 전송
+  useEffect(() => {
+    if (initialQuestion && !hasHandledQuestion.current) {
+      hasHandledQuestion.current = true;
+      sendMessage(initialQuestion);
+    }
+  }, [initialQuestion, sendMessage]);
 
   return (
     <section className="mt-chat" aria-label={`${DEMO_PARTNER.nickname}님과의 1:1 채팅`}>
