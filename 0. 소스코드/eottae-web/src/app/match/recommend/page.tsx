@@ -18,8 +18,8 @@ export const metadata: Metadata = {
 
 export default function MatchRecommendPage() {
   return (
-    <main className="mt-rec-page">
+    <div className="mt-rec-page">
       <RecommendList />
-    </main>
+    </div>
   );
 }

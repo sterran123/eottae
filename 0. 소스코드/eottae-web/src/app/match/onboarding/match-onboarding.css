@@ -43,7 +43,7 @@
 }
 .mt-onb__bar-fill {
   height: 100%;
-  background: var(--match-accent);
+  background: var(--match-accent-solid);
   border-radius: 99px;
 }
 
@@ -191,7 +191,7 @@
   color: var(--match-sub);
 }
 .mt-chip.is-on {
-  background: var(--match-accent);
+  background: var(--match-accent-solid);
   color: var(--match-on-accent);
   border-color: var(--match-accent);
   font-weight: 500;
@@ -225,7 +225,7 @@
   border-color: transparent;
 }
 .mt-pill.is-on {
-  background: var(--match-accent);
+  background: var(--match-accent-solid);
   color: var(--match-on-accent);
 }
 
@@ -388,7 +388,7 @@
   height: 18px;
   padding: 0 5px;
   border-radius: 99px;
-  background: var(--match-accent);
+  background: var(--match-accent-solid);
   color: var(--match-on-accent);
   font-size: 10.5px;
   font-weight: 500;
@@ -460,7 +460,7 @@
 }
 .mt-btn--primary {
   flex: 1;
-  background: var(--match-accent);
+  background: var(--match-accent-solid);
   color: var(--match-on-accent);
   font-weight: 500;
 }

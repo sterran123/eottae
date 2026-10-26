@@ -19,8 +19,8 @@ export const metadata: Metadata = {
 
 export default function MatchOnboardingPage() {
   return (
-    <main className="mt-onb-page">
+    <div className="mt-onb-page">
       <OnboardingForm />
-    </main>
+    </div>
   );
 }

@@ -18,8 +18,8 @@ export const metadata: Metadata = {
 
 export default function MatchCommonPage() {
   return (
-    <main className="mt-cq-page">
+    <div className="mt-cq-page">
       <CommonQna />
-    </main>
+    </div>
   );
 }
