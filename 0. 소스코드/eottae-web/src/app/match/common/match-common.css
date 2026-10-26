@@ -9,7 +9,7 @@
 .mt-cq-page {
   max-width: 480px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 16px 16px 64px;
 }
 
 .mt-cq {

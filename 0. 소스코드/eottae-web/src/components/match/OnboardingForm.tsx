@@ -13,6 +13,7 @@
 // ============================================================
 
 import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   ALL_MBTI,
   DEMO_IDENTITY,
@@ -87,6 +88,7 @@ export default function OnboardingForm({
   const [openCats, setOpenCats] = useState<Set<InterestCategoryId>>(
     () => new Set([INTEREST_CATEGORIES[0]?.id].filter(Boolean) as InterestCategoryId[]),
   );
+  const router = useRouter();
   const [submitted, setSubmitted] = useState(false);
 
   const visibleMbti = showAllMbti
@@ -155,7 +157,13 @@ export default function OnboardingForm({
 
   function handleSubmit() {
     setSubmitted(true);
-    if (!isValid) return;
+    if (!isValid) {
+      const errEl = document.getElementById('mt-onb-errors');
+      if (errEl) {
+        errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
+    }
     const draft: OnboardingDraft = {
       myMbti,
       avoidMbti,
@@ -163,8 +171,19 @@ export default function OnboardingForm({
       relationGoal,
       interestIds: interests,
     };
-    if (onSubmit) onSubmit(draft);
-    else console.info('[DEMO] onboarding draft', draft); // eslint-disable-line no-console
+    if (onSubmit) {
+      onSubmit(draft);
+    } else {
+      router.push('/match/recommend');
+    }
+  }
+
+  function handleCancel() {
+    if (onCancel) {
+      onCancel();
+    } else {
+      router.push('/match');
+    }
   }
 
   return (
@@ -419,7 +438,7 @@ export default function OnboardingForm({
 
       {/* 유효성 오류 (제출 시도 후 노출) */}
       {submitted && !isValid && (
-        <ul className="mt-onb__errors" role="alert">
+        <ul id="mt-onb-errors" className="mt-onb__errors" role="alert">
           {errors.map((e) => (
             <li key={e}>{e}</li>
           ))}
@@ -431,7 +450,7 @@ export default function OnboardingForm({
         <button
           type="button"
           className="mt-btn mt-btn--ghost"
-          onClick={onCancel}
+          onClick={handleCancel}
         >
           취소
         </button>
