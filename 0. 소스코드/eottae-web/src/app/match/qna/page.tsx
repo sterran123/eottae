@@ -18,8 +18,8 @@ export const metadata: Metadata = {
 
 export default function MatchQnaPage() {
   return (
-    <main className="mt-qna-page">
+    <div className="mt-qna-page">
       <ProfileQna />
-    </main>
+    </div>
   );
 }
