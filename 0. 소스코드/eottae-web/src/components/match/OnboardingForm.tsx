@@ -22,6 +22,7 @@ import {
   INTEREST_LABELS,
   MBTI_PREVIEW_COUNT,
   RELATION_OPTIONS,
+  type DistanceIconType,
   type DistancePreference,
 } from '@/lib/match/demo-data';
 import {
@@ -58,6 +59,45 @@ interface OnboardingFormProps {
 }
 
 type SvgIcon = ComponentType<SVGProps<SVGSVGElement>>;
+
+function renderDistanceIcon(type: DistanceIconType) {
+  switch (type) {
+    case 'pin':
+      return (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+      );
+    case 'coffee':
+      return (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+          <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
+          <line x1="6" y1="1" x2="6" y2="4" />
+          <line x1="10" y1="1" x2="10" y2="4" />
+          <line x1="14" y1="1" x2="14" y2="4" />
+        </svg>
+      );
+    case 'subway':
+      return (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <rect x="3" y="3" width="18" height="15" rx="3" />
+          <line x1="3" y1="11" x2="21" y2="11" />
+          <circle cx="8" cy="15" r="1" />
+          <circle cx="16" cy="15" r="1" />
+          <path d="m5 21 2-3" />
+          <path d="m19 21-2-3" />
+        </svg>
+      );
+    case 'sparkle':
+      return (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+        </svg>
+      );
+  }
+}
 
 const TARGET_OPTIONS: ReadonlyArray<{
   value: MatchTargetPreference;
@@ -461,10 +501,13 @@ export default function OnboardingForm({
             <div className="mt-dist-gauge">
               {/* 캐릭터 말풍선 & 움직이는 마스코트 핀 */}
               <div
-                className="mt-dist-gauge__char-wrapper"
-                style={{ left: `${distPercent}%` }}
+                className={`mt-dist-gauge__char-wrapper step-${distIndex}`}
+                style={{ left: `calc(28px + (100% - 56px) * (${distIndex} / 3))` }}
               >
                 <div className="mt-dist-gauge__speech" role="status">
+                  <span className="mt-dist-gauge__speech-icon">
+                    {renderDistanceIcon(currentDistOption.iconType)}
+                  </span>
                   <span>{currentDistOption.speech}</span>
                 </div>
                 <div className="mt-dist-gauge__char-pin">

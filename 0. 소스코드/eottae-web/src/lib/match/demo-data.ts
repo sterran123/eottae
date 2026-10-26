@@ -78,7 +78,7 @@ export const INTEREST_CATEGORIES: InterestCategory[] = [
       'pop',
       'citypop',
       'ballad',
-      'lofi',
+      'ost',
     ],
   },
   {
@@ -110,14 +110,14 @@ export const INTEREST_CATEGORIES: InterestCategory[] = [
       'photospot',
       'resort',
       'daytrip',
-      'local',
+      'seaside',
     ],
   },
   {
     id: 'style',
     label: '스타일 · 취미',
     interestIds: [
-      'minimal',
+      'casual',
       'street',
       'running',
       'crossfit',
@@ -155,7 +155,7 @@ export const INTEREST_LABELS: Record<string, string> = {
   pop: '팝 · 빌보드',
   citypop: '시티팝 · 재즈',
   ballad: '감성 발라드',
-  lofi: 'Lo-Fi · 이지리스닝',
+  ost: 'OST · 영화음악',
 
   // 음식 (10)
   dessert: '디저트 · 베이킹',
@@ -179,10 +179,10 @@ export const INTEREST_LABELS: Record<string, string> = {
   photospot: '인생샷 스팟 투어',
   resort: '휴양지 힐링',
   daytrip: '드라이브 당일치기',
-  local: '로컬 소도시 여행',
+  seaside: '제주 · 바다 여행',
 
   // 스타일 · 취미 (10)
-  minimal: '미니멀 · 놈코어',
+  casual: '캐주얼 · 데일리룩',
   street: '고프코어 · 스트릿',
   running: '러닝 크루 · 오운완',
   crossfit: '크로스핏 · 필라테스',
@@ -196,6 +196,7 @@ export const INTEREST_LABELS: Record<string, string> = {
 
 // ---- 선호 거리 게이지바 스텝 옵션 ----
 export type DistancePreference = 'within_5km' | 'within_10km' | 'within_25km' | 'anywhere';
+export type DistanceIconType = 'pin' | 'coffee' | 'subway' | 'sparkle';
 
 export const DISTANCE_PREFERENCE_OPTIONS: ReadonlyArray<{
   value: DistancePreference;
@@ -203,34 +204,39 @@ export const DISTANCE_PREFERENCE_OPTIONS: ReadonlyArray<{
   badge: string;
   desc: string;
   speech: string;
+  iconType: DistanceIconType;
 }> = [
   {
     value: 'within_5km',
     label: '5km 이내',
     badge: '도보 15분',
     desc: '가까운 동네에서 편하게 만나요',
-    speech: '가까운 곳이 제일 편해요! 👟',
+    speech: '가까운 곳이 제일 편해요',
+    iconType: 'pin',
   },
   {
     value: 'within_10km',
     label: '10km 이내',
     badge: '대중교통 30분',
     desc: '자주 가는 핵심 생활권 주변이에요',
-    speech: '부담 없이 가볍게 만나요! ☕',
+    speech: '부담 없이 가볍게 만나요',
+    iconType: 'coffee',
   },
   {
     value: 'within_25km',
     label: '25km 이내',
     badge: '광역 1시간',
     desc: '동일 지역권 어디든 괜찮아요',
-    speech: '서울·수도권 어디든 좋아요! 🚇',
+    speech: '서울·수도권 어디든 좋아요',
+    iconType: 'subway',
   },
   {
     value: 'anywhere',
     label: '거리 무관',
     badge: '전국 어디든',
     desc: '거리보다 나와 맞는 취향과 마음이 먼저예요',
-    speech: '취향만 통하면 어디든 갈래요! 💖',
+    speech: '취향만 통하면 어디든 갈래요',
+    iconType: 'sparkle',
   },
 ];
 
