@@ -9,7 +9,7 @@
 .mt-qna-page {
   max-width: 480px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 16px 16px 64px;
 }
 
 /* 스크롤바 숨김 + 부드러운 가로 스크롤 */

@@ -10,7 +10,7 @@
 .mt-onb-page {
   max-width: 480px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 16px 16px 64px;
 }
 
 .mt-onb {
@@ -437,6 +437,20 @@
 }
 
 /* 액션 */
+.mt-onb__errors {
+  margin: 0 18px 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--match-warn-bg, #fff5f5);
+  border: 1px solid var(--match-warn-line, #ffc9c9);
+  color: var(--match-err-ink, #e03131);
+  font-size: 12px;
+  line-height: 1.5;
+  list-style: disc inside;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 .mt-onb__actions {
   display: flex;
   gap: 9px;
