@@ -8,16 +8,14 @@
 @import '../match-tokens.css';
 
 .mt-chat-page {
-  background: var(--match-bg);
-  padding: 24px 16px 80px;
-  display: flex;
-  justify-content: center;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px 16px 64px;
   box-sizing: border-box;
 }
 
 .mt-chat {
   width: 100%;
-  max-width: 640px;
   height: 680px;
   max-height: calc(100dvh - 160px);
   min-height: 440px;
@@ -28,6 +26,11 @@
   border-radius: 20px;
   overflow: hidden;
   color: var(--match-ink);
+}
+
+/* 채팅 화면에서는 푸터 상단 스캘럽 물결선 장식을 숨겨 모바일 카드 뷰와 푸터가 깔끔하게 분리되도록 함 */
+body:has(.mt-chat-page) .footer::before {
+  display: none !important;
 }
 
 /* 헤더 */
