@@ -33,7 +33,8 @@ const END = "ISSUE_PROGRESS_END";
 // 이슈 연결 키워드 — Closes류는 머지 때 GitHub이 닫고, Refs류는 연결만 한다
 const LINKS = /\b(close[sd]?|fix(e[sd])?|resolve[sd]?|refs?|related\s+to|part\s+of)\s*:?\s+#(\d+)/gi;
 // 요구사항_마스터·테스트_케이스_마스터의 접두어만 — ADR-005 같은 결정 기록 번호는 거의 모든 PR이 언급해 후보가 폭증한다
-const REQ_ID = /\b(MATCH|ACT|INV|CORE|SEC|FR|TC)-\d{3}\b/g;
+// SEC-001·002(보안·QA 증빙)는 인프라 PR 거의 전부가 표기해 후보 근거로 쓰지 않는다
+const REQ_ID = /\b(MATCH|ACT|INV|CORE|FR|TC)-\d{3}\b/g;
 const MEMBER_ASSOC = new Set(["OWNER", "MEMBER", "COLLABORATOR"]);
 // 체크박스 줄: "- [ ] 내용" / "* [x] 내용"
 const BOX = /^(\s*[-*+]\s+\[)([ xX])(\]\s+)(.*)$/;
@@ -145,8 +146,10 @@ if (!FORCE && prComments.some((c) => c.user?.login === BOT && String(c.body).inc
 }
 
 // 후보 이슈 — 명시 키워드 > 작성자 담당 > 요구사항 ID 일치. 체크박스가 있는 이슈만
-const text = `${pr.title}\n${pr.head.ref}\n${pr.body || ""}`;
-const explicit = new Set([...String(pr.body || "").matchAll(LINKS)].map((m) => Number(m[3])));
+// HTML 주석은 화면에 안 보이는 안내문 — PR 템플릿 주석의 예시 "Closes #20"을 실제 연결로 읽지 않는다
+const body = String(pr.body || "").replace(/<!--[\s\S]*?-->/g, "");
+const text = `${pr.title}\n${pr.head.ref}\n${body}`;
+const explicit = new Set([...body.matchAll(LINKS)].map((m) => Number(m[3])));
 const ids = new Set(text.match(REQ_ID) || []);
 // 팀원이 쓴 이슈만 — 공개 저장소라 누구나 요구사항 ID·체크박스를 넣은 이슈를 열 수 있고,
 // 그 본문은 Devin 프롬프트에 그대로 들어간다(프롬프트 인젝션). 이슈 본문은 작성자·triage 이상만 고칠 수 있다
@@ -186,7 +189,8 @@ const prComment = async (body, mark = MARK) => {
 // 사람 승인은 규칙 봇과 같은 기준: 머지된 head sha에 남은, 협력자(작성자·봇 제외)의 Approve.
 // 공개 저장소라 아무 GitHub 계정이나 Approve를 남길 수 있고, 옛 커밋 승인은 지금 코드를 본 게 아니다.
 const statuses = await ghAll(`repos/${REPO}/commits/${pr.head.sha}/statuses`).catch(() => []);
-// ai-review 상태는 우리 워크플로(github-actions[bot])가 남긴 것만 인정 — 상태 쓰기 권한만 있으면 누구나 success를 남길 수 있다
+// ai-review 상태는 우리 워크플로(github-actions[bot])가 남긴 것만 인정 — 상태 쓰기 권한만 있으면 누구나 success를 남길 수 있다.
+// (협력자 브랜치의 다른 워크플로도 같은 봇 이름으로 쓸 수 있다 — 협력자는 신뢰 범위로 보고, 규칙 봇의 머지 게이트와 같은 수준)
 const aiOk =
   statuses.find((s) => s.context === "ai-review" && s.creator?.login === BOT)?.state === "success"; // 최신순
 const reviews = await ghAll(`repos/${REPO}/pulls/${PR_NUMBER}/reviews`);
@@ -441,7 +445,7 @@ for (const r of result.issues) {
   const sections = [
     checked.length && `**✅ 체크함 (${checked.length})** — 근거 대조 통과\n` + checked.map((v) => `${line(v)} · ${v.links.join(" ")}`).join("\n"),
     missed.length && `**⚠️ 검증은 통과했지만 체크 못 함 (${missed.length})** — 판정 중 이슈 본문이 바뀌었거나 이미 체크됨. 확인 후 직접 체크해 주세요\n` + missed.map((v) => `${line(v)} · ${v.links.join(" ")}`).join("\n"),
-    rejected.length && `**🔎 AI는 완료로 봤지만 근거 대조 실패 → 체크 안 함 (${rejected.length})**\n` + rejected.map((v) => `${line(v)} · _${v.fail}_`).join("\n"),
+    rejected.length && `**🔎 AI는 완료로 봤지만 근거 대조 실패 → 체크 안 함 (${rejected.length})**\n` + rejected.map((v) => `${line(v)} · _${safe(v.fail)}_`).join("\n"),
     partial.length && `**◐ 진행 중 (${partial.length})**\n` + partial.map(line).join("\n"),
     human.length && `**👤 사람 확인 필요 (${human.length})** — 확인한 뒤 직접 체크해 주세요\n` + human.map(line).join("\n"),
   ].filter(Boolean);
