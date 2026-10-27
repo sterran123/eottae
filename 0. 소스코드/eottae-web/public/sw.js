@@ -7,7 +7,8 @@
    '/eottae/' 하위 배포와 로컬 루트 서빙을 같은 파일로 지원하기 위해서다.
    trailingSlash: true라 페이지 주소는 항상 '/'로 끝난다 — '/offline'처럼 쓰면
    Pages가 301을 주고, 리다이렉트된 응답은 오프라인 페이지 이동에 쓸 수 없다(ERR_FAILED). */
-const CACHE = 'eottae-shell-v5';
+// v6: v5까지 쿼리째 저장한 페이지 키(질문 내용 등)·옛 해시 청크를 activate 때 통째로 지우기 위해 올림
+const CACHE = 'eottae-shell-v6';
 // 등록 스코프 URL의 경로 — 로컬 루트는 '/', Pages는 '/eottae/'. 항상 '/'로 끝난다.
 const BASE = new URL(self.registration.scope).pathname;
 const OFFLINE = `${BASE}offline/`;
@@ -60,7 +61,12 @@ self.addEventListener('activate', (event) => {
     caches
       .keys()
       .then((keys) =>
-        Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))),
+        // 같은 출처(sterran123.github.io)를 쓰는 다른 Pages 프로젝트 캐시는 건드리지 않는다
+        Promise.all(
+          keys
+            .filter((key) => key.startsWith('eottae-shell-') && key !== CACHE)
+            .map((key) => caches.delete(key)),
+        ),
       )
       .then(() => self.clients.claim()),
   );
@@ -76,6 +82,22 @@ function remember(event, request, response) {
   return response;
 }
 
+// 페이지 이동 응답은 본문·헤더만으로 다시 만들어 저장한다 — fetch 응답을 그대로 넣으면
+// 키를 경로로 줘도 응답 객체의 url(쿼리 포함)이 CacheStorage에 함께 남는다.
+// 새로 만든 Response는 url이 빈 문자열로 저장되고, 페이지 이동 응답으로 돌려줘도 문제없다.
+function rememberPage(event, path, response) {
+  if (response.ok && !response.redirected) {
+    const copy = response.clone();
+    const clean = new Response(copy.body, {
+      status: copy.status,
+      statusText: copy.statusText,
+      headers: copy.headers,
+    });
+    event.waitUntil(caches.open(CACHE).then((cache) => cache.put(path, clean)));
+  }
+  return response;
+}
+
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
@@ -86,6 +108,7 @@ self.addEventListener('fetch', (event) => {
   // RSC 페이로드 주소(…/index.txt)로 페이지 이동: Next가 오프라인에서 RSC 요청에 실패하면
   // 페이로드 주소 그대로 브라우저 이동을 한다(output: export 동작). 페이지 주소로 돌려보낸다.
   // 쿼리(?partner=&q= 등)는 페이지가 쓰므로 남기고, Next처럼 _rsc만 지운다.
+  // searchParams로 다시 쓰면 공백이 %20 → +로 바뀐다 — URLSearchParams로 읽으면 같은 값이다.
   if (request.mode === 'navigate' && url.pathname.endsWith('/index.txt')) {
     url.pathname = url.pathname.slice(0, -'index.txt'.length);
     url.searchParams.delete('_rsc');
@@ -93,11 +116,13 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 페이지 이동: 네트워크 우선, 실패 시 캐시 → 오프라인 폴백
+  // 페이지 이동: 네트워크 우선, 실패 시 캐시 → 오프라인 폴백.
+  // 정적 export라 HTML은 쿼리와 무관하다 — 경로만 키로, 응답은 rememberPage로 다시 만들어 저장해
+  // 쿼리(질문 내용·인증 콜백 code 등)가 키에도 응답 url에도 남지 않게 하고, 쿼리마다 항목이 늘어나지 않게 한다.
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
-        .then((response) => remember(event, request, response))
+        .then((response) => rememberPage(event, url.pathname, response))
         .catch(() =>
           caches.match(request, { ignoreSearch: true }).then((hit) => hit || caches.match(OFFLINE)),
         ),
