@@ -81,6 +81,10 @@ const PIPELINE_TOOLS = new Set([
   "tools/update_package_manifest.py",
   "tools/devin_pr_watch.mjs",
 ]);
+// 인증·DB·RLS 보안 코드 (ADR-005) — CI는 동작 여부만 보고 '안전한지'는 못 본다.
+// 위조 가능한 세션 서명·하드코딩 키가 CI 통과만으로 자동 머지된 사례(#24) 이후 사람 리뷰 필수.
+const SECURITY_CODE =
+  /^0\. 소스코드\/eottae-web\/(supabase\/|src\/lib\/(server|auth|supabase)\/|src\/app\/api\/)/;
 const MAX_PAGES = 30; // 목록 페이지네이션 상한 (3000건 — GitHub PR 파일 표시 한도와 동일)
 // push 직후에는 check-run 등록이 지연될 수 있다 — 이 시간을 넘겨도 check가 없으면
 // CI가 안 도는 것으로 보고 작성자에게 코멘트한다 (봇이 올린 head에는 check가 영원히 없다)
@@ -103,6 +107,7 @@ const whyBlocked = (f) => {
   if (CODEOWNERS.test(f)) return "`CODEOWNERS` — 리뷰 정책 파일";
   if (PIPELINE_TOOLS.has(f)) return "자동화 진입점 스크립트 — 스케줄 잡이 write 토큰으로 실행";
   if (BUILD_CONTROL.test(f)) return "패키지·빌드 설정 — npm/next가 정의한 코드를 실행";
+  if (SECURITY_CODE.test(f)) return "인증·DB·RLS 보안 코드 — 담당자·김민기 리뷰 필요 (ADR-005)";
   if (SENSITIVE.test(f)) return "환경설정·키류 — 공개 저장소라 즉시 공개됨";
   return "보호 영역";
 };
@@ -376,6 +381,7 @@ async function main() {
           SENSITIVE.test(f) ||
           CODEOWNERS.test(f) ||
           BUILD_CONTROL.test(f) ||
+          SECURITY_CODE.test(f) ||
           PIPELINE_TOOLS.has(f),
       );
       if (blocked.length) {

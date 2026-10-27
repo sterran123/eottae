@@ -346,3 +346,17 @@
 - [보안] 세션 만료 및 비정상 계정(정지/탈퇴) 접근 시 Fail-closed 원칙 준수 (401/403 차단), 비밀번호/시크릿 하드코딩 배제
 - [미구현/보류] MATCH-004 성인 인증 게이트(PASS/실명인증 또는 데모 게이트) 및 Supabase 실제 원격 인스턴스 환경변수 연결 대기
 
+## 2026-10-27 ADR-005 백엔드 결정 — Supabase + GitHub Pages, 이슈 #23 처리 (김민기 작업)
+- [결정] 김민기 확정: 프런트 = GitHub Pages 정적 export 유지, 백엔드 = Supabase(Auth·Postgres RLS·Realtime·Storage·Edge Functions). 근거 — Pages는 정적이라 Next API 라우트가 배포 환경에서 돌지 않음, 기존 ERD·supabase/ 폴더와 일치, 배포 파이프라인 유지. 대안(Firebase, Vercel 이전) 검토 내용은 ADR에 기록
+- [신규] 아키텍처_결정기록_ADR.md ADR-005 | 보안 경계 = RLS(default deny), 브라우저엔 anon key만·service_role은 Edge Function 시크릿에만, MATCH-003~008·CORE-004 각각의 Supabase 구현 원칙(성인 인증 결과는 Edge Function만 기록·fail-closed, 쌍방 매칭은 security definer RPC/트리거 1건, 채팅 Realtime은 RLS 채널로 차단 즉시 정지), 도식 갱신
+- [변경] API_계약_초안.md | `/api/v1` 논리 계약 ↔ Supabase 구현(테이블+RLS / RPC / Edge Function) 대응표 추가
+- [변경] .github/workflows/deploy-pages.yml | build 단계에 Secrets `NEXT_PUBLIC_SUPABASE_URL`·`NEXT_PUBLIC_SUPABASE_ANON_KEY` 주입(없으면 빈 값 → 데모 모드)
+- [변경] eottae-web/.env.example | `SUPABASE_SERVICE_ROLE_KEY` 제거(정적 빌드라 어떤 값이든 브라우저 노출 위험), 값 출처·주의 주석
+- [변경] .github/CODEOWNERS | 채팅 경로 실제 위치로 수정(`src/app/match/chat/`) + `src/components/safety/`·`src/lib/chat/`·`src/lib/safety/` → 손준혁, `src/lib/supabase/`·`src/lib/auth/` → 주한태
+- [검증 기록] 테스트_케이스_마스터.md 실행 기록 신설 — TC-001 PASS, TC-002 PASS(공통 셸)/FAIL(매칭 추천 320·360px 넘침, #20), TC-012 BLOCKED(#26). 근거는 PR #18 실측
+- [정리] 로컬 `.env`의 만료 GH_TOKEN 주석 처리(gh CLI 키링 사용), 커밋 안 된 로컬 파일(`nul`·`tools/__devin_runs.mjs`·`tools/__schema.json`) 저장소 밖으로 이동 — 커밋 대상 아님
+- [이관] CORE-004 계정 삭제·CORE-003 실기기 오프라인·Supabase Secrets 등록은 로그인/실기기/프로젝트 생성 이후라 #26으로 이관 후 #23 종료
+- [검증] 문서·설정 변경 위주 — 로컬 `npm run typecheck`·`npm run build` PASS(정적 16라우트). deploy-pages.yml의 Secrets 주입은 머지 후 배포 실행으로 확인
+- [미실행] 실제 Supabase 프로젝트 생성·마이그레이션 적용·RLS 테스트(주한태 #21), Secrets 등록(#26)
+- [변경·추가] tools/pr_review_bot.mjs · .devin/automations/eottae-pr-watch.md · HANDOFF_김민기.md §10 | 인증·DB·RLS 보안 경로(`supabase/`, `src/lib/server|auth|supabase/`, `src/app/api/`)를 자동 승인 금지 영역에 추가 — #24(자체 세션 서명·하드코딩 키 기본값)가 CI 통과만으로 05:57 자동 머지된 사례. 정규식은 실제 경로 6건으로 node 검증(보안 경로 true, match/chat·페이지 false), `node --check` PASS
+- [후속] 머지된 #24 코드는 어떤 화면에서도 import되지 않음을 확인(실사용자·실데이터 없음) → 되돌리지 않고 #21에서 Supabase Auth로 교체

@@ -134,7 +134,7 @@ git config --global user.email "본인 GitHub 이메일 또는 noreply"
 - 자동 판정 범위는 **main 대상 PR**이다 — 다른 base 대상 PR에는 "사람이 직접 리뷰" 안내 코멘트를 sha당 1회 달고 넘어간다.
 - 하는 일(열린 PR마다):
   - 팀 협력자(OWNER/MEMBER/COLLABORATOR)가 아니면 사람 확인 요청 코멘트
-  - `.github/` 전체·임의 위치 CODEOWNERS·스케줄 잡이 실행하는 자동화 스크립트(`tools/pr_review_bot.mjs`·`team_activity_report.mjs`·`update_package_manifest.py`·`devin_pr_watch.mjs`)·**패키지/빌드 설정**(`package.json`·lock 파일·`.npmrc`·`next.config.*`·`tsconfig*`·babel/postcss/tailwind 설정 — `npm ci`/`npm run`/`next build`가 이 파일들이 정의한 코드를 실행한다)·`.env`/`secret`/`credential` 포함 경로·`id_rsa`류·`*.pem/key/p8/keystore/tfvars` 등 키 파일이 섞이면 자동 승인 금지 + 수동 리뷰 요청 코멘트
+  - `.github/` 전체·임의 위치 CODEOWNERS·스케줄 잡이 실행하는 자동화 스크립트(`tools/pr_review_bot.mjs`·`team_activity_report.mjs`·`update_package_manifest.py`·`devin_pr_watch.mjs`)·**패키지/빌드 설정**(`package.json`·lock 파일·`.npmrc`·`next.config.*`·`tsconfig*`·babel/postcss/tailwind 설정 — `npm ci`/`npm run`/`next build`가 이 파일들이 정의한 코드를 실행한다)·**인증·DB·RLS 보안 코드**(`supabase/`·`src/lib/server|auth|supabase/`·`src/app/api/` — ADR-005, #24 사례)·`.env`/`secret`/`credential` 포함 경로·`id_rsa`류·`*.pem/key/p8/keystore/tfvars` 등 키 파일이 섞이면 자동 승인 금지 + 수동 리뷰 요청 코멘트
   - GitHub이 머지 가능 상태를 아직 계산 중이면 다음 주기로 보류, 머지 충돌이면 해결 요청 코멘트
   - **behind(main보다 뒤처짐)여도 그대로 머지를 시도**한다 — head 커밋의 CI는 작성자 push 때 이미 검증됐다. `update-branch`(main을 PR에 머지)는 쓰지 않는다 — GITHUB_TOKEN으로 한 갱신 push는 pull_request 워크플로를 다시 트리거하지 못해 새 sha에 `check`가 영원히 안 생기고, check가 필수 상태면 사람 머지까지 막힌다. "브랜치 최신화 요구" 보호 규칙이 켜져 있으면 GitHub이 머지를 거부해 자연히 사람에게 넘어간다.
   - CI(`check` 잡) 진행 중이면 조용히 다음 주기, push 후 30분이 지나도 check-run이 없으면 "CI 없음" 안내 코멘트, 실패면 재현 절차 코멘트
