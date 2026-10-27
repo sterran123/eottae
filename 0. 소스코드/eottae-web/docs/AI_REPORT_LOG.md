@@ -445,4 +445,6 @@
 - [변경] ADR-005·.env.example | 공개 키를 Publishable key로 팀 통일(변수 이름은 ANON_KEY 유지), 앞 문단 표현 통일
 - [변경] 실행_결정대기_로그 | DEC-08 행을 DEC-07 뒤로 정렬
 - [검증] 문서만 변경 — 코드 실행 없음. 직전 #39 작업도 문서 변경만이라 실행한 검증 없음(빌드 CI만 통과)
+- [보안] HANDOFF §14 | 임시 Administrator 위임 뒤 Owner가 Database Password를 다시 만들고 위임·회수 기록을 #26에 남기는 절차 (#40 AI 리뷰 권장)
+- [변경] ADR-005 | 마이그레이션 흐름에 `db push --dry-run` 추가(HANDOFF와 통일), Publishable key와 `verify_jwt` 범위(로그인 세션 필요) 명시 · deploy-pages.yml 주석 용어 통일
 

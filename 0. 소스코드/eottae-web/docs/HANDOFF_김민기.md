@@ -190,6 +190,6 @@ git config --global user.email "본인 GitHub 이메일 또는 noreply"
 - 주한태 마이그레이션 PR이 머지되면 클라우드에 적용: `cd "0. 소스코드/eottae-web"` → `npx supabase login` → `npx supabase link --project-ref <ref>`(DB 비밀번호 입력) → **`npx supabase db push --dry-run`으로 적용될 마이그레이션 목록 확인** → `npx supabase db push`
 - **service_role은 복사·등록하지 않는다** — 클라우드 Edge Function 안에서 `Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')`로 자동 제공된다(`SUPABASE_` 접두어 이름은 CLI로 등록할 수도 없다)
 - 외부 키(성인 인증 업체 API 키 등)만 `npx supabase secrets set 이름=값`으로 Edge Function 시크릿에 넣는다 — 파일·GitHub Actions Secrets에 두지 않는다
-- 김민기가 자리를 비울 때 `db push`가 급하면 Owner가 대시보드에서 주한태를 임시로 Administrator로 올렸다가 끝나면 되돌린다
+- 김민기가 자리를 비울 때 `db push`가 급하면: Owner가 주한태를 임시로 **Administrator**로 올림(주한태는 Database Password를 새로 만들어 사용) → 끝나면 **Developer로 되돌리고 Owner가 Database Password를 다시 만들어** 비밀번호 관리자에 저장. 위임·회수 시각은 #26 이슈에 남긴다
 - 무료 플랜은 1주일 비활성 시 일시 정지 — 발표·시연 전날 대시보드에서 상태 확인(정지면 Restore)
 

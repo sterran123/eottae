@@ -41,7 +41,7 @@ jobs:
       # ci.yml과 동일 절차로 검증 후 export 산출물 생성
       - run: npm ci
       - run: npm run typecheck
-      # ADR-005 — Supabase 공개 값(URL·anon key)만 빌드에 주입한다. service_role은 절대 넣지 않는다.
+      # ADR-005 — Supabase 공개 값(URL·Publishable key)만 빌드에 주입한다. service_role은 절대 넣지 않는다.
       # Secrets가 비어 있으면 빈 문자열로 빌드되고 화면은 데모 데이터 모드로 동작한다.
       - run: npm run build
         env:
