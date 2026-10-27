@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import SubpageHero from '@/components/shared/subpage-hero';
+import { MotifIcon } from '@/components/shared/motif-icon';
 
 export const metadata: Metadata = {
   title: '개인정보·계정 삭제 안내',
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
 export default function PrivacyPage() {
   return (
     <>
-      <SubpageHero eyebrow="DATA POLICY" title="개인정보·계정 삭제 안내" motif="✦">
+      <SubpageHero eyebrow="DATA POLICY" title="개인정보·계정 삭제 안내" motif={<MotifIcon name="lock" size={56} />}>
         이 사이트는 아직 공개 운영되지 않는 팀 프로젝트 기본 골격입니다. 실제 개인정보 수집을
         시작하기 전 개인정보 처리방침, 이용약관 및 법률 검토를 완료해야 합니다.
       </SubpageHero>

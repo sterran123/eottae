@@ -10,26 +10,26 @@
 .github/workflows/devin-mention.yml,958,9be2ba668a01c82cbfaf218efe66afe9b5c159475d232299cc95cdc75d261e33
 .github/workflows/pr-review.yml,2536,08e6eaf950f1e4bd27ef1185c3513f4e5ea2087759af9b719043cac4735dcf76
 .github/workflows/site-health.yml,1067,854b68b422d215e5766e9aa8977731980c00b3e7e6454912f18c5d4625696878
-.github/workflows/team-sync.yml,4619,c6a43dde79dc55273e665d12c1fbd1a132a27c5fb72231d54b4b06833a2da39d
+.github/workflows/team-sync.yml,4733,6c6d3615f2bc1652041d2a9359495997dc3b14b5abb41b975233293b357b2e01
 .gitignore,231,64f0218e7546b09bfc3f5a95d14f7213c987f8e182e18439bb3a90de0fe395aa
 0. 소스코드/eottae-web/.env.example,268,0aada50c365168728d9a39d7da2677c6784ffda00a0e94c2735de33654cd46e3
 0. 소스코드/eottae-web/.gitignore,73,f4414d6da0174aa2bcd152a48741b4003b5d1f50c6c218322f1885904d970f7b
 0. 소스코드/eottae-web/AGENTS.md,1371,dfd62088d1b52c3eeb6f9ccb87a62858bb9766b328ae93cd85994f2bb3262587
 0. 소스코드/eottae-web/README.md,4517,29f34850035187210d9a8cd2de1c25308a0d09a152f720ce82f3a185268d10c0
-0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md,51689,9c32e8af33e2b3f0e01c75f32927ad08e0caac07b0351205fd5571f75fb7a682
+0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md,56473,4cc7850826d5bdf898330efa0c7856327d149da95ab32634dd1a9a30a291d775
 0. 소스코드/eottae-web/docs/AI_도구_MCP_권장.md,4206,6ef5f1ba972e9f1d07e1dbddd282ed9c16c3fd132a5301db0a8e0e9cffc2bb2f
 0. 소스코드/eottae-web/docs/AI_에이전트_협업_가이드.md,5975,0e47a560be1c6b125ea53409008e30bc714ba4aa9818d5976e0b9bbdb9e36787
-0. 소스코드/eottae-web/docs/DESIGN_개선_지시서.md,7357,2b9417547a6415e07b7293ba77efaa43f025142ee9c129e8ea0ab1771c0fd641
+0. 소스코드/eottae-web/docs/DESIGN_개선_지시서.md,7364,7d34723629b67d6fc6c107846671146dfa18b35250001621174b73afb4da8511
 0. 소스코드/eottae-web/docs/HANDOFF_김민기.md,15910,91c2bb6842e0e4772873a54479cbd8307648fa6e12dac5cedfc7aa936dc4ec16
 0. 소스코드/eottae-web/docs/README_테스트배포.md,2140,1b5f0de20b848f9f719508c53c773b7b6d9a943480af2da84aa45a0d9d9b156d
 0. 소스코드/eottae-web/docs/TEAM_ACTIVITY.md,3487,a0fbb6a10f35e946c3717c023f1b47a2888f20a316cd675181c8096cd0e8e958
-0. 소스코드/eottae-web/docs/screenshots/01_home_mobile390_light.png,1375379,ee4c7dfe27b204dfb34cd4a76c1520ac1ba760c81983e08492c930fdb6584742
-0. 소스코드/eottae-web/docs/screenshots/02_home_desktop1440_light.png,666440,4d77ab70b0ec37e420690892ae02cdbd09f8beea8ea6d69eee35034778770c14
-0. 소스코드/eottae-web/docs/screenshots/03_home_desktop1440_dark.png,660201,544bca073c35e2306bf4b458eeeab322448a138020aaa217cc7e4612ba80eaba
-0. 소스코드/eottae-web/docs/screenshots/04_match_mobile390_light.png,348100,3d611f991340b70079bf93ca0a1bcb851267228e403dc9d6e78b260fdce9f909
-0. 소스코드/eottae-web/docs/screenshots/05_activities_mobile390_light.png,325171,05c025b1220a3a59c52c15b5748a87bb801c385e48f9e25b38f3d2c502388d10
-0. 소스코드/eottae-web/docs/screenshots/06_invitations_mobile390_light.png,342021,ee5795ace313491471e402ba05794dd6ff13b0f024b63667dc560814d2283158
-0. 소스코드/eottae-web/docs/screenshots/07_offline_mobile390_light.png,150855,5a4bdcfa8f81ba2ce97f7ef53c1aac1adb158444360ca81ef5129416c31173c5
+0. 소스코드/eottae-web/docs/screenshots/01_home_mobile390_light.png,1404562,0afbb4156c5d65d35ed595e2091ceaeac32e57c2091a927dede167dedc58ad19
+0. 소스코드/eottae-web/docs/screenshots/02_home_desktop1440_light.png,941476,50a59fac77a7c111acc7fbbae783a2d4927fd84d846e11066eda96822ba02f51
+0. 소스코드/eottae-web/docs/screenshots/03_home_desktop1440_dark.png,990010,97dd0efa4c601b3bcef24d2370783fbd0ef442831df4f3463ca8004157608c1e
+0. 소스코드/eottae-web/docs/screenshots/04_match_mobile390_light.png,499672,c08f4d8885237fc977b6df6191e98e814486b1e5506f0dac9cbffb15906570f7
+0. 소스코드/eottae-web/docs/screenshots/05_activities_mobile390_light.png,453686,131f9b25a12dfd314ed05fda217f3baec24e3ff18f641e502d9d0768b92e90b7
+0. 소스코드/eottae-web/docs/screenshots/06_invitations_mobile390_light.png,491281,c8156793417ef78ef7356f55ffe5c0e439702664ac273b0d190a09c71a84f913
+0. 소스코드/eottae-web/docs/screenshots/07_offline_mobile390_light.png,286900,d84ae861e493e2bad670f242c0ac8b01062ab01f3f8f4b6723097d565f44e30b
 0. 소스코드/eottae-web/docs/참고_상용앱_문답구조_분석.md,4672,e0aa0672f69a33e6f4706267e93345981c86cc32b8788bcd0c16dc2f66532353
 0. 소스코드/eottae-web/next-env.d.ts,262,85ae5aee75f011967cf2d25cbc342f62d69314e9d925f7f4aa3456fc2cffcca6
 0. 소스코드/eottae-web/next.config.mjs,924,a7c43d03d35a886d640f128eaec88da96cf6e0f250e361bb53877344d832011f
@@ -44,33 +44,33 @@
 0. 소스코드/eottae-web/public/icons/icon-192.png,9608,991f75ee3e54fa8d236ec3ce750e65c2bcdf474a2b85e5053e506395e126bab7
 0. 소스코드/eottae-web/public/icons/icon-512.png,47130,d324e547863d3e4cb9cd4912c117fa0faca2e81da370681051aa9ec4be1b5c94
 0. 소스코드/eottae-web/public/icons/maskable-512.png,31206,4e96a2cd84b3865cad08426167ef0f83ba2670c0c73171c3e6212d83b7cce107
-0. 소스코드/eottae-web/public/manifest.webmanifest,837,05bfe9e62a1b4c74ba84bab7da81b3809e7cf3f593e41494de083e5013dc9244
+0. 소스코드/eottae-web/public/manifest.webmanifest,968,356ea5e3863b86125d371e50db7cc5f0f600c5b91a8bc094f5f2580bf97c8071
 0. 소스코드/eottae-web/public/metadata.json,425,774cdb78ed22a10371182650aebc05dba2d9df3e9258594c31f2b1689c6e3513
 0. 소스코드/eottae-web/public/sw.js,2868,cd9d91fb632f2a3dd1729f8d35a7f1cc7cadbeaea807d763d25e9b8a46abb3e0
-0. 소스코드/eottae-web/src/app/activities/page.tsx,2098,686b98879ded33a54ab3e01869241f832899fb5da250331857f809bacffe99ce
+0. 소스코드/eottae-web/src/app/activities/page.tsx,2191,9d571f7f9dcca3872ecb40de2ce8f4910eea41cb10dc8cfb7c6652d6c1537573
 0. 소스코드/eottae-web/src/app/api/health/route.ts,299,bc084e902c152bf47adc6ebf838975ce0423f15c4fd763de6b0bef71d783b23f
 0. 소스코드/eottae-web/src/app/error.tsx,874,740925db285d13907637d5a97395f8ac13aa783f2744b6591246c8b8e4983015
-0. 소스코드/eottae-web/src/app/globals.css,37518,bd6942bf2396683594af2dcdd83566d32fb16de4f57fa2c73baa181e67e1da75
-0. 소스코드/eottae-web/src/app/invitations/page.tsx,2132,4de44c6936a52070ed7f3a135ec2789daa1457f25e6a315c7a684a1dbfa7269c
-0. 소스코드/eottae-web/src/app/layout.tsx,2957,840d5034d544b1b989d92e84e38700c5097e87ec2d74b34564a3827d8b6f93b0
-0. 소스코드/eottae-web/src/app/loading.tsx,619,e257d1c9d2eb41f972b596c2b0b819f4249a3d73d229d8a3e6535120dbed8193
+0. 소스코드/eottae-web/src/app/globals.css,45817,a0a2822ef28ca854ee4713a2b6eff900029dc269462510049e263717f0909834
+0. 소스코드/eottae-web/src/app/invitations/page.tsx,2224,aa5dad634230e9d31220dcf2319bf738e869941c4508df02ac1180d5eea77139
+0. 소스코드/eottae-web/src/app/layout.tsx,3293,0780186f7e9e19c03b16a77285c1dabdd50f55c216fe1bfe349d37c0ac8d2b26
+0. 소스코드/eottae-web/src/app/loading.tsx,1152,7b3c795fc240758c1d071cc8645a60325f01cc05e69009e267c89bc5a134d08b
 0. 소스코드/eottae-web/src/app/match/chat/match-chat.css,16219,5c97692283aecb5d9768379a17f097793b0db50e63f625722198c65480be7213
 0. 소스코드/eottae-web/src/app/match/chat/page.tsx,1256,64c8214f461a51180a7ad8562e4f39f6f18ecb00c1f5ca334c1758e2e07b0c60
 0. 소스코드/eottae-web/src/app/match/common/match-common.css,5033,0bef2a5d67fdd5c53ab385aa0e5a0a76ca445399ccf64c55ea222273384b82bd
 0. 소스코드/eottae-web/src/app/match/common/page.tsx,946,93a170fd13acc4f2a6ba3a86bf4a8e65a5e3e31b29e7b4f944cac4a09191c43c
-0. 소스코드/eottae-web/src/app/match/match-tokens.css,2713,59c99de995aa3c7886ed0f7bb148aa05cf6ef1edd54a6d4a315394cdf5929ae0
+0. 소스코드/eottae-web/src/app/match/match-tokens.css,5603,397250ab01005c75391e52c9b51963b1e05be19ecf155f7b3472f8f1ef1c4ba9
 0. 소스코드/eottae-web/src/app/match/onboarding/match-onboarding.css,15131,909eebc33e2b4600458237baa3189333a4c0f8156dd3a6b274b02d6f67d362fd
 0. 소스코드/eottae-web/src/app/match/onboarding/page.tsx,1034,8cf74e472cd6f5dedc80acee76a03d65a880bcdab696ef821e50366a6cc2cf0c
-0. 소스코드/eottae-web/src/app/match/page.tsx,4359,e63248c86c0fd3a09cba410f364c46e062dd77ddd9c94805ed75f83dfdfd66f1
+0. 소스코드/eottae-web/src/app/match/page.tsx,4359,361b8e3dbc3ccf638e84d9f36e4fb6abce478d09d9ac59b26682d87a936d1cbc
 0. 소스코드/eottae-web/src/app/match/qna/match-qna.css,8998,724ea406fe16c8d0ba38b0ed2ce0d1ca33d1bb0e0196a878db5a1e3d950f5327
 0. 소스코드/eottae-web/src/app/match/qna/page.tsx,907,991c98705c393dabf7440e540a3c2d2fb21e838e264f809d704987e0d90aa05f
-0. 소스코드/eottae-web/src/app/match/recommend/match-recommend.css,13902,7080e42e2c208f556b9327cdd04b4630a4b563d24a889c2baa18fd0e6dbd9559
+0. 소스코드/eottae-web/src/app/match/recommend/match-recommend.css,13896,eb4ab7c91af25caa024ad46505f387f7714b187f4cb0762c32cbd229eb3a97b8
 0. 소스코드/eottae-web/src/app/match/recommend/page.tsx,900,53bb3dfa7815e16d457bbe5eb6ef1d293c149d614ff9838a0bc5f05bd9a1627b
 0. 소스코드/eottae-web/src/app/not-found.tsx,583,fd2b2c289c9bbbba76d31641b59dc00a283e005b8b19232d706fc838c6155085
-0. 소스코드/eottae-web/src/app/offline/page.tsx,783,0ba45f0fb179f76af86cf4c873d1178b6e5ad67d5d6c26f24717416fd583bb88
-0. 소스코드/eottae-web/src/app/page.tsx,6199,e0bf5c95c95ba2206b019ceec0e0ed76c7b706335ec96be1d5851144b47f8f8a
-0. 소스코드/eottae-web/src/app/privacy/page.tsx,2999,68ff361dbe9071853a331f07e544b103d1da7a4b187d6e9c1587c943b5286243
-0. 소스코드/eottae-web/src/app/safety/page.tsx,1989,cd48b986f2f23a51bbd0617afea60b4a321a183f37c9302fa9de9e82858cea91
+0. 소스코드/eottae-web/src/app/offline/page.tsx,875,f7715c4e5ee547bc8cef2dad96e725cb76ec55562d864245e0abf3aeaeb9917a
+0. 소스코드/eottae-web/src/app/page.tsx,8935,34f4b91f15a9d3b75e92c2771c03c8ccce8147683f7392e819abc8599c45f283
+0. 소스코드/eottae-web/src/app/privacy/page.tsx,3091,9c973f2c0c6f6c620da6eab09ebd408089d4c2f39bb1562e62aed071f803f05d
+0. 소스코드/eottae-web/src/app/safety/page.tsx,2083,b7fff35a33b1c4b90385524e4fa2ae8af97add00ff4b60cf9c60b4dabb6fff6b
 0. 소스코드/eottae-web/src/components/chat/ChatRoom.tsx,10060,db625a190721ea0c2c701af95127b025c4ce672c641f6318cae293fc774f9a35
 0. 소스코드/eottae-web/src/components/chat/MessageBubble.tsx,2831,200c1a26653cb001a9a618eadc21e0b7c29f08f38751cf662ae81cd1ea9f4019
 0. 소스코드/eottae-web/src/components/chat/MessageComposer.tsx,9115,f594933e28589995fb2f7e12bdf3a48d9c68b624998ae1ac4d0c7f2bb7cf7072
@@ -85,12 +85,13 @@
 0. 소스코드/eottae-web/src/components/safety/BlockConfirmModal.tsx,1939,a23db26e50328c21c91e25bff028859832a2020715877eed7691f4d35289b25f
 0. 소스코드/eottae-web/src/components/safety/ReportModal.tsx,5367,cd79e5263bdd6f99b1a291de54d681ded5a1ef01fb4e8e6ab4ae35b1e5c3e385
 0. 소스코드/eottae-web/src/components/safety/SafetyDialog.tsx,1410,d9d845a1c69955ea61d92795556b2c377e16bdeaa6113ed381de00e18c852ad4
-0. 소스코드/eottae-web/src/components/shared/hero-particles.tsx,1694,8b1561fb099f5450628373e58cd6418a6d8c0e15d25ae477dfa2b9f8b393f156
+0. 소스코드/eottae-web/src/components/shared/hero-particles.tsx,1948,020d98506513cc451fdb5746034e95602819263d9ec5ec270354a594bfcffc99
+0. 소스코드/eottae-web/src/components/shared/motif-icon.tsx,1495,64341455f64ea5c7e6790d41843162e731699dac499933af57ae1b30f3595494
 0. 소스코드/eottae-web/src/components/shared/scroll-reveal.tsx,1275,1773c0bfa005291604509edceff28300f1c46dcf0c98e27d96cb06fcdd10029e
-0. 소스코드/eottae-web/src/components/shared/service-card.tsx,821,2ecf4aaf5eb2de3ec8e1c8800785b0becb3ae537a975466c4b9c9956d28ed24f
-0. 소스코드/eottae-web/src/components/shared/site-footer.tsx,574,c4a194cb9830e69d4c2b019ffa85f4226f077467bdbcafe3bba9e1d53a1f462d
+0. 소스코드/eottae-web/src/components/shared/service-card.tsx,1145,8543c8f9a99f7b1303caabd6b589e2b118a6250e023bef7686da9a89f1153f31
+0. 소스코드/eottae-web/src/components/shared/site-footer.tsx,1157,57000e73e17f7b44070ad4c1818c9f3024fdc926490a7730b4d66fba2867e4ed
 0. 소스코드/eottae-web/src/components/shared/site-header.tsx,1139,4e09caff0e8b0caa5def96c3b5992347c6f33ce2086b30d8880691e67a0e2583
-0. 소스코드/eottae-web/src/components/shared/site-nav.tsx,1080,063dde03faec45ea77706ac29dd432c4838daac55f38bb14e6dff082f79f8d3b
+0. 소스코드/eottae-web/src/components/shared/site-nav.tsx,1331,c5eeaf5cb162eea777e8271b6d00b210ed671d3be6008bfd97a9f47b99949351
 0. 소스코드/eottae-web/src/components/shared/subpage-hero.tsx,1078,89547d6be7af77720d0dc35691a0092ad9c2ab50ffb14b25c05c477bbb6f9263
 0. 소스코드/eottae-web/src/components/shared/sw-register.tsx,638,9d0757696510b8470a71209ac1b2d4c8814d33cb875ced37e5e174c6554e230f
 0. 소스코드/eottae-web/src/components/shared/theme-toggle.tsx,3371,de6fabf765ea08a62d3cf44e81b07111f648d1c8640d45029edcb73f00d34535
@@ -122,6 +123,7 @@
 1. 프로젝트 계획서/AI_협업_지시문/rules_1.md,145,d345f79fd1467f7a7b8b7aa80deadcc3cbdfe34ce8377224d73cc8c50b158425
 1. 프로젝트 계획서/AI_협업_지시문/skill_1.md,145,2053a5fe3b7d3a2617110e9b67acfa6b8094fb4f8d8014a5f4041774dc9b6b6b
 1. 프로젝트 계획서/AI_협업_지시문/에이전트_공통_실행프롬프트.md,750,cdb664f0cf5da0e88bb1a6c2091f40db23b21e6cfa86717865a0452f76e81676
+1. 프로젝트 계획서/plan.md,2282,8a313f188b8aa30ce7e454ac42965fa0f53d1ee8abcc496e9b936780c409d479
 1. 프로젝트 계획서/단계_범위고정_인수조건.md,2820,a4fed328dab1c1abd004d724d097089b271eb5d13eb133d904029adf9b3e19aa
 1. 프로젝트 계획서/단계별_로드맵_수익화.md,1154,4fc0bc4cc7200ab5e418cafb89de6e209c0a08dca6641d0e17fe39a934a2237a
 1. 프로젝트 계획서/브랜드_가이드.md,2103,64ae173cf978157656cd7225bbc0eba1b3bab3203a66c885d2f70e00d04569f1
@@ -166,13 +168,13 @@
 2. 프로젝트 설계서/유스케이스_시나리오.md,304,fe2481a7ad43dd535f9925346ae0d553eabc674552cb714a24e95a90ddc83e31
 2. 프로젝트 설계서/테스트_체크리스트.md,304,fe2481a7ad43dd535f9925346ae0d553eabc674552cb714a24e95a90ddc83e31
 2. 프로젝트 설계서/테스트_케이스_마스터.md,2212,858e6b4846281ac57dcb313b5e6738e37ed22ad98cae54fcdb77b8cc3b940734
-3. 구현 이미지(5장이상)/01_공통_홈_데스크톱.png,666440,4d77ab70b0ec37e420690892ae02cdbd09f8beea8ea6d69eee35034778770c14
-3. 구현 이미지(5장이상)/02_공통_홈_모바일.png,1375379,ee4c7dfe27b204dfb34cd4a76c1520ac1ba760c81983e08492c930fdb6584742
-3. 구현 이미지(5장이상)/03_공통_홈_데스크톱_다크.png,660201,544bca073c35e2306bf4b458eeeab322448a138020aaa217cc7e4612ba80eaba
-3. 구현 이미지(5장이상)/04_매칭_진입_모바일.png,348100,3d611f991340b70079bf93ca0a1bcb851267228e403dc9d6e78b260fdce9f909
-3. 구현 이미지(5장이상)/05_준비중_모듈_데이트소모임_모바일.png,325171,05c025b1220a3a59c52c15b5748a87bb801c385e48f9e25b38f3d2c502388d10
-3. 구현 이미지(5장이상)/06_준비중_모듈_청첩장_모바일.png,342021,ee5795ace313491471e402ba05794dd6ff13b0f024b63667dc560814d2283158
-3. 구현 이미지(5장이상)/07_오프라인_폴백_모바일.png,150855,5a4bdcfa8f81ba2ce97f7ef53c1aac1adb158444360ca81ef5129416c31173c5
+3. 구현 이미지(5장이상)/01_공통_홈_데스크톱.png,941476,50a59fac77a7c111acc7fbbae783a2d4927fd84d846e11066eda96822ba02f51
+3. 구현 이미지(5장이상)/02_공통_홈_모바일.png,1404562,0afbb4156c5d65d35ed595e2091ceaeac32e57c2091a927dede167dedc58ad19
+3. 구현 이미지(5장이상)/03_공통_홈_데스크톱_다크.png,990010,97dd0efa4c601b3bcef24d2370783fbd0ef442831df4f3463ca8004157608c1e
+3. 구현 이미지(5장이상)/04_매칭_진입_모바일.png,499672,c08f4d8885237fc977b6df6191e98e814486b1e5506f0dac9cbffb15906570f7
+3. 구현 이미지(5장이상)/05_준비중_모듈_데이트소모임_모바일.png,453686,131f9b25a12dfd314ed05fda217f3baec24e3ff18f641e502d9d0768b92e90b7
+3. 구현 이미지(5장이상)/06_준비중_모듈_청첩장_모바일.png,491281,c8156793417ef78ef7356f55ffe5c0e439702664ac273b0d190a09c71a84f913
+3. 구현 이미지(5장이상)/07_오프라인_폴백_모바일.png,286900,d84ae861e493e2bad670f242c0ac8b01062ab01f3f8f4b6723097d565f44e30b
 3. 구현 이미지(5장이상)/08_매칭_온보딩_모바일.png,251668,ecdf38c2fc9c491b26ae9ac5648e5f3c9acb3ac117a4e4883ed2e6ed029aa480
 3. 구현 이미지(5장이상)/09_매칭_온보딩_데스크톱.png,294209,5319b08a5cad49d1bf269178c329025f1c4473d15cb3eee1c3c1e1ed4249c726
 3. 구현 이미지(5장이상)/10_매칭_추천_모바일.png,231129,2900dc6f4995875f7b8a3791bd0812ce4391df72b368fb37725683b6aacfae2d
@@ -181,15 +183,18 @@
 3. 구현 이미지(5장이상)/13_매칭_문답_모바일_다크.png,662078,b8793d946fb3d2a5c2f4d14904f240f144d43af240f3d1256caff19123504794
 3. 구현 이미지(5장이상)/14_매칭_공통질문_모바일_라이트.png,228072,67fe7a080b49ba6a62f717eee4122091c704282f4700ddff0f32c681c8075df7
 3. 구현 이미지(5장이상)/15_매칭_공통질문_모바일_다크.png,236910,d28e271fa3f8351fc279bd6ec3cb616be93c158db966fb06d8eef1b122c1070e
+3. 구현 이미지(5장이상)/16_공통_홈_6테마_비교.png,966212,f4401f9ec18b22416d79fd1d219b076fa7a02f9a546ae6ab6f79c73e14d6d01a
+3. 구현 이미지(5장이상)/17_매칭_추천_7모드_테마추적.png,393419,5e66b62bf637e6c5c40f94bad6548ce847390de67bbf71cb5ba5a2d2e94e042d
 3. 구현 이미지(5장이상)/README_실제캡처_가이드.md,1060,26b79e4664d87c33c479169e6e2014a910f070ad07e873259fdff06b553f00ad
 3. 구현 이미지(5장이상)/README_캡처_체크리스트.md,726,367ba2ce21934d6d9a8d97f6c0567d79f4ec4733d3009178452aa791c2d7ee6f
-3. 구현 이미지(5장이상)/captions.csv,3235,bf0570c2afa0e835cc8ae203f594afc6d3212b55a9ee70f7a127060225408708
+3. 구현 이미지(5장이상)/captions.csv,4119,f0db6a44e8f28a582582e339a10df48980bbe87ae1ea595eda9b9e685b68d3fc
 4. 프로젝트 결과 보고서/README_결과보고서_작성예정.md,433,2433967cd3ed949c869a6ceca2fecfb363a16dac9e1c2b7cb09731919b8921a5
 4. 프로젝트 결과 보고서/실제진행현황_기록부.md,1178,2a3488aeedf73dc2e7b80958daafa48f665120112f330345658ff8252f622850
 4. 프로젝트 결과 보고서/양식원본/개인 프로젝트 결과 보고서.xlsx,55104,faa467fc925081cb9925b645e09ac1705205155b81b6b23d60451398fea49411
 5. 발표자료(PDF)/README_발표자료_작성예정.md,506,fa76caaafdee83357aa85b16acc4501d26991c18678c13c5d1ac715bf23eb23a
 5. 발표자료(PDF)/어때_팀프로젝트_기획발표_초안.pdf,1104319,5d9df57850a47f16453ccecb20b64ba97a73bd1140496a7937078fcbd87a928a
 QA_최종검증보고서.md,8775,e9001851f82e124c909e4d1ba91c836e9568fef3c2c0a1fb94d886761f0843a7
+README.md,7944,58cde1414b9ffa6aa822db251eb7c346c5363c1344e508c4eaa9d9bb94cba225
 README_처음읽기.md,3729,e0b786412461307c78d34b144db294232f07a51295aa9a6f339097d15598e6da
 tools/capture_screenshots.mjs,4869,7c5f6019f314d68dda47556674ac947eb6b1119ed7a88cfd3a8fb679e9fb39d1
 tools/devin_mention_bridge.mjs,3924,456868ab2b44e9bf382746b5161ec0beb717e2f90d97a5932f5220ba9a251e28
@@ -199,7 +204,7 @@ tools/serve_pages_preview.mjs,3710,40ff84f3f4dc77c2dfebef73ac541e0fa39df2aec2691
 tools/site_health_check.mjs,4193,f5ad34388333f58abb65a916757a2192051ece51dd26d64531ade5aa6f13ac5a
 tools/sync_repo.cmd,198,66f0923b57b3a6d5cf0fa943d96d8f218b75ae956642067ff68f48be2fd6cd1e
 tools/sync_repo.mjs,1844,36cec9e485812b73e23e47fbf298015da71d991a7e224844f455087c2f27ad4e
-tools/team_activity_report.mjs,8839,e0bc75e333138a7dbc33444ca59780387138f034f06c54f4564910f6fba20deb
+tools/team_activity_report.mjs,9008,260836c1c30ce10823993063ae838e814986e9560f5bd43c66337bc95846f986
 tools/update_package_manifest.py,2052,ce1ae78cec56f1f7ca8766ecb1e8501774b69e548e11b17ba3ac8366e7db8e60
 참고용/AI_REPORT_LOG.md,100997,8d554d9ffcd2dd30a282311317f0a9440bbb8ad49592f761e1ec9ae223998778
 참고용/rules.md,28460,66f92993fc8961be9bfdc60daa8947e5ff09cc87ea3debb17b6c3b1d12d1069c

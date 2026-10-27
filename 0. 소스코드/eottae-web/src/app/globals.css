@@ -17,7 +17,7 @@
 :root {
   /* 라이트 테마 토큰 */
   --ink: #28213a;
-  --muted: #6c6984;
+  --muted: #696680; /* 파스텔 카드 위에서도 4.6:1 */
   --brand: #7454c4;
   --brand-dark: #4d3596;
   --brand-soft: #8264d0;
@@ -149,8 +149,8 @@
 /* 컵케잌 — 크림 배경 + 민트·핑크 파스텔. 히어로도 파스텔이라 히어로 텍스트는 어두운 자두색 */
 :root[data-theme='cupcake'] {
   --ink: #3d1f33;
-  --muted: #8a6d7d;
-  --brand: #2f8f94;
+  --muted: #775e6c; /* AA — 크림·핑크 카드 위 4.66:1 */
+  --brand: #256f73; /* AA — 라벨·번호 글자 4.67:1 */
   --brand-dark: #a13a6c;
   --brand-soft: #d58aa8;
   --line: #ecdfd8;
@@ -165,7 +165,7 @@
   --hero-c: #a8d8cf;
   --hero-ink: #58243f;
   --hero-title: #4a1030;
-  --hero-eyebrow: #8f2f61;
+  --hero-eyebrow: #632043; /* 파스텔 히어로 위 4.66:1 */
   --hero-notice: #5f2f49;
   --particle: #ffffff;
   --hero-btn-ink: #4a1030;
@@ -245,7 +245,7 @@
 /* 디즈니 — 캐슬 로열 블루 + 골드. 히어로는 성의 밤하늘 그라데이션 */
 :root[data-theme='disney'] {
   --ink: #17264d;
-  --muted: #5c6b8f;
+  --muted: #5a698c; /* 골드·블루 카드 위 4.61:1 */
   --brand: #2f62b1;
   --brand-dark: #1d4585;
   --brand-soft: #6f9ade;
@@ -324,6 +324,19 @@ body {
   font-size: 16px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  /* 한국어는 어절 단위로 줄바꿈 — '이야/기', '대화/까지' 같은 낱자 끊김 방지 */
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
 }
 
 ::selection {
@@ -339,6 +352,10 @@ a {
 a:focus-visible,
 button:focus-visible,
 summary:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role='button']:focus-visible,
 [tabindex]:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 4px;
@@ -355,7 +372,8 @@ img {
   top: 0;
   background: var(--paper);
   color: var(--ink);
-  padding: 8px 14px;
+  padding: 11px 16px;
+  border-radius: 99px;
   z-index: 99;
   font-weight: 700;
 }
@@ -379,7 +397,9 @@ img {
   top: 0;
   z-index: 50;
   border-bottom: 1px solid var(--line);
-  background: var(--paper);
+  background: color-mix(in srgb, var(--paper) 86%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  backdrop-filter: blur(14px) saturate(1.3);
 }
 
 .sitebar-inner {
@@ -439,13 +459,29 @@ img {
 }
 
 .nav a {
-  padding: 9px 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 14px;
   border-radius: 99px;
   white-space: nowrap;
   color: var(--ink);
   transition:
     color 0.15s ease,
     background-color 0.15s ease;
+}
+
+.nav a .motif-icon {
+  color: var(--brand-soft);
+  flex-shrink: 0;
+  transition: transform 0.3s var(--spring);
+}
+
+.nav a:hover .motif-icon,
+.nav a[aria-current='page'] .motif-icon {
+  color: var(--brand);
+  transform: rotate(-12deg) scale(1.12);
 }
 
 .nav a:hover {
@@ -487,13 +523,12 @@ img {
   display: none;
 }
 
-/* 테마 토글 버튼 / 테마 선택 필 */
-.theme-toggle,
+/* 테마 선택 필 */
 .theme-picker {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 36px;
+  min-height: 44px;
   padding: 7px 12px;
   border: 1px solid var(--line);
   border-radius: 99px;
@@ -510,20 +545,21 @@ img {
     background-color 0.15s ease;
 }
 
-.theme-toggle:hover,
 .theme-picker:hover {
   color: var(--brand-dark);
   border-color: var(--brand-soft);
   background: var(--soft);
 }
 
-.theme-toggle:disabled,
 .theme-picker select:disabled {
   opacity: 0.5;
 }
 
-/* 네이티브 select를 필 안에 얹는다 — 화살표·키보드·스크린리더는 OS 기본 동작 사용 */
+/* 네이티브 select를 필 안에 얹는다 — 화살표·키보드·스크린리더는 OS 기본 동작 사용.
+   select 자체가 44px 터치 영역이 되도록 필의 세로 여백은 0 */
 .theme-picker {
+  padding-top: 0;
+  padding-bottom: 0;
   padding-right: 6px;
 }
 
@@ -534,7 +570,7 @@ img {
   font: inherit;
   font-weight: 800;
   font-family: inherit;
-  min-height: 34px;
+  min-height: 44px;
   cursor: pointer;
 }
 
@@ -594,13 +630,18 @@ img {
   flex-shrink: 0;
 }
 
-/* 로그인 자리 — 실제 인증 구현 전 비활성 표시 */
+/* 로그인 자리 — 실제 인증 구현 전 비활성 표시 (점선 필 + 자물쇠) */
 .nav .login-slot {
-  padding: 9px 13px;
-  border: 1px dashed var(--line);
-  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: 4px;
+  padding: 7px 13px;
+  border: 1px dashed var(--brand-soft);
+  border-radius: 99px;
+  background: var(--soft);
   color: var(--muted);
-  font-size: 13px;
+  font-size: 12px;
   white-space: nowrap;
 }
 
@@ -741,7 +782,7 @@ img {
 .hero h1 {
   font-size: clamp(34px, 5.6vw, 62px);
   letter-spacing: -0.06em;
-  line-height: 1.27;
+  line-height: 1.32;
   margin: 16px 0;
 }
 
@@ -1060,9 +1101,16 @@ img {
   vertical-align: 0.12em;
 }
 
+.section-head {
+  text-align: center;
+}
+
 .section-head p,
 .bottom p {
   color: var(--muted);
+  max-width: 620px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .narrow {
@@ -1079,10 +1127,12 @@ img {
 }
 
 .service-card {
-  padding: 27px;
-  border-radius: 24px;
-  display: block;
-  min-height: 320px;
+  padding: 26px 26px 24px;
+  border-radius: 26px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 300px;
   border: 1px solid var(--line);
   box-shadow: var(--shadow-card);
   transition:
@@ -1176,11 +1226,24 @@ img {
   color: var(--brand-dark);
 }
 
+/* 카드 모티프 — 점선 링을 두른 동그란 스티커, 살짝 기울여 붙인 느낌 */
 .motif {
-  font-size: 60px;
-  text-align: right;
-  opacity: 0.6;
-  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  margin: 22px 0 18px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 35% 30%,
+    var(--paper),
+    color-mix(in srgb, var(--paper) 55%, transparent)
+  );
+  border: 2px dashed color-mix(in srgb, var(--brand-soft) 70%, transparent);
+  color: var(--brand);
+  box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--brand) 45%, transparent);
+  rotate: -6deg;
 }
 
 .english {
@@ -1198,15 +1261,31 @@ img {
 
 .service-card p {
   color: var(--muted);
-  margin: 0 0 16px;
+  margin: 0 0 18px;
 }
 
+/* 카드 하단 링크 — 작은 필, 카드 높이가 달라도 바닥에 정렬 */
 .card-link {
-  display: inline-block;
+  align-self: flex-start;
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 14px;
+  border-radius: 99px;
+  border: 1px solid color-mix(in srgb, var(--brand-soft) 55%, transparent);
+  background: color-mix(in srgb, var(--paper) 70%, transparent);
   font-size: 13px;
   color: var(--brand-dark);
   font-weight: 800;
   transition: transform 0.25s var(--spring);
+}
+
+/* 지금 체험 가능한 모듈은 CTA 색으로 강조 */
+.service-card.is-live .card-link {
+  border-color: transparent;
+  background: var(--cta-bg);
+  color: var(--cta-ink);
 }
 
 /* 카드 호버 시 화살표가 살짝 앞으로 */
@@ -1217,18 +1296,43 @@ img {
 /* ---------- 단계 · 특징 ---------- */
 
 .steps {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin-top: 25px;
+  gap: 12px;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* 단계 사이를 잇는 점선 — 번호 원 높이로 카드 뒤를 지나간다 */
+.steps::before {
+  content: '';
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: 45px;
+  border-top: 2px dashed color-mix(in srgb, var(--brand-soft) 60%, transparent);
 }
 
 .step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
   border: 1px solid var(--line);
-  border-radius: 18px;
-  padding: 22px;
+  border-radius: 20px;
+  padding: 22px 16px 20px;
   text-align: center;
   background: var(--paper);
+  box-shadow: var(--shadow-card);
+}
+
+.step small {
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.5;
 }
 
 /* 단계 번호 — 점선 원 안의 숫자, 손그림 느낌 */
@@ -1238,7 +1342,7 @@ img {
   justify-content: center;
   width: 46px;
   height: 46px;
-  margin: 0 auto 12px;
+  margin: 0 auto 8px;
   border: 2px dashed var(--brand-soft);
   border-radius: 50%;
   background: var(--chip-bg);
@@ -1317,41 +1421,68 @@ img {
 
 /* ---------- 강조 / 경고 ---------- */
 
+/* 안전 강조 — 파스텔 카드 + 안쪽 점선 스티커 프레임 + 방패 배지 */
 .safety-highlight {
   position: relative;
   overflow: hidden;
-  margin-top: 60px;
-  border-radius: 22px;
-  background: var(--soft);
-  padding-top: 34px;
-  padding-bottom: 34px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, var(--card-lav-a), var(--card-pink-b) 70%);
+  border: 1px solid var(--line);
+  padding: 34px 36px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 26px;
 }
 
-/* 오른쪽 큰 하트 워터마크 */
-.safety-highlight::after {
-  content: '♡';
+.safety-highlight::before {
+  content: '';
   position: absolute;
-  right: 26px;
-  top: 50%;
-  transform: translateY(-50%) rotate(-14deg);
-  font-size: 130px;
-  line-height: 1;
-  color: var(--brand-soft);
-  opacity: 0.14;
+  inset: 9px;
+  border: 2px dashed color-mix(in srgb, var(--brand-soft) 45%, transparent);
+  border-radius: 21px;
   pointer-events: none;
 }
 
+.safety-badge {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--brand);
+  box-shadow: 0 10px 26px -10px color-mix(in srgb, var(--brand) 55%, transparent);
+  rotate: -8deg;
+}
+
+.safety-badge .motif-icon {
+  width: 42px;
+  height: 42px;
+}
+
+.safety-copy {
+  flex: 1;
+  min-width: 0;
+}
+
 .safety-highlight h2 {
-  margin: 10px 0;
+  margin: 8px 0;
+  font-size: clamp(22px, 2.6vw, 28px);
+  letter-spacing: -0.04em;
 }
 
 .safety-highlight p {
   color: var(--muted);
-  max-width: 700px;
+  max-width: 640px;
+  margin: 0;
+}
+
+.safety-highlight .btn {
+  position: relative;
+  flex-shrink: 0;
+  background: var(--paper);
 }
 
 .warn {
@@ -1368,9 +1499,8 @@ img {
   margin: 6px 0 0;
 }
 
-/* 원형 ! / i 아이콘 */
-.warn::before,
-.info::before {
+/* 원형 ! 아이콘 */
+.warn::before {
   position: absolute;
   left: 18px;
   top: 18px;
@@ -1388,27 +1518,6 @@ img {
   content: '!';
   background: var(--warn-line);
   color: var(--warn-ink);
-}
-
-.info {
-  position: relative;
-  padding: 17px 20px 17px 52px;
-  border: 1px solid var(--line);
-  background: var(--soft);
-  border-radius: 16px;
-  margin: 35px 0;
-  color: var(--ink);
-}
-
-.info::before {
-  content: 'i';
-  background: var(--brand-soft);
-  color: var(--paper);
-}
-
-.info p {
-  margin: 6px 0 0;
-  color: var(--muted);
 }
 
 /* ---------- 태그/칩 ---------- */
@@ -1457,9 +1566,31 @@ img {
 .faq summary {
   font-weight: 800;
   cursor: pointer;
-  min-height: 44px;
+  min-height: 52px;
   display: flex;
   align-items: center;
+  gap: 10px;
+  list-style: none;
+}
+
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+
+/* 질문 앞 Q 스티커 */
+.faq summary::before {
+  content: 'Q';
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--chip-bg);
+  color: var(--chip-ink);
+  font-size: 12px;
+  font-weight: 900;
 }
 
 /* 열리면 + 가 ×로 도는 장난스러운 아이콘 */
@@ -1493,7 +1624,7 @@ img {
 }
 
 .faq details p {
-  margin: 0 0 14px;
+  margin: 0 0 16px 36px;
   color: var(--muted);
 }
 
@@ -1642,6 +1773,62 @@ img {
   animation-delay: 0.3s;
 }
 
+/* ---------- 상태 공통 — 스켈레톤 (RecommendList 상태 처리와 같은 결의 셸 버전) ---------- */
+
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 26px;
+}
+
+.skeleton-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 23px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--feature-bg);
+}
+
+.skeleton {
+  display: block;
+  height: 12px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--soft) 25%, var(--line) 50%, var(--soft) 75%);
+  background-size: 300% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.sk-chip {
+  width: 42px;
+  height: 20px;
+}
+
+.sk-title {
+  width: 55%;
+  height: 18px;
+}
+
+.sk-line {
+  width: 100%;
+}
+
+.sk-line.short {
+  width: 70%;
+}
+
+@keyframes skeleton-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+
+  to {
+    background-position: 0 0;
+  }
+}
+
 @keyframes heart-hop {
   0%,
   60%,
@@ -1661,18 +1848,65 @@ img {
 }
 
 .bottom {
-  padding-bottom: 88px;
+  padding-bottom: 96px;
   text-align: center;
 }
 
-/* 마지막 섹션 위 장식 구분선 */
-.bottom::before {
-  content: '· ♡ ·';
-  display: block;
-  color: var(--accent-pink);
-  font-size: 18px;
-  letter-spacing: 10px;
-  margin-bottom: 12px;
+/* 로드맵 — 1·2·3차 스티커 카드, 지금 단계만 CTA 색 테두리 */
+.roadmap {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  max-width: 900px;
+  margin: 30px auto 0;
+  padding: 0;
+  list-style: none;
+}
+
+.roadmap li {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 24px 18px 22px;
+  border: 1px dashed var(--line);
+  border-radius: 22px;
+  background: var(--paper);
+}
+
+.roadmap li.is-now {
+  border: 2px solid var(--cta-bg);
+  box-shadow: 0 10px 28px -12px color-mix(in srgb, var(--cta-bg) 80%, transparent);
+}
+
+.roadmap-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 6px;
+  border-radius: 50%;
+  background: var(--chip-bg);
+  color: var(--brand);
+}
+
+.roadmap-phase {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: var(--brand);
+}
+
+.roadmap li small {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.actions.center {
+  justify-content: center;
+  margin-top: 30px;
 }
 
 /* ---------- 푸터 ---------- */
@@ -1702,33 +1936,61 @@ img {
 }
 
 .footer-inner {
-  padding-top: 28px;
-  padding-bottom: 28px;
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
+  padding-top: 40px;
+  padding-bottom: 24px;
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr;
+  gap: 28px;
 }
 
 .footer p {
   margin: 3px 0;
+  font-size: 14px;
+}
+
+.footer-brand b {
+  font-size: 22px;
+  letter-spacing: -0.05em;
+  color: var(--ink);
+}
+
+.footer .footer-team {
+  font-size: 13px;
 }
 
 .footer-links {
   display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  font-size: 14px;
+}
+
+.footer-links b {
+  color: var(--ink);
   font-size: 13px;
-  align-items: flex-start;
+  margin-bottom: 4px;
 }
 
 .footer-links a {
   min-height: 44px;
   display: inline-flex;
   align-items: center;
+  align-self: flex-start;
+  transition: color 0.15s ease;
 }
 
 .footer-links a:hover {
   color: var(--brand);
+}
+
+.footer-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 16px;
+  padding-bottom: 28px;
+  border-top: 1px dashed var(--line);
+  font-size: 12px;
 }
 
 /* ---------- 반응형 ---------- */
@@ -1753,6 +2015,29 @@ img {
   }
 }
 
+/* 태블릿·모바일 — 점선 연결선은 4열일 때만, 히어로 캐릭터는 오른쪽 위 작은 스티커로 */
+@media (max-width: 1024px) {
+  .steps::before {
+    display: none;
+  }
+
+  .hero-visual {
+    display: block;
+    top: 28px;
+    right: 32px;
+    width: 168px;
+    transform: none;
+    box-shadow: 0 14px 34px rgba(24, 14, 52, 0.3);
+    animation:
+      hero-rise 0.8s var(--spring) 0.18s both,
+      motif-bob 5s ease-in-out 1s infinite;
+  }
+
+  .hero-visual::before {
+    inset: -7px;
+  }
+}
+
 /* 모바일 (≤ 760px, 360px 기준 검증) */
 @media (max-width: 760px) {
   .sitebar-inner {
@@ -1774,6 +2059,14 @@ img {
     margin-left: -6px;
     margin-right: -18px;
     padding-bottom: 4px;
+    padding-right: 24px;
+    /* 가로 스크롤 메뉴 — 오른쪽 끝을 흐리게 해 더 있다는 걸 알려준다 */
+    -webkit-mask-image: linear-gradient(90deg, black calc(100% - 32px), transparent);
+    mask-image: linear-gradient(90deg, black calc(100% - 32px), transparent);
+  }
+
+  .nav a {
+    padding: 0 12px;
   }
 
   .shell {
@@ -1786,12 +2079,32 @@ img {
   }
 
   .service-card {
-    min-height: 225px;
+    min-height: 0;
   }
 
   .motif {
-    height: 65px;
-    font-size: 42px;
+    width: 60px;
+    height: 60px;
+    margin: 16px 0 12px;
+  }
+
+  .roadmap {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-visual {
+    top: 16px;
+    right: 12px;
+    width: 76px;
+  }
+
+  /* 파티클은 본문과 겹치지 않을 만큼만 — 절반만 남기고 흐리게 */
+  .hero-particles {
+    opacity: 0.55;
+  }
+
+  .particle:nth-child(n + 7) {
+    display: none;
   }
 
   .steps {
@@ -1799,24 +2112,62 @@ img {
   }
 
   .safety-highlight {
-    display: block;
-    margin: 40px 18px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 30px 24px;
   }
 
-  .safety-highlight .btn {
-    margin-top: 10px;
+  .safety-badge {
+    width: 64px;
+    height: 64px;
   }
 
-  .feature-grid {
+  .safety-badge .motif-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .faq details p {
+    margin-left: 0;
+  }
+
+  .feature-grid,
+  .skeleton-grid {
     grid-template-columns: 1fr;
   }
 
   .footer-inner {
-    display: block;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px 16px;
   }
 
-  .footer-links {
-    margin-top: 15px;
+  .footer-brand {
+    grid-column: 1 / -1;
+  }
+
+  .hero h1 span {
+    text-underline-offset: 6px;
+  }
+
+  .hero h1 {
+    line-height: 1.38;
+  }
+
+  /* 로드맵 — 모바일은 아이콘 왼쪽 + 글 오른쪽 가로 카드로 높이를 줄인다 */
+  .roadmap li {
+    display: grid;
+    grid-template-columns: 52px 1fr;
+    column-gap: 14px;
+    row-gap: 0;
+    align-items: center;
+    text-align: left;
+    padding: 16px 18px;
+  }
+
+  .roadmap-icon {
+    grid-row: 1 / span 3;
+    margin: 0;
   }
 
   .hero {
@@ -1859,6 +2210,18 @@ img {
     width: 88px;
     height: 49px;
   }
+
+  /* 태그라인이 테마 피커 밑으로 들어가므로 초소형 폭에서는 로고만 */
+  .brand small {
+    display: none;
+  }
+}
+
+/* 360px 미만 — 히어로 스티커가 eyebrow와 닿으므로 숨김 */
+@media (max-width: 359px) {
+  .hero-visual {
+    display: none;
+  }
 }
 
 /* ---------- 모션 감소 ---------- */
@@ -1888,7 +2251,8 @@ img {
   .subhero .lead,
   .subhero .status,
   .subhero-motif,
-  .loader-hearts span {
+  .loader-hearts span,
+  .skeleton {
     animation: none;
   }
 
@@ -1915,9 +2279,9 @@ img {
   .card-link,
   .brand-logo,
   .motif,
-  .theme-toggle,
   .theme-picker,
   .feature,
+  .nav a .motif-icon,
   .faq summary::after,
   .faq details::details-content {
     transition: none;
@@ -1928,8 +2292,16 @@ img {
   .step:hover,
   .step:hover strong,
   .feature:hover,
+  .nav a:hover .motif-icon,
   .brand:hover .brand-logo,
   .service-card:hover .card-link {
+    transform: none;
+  }
+}
+
+/* 태블릿·모바일 히어로 스티커는 top 고정 배치라 모션 감소 시 -50% 보정을 쓰지 않는다 */
+@media (prefers-reduced-motion: reduce) and (max-width: 1024px) {
+  .hero-visual {
     transform: none;
   }
 }

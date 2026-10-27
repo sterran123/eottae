@@ -88,8 +88,8 @@ export default function MatchPage() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: '12px',
-                    height: '32px',
-                    minHeight: '32px',
+                    height: '44px',
+                    minHeight: '44px',
                     padding: '0 14px',
                     lineHeight: '1',
                   }}

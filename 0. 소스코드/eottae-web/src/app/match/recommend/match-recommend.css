@@ -139,7 +139,7 @@
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--match-tag-bg);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
   border-radius: 99px;
   padding: 3px 8px;

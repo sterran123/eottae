@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { MotifIcon, type MotifName } from './motif-icon';
 
-const NAV_ITEMS = [
-  { href: '/match', label: '① 매칭' },
-  { href: '/activities', label: '② 데이트·소모임' },
-  { href: '/invitations', label: '③ 모바일 청첩장' },
-  { href: '/safety', label: '안전센터', safety: true },
-] as const;
+const NAV_ITEMS: { href: string; label: string; motif: MotifName; safety?: boolean }[] = [
+  { href: '/match', label: '매칭', motif: 'heart' },
+  { href: '/activities', label: '데이트·소모임', motif: 'spark' },
+  { href: '/invitations', label: '모바일 청첩장', motif: 'mail' },
+  { href: '/safety', label: '안전센터', motif: 'shield', safety: true },
+];
 
 export default function SiteNav() {
   const pathname = usePathname();
@@ -21,15 +22,17 @@ export default function SiteNav() {
           <Link
             href={item.href}
             key={item.href}
-            className={'safety' in item && item.safety ? 'nav-safety' : undefined}
+            className={item.safety ? 'nav-safety' : undefined}
             aria-current={active ? 'page' : undefined}
           >
+            <MotifIcon name={item.motif} size={15} />
             {item.label}
           </Link>
         );
       })}
       <span className="login-slot" title="로그인 기능은 1차 MVP에서 구현 예정입니다">
-        로그인 (준비 중)
+        <MotifIcon name="lock" size={14} />
+        로그인 · 준비 중
       </span>
     </nav>
   );

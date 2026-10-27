@@ -311,3 +311,24 @@
 - [검증] 브라우저 실검증 완료: 차단 시 입력 잠금 및 추가 응답 정지(TC-009 충족), 차단 해제 토글 정상 동작, 신고 모달 유효성 검증(사유 미선택/기타 빈값 방지) 및 Esc 닫기, 테마 전환 시 모달 스타일 정상 표시 확인
 - [보안] 신고/차단 데이터는 클라이언트 DEMO 상태로만 격리(RULES 7), 허위 운영 처리 일정 미약속(RULES 6 준수)
 - [미구현/보류] 서버 DB 영속화 및 운영 대기열 RLS 연동(주한태 담당) 대기
+
+## 2026-10-27 디자인 패스 2차 — 홈 리디자인·접근성(C)·반응형(D)·상태(E)·PWA(F)·품질(G)·문서(H) (김민기 작업)
+- [버그수정] src/app/match/match-tokens.css | PR #11 머지 때 빠진 테마 추적 복원 — 다크 세트를 cyberpunk·system(OS 다크)에도 적용, cyberpunk 표면은 셸 토큰 추종. match CSS가 참조하는데 정의가 사라졌던 토큰 4개(`--match-photo-a/b`·`--match-avatar-ink`·`--match-toast-shadow`) 재정의 → 사진 자리 그라데이션·토스트 그림자 복구. 오하율의 `--match-accent-solid`·`--match-on-accent` 대비 수정은 그대로 유지
+- [변경] 홈(page.tsx)·내비·서비스 카드·푸터 리디자인 | 한국어 어절 단위 줄바꿈(`word-break: keep-all`, 제목 `text-wrap: balance`)로 '이야/기' 같은 낱자 끊김 제거, 섹션 머리 가운데 정렬로 좁은/넓은 섹션 왼쪽 선 어긋남 해소, 카드 모티프를 시스템 글리프 → 점선 링 스티커 + 인라인 SVG(`motif-icon.tsx`), 단계 점선 연결선·설명, 안전 강조 박스(방패 배지·안쪽 점선 프레임, 워터마크-버튼 겹침 해소), FAQ Q 스티커 + PWA 설치 안내 문항, 하단 로드맵 카드, 3열 푸터, 반투명 블러 헤더, 로그인 자리 점선 필
+- [변경] 문구 | 매칭은 이제 데모로 체험 가능하므로 히어로 안내·FAQ·카드 CTA를 사실대로 갱신("데모 데이터로 체험 가능, 실제 매칭·대화는 로그인·성인 인증 후")
+- [변경] hero-particles.tsx | 파티클을 본문 열 밖(가장자리·캐릭터 주변)으로 재배치, 모바일은 6개만·55% 투명도 — 글자 위 겹침 제거
+- [변경] 서브페이지 모티프 | ✦ ✉ ♡ 글리프 → SVG 아이콘(activities·invitations·offline·privacy·safety·loading)
+- [접근성 C.5] 포커스 링을 input·select·textarea·[role=button]까지 확장
+- [접근성 C.6] 토큰 대비 보정 — 셸: light `--muted` #696680, cupcake `--muted` #775e6c·`--brand` #256f73·`--hero-eyebrow` #632043, disney `--muted` #5a698c / 매칭(라이트 피치 세트, 액센트 피치색은 불변): `--match-sub` #6a595c·`--match-hint` #7c5d64·`--match-accent-ink` #a9415b(이슈 #8 Devin 제안값)·`--match-mutual-ink` #347944·`--match-ok-sub` #527a5b·`--match-warn-ink` #85591a, 다크 `--match-hint` #b89ca2, 다크 '미리보기' 태그 배경 토큰화(`--match-tag-bg`, 기존 1.48:1)
+- [반응형 D.8] 터치 타겟 44px — 내비 링크·테마 select·스킵 링크·/match 소개 카드 버튼(인라인 32px→44px, 스타일 값만). 태블릿/모바일 히어로 캐릭터 스티커, 380px 이하 헤더 태그라인 숨김, 모바일 내비 오른쪽 페이드
+- [상태 E.10] 공통 스켈레톤(`.skeleton`·`.skeleton-card`) + loading.tsx 카드 자리 스켈레톤
+- [PWA F.11·12] manifest `id`·`orientation`·`categories` 추가, 설명 문구 갱신 / FAQ에 iOS·Android 설치 안내(CORE-003 iOS 가이드)
+- [성능 G.13·14] Pretendard woff2 `<link rel=preload>`(swap 시 CLS 감소), 미사용 CSS(`.theme-toggle`·`.info`) 제거
+- [문서 H] 루트 README.md 신설(GitHub 첫 화면), 3. 구현 이미지 01~07 재캡처 + 16(홈 6테마 비교)·17(매칭 추천 7모드) 추가·captions.csv 갱신, docs/screenshots 01~07 갱신, DESIGN_개선_지시서 저장 키 표기 `theme`→`eottae-theme`(이슈 #8 항목 4)
+- [검증] `npm run typecheck`·`npm run build` PASS (정적 16라우트)
+- [검증] 헤드리스 Chrome(CDP) WCAG 대비 자동 감사 — 13페이지(셸 8 + 매칭 5) × 7모드 = 91조합, 보이는 텍스트 전부: 수정 전 셸 70건·매칭 165건 미달 → 수정 후 **0건**. 단, 그라데이션 배경은 첫 색 정지값으로 근사
+- [검증] 키보드 Tab 45회 순회(셸 8페이지) 포커스 링 누락 0, 320/360/390/768/1024/1440px 가로 넘침 0(셸 8페이지), 셸 터치 타겟 44px 미만 0
+- [검증] theme-color 메타·data-theme 7모드 전부 기대값 일치(FOUC 스크립트), manifest 아이콘 any 192/512 + maskable 512, 폰트 preload 적용 확인
+- [미실행] 서비스워커 설치·오프라인 폴백 — 검증용 헤드리스 프로필에서 CacheStorage 자체가 내부 오류로 열리지 않아 판정 불가(sw.js 미변경). 실기기/일반 Chrome에서 재확인 필요
+- [미실행] 모션 켠 상태 애니메이션 육안 확인(캡처는 reduced-motion), iOS Safari·Android 실기기 설치, 실사이트(Pages) 반영 확인(머지 후 배포)
+- [미결/회신 — 오하율] /match/recommend 320~360px에서 '관심' 버튼이 카드 밖으로 넘침, 매칭 컴포넌트 터치 타겟 44px 미만(MBTI 칩 32px·더보기 26px·문답 선택지 38px 등) — 컴포넌트 레이아웃이라 손대지 않음

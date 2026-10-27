@@ -1,13 +1,17 @@
 {
   "name": "어때? — 매칭·데이트·소모임·청첩장",
   "short_name": "어때?",
+  "id": "/eottae/",
   "start_url": "/eottae/",
   "scope": "/eottae/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#faf9fe",
   "theme_color": "#7454c4",
   "lang": "ko",
-  "description": "어때? 하나의 PWA에서 매칭·데이트·소모임·모바일 청첩장을 단계적으로 제공하는 서비스. 현재는 기획 골격.",
+  "dir": "ltr",
+  "categories": ["social", "lifestyle"],
+  "description": "어때? 하나의 PWA에서 매칭·데이트·소모임·모바일 청첩장을 단계적으로 제공하는 서비스. 1차 매칭은 데모 데이터로 체험 가능.",
   "icons": [
     {
       "src": "/eottae/icons/icon-192.png",
