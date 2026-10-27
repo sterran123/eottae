@@ -131,17 +131,19 @@ export default function CommonQna({
               </div>
 
               {st === 'unanswered' && !isDeclined && (
-                <div className="mt-cq-item__opts" role="radiogroup" aria-label={q.question}>
-                  {q.options.slice(0, 4).map((opt) => (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      className="mt-cq-item__opt"
-                      onClick={() => answerQuestion(q, opt.id)}
-                    >
-                      {opt.emoji ? `${opt.emoji} ${opt.label}` : opt.label}
-                    </button>
-                  ))}
+                <>
+                  <div className="mt-cq-item__opts" role="radiogroup" aria-label={q.question}>
+                    {q.options.slice(0, 4).map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        className="mt-cq-item__opt"
+                        onClick={() => answerQuestion(q, opt.id)}
+                      >
+                        {opt.emoji ? `${opt.emoji} ${opt.label}` : opt.label}
+                      </button>
+                    ))}
+                  </div>
                   <div className="mt-cq-item__decline-row">
                     <button
                       type="button"
@@ -151,7 +153,7 @@ export default function CommonQna({
                       이 질문 거절하기 / 건너뛰기
                     </button>
                   </div>
-                </div>
+                </>
               )}
 
               {st === 'unanswered' && isDeclined && (

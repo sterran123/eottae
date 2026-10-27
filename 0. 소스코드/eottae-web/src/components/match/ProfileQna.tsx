@@ -53,7 +53,6 @@ export default function ProfileQna({
   const [recommendIds, setRecommendIds] = useState<string[]>([]);
   const [reshuffle, setReshuffle] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
-  const animRef = useRef<number | null>(null);
   const [carouselIdx, setCarouselIdx] = useState(0);
 
   // 스크롤 시 현재 중앙에 위치한 슬라이드 인덱스 추적
@@ -77,7 +76,7 @@ export default function ProfileQna({
     setCarouselIdx(closest);
   }
 
-  // 부드러운 가감속(smooth sliding) 모션으로 다음/이전 슬라이드 이동
+  // 부드러운 가감속 모션으로 다음/이전 슬라이드 이동 (네이티브 smooth scroll 활용)
   function scrollCarousel(dir: 'left' | 'right') {
     const el = carouselRef.current;
     if (!el) return;
@@ -98,53 +97,9 @@ export default function ProfileQna({
       targetSlide.offsetLeft - (el.clientWidth - targetSlide.offsetWidth) / 2,
     );
 
-    // 모션 줄이기 설정 시 즉시 이동
-    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      el.scrollLeft = targetScrollLeft;
-      setCarouselIdx(targetIdx);
-      return;
-    }
-
-    const startLeft = el.scrollLeft;
-    const distance = targetScrollLeft - startLeft;
-    if (Math.abs(distance) < 2) return;
-
-    // 이전 진행 중인 애니메이션이 있으면 취소하여 연타 시 겹침 방지
-    if (animRef.current !== null) {
-      cancelAnimationFrame(animRef.current);
-      animRef.current = null;
-    }
-
-    el.style.scrollSnapType = 'none';
-    const duration = 380;
-    const startTime = performance.now();
-
-    function easeOutCubic(t: number): number {
-      return 1 - Math.pow(1 - t, 3);
-    }
-
-    function animate(currentTime: number) {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const ease = easeOutCubic(progress);
-
-      if (el) {
-        el.scrollLeft = startLeft + distance * ease;
-      }
-
-      if (progress < 1) {
-        animRef.current = requestAnimationFrame(animate);
-      } else {
-        if (el) {
-          el.scrollLeft = targetScrollLeft;
-          el.style.scrollSnapType = '';
-        }
-        animRef.current = null;
-        setCarouselIdx(targetIdx);
-      }
-    }
-
-    animRef.current = requestAnimationFrame(animate);
+    const isReduced = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el.scrollTo({ left: targetScrollLeft, behavior: isReduced ? 'auto' : 'smooth' });
+    setCarouselIdx(targetIdx);
   }
 
   const answeredCount = Object.keys(answers).length;
@@ -166,6 +121,8 @@ export default function ProfileQna({
     const source = pool.length >= RECOMMEND_COUNT ? pool : fallback;
     const shuffled = [...source].sort(() => Math.random() - 0.5);
     setRecommendIds(shuffled.slice(0, RECOMMEND_COUNT).map((q) => q.id));
+    setCarouselIdx(0);
+    if (carouselRef.current) carouselRef.current.scrollLeft = 0;
     // answers 변화 시 추천 갱신은 과하므로 relation/reshuffle 에만 반응.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [relationGoal, reshuffle, questions]);

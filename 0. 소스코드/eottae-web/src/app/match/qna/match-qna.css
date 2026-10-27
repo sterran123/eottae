@@ -123,10 +123,10 @@
   top: calc(50% - 4px);
   transform: translateY(-50%);
   z-index: 10;
-  width: 38px;
-  height: 38px;
-  min-width: 38px;
-  min-height: 38px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: 50%;
   background: var(--match-paper);
   border: 1px solid var(--match-chip-line);
