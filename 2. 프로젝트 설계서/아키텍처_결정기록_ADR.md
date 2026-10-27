@@ -36,7 +36,9 @@
 - **배포 설정**: GitHub 저장소 Secrets `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`를 `deploy-pages.yml`의 build 단계에 주입한다. 값이 없으면 빈 문자열로 빌드되며, 화면은 데모 데이터 모드로 동작해야 한다(키가 없어서 빌드가 깨지지 않게).
 - **API 계약과의 관계**: `API_계약_초안.md`의 `/api/v1/...` 경로는 **논리 계약**으로 유지하고, 실제 구현은 테이블+RLS / RPC / Edge Function으로 대응한다(대응표는 API 계약 문서 하단). `src/app/api/health`처럼 정적으로 둘 수 있는 것 외에는 Next API 라우트를 새로 만들지 않는다.
 - **마이그레이션**: `supabase/migrations/`에 Supabase CLI 형식으로 작성한다. 되돌릴 수 있게 만들고, RLS 정책마다 허용·거부 테스트(TC-003~010)를 같이 둔다. 운영 DB에 AI 에이전트나 MCP를 직접 연결하지 않는다(운영 결정 목록 유지).
-- **프로젝트 소유·키 관리 (2026-10-27 추가)**: Supabase 조직·프로젝트는 **김민기가 만들고 Owner로 소유**한다. 키를 한 사람이 관리해 팀원끼리 키를 주고받지 않게 하고, 팀원 계정 사정으로 프로젝트 접근을 잃지 않게 하기 위해서다. 주한태(DB·RLS 담당)는 조직에 **Developer**로 초대받아 스키마·정책을 작업한다.
+- **프로젝트 소유·키 관리 (2026-10-27 추가)**: Supabase 조직·프로젝트는 **김민기가 만들고 Owner로 소유**한다. 키를 한 사람이 관리해 팀원끼리 키를 주고받지 않게 하고, 팀원 계정 사정으로 프로젝트 접근을 잃지 않게 하기 위해서다. 팀원 3명(오하율·주한태·손준혁)은 급할 때 서로 대신 작업할 수 있게 모두 조직에 **Developer**로 초대한다. 스키마·정책은 주한태(DB·RLS 담당)가 주도한다.
+  - Developer는 대시보드(Table Editor·SQL Editor)에서 운영 DB를 직접 고칠 수 있지만, **스키마·정책·데이터 변경은 대시보드에서 하지 않고 마이그레이션 PR로만** 한다. 대시보드는 조회·로그 확인·디버깅용이다.
+  - 생성: 2026-10-27, 조직·프로젝트 `eottae`(ref `zbwdzdwomiokjmaibglt`). 김민기 브라우저 승인 후 Claude Code가 CLI로 생성·공개 키 조회만 한 1회 예외이며 기록은 #26에 있다.
   - 지역 **Northeast Asia (Seoul)**, 무료 플랜. 무료 플랜은 1주일간 사용이 없으면 일시 정지되므로 시연 전에 대시보드에서 상태를 확인한다.
   - 값별 보관 위치:
 
@@ -46,7 +48,7 @@
     | service_role(secret) key | 복사하지 않음 — 클라우드 Edge Function에 자동 제공 | **공유·커밋 금지** |
     | 외부 서비스 키(성인 인증 업체 등) | Edge Function 시크릿(`supabase secrets set`)만 | **공유·커밋 금지** |
     | DB 비밀번호 | 김민기 비밀번호 관리자 | **공유 금지** |
-  - 마이그레이션 흐름: 주한태는 **로컬 Supabase**(`npx supabase start`, Docker)에서 마이그레이션·RLS 테스트를 만들어 PR로 올린다. 리뷰·머지 후 **김민기가 클라우드 프로젝트에 적용**한다(`npx supabase link --project-ref <ref>` → `npx supabase db push --dry-run`으로 목록 확인 → `npx supabase db push`). 운영 DB 비밀번호를 여러 사람이 갖지 않고, 리뷰를 거친 마이그레이션만 운영에 들어간다.
+  - 마이그레이션 흐름: 주한태는 **로컬 Supabase**(`npx supabase start`, Docker)에서 마이그레이션·RLS 테스트를 만들어 PR로 올린다. 리뷰·머지 후 **김민기가 클라우드 프로젝트에 적용**한다(`npx supabase link --project-ref <ref>` → `npx supabase db push --dry-run`으로 목록 확인 → `npx supabase db push`). 운영 DB 비밀번호를 여러 사람이 갖지 않고, 리뷰를 거친 마이그레이션만 운영에 들어간다. 김민기 부재 시 예외: Owner가 Developer 중 한 명을 임시 Administrator로 올려 `db push`를 맡길 수 있다. 끝나면 Developer로 되돌리고 Owner가 DB 비밀번호를 다시 만든다(절차는 HANDOFF §14).
 
 ## 도식
 ```mermaid
