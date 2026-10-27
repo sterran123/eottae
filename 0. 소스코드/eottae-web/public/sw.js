@@ -60,7 +60,12 @@ self.addEventListener('activate', (event) => {
     caches
       .keys()
       .then((keys) =>
-        Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))),
+        // 같은 출처(sterran123.github.io)를 쓰는 다른 Pages 프로젝트 캐시는 건드리지 않는다
+        Promise.all(
+          keys
+            .filter((key) => key.startsWith('eottae-') && key !== CACHE)
+            .map((key) => caches.delete(key)),
+        ),
       )
       .then(() => self.clients.claim()),
   );
@@ -86,6 +91,7 @@ self.addEventListener('fetch', (event) => {
   // RSC 페이로드 주소(…/index.txt)로 페이지 이동: Next가 오프라인에서 RSC 요청에 실패하면
   // 페이로드 주소 그대로 브라우저 이동을 한다(output: export 동작). 페이지 주소로 돌려보낸다.
   // 쿼리(?partner=&q= 등)는 페이지가 쓰므로 남기고, Next처럼 _rsc만 지운다.
+  // searchParams로 다시 쓰면 공백이 %20 → +로 바뀐다 — URLSearchParams로 읽으면 같은 값이다.
   if (request.mode === 'navigate' && url.pathname.endsWith('/index.txt')) {
     url.pathname = url.pathname.slice(0, -'index.txt'.length);
     url.searchParams.delete('_rsc');
@@ -93,11 +99,13 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 페이지 이동: 네트워크 우선, 실패 시 캐시 → 오프라인 폴백
+  // 페이지 이동: 네트워크 우선, 실패 시 캐시 → 오프라인 폴백.
+  // 정적 export라 HTML은 쿼리와 무관하다 — 경로만 키로 저장해 쿼리(질문 내용·인증 콜백 code 등)가
+  // 기기 캐시에 남지 않게 하고, 쿼리마다 항목이 늘어나지 않게 한다.
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
-        .then((response) => remember(event, request, response))
+        .then((response) => remember(event, url.pathname, response))
         .catch(() =>
           caches.match(request, { ignoreSearch: true }).then((hit) => hit || caches.match(OFFLINE)),
         ),
