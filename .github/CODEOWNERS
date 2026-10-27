@@ -8,6 +8,7 @@
 0.?소스코드/eottae-web/public/                   @sterran123
 0.?소스코드/eottae-web/docs/                     @sterran123
 .github/                                          @sterran123
+tools/                                            @sterran123
 
 # 오하율 — 매칭/모임/청첩장 UI (MATCH-001/002/009, ACT-001, INV-001)
 0.?소스코드/eottae-web/src/app/match/            @HaYul0611
