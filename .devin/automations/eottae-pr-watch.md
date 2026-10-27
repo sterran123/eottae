@@ -20,6 +20,7 @@
    - `.github/` 전체, 임의 위치의 `CODEOWNERS`
    - 스케줄 잡이 실행하는 자동화 스크립트: `tools/pr_review_bot.mjs`, `tools/team_activity_report.mjs`, `tools/update_package_manifest.py`, `tools/devin_pr_watch.mjs`
    - 패키지/빌드 설정: `package.json`, 각종 lock 파일, `.npmrc`/`.yarnrc`, `next.config.*`, `tsconfig*`/`jsconfig*`, babel/postcss/tailwind 설정
+   - 인증·DB·RLS 보안 코드(ADR-005): `0. 소스코드/eottae-web/supabase/`, `src/lib/server/`, `src/lib/auth/`, `src/lib/supabase/`, `src/app/api/` — CI 통과만으로는 안전성을 판정할 수 없다
    - `.env*`, `secret`/`credential`이 포함된 경로, `id_rsa`류 키, `*.pem`/`*.key`/`*.p8`/`*.keystore`/`*.tfvars` 등
 4. diff를 직접 읽고 코드 리뷰한다 — 명백한 버그, 보안 문제, 저장소 컨벤션(한국어 주석·docs 로그·요구사항 ID) 위반이 있으면 파일/라인을 지적하는 코멘트를 남긴다. 이 리뷰가 규칙 봇(`pr-review.yml`)과 다른 이 자동화의 핵심 역할이다.
 5. head 커밋의 `check` check-run을 확인한다 — 실패면 재현 절차(`npm ci` → `npm run typecheck` → `npm run build`) 코멘트, 진행 중이면 이번 주기 스킵, 오래됐는데도 없으면 CI 미실행 안내 코멘트.

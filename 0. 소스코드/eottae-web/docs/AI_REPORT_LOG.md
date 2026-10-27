@@ -333,6 +333,19 @@
 - [미실행] 모션 켠 상태 애니메이션 육안 확인(캡처는 reduced-motion), iOS Safari·Android 실기기 설치, 실사이트(Pages) 반영 확인(머지 후 배포)
 - [미결/회신 — 오하율] /match/recommend 320~360px에서 '관심' 버튼이 카드 밖으로 넘침, 매칭 컴포넌트 터치 타겟 44px 미만(MBTI 칩 32px·더보기 26px·문답 선택지 38px 등) — 컴포넌트 레이아웃이라 손대지 않음
 
+## 2026-10-27 MATCH-003 로그인 및 세션·RLS 보안 구현 (주한태 작업)
+- [신규] supabase/migrations/0001_create_auth_and_users.sql | users 및 consents 테이블 스키마, account_status ENUM(ACTIVE/SUSPENDED/DELETED/PENDING), RLS default deny 및 본인 데이터만 접근 가능한 보안 정책 정의
+- [신규] src/lib/auth/types.ts | Auth/Session DTO, AccountStatus, UserSession, AuthError 및 API 응답 인터페이스 정의
+- [신규] src/lib/server/session.ts | 세션 토큰 Base64URL 인코딩 및 HMAC 서명/검증 모듈, 24시간 만료 시각 자동 검사 및 Fail-closed 차단 로직
+- [신규] src/lib/server/auth.ts | 서버 인증 가드 requireActiveUser(만료 시 401, SUSPENDED/DELETED 시 403 차단), authenticateUser 목업 풀 연동
+- [신규] src/lib/auth/client-auth.ts | 클라이언트 세션 스토리지 매니저 (GitHub Pages 정적 환경 호환 로그인/로그아웃/세션 확인/성인 인증 상태 갱신)
+- [신규] src/app/api/v1/users/me/route.ts | GET /api/v1/users/me 내 세션 및 인증 상태 조회 API (정적 export force-static 계약 호환)
+- [신규] tools/test_auth_match_003.mjs | 세션 서명 무결성, 만료 차단(401), 위변조 토큰 무효화, 정지/탈퇴 계정 차단(403) 단위 검증 테스트 스위트
+- [검증] `node tools/test_auth_match_003.mjs` ALL PASS (5개 단위 테스트 통과)
+- [검증] `npm run typecheck` PASS / `npm run build` PASS (신규 /api/v1/users/me 포함 정적 17개 라우트 정상 생성)
+- [보안] 세션 만료 및 비정상 계정(정지/탈퇴) 접근 시 Fail-closed 원칙 준수 (401/403 차단), 비밀번호/시크릿 하드코딩 배제
+- [미구현/보류] MATCH-004 성인 인증 게이트(PASS/실명인증 또는 데모 게이트) 및 Supabase 실제 원격 인스턴스 환경변수 연결 대기
+
 ## 2026-10-27 ADR-005 백엔드 결정 — Supabase + GitHub Pages, 이슈 #23 처리 (김민기 작업)
 - [결정] 김민기 확정: 프런트 = GitHub Pages 정적 export 유지, 백엔드 = Supabase(Auth·Postgres RLS·Realtime·Storage·Edge Functions). 근거 — Pages는 정적이라 Next API 라우트가 배포 환경에서 돌지 않음, 기존 ERD·supabase/ 폴더와 일치, 배포 파이프라인 유지. 대안(Firebase, Vercel 이전) 검토 내용은 ADR에 기록
 - [신규] 아키텍처_결정기록_ADR.md ADR-005 | 보안 경계 = RLS(default deny), 브라우저엔 anon key만·service_role은 Edge Function 시크릿에만, MATCH-003~008·CORE-004 각각의 Supabase 구현 원칙(성인 인증 결과는 Edge Function만 기록·fail-closed, 쌍방 매칭은 security definer RPC/트리거 1건, 채팅 Realtime은 RLS 채널로 차단 즉시 정지), 도식 갱신
@@ -345,3 +358,5 @@
 - [이관] CORE-004 계정 삭제·CORE-003 실기기 오프라인·Supabase Secrets 등록은 로그인/실기기/프로젝트 생성 이후라 #26으로 이관 후 #23 종료
 - [검증] 문서·설정 변경 위주 — 로컬 `npm run typecheck`·`npm run build` PASS(정적 16라우트). deploy-pages.yml의 Secrets 주입은 머지 후 배포 실행으로 확인
 - [미실행] 실제 Supabase 프로젝트 생성·마이그레이션 적용·RLS 테스트(주한태 #21), Secrets 등록(#26)
+- [변경·추가] tools/pr_review_bot.mjs · .devin/automations/eottae-pr-watch.md · HANDOFF_김민기.md §10 | 인증·DB·RLS 보안 경로(`supabase/`, `src/lib/server|auth|supabase/`, `src/app/api/`)를 자동 승인 금지 영역에 추가 — #24(자체 세션 서명·하드코딩 키 기본값)가 CI 통과만으로 05:57 자동 머지된 사례. 정규식은 실제 경로 6건으로 node 검증(보안 경로 true, match/chat·페이지 false), `node --check` PASS
+- [후속] 머지된 #24 코드는 어떤 화면에서도 import되지 않음을 확인(실사용자·실데이터 없음) → 되돌리지 않고 #21에서 Supabase Auth로 교체
