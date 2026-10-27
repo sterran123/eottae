@@ -505,10 +505,10 @@
   background: var(--match-paper);
   border: 1px solid var(--match-line-soft);
   border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  min-height: 36px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;

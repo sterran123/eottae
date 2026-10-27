@@ -53,6 +53,7 @@ export default function ProfileQna({
   const [recommendIds, setRecommendIds] = useState<string[]>([]);
   const [reshuffle, setReshuffle] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
+  const animRef = useRef<number | null>(null);
   const [carouselIdx, setCarouselIdx] = useState(0);
 
   // 스크롤 시 현재 중앙에 위치한 슬라이드 인덱스 추적
@@ -97,13 +98,25 @@ export default function ProfileQna({
       targetSlide.offsetLeft - (el.clientWidth - targetSlide.offsetWidth) / 2,
     );
 
-    // 스냅 엔진과의 충돌을 피해 스냅을 일시 해제하고 60fps 부드러운 가감속 애니메이션 실행
+    // 모션 줄이기 설정 시 즉시 이동
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      el.scrollLeft = targetScrollLeft;
+      setCarouselIdx(targetIdx);
+      return;
+    }
+
     const startLeft = el.scrollLeft;
     const distance = targetScrollLeft - startLeft;
     if (Math.abs(distance) < 2) return;
 
+    // 이전 진행 중인 애니메이션이 있으면 취소하여 연타 시 겹침 방지
+    if (animRef.current !== null) {
+      cancelAnimationFrame(animRef.current);
+      animRef.current = null;
+    }
+
     el.style.scrollSnapType = 'none';
-    const duration = 420; // 0.42초 동안 부드럽게 슬라이딩
+    const duration = 380;
     const startTime = performance.now();
 
     function easeOutCubic(t: number): number {
@@ -120,17 +133,18 @@ export default function ProfileQna({
       }
 
       if (progress < 1) {
-        requestAnimationFrame(animate);
+        animRef.current = requestAnimationFrame(animate);
       } else {
         if (el) {
           el.scrollLeft = targetScrollLeft;
           el.style.scrollSnapType = '';
         }
+        animRef.current = null;
         setCarouselIdx(targetIdx);
       }
     }
 
-    requestAnimationFrame(animate);
+    animRef.current = requestAnimationFrame(animate);
   }
 
   const answeredCount = Object.keys(answers).length;

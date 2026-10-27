@@ -12,13 +12,25 @@ const ICONS_DIR = path.join(ROOT, 'public', 'icons');
 const PUBLIC_DIR = path.join(ROOT, 'public');
 const APP_DIR = path.join(ROOT, 'src', 'app');
 
+/**
+ * 파비콘 및 앱 아이콘 생성 스크립트
+ * 실행: node tools/generate_favicons.mjs
+ * 전제: Next.js 의존성(sharp) 사용
+ *
+ * 규칙:
+ * - 16, 32, 48 파비콘: 브라우저 탭용 투명 배경
+ * - 180 (apple-touch-icon), 192, 512 (PWA 아이콘): iOS/런처 투명 검정 채움 방지를 위해 manifest background_color(#faf9fe) 불투명 배경
+ */
 async function main() {
-  console.log('Generating transparent favicons & app icons from:', SRC);
+  console.log('Generating favicons & app icons from:', SRC);
 
   // 1. Trim transparent padding to tightly frame the logo
   const trimmed = await sharp(SRC).trim().toBuffer();
 
-  async function makeIcon(size, paddingRatio = 0.04) {
+  const BRAND_BG = { r: 250, g: 249, b: 254, alpha: 1 }; // #faf9fe
+  const TRANSPARENT_BG = { r: 0, g: 0, b: 0, alpha: 0 };
+
+  async function makeIcon(size, paddingRatio = 0.04, bg = TRANSPARENT_BG) {
     const margin = Math.max(1, Math.round(size * paddingRatio));
     const inner = size - margin * 2;
     const innerBuf = await sharp(trimmed)
@@ -34,22 +46,22 @@ async function main() {
         width: size,
         height: size,
         channels: 4,
-        background: { r: 0, g: 0, b: 0, alpha: 0 },
+        background: bg,
       },
     })
       .composite([{ input: innerBuf, gravity: 'center' }])
-      .png({ compressionLevel: 9 })
+      .png({ compressionLevel: 9, palette: true })
       .toBuffer();
   }
 
-  // 2. Generate PNGs
+  // 2. Generate PNGs: 탭 파비콘은 투명, 모바일/터치 아이콘은 #faf9fe 불투명
   const [b16, b32, b48, b180, b192, b512] = await Promise.all([
-    makeIcon(16, 0.03),
-    makeIcon(32, 0.03),
-    makeIcon(48, 0.04),
-    makeIcon(180, 0.04),
-    makeIcon(192, 0.04),
-    makeIcon(512, 0.04),
+    makeIcon(16, 0.03, TRANSPARENT_BG),
+    makeIcon(32, 0.03, TRANSPARENT_BG),
+    makeIcon(48, 0.04, TRANSPARENT_BG),
+    makeIcon(180, 0.1, BRAND_BG),
+    makeIcon(192, 0.08, BRAND_BG),
+    makeIcon(512, 0.08, BRAND_BG),
   ]);
 
   if (!fs.existsSync(ICONS_DIR)) {
@@ -62,9 +74,6 @@ async function main() {
   fs.writeFileSync(path.join(ICONS_DIR, 'apple-touch-icon.png'), b180);
   fs.writeFileSync(path.join(ICONS_DIR, 'icon-192.png'), b192);
   fs.writeFileSync(path.join(ICONS_DIR, 'icon-512.png'), b512);
-
-  // Next.js metadata icon in src/app
-  fs.writeFileSync(path.join(APP_DIR, 'icon.png'), b32);
 
   // 3. Generate multi-resolution ICO file (16, 32, 48)
   const icoItems = [
@@ -97,11 +106,19 @@ async function main() {
 
   const icoBuf = Buffer.concat([header, ...entries, ...icoItems.map((p) => p.buffer)]);
 
+  // HTML은 /eottae/favicon.ico를 참조하므로 public/favicon.ico만 유지
   fs.writeFileSync(path.join(PUBLIC_DIR, 'favicon.ico'), icoBuf);
-  fs.writeFileSync(path.join(ICONS_DIR, 'favicon.ico'), icoBuf);
-  fs.writeFileSync(path.join(APP_DIR, 'favicon.ico'), icoBuf);
 
-  console.log('Successfully generated transparent favicons and app icons!');
+  // 불필요한 사본 정리
+  for (const extra of [
+    path.join(ICONS_DIR, 'favicon.ico'),
+    path.join(APP_DIR, 'favicon.ico'),
+    path.join(APP_DIR, 'icon.png'),
+  ]) {
+    if (fs.existsSync(extra)) fs.unlinkSync(extra);
+  }
+
+  console.log('Successfully generated favicons and app icons!');
 }
 
 main().catch((err) => {
