@@ -26,12 +26,13 @@ const PRECACHE = [
   `${BASE}brand/hero-visual.webp`,
 ];
 
-// 셸 페이지 HTML이 참조하는 /_next/static/ 자산 경로를 모은다
-function staticAssetsIn(html) {
+// 셸 페이지 HTML이 참조하는 /_next/static/ 자산 경로를 모은다 (상대 경로는 그 페이지 주소 기준)
+function staticAssetsIn(html, page) {
   const found = new Set();
+  const base = new URL(page, self.location.origin);
   const re = /(?:src|href)="([^"]*\/_next\/static\/[^"]+)"/g;
   let m;
-  while ((m = re.exec(html))) found.add(new URL(m[1], self.location.origin).pathname);
+  while ((m = re.exec(html))) found.add(new URL(m[1], base).pathname);
   return [...found];
 }
 
@@ -46,7 +47,7 @@ self.addEventListener('install', (event) => {
           const response = await fetch(page, { cache: 'no-cache' });
           if (!response.ok || response.redirected) throw new Error(`precache ${page}: ${response.status}`);
           await cache.put(page, response.clone());
-          staticAssetsIn(await response.text()).forEach((asset) => assets.add(asset));
+          staticAssetsIn(await response.text(), page).forEach((asset) => assets.add(asset));
         }
         await cache.addAll([...assets]);
       })
@@ -65,11 +66,12 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// 정상 응답만 캐시한다 — 리다이렉트된 응답은 나중에 페이지 이동에 돌려줄 수 없다
-function remember(request, response) {
+// 정상 응답만 캐시한다 — 리다이렉트된 응답은 나중에 페이지 이동에 돌려줄 수 없다.
+// 응답을 돌려준 뒤 워커가 종료돼도 저장이 끝나도록 waitUntil로 묶는다.
+function remember(event, request, response) {
   if (response.ok && !response.redirected) {
     const copy = response.clone();
-    caches.open(CACHE).then((cache) => cache.put(request, copy));
+    event.waitUntil(caches.open(CACHE).then((cache) => cache.put(request, copy)));
   }
   return response;
 }
@@ -83,9 +85,10 @@ self.addEventListener('fetch', (event) => {
 
   // RSC 페이로드 주소(…/index.txt)로 페이지 이동: Next가 오프라인에서 RSC 요청에 실패하면
   // 페이로드 주소 그대로 브라우저 이동을 한다(output: export 동작). 페이지 주소로 돌려보낸다.
+  // 쿼리(?partner=&q= 등)는 페이지가 쓰므로 남기고, Next처럼 _rsc만 지운다.
   if (request.mode === 'navigate' && url.pathname.endsWith('/index.txt')) {
     url.pathname = url.pathname.slice(0, -'index.txt'.length);
-    url.search = '';
+    url.searchParams.delete('_rsc');
     event.respondWith(Response.redirect(url.href, 302));
     return;
   }
@@ -94,7 +97,7 @@ self.addEventListener('fetch', (event) => {
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
-        .then((response) => remember(request, response))
+        .then((response) => remember(event, request, response))
         .catch(() =>
           caches.match(request, { ignoreSearch: true }).then((hit) => hit || caches.match(OFFLINE)),
         ),
@@ -111,7 +114,7 @@ self.addEventListener('fetch', (event) => {
     : url.pathname;
   if (/^\/(icons\/|fonts\/|brand\/|eottae-|manifest\.webmanifest$|_next\/static\/)/.test(path)) {
     event.respondWith(
-      caches.match(request).then((hit) => hit || fetch(request).then((response) => remember(request, response))),
+      caches.match(request).then((hit) => hit || fetch(request).then((response) => remember(event, request, response))),
     );
   }
 });

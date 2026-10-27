@@ -462,4 +462,6 @@
 - [변경] public/sw.js | `…/index.txt` 주소로의 페이지 이동은 페이지 주소로 302 — Next 15 `output: export`는 RSC 요청이 네트워크 오류로 실패하면 페이로드 주소(index.txt) 그대로 브라우저 이동을 한다(`fetch-server-response.js` catch 분기)
 - [변경] public/sw.js | 설치 때 홈·오프라인 페이지 HTML이 참조하는 `/_next/static/` JS·CSS까지 precache — 첫 방문 직후 오프라인으로 열 때 청크가 없어 「Application error」가 나는 경우 방지. 리다이렉트된 응답은 캐시하지 않음, 캐시 이름 v5
 - [검증] 로컬 Pages 미리보기 + Chromium(playwright-core, 임시 설치)으로 첫 방문 → 서비스워커 설치 → **서버 종료**(context.setOffline은 서비스워커 fetch를 막지 않아 이전 헤드리스 점검이 판정 불가였던 원인) 후 4가지 확인. 기존 sw.js: 홈 새로고침 ok, 매칭 링크 클릭·index.txt 직접 이동·미방문 페이지 3건 `ERR_FAILED`. 수정본: 4건 모두 정상(홈은 캐시, 나머지는 「지금은 오프라인이에요」), pageerror 0건
-- [미구현/보류] 실기기 재확인(TC-012) — 배포 후 김민기가 안드로이드에서 다시 확인. 온라인 상태에서 미리 받아 둔(prefetch) 경로를 오프라인에서 누를 때의 동작은 이번 재현 범위 밖
+- [변경] public/sw.js (#43 AI 리뷰) | index.txt → 페이지 302 때 쿼리 유지(`_rsc`만 제거) — 추천 → 질문 보내기(`/match/chat/?partner=&q=`)의 질문이 사라지던 문제. 셸 자산 경로를 페이지 주소 기준으로 해석, 캐시 저장을 `event.waitUntil`로 묶음
+- [검증] 같은 재현에 5번 「쿼리 붙은 index.txt 이동(?partner=p1&q=hello&_rsc=abc)」 추가 → `/match/chat/?partner=p1&q=hello`로 이동·캐시된 채팅 화면 표시, 5건 모두 정상. 테스트_케이스_마스터 TC-012 실행 기록 2줄 추가
+- [미구현/보류] 실기기 재확인(TC-012) — 배포 후 김민기가 안드로이드에서 다시 확인. 캐시 이름을 안 바꾸고 배포가 반복되면 옛 해시 청크가 v5 캐시에 쌓이는 문제(이 PR 이전부터)는 후속 과제. 온라인 상태에서 미리 받아 둔(prefetch) 경로를 오프라인에서 누를 때의 동작은 이번 재현 범위 밖
