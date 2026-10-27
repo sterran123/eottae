@@ -448,10 +448,11 @@
 - [보안] HANDOFF §14 | 임시 Administrator 위임 뒤 Owner가 Database Password를 다시 만들고 위임·회수 기록을 #26에 남기는 절차 (#40 AI 리뷰 권장)
 - [변경] ADR-005 | 마이그레이션 흐름에 `db push --dry-run` 추가(HANDOFF와 통일), Publishable key와 `verify_jwt` 범위(로그인 세션 필요) 명시 · deploy-pages.yml 주석 용어 통일
 
-
 ## 2026-10-27 Supabase 프로젝트 생성·팀원 권한 — 김민기 작업
 - [보안] Supabase 조직·프로젝트 `eottae`(ref `zbwdzdwomiokjmaibglt`, Seoul, Free) 생성 — 김민기 브라우저 승인(`supabase login`) 후 Claude Code가 CLI로 생성·공개 키 조회만 한 ADR-005 1회 예외. DB 데이터·스키마는 건드리지 않음, DB 비밀번호·secret 키는 출력하지 않음. 기록은 #26
 - [변경] ADR-005·plan.md·실행_결정대기_로그 DEC-08·HANDOFF §14 | 팀원 3명(오하율·주한태·손준혁) 모두 Developer로 초대 — 급할 때 서로 대신 작업. DB 변경은 대시보드가 아니라 마이그레이션 PR로만
 - [보안] ADR-005 | 김민기 부재 시 임시 Administrator 위임 예외를 ADR에도 명시, HANDOFF에 `db push` 없이 끝나도 DB 비밀번호 재생성 명시 (#41 AI 리뷰 권장)
 - [검증] 공개 키로 `/auth/v1/settings` 호출 200, 틀린 키 401 · GitHub Secrets 2개 등록 확인(`gh secret list`) · 로그인 주소 설정은 김민기 화면 캡처로 확인
-- [미구현/보류] 팀원 초대(대시보드 전용, 김민기) · `npx supabase logout`으로 CLI 토큰 정리(김민기) · 앱 코드에 Supabase 연결 전이라 배포 번들 반영 확인은 주한태 연결 코드 머지 후
+- [보안] ADR-005·HANDOFF §14 | Developer 실제 권한(service_role·JWT Secret 읽기, Edge Function 배포, SQL Editor RLS 우회, 백업 복원)을 사실대로 적고 「공유 금지」는 팀 규칙임을 명시, 팀원 이탈·키 노출 시 secret key 재발급 회수 절차 추가 (#42 AI 리뷰 수정 필요). 무료 플랜엔 Read-only 역할 없음
+- [변경] .gitignore | supabase/.branches·supabase/.env 추가 · HANDOFF 초대 링크 24시간 유효·CLI 토큰 Revoke 확인
+- [미구현/보류] 팀원 초대(대시보드 전용, 김민기) · `npx supabase logout` + Access Tokens Revoke 확인(김민기) · 앱 코드에 Supabase 연결 전이라 배포 번들 반영 확인은 주한태 연결 코드 머지 후

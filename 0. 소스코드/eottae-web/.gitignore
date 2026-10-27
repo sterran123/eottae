@@ -9,3 +9,5 @@ out
 .DS_Store
 # Supabase CLI 로컬 상태(link 정보·버전 캐시) — 사람마다 다름
 supabase/.temp
+supabase/.branches
+supabase/.env
