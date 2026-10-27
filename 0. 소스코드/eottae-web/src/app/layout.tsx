@@ -44,6 +44,16 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko" suppressHydrationWarning data-scroll-behavior="smooth">
+      <head>
+        {/* 유일한 본문 폰트 — 첫 페인트 전에 받아 swap 시 레이아웃 흔들림(CLS)을 줄인다 */}
+        <link
+          rel="preload"
+          href="/eottae/fonts/PretendardVariable.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body>
         {/* 저장된 테마(data-theme)를 첫 페인트 전에 적용해 깜빡임(FOUC) 방지.
             'system'만 OS 설정을 따르고 미저장·잘못된 값은 기본 'light'로 동작한다 */}
