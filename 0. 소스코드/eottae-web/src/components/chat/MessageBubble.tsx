@@ -38,6 +38,15 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
     setIsPlaying((p) => !p);
   }
 
+  // 차단/해제 안내 — 말풍선이 아닌 가운데 정렬 알림
+  if (message.sender === 'system') {
+    return (
+      <li className="mt-chat-system">
+        <span>{message.body}</span>
+      </li>
+    );
+  }
+
   return (
     <li className={`mt-chat-row ${mine ? 'is-me' : 'is-partner'}`}>
       <div className="mt-chat-bubble" data-status={message.status}>

@@ -5,9 +5,10 @@
 //        응답 형태에 맞춰 추후 서버 연동 시 그대로 교체할 수 있게 둔다.
 // ============================================================
 
-export type MessageSender = 'me' | 'partner';
+/** 'system' = 차단/해제 등 안내 문구 (MATCH-008) */
+export type MessageSender = 'me' | 'partner' | 'system';
 
-/** 전송 상태 — 데모에서는 sending → sent 로만 전이한다. */
+/** 전송 상태 — 데모에서는 sending → sent, 차단 시 미전송분은 failed 로 전이한다. */
 export type MessageStatus = 'sending' | 'sent' | 'failed';
 
 export interface ChatMessage {
