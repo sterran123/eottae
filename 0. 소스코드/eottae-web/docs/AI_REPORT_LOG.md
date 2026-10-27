@@ -386,3 +386,6 @@
 - [버그수정] ai-review 첫 실전(PR #30): Devin 세션 생성·판정 반환까지 성공했으나 PR 코멘트 403(`pull-requests: read`) → `pull-requests: write`로 수정, 판정 커밋 상태를 코멘트보다 먼저 기록하고 코멘트 실패는 best-effort로 처리(상태가 pending에 멈추지 않게)
 - [검증·실환경] 권한 수정 후 `/ai-review` 재실행(PR #30) — Devin 세션이 25분 동안 running으로 남아 시간 초과 → 설계대로 ERROR 코멘트 + 상태 `error`(머지 차단) 확인
 - [버그수정] ai_code_review.mjs | 세션 상태만 기다리던 폴링을 "매 주기 메시지를 읽어 VERDICT 줄이 나오면 즉시 채택"으로 변경 — Devin이 답을 쓴 뒤에도 세션을 열어 두는 경우 대응
+- [검증·실환경] 폴링 수정(#31) 머지 후 `/ai-review` 재실행 — **2분 만에 판정 완료**, PR 코멘트 + 상태 `failure` 기록까지 정상. AI 리뷰가 #31 코드에서 fail-open 결함(중간 줄의 `VERDICT: PASS`도 판정으로 인정) 지적
+- [버그수정] ai_code_review.mjs | 판정은 비어 있지 않은 마지막 줄만 인정(`verdictOf`), Devin API 4xx는 즉시 error 처리(25분 대기 없이), 세션 생성 4xx도 실패 경로로 합침 / CODEOWNERS | `tools/` → @sterran123 (AI 리뷰 권장 사항)
+- [검증] `node --check` PASS, 판정 파서 단위 테스트 6건(정상 통과·정상 수정필요·중간 PASS+끝 수정필요→수정필요·진행 메시지 PASS만→error·판정 없음·빈 값) 모두 기대대로. [미실행] Devin 메시지 API 페이지네이션 여부(AI 리뷰 권장, API 문서 미확인)

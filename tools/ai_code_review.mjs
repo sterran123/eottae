@@ -56,10 +56,21 @@ const ghAll = async (path) => {
 };
 
 const DH = { Authorization: `Bearer ${DEVIN_API_KEY}`, "Content-Type": "application/json" };
-const devin = (p, init = {}) =>
-  fetch(`https://api.devin.ai/v3/organizations/${DEVIN_ORG_ID}/${p}`, { headers: DH, ...init }).then((r) =>
-    r.json(),
-  );
+// 4xx(키·권한·잘못된 경로)는 기다려도 안 풀린다 — 예외로 올려 즉시 error로 끝낸다. 5xx·네트워크는 재시도 대상.
+const devin = async (p, init = {}) => {
+  const r = await fetch(`https://api.devin.ai/v3/organizations/${DEVIN_ORG_ID}/${p}`, { headers: DH, ...init });
+  const body = await r.json().catch(() => ({}));
+  if (r.status >= 400 && r.status < 500) {
+    const e = new Error(`Devin API ${r.status} ${p}: ${JSON.stringify(body).slice(0, 200)}`);
+    e.fatal = true;
+    throw e;
+  }
+  return r.ok ? body : {};
+};
+// 판정은 비어 있지 않은 **마지막 줄**만 인정한다 — 본문 중간·진행 메시지의 "VERDICT: PASS"를
+// 판정으로 읽으면 머지 게이트가 잘못 열린다(fail-open). (PR #31 AI 리뷰 지적)
+const lastLine = (m) => String(m || "").trimEnd().split("\n").pop().trim();
+const verdictOf = (m) => lastLine(m).match(/^VERDICT:\s*(PASS|CHANGES_REQUESTED)$/)?.[1];
 
 const pr = await gh(`repos/${REPO}/pulls/${PR_NUMBER}`);
 const sha = pr.head.sha;
@@ -156,10 +167,11 @@ if (!DEVIN_API_KEY || !DEVIN_ORG_ID) {
 }
 
 await setStatus("pending", "Devin이 코드를 리뷰하는 중");
+// 4xx는 예외로 올라온다 — 아래 실패 경로(error 상태 + 재시도 안내)로 합친다
 const sess = await devin("sessions", {
   method: "POST",
   body: JSON.stringify({ prompt, title: `AI 리뷰: PR #${PR_NUMBER} @ ${sha.slice(0, 7)}` }),
-});
+}).catch((e) => ({ error: e.message }));
 if (!sess.session_id) {
   console.error("세션 생성 실패:", JSON.stringify(sess).slice(0, 300));
   await setStatus("error", "Devin 세션 생성 실패 — /ai-review 댓글로 재시도");
@@ -175,25 +187,42 @@ console.log("session:", sess.session_id, url);
 let answer = null;
 const deadline = Date.now() + DEADLINE_MS;
 // Devin은 답을 다 쓴 뒤에도 세션을 running으로 열어 둘 때가 있다 — 상태만 기다리면 시간 초과가 난다.
-// 매 주기 메시지를 읽어 VERDICT 줄이 있는 응답이 나오면 바로 채택하고, 세션이 끝나면 마지막 응답을 쓴다.
-const VERDICT_RE = /VERDICT:\s*(PASS|CHANGES_REQUESTED)\s*$/m;
+// 매 주기 메시지를 읽어 마지막 줄이 VERDICT인 응답이 나오면 바로 채택하고, 세션이 끝나면 마지막 응답을 쓴다.
+let fatal = null;
 while (Date.now() < deadline) {
   await new Promise((r) => setTimeout(r, 30_000));
-  const msgs = await devin(`sessions/${sess.session_id}/messages`).catch(() => ({}));
-  const said = (msgs.items ?? []).filter((m) => m.source === "devin").map((m) => m.message?.trim() || "");
-  const done = [...said].reverse().find((m) => VERDICT_RE.test(m));
-  if (done) {
-    answer = done;
-    break;
-  }
-  const s = await devin(`sessions/${sess.session_id}`).catch(() => ({}));
-  if (s.status && s.status !== "running") {
-    answer = said.pop() || null;
-    break;
+  try {
+    const msgs = await devin(`sessions/${sess.session_id}/messages`);
+    const said = (msgs.items ?? []).filter((m) => m.source === "devin").map((m) => m.message?.trim() || "");
+    const done = [...said].reverse().find((m) => verdictOf(m));
+    if (done) {
+      answer = done;
+      break;
+    }
+    const s = await devin(`sessions/${sess.session_id}`);
+    if (s.status && s.status !== "running") {
+      answer = said.pop() || null;
+      break;
+    }
+  } catch (e) {
+    if (e.fatal) {
+      fatal = e;
+      break;
+    }
+    console.error(`일시 오류 — 재시도: ${e.message}`);
   }
 }
+if (fatal) {
+  console.error(fatal.message);
+  await setStatus("error", "Devin API 오류 — /ai-review로 재시도", url);
+  await comment(
+    "ERROR",
+    `🤖 **AI 코드 리뷰 중 Devin API 오류가 났습니다** (\`${fatal.message.slice(0, 120)}\`).\n\n자동 머지는 보류됩니다. 이 PR에 \`/ai-review\` 댓글을 달면 다시 리뷰합니다. [Devin 세션](${url})`,
+  );
+  process.exit(1);
+}
 
-const verdict = answer?.match(/VERDICT:\s*(PASS|CHANGES_REQUESTED)\s*$/m)?.[1];
+const verdict = verdictOf(answer);
 if (!answer || !verdict) {
   await setStatus("error", answer ? "판정 형식 없음 — /ai-review로 재시도" : "시간 초과 — /ai-review로 재시도", url);
   await comment(
@@ -209,7 +238,7 @@ const pass = verdict === "PASS";
 await setStatus(pass ? "success" : "failure", pass ? "AI 리뷰 통과" : "AI 리뷰 — 수정 필요", url);
 await comment(
   pass ? "PASS" : "FAIL",
-  `${answer.replace(/\n?VERDICT:\s*(PASS|CHANGES_REQUESTED)\s*$/m, "").trim()}\n\n---\n` +
+  `${answer.trimEnd().split("\n").slice(0, -1).join("\n").trim()}\n\n---\n` +
     (pass
       ? `🤖 판정: **통과** (head \`${sha.slice(0, 7)}\`) — 규칙 봇이 나머지 조건을 확인해 머지합니다.`
       : `🤖 판정: **수정 필요** (head \`${sha.slice(0, 7)}\`) — 「반드시 고칠 것」을 수정해 push하면 자동으로 다시 리뷰합니다. 판정에 동의하지 않으면 담당자가 PR을 Approve하면 사람 판단이 우선합니다.`) +
