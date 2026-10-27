@@ -145,6 +145,13 @@ git config --global user.email "본인 GitHub 이메일 또는 noreply"
 - 머지가 한 건이라도 되면 `deploy-pages`·`team-sync`를 자동 dispatch해 사이트·리포트·매니페스트를 갱신한다 (GITHUB_TOKEN 머지는 push 이벤트를 못 일으키므로).
 - 로컬 점검: `DRY_RUN=1 node tools/pr_review_bot.mjs` (조회·판정만), 실제 동작은 `GH_TOKEN` 필요.
 
+- **2026-10-27 판정 강화 (요청: 김민기)** — 모든 판정 코멘트는 같은 검사 표(작성자·보호 영역·보안 스캔·머지 가능성·빌드 CI·AI 코드 리뷰·연결 이슈)와 다시 시도하는 방법을 담는다.
+  - **AI 코드 리뷰**: `.github/workflows/ai-review.yml` → `tools/ai_code_review.mjs`가 PR head마다(Draft 포함) Devin 세션에 diff+저장소 규칙을 보내 정확성·보안을 판정 → PR 코멘트 + 커밋 상태 `ai-review`. 봇은 `ai-review` 성공이어야 머지. 재실행은 협력자의 `/ai-review` 댓글. 같은 head는 다시 리뷰하지 않는다(ACU 절약). 스크립트는 항상 main 기준으로 실행돼 PR이 판정 로직을 바꿀 수 없다.
+  - **보안 스캔**: 추가된 줄에서 키·토큰·JWT 하드코딩, 브라우저 코드의 `service_role`, 비밀값 기본값(fail-open)·하드코딩, `NEXT_PUBLIC_*` 비밀값, `eval` → 차단 / `dangerouslySetInnerHTML`·토큰 브라우저 저장·tsx 색 하드코딩 → 경고. PR #24 실데이터로 차단 2건 검출, #18·#27 오탐 0 확인.
+  - **보호 영역**: 즉시 멈추지 않고 나머지 검사를 끝까지 한 뒤, 작성자 외 사람이 head sha에 Approve하면 머지.
+  - **Draft PR**: 판정만 하고 「Ready for review」 전환 시 머지. **team-sync 봇 PR**: 자동 생성 파일만 허용, team-sync가 남긴 커밋 상태 `check`를 빌드 결과로 인정, 충돌이면 다음 team-sync 덮어쓰기 대기. 봇은 자기 PR을 승인할 수 없어 브랜치 보호의 bypass 허용이 없으면 사람 승인 1번 필요.
+  - **연결 이슈**: PR 본문에 `Closes #번호`가 없으면 표에 안내(머지는 막지 않음). PR 템플릿 첫 칸이 `Closes #`.
+
 ## 11. Devin 자동화 — PR 점검(주기+실시간)과 멘션 응답
 
 - GitHub Actions 봇(§10)과 별개로 **Devin 측 자동화 2개**를 둔다:
