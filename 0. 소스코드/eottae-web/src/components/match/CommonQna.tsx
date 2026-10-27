@@ -37,6 +37,7 @@ export default function CommonQna({
   const [myAnswers, setMyAnswers] = useState<
     Record<string, { optionId: string | null; customText?: string }>
   >(() => ({ ...DEMO_MY_ANSWERS }));
+  const [declinedIds, setDeclinedIds] = useState<Set<string>>(() => new Set());
   const partner = DEMO_PARTNER_ANSWERS;
 
   // 공통 질문으로 다룰 문항: 나 또는 상대가 답했거나, 추천 대상.
@@ -71,6 +72,28 @@ export default function CommonQna({
       ...prev,
       [q.id]: { optionId },
     }));
+    setDeclinedIds((prev) => {
+      if (!prev.has(q.id)) return prev;
+      const next = new Set(prev);
+      next.delete(q.id);
+      return next;
+    });
+  }
+
+  function declineQuestion(qId: string) {
+    setDeclinedIds((prev) => {
+      const next = new Set(prev);
+      next.add(qId);
+      return next;
+    });
+  }
+
+  function restoreQuestion(qId: string) {
+    setDeclinedIds((prev) => {
+      const next = new Set(prev);
+      next.delete(qId);
+      return next;
+    });
   }
 
   return (
@@ -81,12 +104,13 @@ export default function CommonQna({
         <div className="mt-cq__avatar" aria-hidden="true" />
         <div className="mt-cq__head-text">
           <div className="mt-cq__title">{partnerName}님과의 공통 질문</div>
-          <div className="mt-cq__sub">둘 다 답하면 서로 답이 공개돼요</div>
+          <div className="mt-cq__sub">둘 다 답하면 서로 답이 공개돼요 · 원치 않는 질문은 거절 가능</div>
         </div>
       </header>
 
       <div className="mt-cq__body">
         {items.map((q) => {
+          const isDeclined = declinedIds.has(q.id);
           const st = stateOf(q);
           const mine = myAnswers[q.id];
           const theirs = partner[q.id];
@@ -98,14 +122,15 @@ export default function CommonQna({
           return (
             <article
               key={q.id}
-              className={`mt-cq-item${st === 'revealed' ? ' is-revealed' : ''}`}
+              className={`mt-cq-item${st === 'revealed' ? ' is-revealed' : ''}${isDeclined ? ' is-declined' : ''}`}
             >
               <div className="mt-cq-item__q-row">
                 <span className="mt-cq-item__q">Q. {q.question}</span>
                 {same && <span className="mt-cq-item__hit">통했어요 ✓</span>}
+                {isDeclined && <span className="mt-cq-item__declined-badge">거절됨</span>}
               </div>
 
-              {st === 'unanswered' && (
+              {st === 'unanswered' && !isDeclined && (
                 <div className="mt-cq-item__opts" role="radiogroup" aria-label={q.question}>
                   {q.options.slice(0, 4).map((opt) => (
                     <button
@@ -117,6 +142,30 @@ export default function CommonQna({
                       {opt.emoji ? `${opt.emoji} ${opt.label}` : opt.label}
                     </button>
                   ))}
+                  <div className="mt-cq-item__decline-row">
+                    <button
+                      type="button"
+                      className="mt-cq-item__decline-btn"
+                      onClick={() => declineQuestion(q.id)}
+                    >
+                      이 질문 거절하기 / 건너뛰기
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {st === 'unanswered' && isDeclined && (
+                <div className="mt-cq-item__declined-panel">
+                  <span className="mt-cq-item__declined-desc">
+                    질문 공유를 거절했습니다. 상대방에게 답변이 전달되지 않아요.
+                  </span>
+                  <button
+                    type="button"
+                    className="mt-cq-item__restore-btn"
+                    onClick={() => restoreQuestion(q.id)}
+                  >
+                    다시 답변하기
+                  </button>
                 </div>
               )}
 

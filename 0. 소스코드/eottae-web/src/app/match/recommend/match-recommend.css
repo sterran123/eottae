@@ -42,11 +42,13 @@
 .mt-rec-list__acorn {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
   background: var(--match-acorn-bg);
   border: 0.5px solid var(--match-acorn-line);
   border-radius: 99px;
-  padding: 4px 11px;
+  padding: 6px 13px;
+  min-height: 44px;
   font-size: 12px;
   font-weight: 500;
   color: var(--match-acorn-ink);
@@ -55,7 +57,7 @@
   font-family: inherit;
 }
 .mt-rec-list__acorn:hover {
-  background: #f5e4ce;
+  background: var(--match-acorn-line);
   transform: translateY(-1px);
 }
 .mt-rec-list__acorn:active {
@@ -115,12 +117,12 @@
   background: var(--match-soft);
 }
 .mt-rec__photo--revealed {
-  background: linear-gradient(135deg, #ffd9c7, #ffc0d4);
+  background: linear-gradient(135deg, var(--match-photo-a), var(--match-photo-b));
 }
 .mt-rec__avatar {
   width: 36px;
   height: 36px;
-  color: #eeb9c8;
+  color: var(--match-avatar-ink);
 }
 .mt-rec__photo--revealed .mt-rec__avatar {
   color: rgba(255, 255, 255, 0.85);
@@ -199,11 +201,13 @@
   background: none;
   cursor: pointer;
   color: var(--match-hint);
-  padding: 4px;
+  padding: 8px;
+  min-width: 44px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
+  border-radius: 8px;
   transition: all 0.15s ease;
 }
 .mt-rec__more-btn:hover {
@@ -250,10 +254,10 @@
   background: var(--match-soft);
 }
 .mt-rec__dropdown-item--danger {
-  color: #ff4757;
+  color: var(--match-err-ink);
 }
 .mt-rec__dropdown-item--danger:hover {
-  background: rgba(255, 71, 87, 0.08);
+  background: var(--match-soft);
 }
 
 .mt-rec__meta {
@@ -322,7 +326,8 @@
   gap: 7px;
 }
 .mt-rec__btn {
-  height: 36px;
+  height: 44px;
+  min-height: 44px;
   border-radius: 10px;
   font-size: 12px;
   font-family: inherit;
@@ -366,6 +371,22 @@
   white-space: nowrap;
 }
 
+/* 320~360px 모바일 폭에서 '관심' 버튼 카드 바깥 넘침 방지 */
+@media (max-width: 375px) {
+  .mt-rec__actions {
+    flex-wrap: wrap;
+  }
+  .mt-rec__btn--later {
+    flex: 1 1 30%;
+  }
+  .mt-rec__btn--acorn {
+    flex: 1 1 calc(70% - 7px);
+  }
+  .mt-rec__btn--like {
+    flex: 1 1 100%;
+  }
+}
+
 /* 공통 질문 */
 .mt-rec__ask {
   margin-top: 11px;
@@ -386,13 +407,17 @@
 }
 .mt-rec__ask-chip {
   font-size: 11px;
-  padding: 6px 11px;
+  padding: 6px 12px;
+  min-height: 44px;
   border-radius: 99px;
   background: var(--match-paper);
   border: 0.5px solid var(--match-chip-line);
   color: var(--match-accent-ink);
   font-family: inherit;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ---- 상태(빈/에러) ---- */
@@ -502,7 +527,8 @@
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -511,14 +537,14 @@
 }
 .mt-report-modal {
   width: 100%;
-  max-width: 360px;
+  max-width: 380px;
   background: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e2e8f0;
   border-radius: 16px;
-  padding: 20px 20px 18px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
-  color: #111827;
-  animation: mt-scale-in 0.2s ease;
+  padding: 22px 20px 20px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.06);
+  color: #0f172a;
+  animation: mt-scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
 }
@@ -534,40 +560,44 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 .mt-report-title {
-  font-size: 16px;
+  font-size: 16.5px;
   font-weight: 700;
-  color: #111827;
+  color: #0f172a;
   margin: 0;
 }
+/* X 버튼: 사각형에서 모서리만 살짝 둥글게, 두껍고 단정한 스타일 */
 .mt-report-close-btn {
-  border: none;
-  background: #f3f4f6;
-  color: #6b7280;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
   cursor: pointer;
   transition: all 0.15s ease;
+  padding: 0;
 }
 .mt-report-close-btn:hover {
-  background: #e5e7eb;
-  color: #111827;
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
 }
 .mt-report-desc {
   font-size: 12.5px;
-  color: #6b7280;
-  line-height: 1.45;
-  margin: 0 0 14px;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0 0 16px;
 }
 .mt-report-desc strong {
-  color: #111827;
+  color: #0f172a;
   font-weight: 600;
 }
 .mt-report-options {
@@ -582,31 +612,34 @@
   gap: 10px;
   font-size: 13px;
   padding: 10px 12px;
+  min-height: 44px;
   border-radius: 10px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  color: #374151;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #334155;
   cursor: pointer;
   transition: all 0.15s ease;
   user-select: none;
 }
 .mt-report-opt:hover {
-  background: #f3f4f6;
-  border-color: #d1d5db;
+  background: #f1f5f9;
+  border-color: #cbd5e1;
 }
 .mt-report-opt.is-selected {
   background: #ffffff;
-  border-color: #111827;
-  color: #111827;
+  border-color: #0f172a;
+  color: #0f172a;
   font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 .mt-report-opt input[type='radio'] {
-  accent-color: #111827;
-  width: 15px;
-  height: 15px;
+  accent-color: #0f172a;
+  width: 16px;
+  height: 16px;
   margin: 0;
   cursor: pointer;
 }
+/* 텍스트 입력창: 이상한 보라색 두꺼운 테두리 완전 제거 및 자연스러운 그레이 링 적용 */
 .mt-report-textarea {
   width: 100%;
   box-sizing: border-box;
@@ -614,19 +647,22 @@
   margin-bottom: 12px;
   padding: 10px 12px;
   border-radius: 10px;
-  border: 1px solid #d1d5db;
+  border: 1px solid #cbd5e1;
   background: #ffffff;
-  font-size: 12.5px;
+  font-size: 13px;
   font-family: inherit;
-  color: #111827;
+  color: #0f172a;
   resize: vertical;
-  min-height: 70px;
-  outline: none;
-  transition: border-color 0.15s;
+  min-height: 74px;
+  outline: none !important;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
-.mt-report-textarea:focus {
-  border-color: #111827;
-  box-shadow: 0 0 0 2px rgba(17, 24, 39, 0.08);
+.mt-report-textarea:focus,
+.mt-report-textarea:focus-visible {
+  outline: none !important;
+  outline-offset: 0 !important;
+  border-color: #64748b !important;
+  box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.16) !important;
 }
 .mt-report-actions {
   display: flex;
@@ -636,22 +672,31 @@
 .mt-report-btn {
   flex: 1;
   padding: 11px;
+  min-height: 44px;
   border-radius: 10px;
   font-size: 13px;
   font-weight: 600;
   border: none;
   cursor: pointer;
   font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.15s ease;
 }
+.mt-report-btn:focus-visible,
+.mt-report-close-btn:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 2px #64748b !important;
+}
 .mt-report-btn--cancel {
-  background: #f3f4f6;
-  color: #4b5563;
-  border: 1px solid #e5e7eb;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
 }
 .mt-report-btn--cancel:hover {
-  background: #e5e7eb;
-  color: #111827;
+  background: #e2e8f0;
+  color: #0f172a;
 }
 .mt-report-btn--submit {
   background: #ef4444;
@@ -659,6 +704,65 @@
 }
 .mt-report-btn--submit:hover {
   background: #dc2626;
+}
+
+/* 다크 테마 대응 */
+:root[data-theme='dark'] .mt-report-modal,
+:root[data-theme='cyberpunk'] .mt-report-modal {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f8fafc;
+}
+:root[data-theme='dark'] .mt-report-title,
+:root[data-theme='cyberpunk'] .mt-report-title {
+  color: #f8fafc;
+}
+:root[data-theme='dark'] .mt-report-desc,
+:root[data-theme='cyberpunk'] .mt-report-desc {
+  color: #94a3b8;
+}
+:root[data-theme='dark'] .mt-report-desc strong,
+:root[data-theme='cyberpunk'] .mt-report-desc strong {
+  color: #f8fafc;
+}
+:root[data-theme='dark'] .mt-report-close-btn,
+:root[data-theme='cyberpunk'] .mt-report-close-btn {
+  background: #334155;
+  border-color: #475569;
+  color: #cbd5e1;
+}
+:root[data-theme='dark'] .mt-report-close-btn:hover,
+:root[data-theme='cyberpunk'] .mt-report-close-btn:hover {
+  background: #475569;
+  color: #ffffff;
+}
+:root[data-theme='dark'] .mt-report-opt,
+:root[data-theme='cyberpunk'] .mt-report-opt {
+  background: #0f172a;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+:root[data-theme='dark'] .mt-report-opt.is-selected,
+:root[data-theme='cyberpunk'] .mt-report-opt.is-selected {
+  background: #1e293b;
+  border-color: #f8fafc;
+  color: #f8fafc;
+}
+:root[data-theme='dark'] .mt-report-opt input[type='radio'],
+:root[data-theme='cyberpunk'] .mt-report-opt input[type='radio'] {
+  accent-color: #f8fafc;
+}
+:root[data-theme='dark'] .mt-report-textarea,
+:root[data-theme='cyberpunk'] .mt-report-textarea {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f8fafc;
+}
+:root[data-theme='dark'] .mt-report-btn--cancel,
+:root[data-theme='cyberpunk'] .mt-report-btn--cancel {
+  background: #334155;
+  border-color: #475569;
+  color: #cbd5e1;
 }
 
 /* 플로팅 토스트 */
@@ -670,13 +774,13 @@
   z-index: 90;
   max-width: 90%;
   width: 380px;
-  background: rgba(36, 26, 32, 0.94);
-  backdrop-filter: blur(8px);
-  color: #ffffff;
+  background: var(--match-paper);
+  border: 1px solid var(--match-chip-line);
+  color: var(--match-ink);
   padding: 12px 16px;
   border-radius: 14px;
   font-size: 12.5px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 24px var(--match-toast-shadow);
   display: flex;
   align-items: center;
   justify-content: space-between;

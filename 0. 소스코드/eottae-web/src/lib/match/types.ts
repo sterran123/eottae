@@ -71,6 +71,8 @@ export interface OnboardingDraft {
   interestIds: string[];
   /** 선호하는 거리 유형 (예: 5km 이내, 거리 무관 등) */
   preferredDistance?: string | null;
+  /** 프로필/사진 공개범위 설정 (MATCH-001) */
+  photoVisibility?: PhotoVisibility;
 }
 
 // ---- 유효성 규칙 (UI와 서버가 공유) ----
@@ -88,6 +90,7 @@ export interface SaveOnboardingRequest {
   relationGoal: RelationGoal;
   interestIds: string[];
   preferredDistance?: string | null;
+  photoVisibility?: PhotoVisibility;
 }
 
 // ---- 표준 에러 형식 (API_계약_초안.md 준수) ----

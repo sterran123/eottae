@@ -11,7 +11,7 @@
 //  [관계] relationGoal 로 추천 카테고리 결정(RELATION_TO_CATEGORIES).
 // ============================================================
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   DEMO_MY_ANSWERS,
   DEMO_QUESTIONS,
@@ -24,7 +24,7 @@ import type {
   QnaQuestion,
   RelationGoal,
 } from '@/lib/match/types';
-import { IconRefresh, IconX } from './icons';
+import { IconChevronLeft, IconChevronRight, IconRefresh, IconX } from './icons';
 import QnaQuestionCard from './QnaQuestionCard';
 
 interface ProfileQnaProps {
@@ -52,6 +52,86 @@ export default function ProfileQna({
   // 추천 질문 id 목록. 마운트 후 셔플(hydration 안전).
   const [recommendIds, setRecommendIds] = useState<string[]>([]);
   const [reshuffle, setReshuffle] = useState(0);
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [carouselIdx, setCarouselIdx] = useState(0);
+
+  // 스크롤 시 현재 중앙에 위치한 슬라이드 인덱스 추적
+  function handleCarouselScroll() {
+    const el = carouselRef.current;
+    if (!el) return;
+    const slides = Array.from(el.querySelectorAll<HTMLElement>('.mt-qna__slide'));
+    if (slides.length === 0) return;
+
+    const currentCenter = el.scrollLeft + el.clientWidth / 2;
+    let closest = 0;
+    let minDiff = Infinity;
+    slides.forEach((slide, i) => {
+      const center = slide.offsetLeft + slide.offsetWidth / 2;
+      const diff = Math.abs(center - currentCenter);
+      if (diff < minDiff) {
+        minDiff = diff;
+        closest = i;
+      }
+    });
+    setCarouselIdx(closest);
+  }
+
+  // 부드러운 가감속(smooth sliding) 모션으로 다음/이전 슬라이드 이동
+  function scrollCarousel(dir: 'left' | 'right') {
+    const el = carouselRef.current;
+    if (!el) return;
+
+    const slides = Array.from(el.querySelectorAll<HTMLElement>('.mt-qna__slide'));
+    if (slides.length === 0) return;
+
+    // 현재 위치 기준 다음 타겟 인덱스 결정
+    const targetIdx = dir === 'right'
+      ? Math.min(slides.length - 1, carouselIdx + 1)
+      : Math.max(0, carouselIdx - 1);
+
+    const targetSlide = slides[targetIdx];
+    if (!targetSlide) return;
+
+    const targetScrollLeft = Math.max(
+      0,
+      targetSlide.offsetLeft - (el.clientWidth - targetSlide.offsetWidth) / 2,
+    );
+
+    // 스냅 엔진과의 충돌을 피해 스냅을 일시 해제하고 60fps 부드러운 가감속 애니메이션 실행
+    const startLeft = el.scrollLeft;
+    const distance = targetScrollLeft - startLeft;
+    if (Math.abs(distance) < 2) return;
+
+    el.style.scrollSnapType = 'none';
+    const duration = 420; // 0.42초 동안 부드럽게 슬라이딩
+    const startTime = performance.now();
+
+    function easeOutCubic(t: number): number {
+      return 1 - Math.pow(1 - t, 3);
+    }
+
+    function animate(currentTime: number) {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const ease = easeOutCubic(progress);
+
+      if (el) {
+        el.scrollLeft = startLeft + distance * ease;
+      }
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        if (el) {
+          el.scrollLeft = targetScrollLeft;
+          el.style.scrollSnapType = '';
+        }
+        setCarouselIdx(targetIdx);
+      }
+    }
+
+    requestAnimationFrame(animate);
+  }
 
   const answeredCount = Object.keys(answers).length;
   const total = questions.length;
@@ -130,21 +210,47 @@ export default function ProfileQna({
             추천할 새 질문이 없어요. 전체 문답에서 더 답해보세요.
           </p>
         ) : (
-          <div className="mt-qna__carousel mt-noscroll">
-            {recommendIds.map((qid) => {
-              const q = byId.get(qid);
-              if (!q) return null;
-              return (
-                <div key={qid} className="mt-qna__slide">
-                  <QnaQuestionCard
-                    question={q}
-                    answer={answers[qid]}
-                    onSave={handleSave}
-                    compact
-                  />
-                </div>
-              );
-            })}
+          <div className="mt-qna__carousel-wrap">
+            <button
+              type="button"
+              className="mt-qna__nav-btn mt-qna__nav-btn--prev"
+              aria-label="이전 추천 질문 보기"
+              disabled={carouselIdx <= 0}
+              onClick={() => scrollCarousel('left')}
+            >
+              <IconChevronLeft className="mt-ico mt-ico--sm" />
+            </button>
+
+            <div
+              ref={carouselRef}
+              onScroll={handleCarouselScroll}
+              className="mt-qna__carousel mt-noscroll"
+            >
+              {recommendIds.map((qid) => {
+                const q = byId.get(qid);
+                if (!q) return null;
+                return (
+                  <div key={qid} className="mt-qna__slide">
+                    <QnaQuestionCard
+                      question={q}
+                      answer={answers[qid]}
+                      onSave={handleSave}
+                      compact
+                    />
+                  </div>
+                );
+              })}
+            </div>
+
+            <button
+              type="button"
+              className="mt-qna__nav-btn mt-qna__nav-btn--next"
+              aria-label="다음 추천 질문 보기"
+              disabled={carouselIdx >= recommendIds.length - 1}
+              onClick={() => scrollCarousel('right')}
+            >
+              <IconChevronRight className="mt-ico mt-ico--sm" />
+            </button>
           </div>
         )}
       </div>
@@ -217,20 +323,25 @@ export default function ProfileQna({
             onClick={() => setOpenQid(null)}
           />
           <div className="mt-qna__modal-body">
-            <button
-              type="button"
-              className="mt-qna__modal-close"
-              aria-label="닫기"
-              onClick={() => setOpenQid(null)}
-            >
-              <IconX className="mt-ico mt-ico--sm" />
-            </button>
-            <QnaQuestionCard
-              question={openQuestion}
-              answer={answers[openQuestion.id]}
-              onSave={handleSave}
-              onDelete={handleDelete}
-            />
+            <div className="mt-qna__modal-header">
+              <span className="mt-qna__modal-title">문답 답하기</span>
+              <button
+                type="button"
+                className="mt-qna__modal-close"
+                aria-label="닫기"
+                onClick={() => setOpenQid(null)}
+              >
+                <IconX className="mt-ico mt-ico--sm" />
+              </button>
+            </div>
+            <div className="mt-qna__modal-content">
+              <QnaQuestionCard
+                question={openQuestion}
+                answer={answers[openQuestion.id]}
+                onSave={handleSave}
+                onDelete={handleDelete}
+              />
+            </div>
           </div>
         </div>
       )}

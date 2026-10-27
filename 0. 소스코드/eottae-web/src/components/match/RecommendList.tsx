@@ -191,7 +191,20 @@ export default function RecommendList({
                 onClick={() => setReportingTarget(null)}
                 aria-label="닫기"
               >
-                ✕
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
               </button>
             </div>
 
@@ -261,7 +274,7 @@ export default function RecommendList({
           <span>{notice}</span>
           <button
             type="button"
-            style={{ background: 'none', border: 'none', color: '#ffffff', cursor: 'pointer', padding: '2px 6px', fontSize: '14px' }}
+            style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', padding: '6px 8px', fontSize: '14px', minWidth: '44px', minHeight: '44px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
             onClick={() => setNotice(null)}
             aria-label="알림 닫기"
           >
