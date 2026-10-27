@@ -306,11 +306,22 @@
 - [신규] src/components/safety/ReportModal.tsx | 신고 사유 선택, 200자 상세 사유 검증, 신고와 동시 차단 체크박스 및 DEMO 안내 완료 모달
 - [변경] src/lib/chat/types.ts & src/components/chat/MessageBubble.tsx | `system` 발신자 타입 추가 및 차단/해제 중앙 알림 렌더링 지원
 - [변경] src/components/chat/ChatRoom.tsx | 헤더 더보기(`⋯`) 메뉴(차단/해제/신고) 연동, `blockedRef` 차단 즉시 전송 거부(TC-009), 대기 타이머 일괄 취소, 차단 안내 바 노출
-- [변경] src/app/match/chat/match-chat.css | 메뉴 팝업, 시스템 안내, 차단 바, 모달 및 폼 스타일 추가 (`--match-*` 토큰만 사용해 6테마 완벽 대응)
+- [변경] src/app/match/chat/match-chat.css | 메뉴 팝업, 시스템 안내, 차단 바, 모달 및 폼 스타일 추가 (`--match-*` 토큰 사용. 단 `--match-dim`이 main 토큰 파일에 없어 모달 배경 딤·그림자가 표시되지 않던 결함이 있었음 → 아래 후속 항목에서 수정)
 - [검증] `npm run typecheck` PASS / `npm run build` PASS (정적 16개 라우트)
-- [검증] 브라우저 실검증 완료: 차단 시 입력 잠금 및 추가 응답 정지(TC-009 충족), 차단 해제 토글 정상 동작, 신고 모달 유효성 검증(사유 미선택/기타 빈값 방지) 및 Esc 닫기, 테마 전환 시 모달 스타일 정상 표시 확인
+- [검증] 개발자 수동 브라우저 확인(스크린샷·체크리스트 기록 없음): 차단 시 입력 잠금·추가 응답 정지(TC-009 **클라이언트 부분** 확인), 차단 해제 토글, 신고 모달 유효성(사유 미선택/기타 빈값) 및 Esc 닫기. 서버 쪽 "실패/구독 회수"는 미구현이라 TC-009 전체 충족 아님
+- [미실행] 360px 폭, 다크·사이버펑크 등 테마별 모달 확인(당시 `--match-dim` 누락으로 배경 딤 미표시 상태였음), 스크린샷 증빙
 - [보안] 신고/차단 데이터는 클라이언트 DEMO 상태로만 격리(RULES 7), 허위 운영 처리 일정 미약속(RULES 6 준수)
-- [미구현/보류] 서버 DB 영속화 및 운영 대기열 RLS 연동(주한태 담당) 대기
+- [미구현/보류] 서버 DB 영속화 및 운영 대기열 RLS 연동(주한태 담당) 대기. MATCH-008 완료 기준(신고 이력 보존·권한 분리·운영 대기열)과 TC-010은 미구현
+
+## 2026-10-27 MATCH-008 PR #16 리뷰 후속 — 토큰 누락·문구·해제 확인 (손준혁 작업)
+- [버그수정] src/app/match/match-tokens.css | `--match-dim` 정의 누락 → 라이트/다크(+cyberpunk)/system-OS다크 3곳에 추가. 모달 `::backdrop` 딤이 실제로 적용됨. (`--match-toast-shadow`는 main에 이미 복원돼 있음 확인) 토큰 파일은 공유 영역이라 값 추가만 수행
+- [변경] src/components/safety/BlockConfirmModal.tsx | "서로의 추천 목록에서도 제외돼요"가 데모에서 일어나지 않으므로 "서버 연동 후에는 … 제외될 예정이에요"로 수정(RULES 6). `mode`(block/unblock) prop 추가
+- [변경] src/components/chat/ChatRoom.tsx | 차단 해제도 확인 모달을 거치도록 변경(메뉴·차단 바 모두). 모달 닫힘 시 더보기 버튼으로 포커스 복귀
+- [변경] src/components/chat/MessageComposer.tsx | 녹음 중 입력이 비활성화(차단)되면 녹음을 취소해 마이크가 켜진 채 남지 않게 함
+- [변경] src/lib/safety/types.ts | 쓰이지 않던 `BlockState` 타입 제거(상태는 boolean 사용)
+- [검증] `npm run typecheck` PASS / `npm run build` PASS (정적 17개 라우트)
+- [미실행] 브라우저 확인(배경 딤 표시, 해제 확인 모달, 포커스 복귀, 녹음 중 차단 시 마이크 해제), 360px·테마별 확인, 스크린샷
+- [미결/회신 — 오하율] 추천 화면 RecommendList.tsx의 별도 신고 모달(사유 문자열)과 채팅의 `src/lib/safety/types.ts` DTO(REPORT_CATEGORIES/ReportRequest) 통합 제안 — 오하율 담당 파일이라 합의 후 진행
 
 ## 2026-10-27 디자인 패스 2차 — 홈 리디자인·접근성(C)·반응형(D)·상태(E)·PWA(F)·품질(G)·문서(H) (김민기 작업)
 - [버그수정] src/app/match/match-tokens.css | PR #11 머지 때 빠진 테마 추적 복원 — 다크 세트를 cyberpunk·system(OS 다크)에도 적용, cyberpunk 표면은 셸 토큰 추종. match CSS가 참조하는데 정의가 사라졌던 토큰 4개(`--match-photo-a/b`·`--match-avatar-ink`·`--match-toast-shadow`) 재정의 → 사진 자리 그라데이션·토스트 그림자 복구. 오하율의 `--match-accent-solid`·`--match-on-accent` 대비 수정은 그대로 유지

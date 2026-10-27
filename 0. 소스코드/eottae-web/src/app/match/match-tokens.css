@@ -54,6 +54,7 @@
   --match-photo-b: #ffc0d4;
   --match-avatar-ink: #eeb9c8;
   --match-toast-shadow: rgba(230, 120, 140, 0.18);
+  --match-dim: rgba(40, 30, 35, 0.45); /* 모달 ::backdrop 딤 */
   --match-tag-bg: rgba(255, 255, 255, 0.95);
 }
 
@@ -95,6 +96,7 @@
   --match-photo-b: #6b3a4f;
   --match-avatar-ink: #7a5560;
   --match-toast-shadow: rgba(0, 0, 0, 0.45);
+  --match-dim: rgba(0, 0, 0, 0.6);
   --match-tag-bg: rgba(36, 26, 32, 0.92);
 }
 
@@ -137,6 +139,7 @@
     --match-photo-b: #6b3a4f;
     --match-avatar-ink: #7a5560;
     --match-toast-shadow: rgba(0, 0, 0, 0.45);
+    --match-dim: rgba(0, 0, 0, 0.6);
     --match-tag-bg: rgba(36, 26, 32, 0.92);
   }
 }
