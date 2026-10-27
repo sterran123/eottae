@@ -104,7 +104,9 @@ const closeIssue = async (n, body) => {
 // ── 모드 2: 사람이 이슈 본문을 고쳤을 때 — 마지막 체크박스까지 체크했으면 닫는다 ──
 if (ISSUE_NUMBER && !PR_NUMBER) {
   const issue = await gh(`repos/${REPO}/issues/${ISSUE_NUMBER}`);
-  if (issue.pull_request || issue.state !== "open" || !allChecked(issue.body)) {
+  // 이번 수정으로 '마지막 체크'가 된 경우만 — 전부 체크된 채 Reopen한 이슈를 오타 수정마다 다시 닫지 않게
+  const prev = process.env.PREV_BODY;
+  if (issue.pull_request || issue.state !== "open" || !allChecked(issue.body) || (prev != null && allChecked(prev))) {
     console.log(`#${ISSUE_NUMBER}: 닫을 조건 아님 (열림=${issue.state === "open"}, 전부 체크=${allChecked(issue.body)})`);
     process.exit(0);
   }
@@ -146,12 +148,15 @@ if (!FORCE && prComments.some((c) => c.user?.login === BOT && String(c.body).inc
 const text = `${pr.title}\n${pr.head.ref}\n${pr.body || ""}`;
 const explicit = new Set([...String(pr.body || "").matchAll(LINKS)].map((m) => Number(m[3])));
 const ids = new Set(text.match(REQ_ID) || []);
-const open = (await ghAll(`repos/${REPO}/issues?state=open`)).filter((i) => !i.pull_request);
+// 팀원이 쓴 이슈만 — 공개 저장소라 누구나 요구사항 ID·체크박스를 넣은 이슈를 열 수 있고,
+// 그 본문은 Devin 프롬프트에 그대로 들어간다(프롬프트 인젝션). 이슈 본문은 작성자·triage 이상만 고칠 수 있다
+const teamIssue = (i) => Boolean(i) && !i.pull_request && MEMBER_ASSOC.has(i.author_association);
+const open = (await ghAll(`repos/${REPO}/issues?state=open`)).filter(teamIssue);
 const pool = new Map(open.map((i) => [i.number, i]));
 for (const n of explicit) {
   if (!pool.has(n)) {
     const i = await gh(`repos/${REPO}/issues/${n}`).catch(() => null);
-    if (i && !i.pull_request) pool.set(n, i); // Closes로 방금 닫힌 이슈도 체크 대상
+    if (teamIssue(i)) pool.set(n, i); // Closes로 방금 닫힌 이슈도 체크 대상
   }
 }
 const why = new Map();
@@ -430,7 +435,9 @@ for (const r of result.issues) {
   const missed = verified.filter((v) => !applied.has(v));
   const after = boxes(fresh.body);
   const left = after.filter((b) => !b.checked);
-  const line = (x) => `- ${x.box.text.slice(0, 120)}${x.why ? ` — ${x.why}` : ""}`;
+  // AI가 쓴 이유는 그대로 게시하지 않는다 — 멘션·링크 무력화, 한 줄·길이 제한
+  const safe = (t) => String(t || "").replace(/@/g, "@\u200b").replace(/\]\(/g, "] (").replace(/\s+/g, " ").slice(0, 200);
+  const line = (x) => `- ${x.box.text.slice(0, 120)}${x.why ? ` — ${safe(x.why)}` : ""}`;
   const sections = [
     checked.length && `**✅ 체크함 (${checked.length})** — 근거 대조 통과\n` + checked.map((v) => `${line(v)} · ${v.links.join(" ")}`).join("\n"),
     missed.length && `**⚠️ 검증은 통과했지만 체크 못 함 (${missed.length})** — 판정 중 이슈 본문이 바뀌었거나 이미 체크됨. 확인 후 직접 체크해 주세요\n` + missed.map((v) => `${line(v)} · ${v.links.join(" ")}`).join("\n"),
