@@ -7,7 +7,8 @@
    '/eottae/' 하위 배포와 로컬 루트 서빙을 같은 파일로 지원하기 위해서다.
    trailingSlash: true라 페이지 주소는 항상 '/'로 끝난다 — '/offline'처럼 쓰면
    Pages가 301을 주고, 리다이렉트된 응답은 오프라인 페이지 이동에 쓸 수 없다(ERR_FAILED). */
-const CACHE = 'eottae-shell-v5';
+// v6: v5까지 쿼리째 저장한 페이지 키(질문 내용 등)·옛 해시 청크를 activate 때 통째로 지우기 위해 올림
+const CACHE = 'eottae-shell-v6';
 // 등록 스코프 URL의 경로 — 로컬 루트는 '/', Pages는 '/eottae/'. 항상 '/'로 끝난다.
 const BASE = new URL(self.registration.scope).pathname;
 const OFFLINE = `${BASE}offline/`;
@@ -63,7 +64,7 @@ self.addEventListener('activate', (event) => {
         // 같은 출처(sterran123.github.io)를 쓰는 다른 Pages 프로젝트 캐시는 건드리지 않는다
         Promise.all(
           keys
-            .filter((key) => key.startsWith('eottae-') && key !== CACHE)
+            .filter((key) => key.startsWith('eottae-shell-') && key !== CACHE)
             .map((key) => caches.delete(key)),
         ),
       )
