@@ -449,3 +449,175 @@ body:has(.mt-chat-page) .footer::before {
 @media (prefers-reduced-motion: reduce) {
   .mt-chat-typing span { animation: none; opacity: 0.7; }
 }
+
+/* ============================================================
+   MATCH-008 신고/차단 — 더보기 메뉴·시스템 알림·차단 바·모달
+   ============================================================ */
+
+/* 헤더 더보기 메뉴 */
+.mt-chat-menu {
+  position: relative;
+  margin-left: auto;
+}
+.mt-chat-menu-btn {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--match-line);
+  border-radius: 50%;
+  background: var(--match-paper);
+  color: var(--match-ink);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.mt-chat-menu-btn:focus-visible,
+.mt-chat-menu-list button:focus-visible,
+.mt-chat-blocked-bar button:focus-visible,
+.mt-safety-btn:focus-visible {
+  outline: 2px solid var(--match-focus);
+  outline-offset: 2px;
+}
+.mt-chat-menu-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 5;
+  min-width: 160px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: var(--match-paper);
+  border: 1px solid var(--match-line);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px var(--match-toast-shadow);
+}
+.mt-chat-menu-list button {
+  width: 100%;
+  padding: 9px 12px;
+  text-align: left;
+  font: inherit;
+  font-size: 0.88rem;
+  color: var(--match-ink);
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.mt-chat-menu-list button:hover { background: var(--match-soft); }
+.mt-chat-menu-list button.is-danger { color: var(--match-err-ink); }
+
+/* 시스템 안내 (차단/해제) */
+.mt-chat-system {
+  align-self: center;
+  max-width: 90%;
+  text-align: center;
+}
+.mt-chat-system span {
+  display: inline-block;
+  padding: 5px 12px;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: var(--match-sub);
+  background: var(--match-soft);
+  border: 1px solid var(--match-line-soft);
+  border-radius: 99px;
+}
+
+/* 차단 안내 바 (입력창 위) */
+.mt-chat-blocked-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 0.8rem;
+  color: var(--match-warn-ink);
+  background: var(--match-warn-bg);
+  border-top: 1px solid var(--match-warn-line);
+}
+.mt-chat-blocked-bar button {
+  font: inherit;
+  font-weight: 600;
+  color: var(--match-accent-ink);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* 모달 — display는 [open]에만 지정해 닫힌 상태를 깨지 않는다 */
+.mt-safety-dialog {
+  width: min(92vw, 420px);
+  padding: 0;
+  color: var(--match-ink);
+  background: var(--match-paper);
+  border: 1px solid var(--match-line);
+  border-radius: 18px;
+  box-shadow: 0 16px 48px var(--match-toast-shadow);
+}
+.mt-safety-dialog::backdrop { background: var(--match-dim); }
+.mt-safety-dialog[open] { display: block; }
+.mt-safety-form { padding: 20px; }
+.mt-safety-title { margin: 0 0 10px; font-size: 1.05rem; }
+.mt-safety-text { margin: 0 0 10px; font-size: 0.9rem; line-height: 1.6; color: var(--match-sub); }
+.mt-safety-demo {
+  margin: 0 0 14px;
+  padding: 6px 10px;
+  font-size: 0.76rem;
+  color: var(--match-warn-ink);
+  background: var(--match-warn-bg);
+  border: 1px solid var(--match-warn-line);
+  border-radius: 8px;
+}
+.mt-safety-fieldset { margin: 0 0 12px; padding: 0; border: 0; }
+.mt-safety-legend { display: block; margin-bottom: 8px; padding: 0; font-size: 0.86rem; font-weight: 700; }
+.mt-safety-radio {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border: 1px solid var(--match-line);
+  border-radius: 10px;
+  cursor: pointer;
+}
+.mt-safety-radio:has(input:checked) { border-color: var(--match-accent); background: var(--match-soft); }
+.mt-safety-radio input { margin-top: 3px; accent-color: var(--match-accent-deep); }
+.mt-safety-radio span { display: flex; flex-direction: column; gap: 2px; font-size: 0.88rem; }
+.mt-safety-radio small { color: var(--match-sub); font-size: 0.76rem; }
+.mt-safety-field { display: block; margin-bottom: 12px; }
+.mt-safety-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 0.88rem;
+  color: var(--match-ink);
+  background: var(--match-bg);
+  border: 1px solid var(--match-line);
+  border-radius: 10px;
+}
+.mt-safety-textarea:focus-visible { outline: 2px solid var(--match-focus); outline-offset: 2px; }
+.mt-safety-count { display: block; text-align: right; color: var(--match-hint); font-size: 0.72rem; }
+.mt-safety-check { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; font-size: 0.86rem; }
+.mt-safety-check input { accent-color: var(--match-accent-deep); }
+/* 오류 문구 자리를 항상 확보해 레이아웃이 밀리지 않게 한다 */
+.mt-safety-error { min-height: 1.2em; margin: 0 0 8px; font-size: 0.8rem; color: var(--match-err-ink); }
+.mt-safety-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.mt-safety-btn {
+  min-height: 40px;
+  padding: 0 18px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--match-ink);
+  background: var(--match-bg);
+  border: 1px solid var(--match-line);
+  border-radius: 99px;
+  cursor: pointer;
+}
+.mt-safety-btn.is-primary { color: var(--match-on-accent); background: var(--match-accent-deep); border-color: transparent; }
+.mt-safety-btn.is-danger { color: var(--match-on-accent); background: var(--match-err-ink); border-color: transparent; }
+

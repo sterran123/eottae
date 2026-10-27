@@ -8,17 +8,20 @@
 //
 //  [경계] 실제 서버 연동(주한태 API/RLS)·실시간 구독은 별도 설계 리뷰 후 착수.
 //         아래 sendMessage 내부가 API 호출로 교체될 지점이다.
-//  [TODO MATCH-008] 헤더 더보기 메뉴에 차단/신고 연결, 차단 시 composer disabled.
+//  [MATCH-008] 헤더 더보기 메뉴 → 차단/신고. 차단 시 입력·전송·자동응답 즉시 정지(TC-009).
 // ============================================================
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import type { ChatMessage } from '@/lib/chat/types';
+import type { ReportRequest } from '@/lib/safety/types';
 import {
   DEMO_INITIAL_MESSAGES,
   DEMO_PARTNER,
   DEMO_REPLIES,
 } from '@/lib/chat/demo-data';
+import BlockConfirmModal from '@/components/safety/BlockConfirmModal';
+import ReportModal from '@/components/safety/ReportModal';
 import MessageBubble from './MessageBubble';
 import MessageComposer from './MessageComposer';
 
@@ -37,6 +40,16 @@ export default function ChatRoom() {
   const replyIdx = useRef(0);
   // 아직 응답이 오지 않은 내 메시지 수 — 연속 전송 시 '입력 중' 표시가 먼저 꺼지지 않게 한다.
   const pendingReplies = useRef(0);
+
+  // ---- MATCH-008 안전 기능 ----
+  const [blocked, setBlocked] = useState(false);
+  // 타이머 콜백이 최신 차단 상태를 보도록 ref로도 보관
+  const blockedRef = useRef(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [blockOpen, setBlockOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const menuBtnRef = useRef<HTMLButtonElement>(null);
 
   // 새 메시지·입력중 표시마다 맨 아래로 스크롤
   useEffect(() => {
@@ -59,8 +72,69 @@ export default function ChatRoom() {
     timers.current.push(t);
   }, []);
 
+  const pushSystem = useCallback((body: string) => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: nextId(),
+        sender: 'system',
+        body,
+        createdAt: new Date().toISOString(),
+        status: 'sent',
+      },
+    ]);
+  }, []);
+
+  // 차단 적용: 대기 중 전송·자동응답 타이머 전부 취소, 미전송 메시지는 실패 처리
+  const applyBlock = useCallback(() => {
+    if (blockedRef.current) return;
+    blockedRef.current = true;
+    setBlocked(true);
+    timers.current.forEach(clearTimeout);
+    timers.current.length = 0;
+    pendingReplies.current = 0;
+    setTyping(false);
+    setMessages((prev) =>
+      prev.map((m) => (m.status === 'sending' ? { ...m, status: 'failed' } : m)),
+    );
+    pushSystem(`${DEMO_PARTNER.nickname}님을 차단했어요. 더 이상 대화할 수 없어요.`);
+  }, [pushSystem]);
+
+  const releaseBlock = useCallback(() => {
+    if (!blockedRef.current) return;
+    blockedRef.current = false;
+    setBlocked(false);
+    pushSystem('차단을 해제했어요. 다시 대화할 수 있어요.');
+  }, [pushSystem]);
+
+  function handleReportSubmit(req: ReportRequest) {
+    // [DEMO] 서버 전송 없음. 신고 내용은 저장·로깅하지 않는다.
+    if (req.alsoBlock) applyBlock();
+  }
+
+  // 더보기 메뉴: 바깥 클릭·Esc로 닫고, Esc일 때 트리거로 포커스 복귀
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (!menuRef.current?.contains(e.target as Node)) setMenuOpen(false);
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setMenuOpen(false);
+        menuBtnRef.current?.focus();
+      }
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [menuOpen]);
+
   const sendMessage = useCallback(
     (body: string) => {
+      if (blockedRef.current) return; // 차단 중에는 어떤 경로로도 전송 금지
       const id = nextId();
       pendingReplies.current += 1;
       setMessages((prev) => [
@@ -111,7 +185,51 @@ export default function ChatRoom() {
         </div>
         <div className="mt-chat-head-text">
           <h1 className="mt-chat-title">{DEMO_PARTNER.nickname}</h1>
-          <span className="mt-chat-demo">DEMO · 실제 채팅이 아니에요</span>
+          <span className="mt-chat-demo">
+            {blocked ? '차단됨 · ' : ''}DEMO · 실제 채팅이 아니에요
+          </span>
+        </div>
+
+        <div className="mt-chat-menu" ref={menuRef}>
+          <button
+            ref={menuBtnRef}
+            type="button"
+            className="mt-chat-menu-btn"
+            aria-label="더보기 메뉴"
+            aria-expanded={menuOpen}
+            aria-controls="mt-chat-menu-list"
+            onClick={() => setMenuOpen((o) => !o)}
+          >
+            <span aria-hidden="true">⋯</span>
+          </button>
+          {menuOpen && (
+            <ul id="mt-chat-menu-list" className="mt-chat-menu-list">
+              <li>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    if (blocked) releaseBlock();
+                    else setBlockOpen(true);
+                  }}
+                >
+                  {blocked ? '차단 해제하기' : '상대방 차단하기'}
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  className="is-danger"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setReportOpen(true);
+                  }}
+                >
+                  상대방 신고하기
+                </button>
+              </li>
+            </ul>
+          )}
         </div>
       </header>
 
@@ -136,7 +254,34 @@ export default function ChatRoom() {
         <li ref={listEndRef} aria-hidden="true" />
       </ul>
 
-      <MessageComposer onSend={sendMessage} />
+      {blocked && (
+        <div className="mt-chat-blocked-bar" role="status">
+          <span>차단한 상대와는 대화할 수 없어요</span>
+          <button type="button" onClick={releaseBlock}>
+            차단 해제
+          </button>
+        </div>
+      )}
+
+      <MessageComposer
+        onSend={sendMessage}
+        disabled={blocked}
+        disabledReason="차단한 상대와는 대화할 수 없어요"
+      />
+
+      <BlockConfirmModal
+        open={blockOpen}
+        partnerName={DEMO_PARTNER.nickname}
+        onConfirm={applyBlock}
+        onClose={() => setBlockOpen(false)}
+      />
+      <ReportModal
+        open={reportOpen}
+        partnerId={DEMO_PARTNER.id}
+        partnerName={DEMO_PARTNER.nickname}
+        onSubmit={handleReportSubmit}
+        onClose={() => setReportOpen(false)}
+      />
     </section>
   );
 }

@@ -299,6 +299,19 @@
 - [미구현/보류] /match → /match/chat 진입 링크 — match/page.tsx는 오하율 담당이라 합의 후 추가
 - [미결/회신] 다른 match 페이지들의 `<main>` 중첩은 기존 이관 사항 그대로 (오하율 담당)
 
+## 2026-10-27 MATCH-008 신고 사유 모달 및 차단 시스템 구현 (손준혁 작업)
+- [신규] src/lib/safety/types.ts | 신고 카테고리 4종(욕설/성희롱/사기/기타), ReportRequest DTO, 상세 200자 제한, BlockState 정의 (API 계약 `POST /safety/reports`, `POST /safety/blocks` 호환)
+- [신규] src/components/safety/SafetyDialog.tsx | 웹 표준 가이드 준수 네이티브 `<dialog>` 기반 공통 모달 (Esc 닫기, `showModal()` 포커스 가두기)
+- [신규] src/components/safety/BlockConfirmModal.tsx | 상대방 차단 확인 및 주의사항 안내 다이얼로그
+- [신규] src/components/safety/ReportModal.tsx | 신고 사유 선택, 200자 상세 사유 검증, 신고와 동시 차단 체크박스 및 DEMO 안내 완료 모달
+- [변경] src/lib/chat/types.ts & src/components/chat/MessageBubble.tsx | `system` 발신자 타입 추가 및 차단/해제 중앙 알림 렌더링 지원
+- [변경] src/components/chat/ChatRoom.tsx | 헤더 더보기(`⋯`) 메뉴(차단/해제/신고) 연동, `blockedRef` 차단 즉시 전송 거부(TC-009), 대기 타이머 일괄 취소, 차단 안내 바 노출
+- [변경] src/app/match/chat/match-chat.css | 메뉴 팝업, 시스템 안내, 차단 바, 모달 및 폼 스타일 추가 (`--match-*` 토큰만 사용해 6테마 완벽 대응)
+- [검증] `npm run typecheck` PASS / `npm run build` PASS (정적 16개 라우트)
+- [검증] 브라우저 실검증 완료: 차단 시 입력 잠금 및 추가 응답 정지(TC-009 충족), 차단 해제 토글 정상 동작, 신고 모달 유효성 검증(사유 미선택/기타 빈값 방지) 및 Esc 닫기, 테마 전환 시 모달 스타일 정상 표시 확인
+- [보안] 신고/차단 데이터는 클라이언트 DEMO 상태로만 격리(RULES 7), 허위 운영 처리 일정 미약속(RULES 6 준수)
+- [미구현/보류] 서버 DB 영속화 및 운영 대기열 RLS 연동(주한태 담당) 대기
+
 ## 2026-10-27 디자인 패스 2차 — 홈 리디자인·접근성(C)·반응형(D)·상태(E)·PWA(F)·품질(G)·문서(H) (김민기 작업)
 - [버그수정] src/app/match/match-tokens.css | PR #11 머지 때 빠진 테마 추적 복원 — 다크 세트를 cyberpunk·system(OS 다크)에도 적용, cyberpunk 표면은 셸 토큰 추종. match CSS가 참조하는데 정의가 사라졌던 토큰 4개(`--match-photo-a/b`·`--match-avatar-ink`·`--match-toast-shadow`) 재정의 → 사진 자리 그라데이션·토스트 그림자 복구. 오하율의 `--match-accent-solid`·`--match-on-accent` 대비 수정은 그대로 유지
 - [변경] 홈(page.tsx)·내비·서비스 카드·푸터 리디자인 | 한국어 어절 단위 줄바꿈(`word-break: keep-all`, 제목 `text-wrap: balance`)로 '이야/기' 같은 낱자 끊김 제거, 섹션 머리 가운데 정렬로 좁은/넓은 섹션 왼쪽 선 어긋남 해소, 카드 모티프를 시스템 글리프 → 점선 링 스티커 + 인라인 SVG(`motif-icon.tsx`), 단계 점선 연결선·설명, 안전 강조 박스(방패 배지·안쪽 점선 프레임, 워터마크-버튼 겹침 해소), FAQ Q 스티커 + PWA 설치 안내 문항, 하단 로드맵 카드, 3열 푸터, 반투명 블러 헤더, 로그인 자리 점선 필
