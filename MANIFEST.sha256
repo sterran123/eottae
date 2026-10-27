@@ -16,7 +16,7 @@ e107b851f2cb376474c3ca9ebbe64a80b64cb81e6c957b92f95514fd57b9f28e  0. 소스코�
 f4414d6da0174aa2bcd152a48741b4003b5d1f50c6c218322f1885904d970f7b  0. 소스코드/eottae-web/.gitignore
 dfd62088d1b52c3eeb6f9ccb87a62858bb9766b328ae93cd85994f2bb3262587  0. 소스코드/eottae-web/AGENTS.md
 29f34850035187210d9a8cd2de1c25308a0d09a152f720ce82f3a185268d10c0  0. 소스코드/eottae-web/README.md
-bede6235f549185aaff9daaf6acf0d6f402214db7bd0373eb187c86d177e1926  0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md
+c1c061457b80bed607436c3e061cb6a5ec9407330930844c9750555399b37098  0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md
 6ef5f1ba972e9f1d07e1dbddd282ed9c16c3fd132a5301db0a8e0e9cffc2bb2f  0. 소스코드/eottae-web/docs/AI_도구_MCP_권장.md
 0e47a560be1c6b125ea53409008e30bc714ba4aa9818d5976e0b9bbdb9e36787  0. 소스코드/eottae-web/docs/AI_에이전트_협업_가이드.md
 7d34723629b67d6fc6c107846671146dfa18b35250001621174b73afb4da8511  0. 소스코드/eottae-web/docs/DESIGN_개선_지시서.md
@@ -59,7 +59,7 @@ aa5dad634230e9d31220dcf2319bf738e869941c4508df02ac1180d5eea77139  0. 소스코�
 64c8214f461a51180a7ad8562e4f39f6f18ecb00c1f5ca334c1758e2e07b0c60  0. 소스코드/eottae-web/src/app/match/chat/page.tsx
 0bef2a5d67fdd5c53ab385aa0e5a0a76ca445399ccf64c55ea222273384b82bd  0. 소스코드/eottae-web/src/app/match/common/match-common.css
 93a170fd13acc4f2a6ba3a86bf4a8e65a5e3e31b29e7b4f944cac4a09191c43c  0. 소스코드/eottae-web/src/app/match/common/page.tsx
-397250ab01005c75391e52c9b51963b1e05be19ecf155f7b3472f8f1ef1c4ba9  0. 소스코드/eottae-web/src/app/match/match-tokens.css
+0fd137fb68d859c8de33bcf96912f61c2fef005fee8a54bad6d38e9819755279  0. 소스코드/eottae-web/src/app/match/match-tokens.css
 909eebc33e2b4600458237baa3189333a4c0f8156dd3a6b274b02d6f67d362fd  0. 소스코드/eottae-web/src/app/match/onboarding/match-onboarding.css
 8cf74e472cd6f5dedc80acee76a03d65a880bcdab696ef821e50366a6cc2cf0c  0. 소스코드/eottae-web/src/app/match/onboarding/page.tsx
 361b8e3dbc3ccf638e84d9f36e4fb6abce478d09d9ac59b26682d87a936d1cbc  0. 소스코드/eottae-web/src/app/match/page.tsx
@@ -72,9 +72,9 @@ f7715c4e5ee547bc8cef2dad96e725cb76ec55562d864245e0abf3aeaeb9917a  0. 소스코�
 34f4b91f15a9d3b75e92c2771c03c8ccce8147683f7392e819abc8599c45f283  0. 소스코드/eottae-web/src/app/page.tsx
 9c973f2c0c6f6c620da6eab09ebd408089d4c2f39bb1562e62aed071f803f05d  0. 소스코드/eottae-web/src/app/privacy/page.tsx
 b7fff35a33b1c4b90385524e4fa2ae8af97add00ff4b60cf9c60b4dabb6fff6b  0. 소스코드/eottae-web/src/app/safety/page.tsx
-db625a190721ea0c2c701af95127b025c4ce672c641f6318cae293fc774f9a35  0. 소스코드/eottae-web/src/components/chat/ChatRoom.tsx
+70d05d2390a48110c96921daf990b8da52ef29e3aafa4ef7f0a192673067cd06  0. 소스코드/eottae-web/src/components/chat/ChatRoom.tsx
 200c1a26653cb001a9a618eadc21e0b7c29f08f38751cf662ae81cd1ea9f4019  0. 소스코드/eottae-web/src/components/chat/MessageBubble.tsx
-f594933e28589995fb2f7e12bdf3a48d9c68b624998ae1ac4d0c7f2bb7cf7072  0. 소스코드/eottae-web/src/components/chat/MessageComposer.tsx
+3921b8c8ea9e5e4a19275ece0381a42b1a1e389695e01c1d47e98fbf67e4aa12  0. 소스코드/eottae-web/src/components/chat/MessageComposer.tsx
 744627938700efaba14f46129ad849f7e11ba8feb0aace76bcdaa6e89d05add4  0. 소스코드/eottae-web/src/components/match/CommonQna.tsx
 97c38cd0a45c6eb1be02e6bd4e5d8a0573561d16eca76cfd0d0c880bb86b19de  0. 소스코드/eottae-web/src/components/match/CompatToast.tsx
 02f2551068bd096359856d31a1c71a163498b8abfcce3bcf3b80d6343dbb3f7f  0. 소스코드/eottae-web/src/components/match/OnboardingForm.tsx
@@ -83,7 +83,7 @@ f594933e28589995fb2f7e12bdf3a48d9c68b624998ae1ac4d0c7f2bb7cf7072  0. 소스코�
 7ba766536be377cf9cbc23c73a2a7ef5d84ee9f7de54d92f0898212b01b53294  0. 소스코드/eottae-web/src/components/match/RecommendCard.tsx
 1dbbc05c6292252b940128190b83df8e7e9bbbc1e97f6cfbcc993ccf959dc121  0. 소스코드/eottae-web/src/components/match/RecommendList.tsx
 9af0971b0a0367b55aa068543d1c861ca8186a5b96fdeb9665cfacf9a8ddcaf5  0. 소스코드/eottae-web/src/components/match/icons.tsx
-a23db26e50328c21c91e25bff028859832a2020715877eed7691f4d35289b25f  0. 소스코드/eottae-web/src/components/safety/BlockConfirmModal.tsx
+7f6520fc57c84a5f30b5b586f2bd591f865fe0a5dff4f14ff867c3b48ce7dcda  0. 소스코드/eottae-web/src/components/safety/BlockConfirmModal.tsx
 cd79e5263bdd6f99b1a291de54d681ded5a1ef01fb4e8e6ab4ae35b1e5c3e385  0. 소스코드/eottae-web/src/components/safety/ReportModal.tsx
 d9d845a1c69955ea61d92795556b2c377e16bdeaa6113ed381de00e18c852ad4  0. 소스코드/eottae-web/src/components/safety/SafetyDialog.tsx
 020d98506513cc451fdb5746034e95602819263d9ec5ec270354a594bfcffc99  0. 소스코드/eottae-web/src/components/shared/hero-particles.tsx
@@ -104,7 +104,7 @@ ac6f66ac9eda35044df75848db5fa06987bb7f79fd7390f3e103faf0a0c50b69  0. 소스코�
 d118c6abaac2fc2a4f604bcaa16f1ef7305f8c4df22d2d45e2a191313a25e62a  0. 소스코드/eottae-web/src/lib/match/demo-qna.ts
 1196f353baf0193860b0dfa313efbe64394270ed10c61c43aef6934cf75b5dcf  0. 소스코드/eottae-web/src/lib/match/demo-recommendations.ts
 01998211895170a78c4a308503782939255dbac983a6bf136524c8e43dd75bd6  0. 소스코드/eottae-web/src/lib/match/types.ts
-c7a0dff2e78982bddae8d71670e2ca6fa881ea406f6964b73aa872405b3b5def  0. 소스코드/eottae-web/src/lib/safety/types.ts
+5196327ba3831dd436ddef67821679a98e60c71a8e873d82cb60eab3001a2036  0. 소스코드/eottae-web/src/lib/safety/types.ts
 6e8ea11fb848f16c2ce85a0a38737469766f995a67f34d6e704b8d14749c6c1b  0. 소스코드/eottae-web/src/lib/server/auth.ts
 2d835d202a0c732f348bac3a36da1f5d2b6a474183146c56ddf99c38f944ed86  0. 소스코드/eottae-web/src/lib/server/session.ts
 47455c04822b378ef36ccd29e8f50f5bc11fdf8ab193afd2b1ffae6a366c28e0  0. 소스코드/eottae-web/src/types/assets.d.ts
