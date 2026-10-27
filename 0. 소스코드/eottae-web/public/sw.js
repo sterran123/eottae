@@ -82,6 +82,22 @@ function remember(event, request, response) {
   return response;
 }
 
+// 페이지 이동 응답은 본문·헤더만으로 다시 만들어 저장한다 — fetch 응답을 그대로 넣으면
+// 키를 경로로 줘도 응답 객체의 url(쿼리 포함)이 CacheStorage에 함께 남는다.
+// 새로 만든 Response는 url이 빈 문자열로 저장되고, 페이지 이동 응답으로 돌려줘도 문제없다.
+function rememberPage(event, path, response) {
+  if (response.ok && !response.redirected) {
+    const copy = response.clone();
+    const clean = new Response(copy.body, {
+      status: copy.status,
+      statusText: copy.statusText,
+      headers: copy.headers,
+    });
+    event.waitUntil(caches.open(CACHE).then((cache) => cache.put(path, clean)));
+  }
+  return response;
+}
+
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
@@ -101,12 +117,12 @@ self.addEventListener('fetch', (event) => {
   }
 
   // 페이지 이동: 네트워크 우선, 실패 시 캐시 → 오프라인 폴백.
-  // 정적 export라 HTML은 쿼리와 무관하다 — 경로만 키로 저장해 쿼리(질문 내용·인증 콜백 code 등)가
-  // 기기 캐시에 남지 않게 하고, 쿼리마다 항목이 늘어나지 않게 한다.
+  // 정적 export라 HTML은 쿼리와 무관하다 — 경로만 키로, 응답은 rememberPage로 다시 만들어 저장해
+  // 쿼리(질문 내용·인증 콜백 code 등)가 키에도 응답 url에도 남지 않게 하고, 쿼리마다 항목이 늘어나지 않게 한다.
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
-        .then((response) => remember(event, url.pathname, response))
+        .then((response) => rememberPage(event, url.pathname, response))
         .catch(() =>
           caches.match(request, { ignoreSearch: true }).then((hit) => hit || caches.match(OFFLINE)),
         ),
