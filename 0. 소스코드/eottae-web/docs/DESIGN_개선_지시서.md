@@ -40,7 +40,7 @@ match 모듈(`오하율` 담당)은 기능 코드를 바꾸지 않는다 — 시
 
 ### A. 테마 시스템 완결
 1. match 페이지 4개를 6테마+시스템 테마 전부에서 실전환 확인. 어색한 곳은 `match-tokens.css`에 `[data-theme='...']` 매핑 블록 추가 (토큰명 유지 — 컴포넌트 불변)
-2. 테마 피커(`theme-toggle.tsx`)의 `<select>` UX 개선 검토 — 팔레트 미리보기 스와치 등 (기존 동작·저장 키 `theme`/`data-theme` 계약 유지)
+2. 테마 피커(`theme-toggle.tsx`)의 `<select>` UX 개선 검토 — 팔레트 미리보기 스와치 등 (기존 동작·저장 키 `eottae-theme`/`data-theme` 계약 유지)
 
 ### B. 서브페이지 디자인 통일
 3. privacy·safety·offline·invitations·activities에 홈과 같은 장식 언어 적용 — eyebrow 반짝이, ♡ 꼬리, 스캘럽, 카드 테이프 등 globals.css 기존 클래스 재사용 우선

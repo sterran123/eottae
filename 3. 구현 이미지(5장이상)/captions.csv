@@ -1,11 +1,11 @@
 ﻿file,captured_at,environment,requirement_id,note
-01_공통_홈_데스크톱.png,2026-10-23,Windows + Chrome 에뮬레이션 1440x900 · next start 프로덕션 빌드 · tools/capture_screenshots.mjs,SEC-002 / CORE-002,통합 홈 라이트 — 3모듈 내비·히어로·파티클·브랜드 일러스트
-02_공통_홈_모바일.png,2026-10-23,Windows + Chrome 에뮬레이션 390x844 모바일 · next start 프로덕션 빌드,SEC-002 / CORE-002,통합 홈 모바일 라이트 — 반응형 헤더·테마 토글
-03_공통_홈_데스크톱_다크.png,2026-10-23,Windows + Chrome 에뮬레이션 1440x900 · prefers-color-scheme: dark,SEC-002 / CORE-002,통합 홈 다크 — 토큰·다크 로고 스왑(BRAND-004)
-04_매칭_진입_모바일.png,2026-10-23,Windows + Chrome 에뮬레이션 390x844 모바일 · next start 프로덕션 빌드,SEC-002,/match 1차 개발 대상 진입 화면 (실기능 미구현 명시)
-05_준비중_모듈_데이트소모임_모바일.png,2026-10-23,Windows + Chrome 에뮬레이션 390x844 모바일 · next start 프로덕션 빌드,SEC-002,/activities 2차 준비중 화면
-06_준비중_모듈_청첩장_모바일.png,2026-10-23,Windows + Chrome 에뮬레이션 390x844 모바일 · next start 프로덕션 빌드,SEC-002,/invitations 3차 준비중 화면
-07_오프라인_폴백_모바일.png,2026-10-23,Windows + Chrome 에뮬레이션 390x844 모바일 · next start 프로덕션 빌드,SEC-002 / CORE-003,/offline PWA 폴백 — 서비스워커 오프라인 실검증 대상
+01_공통_홈_데스크톱.png,2026-10-27,Windows + 헤드리스 Chrome(CDP) 1440 전체 높이 · npm run build 정적 산출물 · tools/serve_pages_preview.mjs,CORE-001 / CORE-002,통합 홈 라이트 — 디자인 패스 2차(스티커 모티프 카드·단계 연결선·안전 배지·FAQ Q 스티커·로드맵·새 푸터)
+02_공통_홈_모바일.png,2026-10-27,Windows + 헤드리스 Chrome(CDP) 390 모바일 2x 전체 높이 · npm run build 정적 산출물,CORE-002,통합 홈 모바일 — 어절 단위 줄바꿈·히어로 캐릭터 스티커·가로 스크롤 내비(페이드)
+03_공통_홈_데스크톱_다크.png,2026-10-27,Windows + 헤드리스 Chrome(CDP) 1440 전체 높이 · npm run build 정적 산출물 · tools/serve_pages_preview.mjs · data-theme=dark,CORE-002,통합 홈 다크 — 토큰·다크 로고 스왑(BRAND-004)
+04_매칭_진입_모바일.png,2026-10-27,Windows + 헤드리스 Chrome(CDP) 390 모바일 2x 전체 높이 · npm run build 정적 산출물,CORE-001 / MATCH,/match 소개 — 4개 데모 진입 카드(오하율 구성) + 공통 서브히어로
+05_준비중_모듈_데이트소모임_모바일.png,2026-10-27,Windows + 헤드리스 Chrome(CDP) 390 모바일 2x 전체 높이 · npm run build 정적 산출물,CORE-001,/activities 2차 준비중 — 서브히어로·테이프 카드
+06_준비중_모듈_청첩장_모바일.png,2026-10-27,Windows + 헤드리스 Chrome(CDP) 390 모바일 2x 전체 높이 · npm run build 정적 산출물,CORE-001,/invitations 3차 준비중 — 서브히어로·테이프 카드
+07_오프라인_폴백_모바일.png,2026-10-27,Windows + 헤드리스 Chrome(CDP) 390 모바일 2x 전체 높이 · npm run build 정적 산출물,CORE-003,/offline PWA 폴백 화면 (서비스워커 오프라인 동작은 미검증)
 08_매칭_온보딩_모바일.png,2026-10-24,Windows + Chrome 390x844 모바일 서빙,/match/onboarding (MATCH-001),1차 매칭 취향 온보딩 모바일 라이트 · 카테고리별 아코디언 선택 폼
 09_매칭_온보딩_데스크톱.png,2026-10-24,Windows + Chrome 1440x900 데스크톱 서빙,/match/onboarding (MATCH-001),1차 매칭 취향 온보딩 데스크톱 라이트 · 반응형 와이드 레이아웃
 10_매칭_추천_모바일.png,2026-10-24,Windows + Chrome 390x844 모바일 서빙,/match/recommend (MATCH-002),오늘의 추천 카드 리스트 모바일 라이트 · 문답 궁합(통했어요) 및 취향 일치 태그
@@ -14,3 +14,5 @@
 13_매칭_문답_모바일_다크.png,2026-10-24,Windows + Chrome 390x844 모바일 다크 서빙,/match/qna (MATCH-009),프로필 문답 40문항 목록 모바일 다크 · 피치 악센트 다크 테마
 14_매칭_공통질문_모바일_라이트.png,2026-10-24,Windows + Chrome 390x844 모바일 라이트 서빙,/match/common (MATCH-009),공통 질문 블라인드 비교 모바일 라이트 · 상단 궁합 토스트 알림
 15_매칭_공통질문_모바일_다크.png,2026-10-24,Windows + Chrome 390x844 모바일 다크 서빙,/match/common (MATCH-009),공통 질문 블라인드 비교 모바일 다크 · 블라인드 잠금 및 답변 비교
+16_공통_홈_6테마_비교.png,2026-10-27,Windows + 헤드리스 Chrome(CDP) 1440 전체 높이 · npm run build 정적 산출물 · tools/serve_pages_preview.mjs,CORE-002,통합 홈 light·cupcake·cyberpunk·disney·dark 비교 (system은 OS 설정에 따라 light/dark와 동일)
+17_매칭_추천_7모드_테마추적.png,2026-10-27,Windows + 헤드리스 Chrome(CDP) 390 모바일 1x 전체 높이 · npm run build 정적 산출물,CORE-002 / MATCH-002,/match/recommend 7모드 — match-tokens 테마 추적 복원(cyberpunk·system 다크)
