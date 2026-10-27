@@ -1,0 +1,60 @@
+# 「어때?」 이슈 진행 동기화 — 머지된 PR이 끝낸 이슈 체크 항목을 엄격 검증해 체크하고,
+# 체크리스트가 전부 체크되면 이슈를 닫는다. (Closes/Refs가 없어도 작성자 담당 이슈·요구사항 ID로 찾는다)
+#   트리거:
+#     - 사람이 PR을 머지했을 때 (pull_request closed + merged)
+#     - 규칙 봇이 머지한 뒤 dispatch (GITHUB_TOKEN 머지는 pull_request 이벤트를 만들지 않는다)
+#     - 사람이 이슈 본문을 고쳤을 때 — 마지막 체크박스까지 체크했으면 닫기만 (AI 호출 없음)
+#   비용: 머지된 PR당 Devin 세션 1개(후보 이슈가 있을 때만). 같은 PR은 다시 판정하지 않는다(force로 재실행)
+# 상세는 tools/issue_progress.mjs 상단 주석 참조.
+name: issue-progress
+
+on:
+  pull_request:
+    branches: [main]
+    types: [closed]
+  issues:
+    types: [edited]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: 머지된 PR 번호
+        required: true
+      force:
+        description: 이미 처리한 PR도 다시 판정 (1)
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+  issues: write        # 체크박스 체크·코멘트·닫기
+  pull-requests: write # PR 코멘트 — PR 이벤트에서는 issues: write만으로는 403
+  statuses: read       # ai-review 통과 여부(게이트)
+
+concurrency:
+  group: issue-progress-${{ github.event.pull_request.number || inputs.pr || github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  progress:
+    if: >-
+      (github.event_name == 'pull_request' && github.event.pull_request.merged) ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'issues' && github.event.changes.body && github.event.sender.type != 'Bot')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main # 판정 스크립트는 항상 main 기준
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: 이슈 진행 판정
+        env:
+          DEVIN_API_KEY: ${{ secrets.DEVIN_API_KEY }}
+          DEVIN_ORG_ID: ${{ secrets.DEVIN_ORG_ID }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          FORCE: ${{ inputs.force }}
+        run: node tools/issue_progress.mjs
