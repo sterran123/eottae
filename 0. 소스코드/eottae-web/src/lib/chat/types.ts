@@ -25,7 +25,11 @@ export interface ChatPartner {
   nickname: string;
 }
 
-/** 채팅방 목록 1건 (MATCH-007 목록 뷰). 서버 연동 시 `/conversations` 응답으로 교체. */
+/**
+ * 채팅방 목록 1건 (MATCH-007 목록 뷰). 서버 연동 시 `/conversations` 응답으로 교체.
+ * [ADR-003 / ADR-005 보안] 실제 서버 연동 시 대화방 목록과 메시지 열람은
+ * match 구성원 본인 확인 및 차단 여부를 Postgres RLS 정책으로 강제 필터링해야 한다.
+ */
 export interface ChatRoomInfo {
   id: string;
   partner: ChatPartner;

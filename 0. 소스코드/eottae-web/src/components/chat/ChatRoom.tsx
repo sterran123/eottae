@@ -11,7 +11,7 @@
 //  [MATCH-008] 헤더 더보기 메뉴 → 차단/신고. 차단 시 입력·전송·자동응답 즉시 정지(TC-009).
 // ============================================================
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { ChatMessage, ChatRoomInfo } from '@/lib/chat/types';
 import type { ReportRequest } from '@/lib/safety/types';
 import { DEMO_REPLIES } from '@/lib/chat/demo-data';
@@ -41,6 +41,7 @@ export default function ChatRoom({
   onClose,
   onLastMessage,
 }: ChatRoomProps) {
+  const menuId = useId();
   const partner = room.partner;
   const hasHandledQuestion = useRef(false);
 
@@ -235,13 +236,13 @@ export default function ChatRoom({
             className="mt-chat-menu-btn"
             aria-label="더보기 메뉴"
             aria-expanded={menuOpen}
-            aria-controls="mt-chat-menu-list"
+            aria-controls={menuId}
             onClick={() => setMenuOpen((o) => !o)}
           >
             <span aria-hidden="true">⋯</span>
           </button>
           {menuOpen && (
-            <ul id="mt-chat-menu-list" className="mt-chat-menu-list">
+            <ul id={menuId} className="mt-chat-menu-list">
               <li>
                 <button
                   type="button"

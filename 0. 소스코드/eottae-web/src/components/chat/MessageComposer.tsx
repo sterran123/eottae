@@ -6,7 +6,7 @@
 //  역할: 메시지 입력창 + 사진 첨부 + 음성 메모 녹음 (Record Audio).
 // ============================================================
 
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from 'react';
+import { useEffect, useId, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from 'react';
 import { MAX_MESSAGE_LENGTH } from '@/lib/chat/types';
 
 interface MessageComposerProps {
@@ -20,6 +20,7 @@ export default function MessageComposer({
   disabled = false,
   disabledReason,
 }: MessageComposerProps) {
+  const inputId = useId();
   const [value, setValue] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [recordSeconds, setRecordSeconds] = useState(0);
@@ -263,11 +264,11 @@ export default function MessageComposer({
           )}
         </button>
 
-        <label htmlFor="mt-chat-input" className="mt-chat-sr">
+        <label htmlFor={inputId} className="mt-chat-sr">
           메시지 입력
         </label>
         <textarea
-          id="mt-chat-input"
+          id={inputId}
           className="mt-chat-input"
           rows={1}
           value={value}

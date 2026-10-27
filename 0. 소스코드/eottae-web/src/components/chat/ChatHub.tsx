@@ -54,7 +54,19 @@ export default function ChatHub() {
 
   const closeRoom = useCallback(() => setActiveId(null), []);
 
+  // 패널이 열려 있는 동안 배경 페이지 스크롤 방지
+  useEffect(() => {
+    if (activeId) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [activeId]);
+
   // 추천 카드 "가볍게 물어보기"(?q=) 진입 → 첫 방을 열고 질문을 전송한다.
+  // [경계] DEMO에서는 DEMO_ROOMS[0]으로 고정하지만, 서버 연동 시에는 쿼리의 match id 대상 방으로 연결한다.
   useEffect(() => {
     if (initialQuestion && !handledQuestion.current) {
       handledQuestion.current = true;
@@ -93,12 +105,45 @@ export default function ChatHub() {
     }
   }, [activeId]);
 
-  // Esc로 닫기 — 더보기 메뉴·차단/신고 모달이 열려 있으면 그쪽 Esc가 먼저 처리되게 양보한다.
+  // 패널 내 포커스 트랩: 활성 패널 밖(헤더·푸터 등)으로 Tab 포커스가 빠져나가지 않도록 순환
+  useEffect(() => {
+    if (!activeId) return;
+    const panel = document.getElementById(`mt-chat-panel-${activeId}`);
+    if (!panel) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+      // 대화상자(dialog[open])는 브라우저가 자체 포커스를 가두므로 양보
+      if (panel.querySelector('dialog[open]')) return;
+
+      const focusables = panel.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), textarea:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusables.length === 0) return;
+
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [activeId]);
+
+  // Esc로 닫기 — 활성 패널 내의 더보기 메뉴·차단/신고 모달이 열려 있으면 그쪽 Esc가 먼저 처리되게 양보한다.
   useEffect(() => {
     if (!activeId) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || e.defaultPrevented) return;
-      if (document.querySelector('dialog[open], .mt-chat-menu-list')) return;
+      const activePanel = document.getElementById(`mt-chat-panel-${activeId}`);
+      if (activePanel?.querySelector('dialog[open], .mt-chat-menu-list')) return;
       closeRoom();
     };
     document.addEventListener('keydown', onKeyDown);

@@ -390,14 +390,59 @@
 - [버그수정] ai_code_review.mjs | 판정은 비어 있지 않은 마지막 줄만 인정(`verdictOf`), Devin API 4xx는 즉시 error 처리(25분 대기 없이), 세션 생성 4xx도 실패 경로로 합침 / CODEOWNERS | `tools/` → @sterran123 (AI 리뷰 권장 사항)
 - [검증] `node --check` PASS, 판정 파서 단위 테스트 6건(정상 통과·정상 수정필요·중간 PASS+끝 수정필요→수정필요·진행 메시지 PASS만→error·판정 없음·빈 값) 모두 기대대로. [미실행] Devin 메시지 API 페이지네이션 여부(AI 리뷰 권장, API 문서 미확인)
 
+## 2026-10-27 이슈 진행 자동 동기화 — 체크박스 자동 체크·자동 닫기 (김민기 작업)
+- [신규] tools/issue_progress.mjs | 머지된 PR이 끝낸 이슈 체크 항목 판정. 후보 이슈 = 본문 Closes/Refs > 작성자 담당 > 요구사항 ID 일치. 게이트(AI 리뷰 통과 또는 작성자 외 사람 Approve) → Devin 항목별 판정(done/partial/not_done/needs_human) → done 근거를 **이 PR의 추가 줄 + 머지 커밋 파일**과 기계 대조해 통과한 항목만 체크. 체크리스트가 전부 [x]면 이슈를 닫음. 사람이 본문에서 마지막 체크를 하면 AI 없이 닫음
+- [신규] .github/workflows/issue-progress.yml | 사람 머지(pull_request closed) · 봇 머지 후 dispatch · 이슈 본문 수정(issues edited) 트리거
+- [변경] tools/pr_review_bot.mjs | 사람 PR 머지 후 issue-progress dispatch(GITHUB_TOKEN 머지는 이벤트가 안 생김), 키워드 없는 PR에 추정 이슈 표시, Refs 인식, `api()` 객체 필드(JSON stdin) 지원, PIPELINE_TOOLS에 issue_progress 추가
+- [변경] .github/pull_request_template.md, README.md | Closes(다 끝냄)/Refs(일부) 구분 안내, 비워 둬도 자동 연결됨을 안내
+- [검증] `node --check` 2개 스크립트 PASS
+- [검증] `DRY_RUN=1 PR_NUMBER=28` — 키워드 없는 손준혁 PR에서 후보 #22(담당·MATCH-008·TC-009) 탐지, AI 리뷰 없는 PR이라 게이트에서 체크 생략 판정
+- [검증] 근거 대조 — PR #28 실데이터로 실제 인용(match-tokens.css:57) 통과, 지어낸 인용·diff 밖 파일은 거부
+- [검증] 체크박스 파싱·교체 — CRLF 본문에서 교체가 안 되던 버그 발견 후 수정, 재확인 PASS
+- [보안] AI 리뷰(#33) 지적 반영 — 사람 승인 게이트를 협력자·머지 head sha 승인으로 제한(공개 저장소 외부 Approve·옛 커밋 승인 우회 차단), 비협력자·포크 PR 생략
+- [버그수정] AI 리뷰(#33) 지적 반영 — 생략·실패 안내 코멘트가 '처리 완료' 마커를 달아 재실행이 막히던 문제 → 안내는 별도 마커(NOTE)
+- [변경] 요구사항 ID를 MATCH·ACT·INV·CORE·SEC·FR·TC 접두어로 제한(ADR 번호로 후보 폭증 방지), '46곳·모든·전부' 전수 항목은 자동 체크 안 함, 코드 펜스 안 체크박스 제외, 쓰기 직전 본문 재확인(동시 수정 덮어쓰기 방지), 닫힌 이슈 안내 문구 분기
+- [버그수정] AI 재리뷰(#33) 지적 반영 — 프롬프트용 체크박스 id가 코드 펜스를 세서 실제 id와 어긋나던 문제(엉뚱한 항목 체크·오닫기 가능) → id를 boxes() 하나에서 생성, 판정에 항목 문구를 함께 받아 id와 문구가 맞을 때만 체크
+- [변경] 실제로 [x]로 바꾼 항목만 '체크함'으로 보고, 같은 문구 fallback은 문구가 하나일 때만, ai-review 상태는 github-actions[bot]이 남긴 것만 인정, 긴 이슈 잘림을 프롬프트에 알림
+- [검증] 가짜 Devin 답변으로 판정 단계 E2E(PR #28·이슈 #22 실데이터, 쓰기 없음) — 진짜 근거 1건만 체크, 전수 항목·id/문구 불일치·지어낸 근거 거부, 사람 확인 항목 분리, 남은 항목 6/7 안내 확인
+- [보안] AI 3차 리뷰(#33) 지적 반영 — 후보 이슈를 협력자가 쓴 이슈로 제한(공개 저장소 외부 이슈 본문의 프롬프트 인젝션 차단), 이슈 수정 트리거 step에는 Devin 시크릿 미주입, AI가 쓴 이유 문구의 @멘션·링크 무력화·200자 제한
+- [변경] 이슈 수정 닫기는 '이번 수정으로 마지막 체크가 된 경우'만(PREV_BODY) — 전부 체크된 채 Reopen한 이슈를 다시 닫지 않음, concurrency 그룹 pr-/issue- 분리
+- [버그수정] AI 4차 리뷰(#33) 지적 반영 — PR 템플릿 HTML 주석의 예시 'Closes #20'을 실제 연결로 읽던 문제 → 두 스크립트 모두 주석 제거 후 키워드·ID 검사, 템플릿 예시도 '#이슈번호'로
+- [변경] SEC-00x는 후보 근거에서 제외(인프라 PR마다 #22가 후보가 되던 문제), 규칙 봇 추정 이슈를 issue_progress와 같은 기준(협력자 이슈·남은 항목)으로, 근거 대조 실패 사유에도 safe() 적용
+- [미구현/보류] Devin 메시지 API 페이지네이션 — ai_code_review.mjs와 같이 첫 페이지만 읽음(리뷰 세션은 메시지 수가 적어 현재 문제 없음)
+- [미구현/보류] 실제 Devin 판정·이슈 체크·닫기 — 머지 후 첫 사람 PR에서 확인
+
+## 2026-10-27 이슈 진행 동기화 보강 — 조기 닫힘 방지 (김민기 작업)
+- [검증] #33 머지 후 실제 실행 — Devin 판정 43초, 후보 #26·#22 중 끝낸 항목 없음으로 판정, 오체크·오닫기 없음
+- [버그수정] tools/issue_progress.mjs | 번호 목록(`1. [ ]`)·인용(`> - [ ]`) 체크박스를 세지 않아 남은 항목이 있어도 이슈가 닫힐 수 있던 문제 (#33 AI 리뷰 권장)
+- [변경] tools/issue_progress.mjs | id·문구가 어긋난 진행 중·사람 확인 판정은 보고에서 제외, 닫기 직전 이슈 상태 재확인(동시 실행 중복 닫기 방지)
+- [변경] tools/pr_review_bot.mjs | 추정 이슈의 남은 항목 판정도 같은 체크박스 형식으로
+- [검증] `node --check` PASS, 새 체크박스 정규식 6가지 형식 대조 PASS
+
+## 2026-10-27 MATCH-001·002·009 1차 매칭 UI 피드백 반영 및 파비콘 최적화 (오하율 작업)
+- [변경] src/lib/match/types.ts | PhotoVisibilitySetting DTO 분리(MATCH-001) — 사용자가 직접 고르는 설정값은 'hidden'|'preview'로 제한, 'revealed'는 서버가 쌍방 매칭 시에만 부여하는 fail-closed 계약 확립
+- [변경] src/components/match/OnboardingForm.tsx | 사진/프로필 공개범위 라디오 선택 UI 구현 ('실루엣 기본' vs '사진 미리보기 허용')
+- [변경] src/components/match/CommonQna.tsx | 공통 질문 거절/건너뛰기 및 다시 답변하기 기능 추가 (MATCH-009)
+- [변경] src/app/match/recommend/match-recommend.css | 320~360px 관심 버튼 카드 밖 넘침 보정, 44px 터치 패딩 확보, 추천 캐러셀 데스크톱 호버 네비게이션 적용
+- [변경] src/components/match/ProfileQna.tsx, CommonQna.tsx, OnboardingForm.tsx | CSS/TSX 내 하드코딩 색상을 --match-* 토큰으로 전환, 캐러셀 prefers-reduced-motion 및 닫기 버튼 44px 확보
+- [신규] tools/generate_favicons.mjs | 탭 파비콘 투명화 및 apple-touch-icon/PWA 아이콘(#faf9fe 불투명 배경) 최적화 생성 스크립트
+- [검증] `npm run typecheck` PASS / `npm run build` PASS (정적 17개 라우트 전수 생성 확인)
+- [검증] 360px 및 다크 테마(7모드) 레이아웃 수동 확인 PASS
+- [설계] 온보딩 사진 공개범위 DTO fail-closed 설계 (미지정 시 기본 'hidden' 처리, 무단 revealed 조작 방지. 향후 주한태 백엔드 연동 시 DB CHECK 제약 적용 예정)
+- [미실행] 서비스워커 오프라인 캐시 및 iOS/Android 실기기 육안 검증 — 김민기님 담당 이슈 #26으로 공식 이관
+
 ## 2026-10-27 MATCH-007 카카오톡 스타일 채팅 목록(ChatList) 및 우측 슬라이드 패널 구현 (손준혁 작업)
 - [요청] 가상 채팅방 목록 3~4개(ChatList), 대화방 클릭 시 카카오톡처럼 우측 팝업/패널(ChatRoom) 오픈, 우측 상단 닫기(X)로 목록 복귀, 기존 차단/신고 기능 100% 유지
 - [신규] src/components/chat/ChatList.tsx | 가상 대화방 목록 뷰 — 이니셜 아바타, 닉네임, 마지막 메시지 미리보기(말줄임), 시간 레이블, 안 읽은 메시지 배지(99+ 대응)
-- [신규] src/components/chat/ChatHub.tsx | 대화방 목록과 우측 슬라이드 패널 조율 오케스트레이터 — 방 선택 시 `activeId` 상태 전환, 패널 열림 중 목록 `inert` 처리, 백드롭 클릭 및 Esc 닫기(다이얼로그/메뉴 열림 우선 처리), 닫기 시 기존 선택 아이템 포커스 복귀, 한 번 열린 방 언마운트 없이 상태 보존
-- [변경] src/lib/chat/types.ts & src/lib/chat/demo-data.ts | `ChatRoomInfo` 인터페이스 정의 및 4개 가상 대화방(데모 상대, 러닝 메이트, 전시 친구, 보드게임 러버) 샘플 데이터/초기 메시지 구성
-- [변경] src/components/chat/ChatRoom.tsx | 단일 데모 상대 하드코딩 제거 → `room` props 기반으로 일반화, 우측 상단 닫기(`✕`) 버튼 추가, 메시지 발생 시 목록 미리보기 갱신 콜백(`onLastMessage`) 연동, 차단/신고 모달에 해당 방의 상대 정보 바인딩
+- [신규] src/components/chat/ChatHub.tsx | 대화방 목록과 우측 슬라이드 패널 조율 오케스트레이터 — 방 선택 시 `activeId` 상태 전환, 패널 열림 중 목록 `inert` 및 `body` 스크롤 락(`overflow: hidden`), 패널 내 키보드 Tab 포커스 순환(포커스 트랩), 백드롭 클릭 및 Esc 닫기(활성 패널 내 모달/메뉴 열림 우선 처리), 닫기 시 선택했던 목록 버튼으로 포커스 복귀, 한 번 열린 방 언마운트 없이 상태 보존
+- [변경] src/lib/chat/types.ts & src/lib/chat/demo-data.ts | `ChatRoomInfo` 인터페이스 정의(ADR-003 RLS 보안 메모 추가) 및 4개 가상 대화방(데모 상대, 러닝 메이트, 전시 친구, 보드게임 러버) 샘플 데이터/초기 메시지 구성
+- [변경] src/components/chat/ChatRoom.tsx | 단일 데모 상대 하드코딩 제거 → `room` props 기반으로 일반화, 우측 상단 닫기(`✕`) 버튼(44px) 추가, 메시지 발생 시 목록 미리보기 갱신 콜백(`onLastMessage`) 연동, 차단/신고 모달에 해당 방의 상대 정보 바인딩, 더보기 메뉴 `menuId`에 `useId()` 적용
+- [변경] src/components/safety/BlockConfirmModal.tsx & ReportModal.tsx | 다중 방 유지 시 DOM ID 충돌 및 스크린리더 오독(MATCH-008 회귀) 방지를 위해 `titleId`, `detailId`, `categoryName`에 `useId()` 적용
+- [변경] src/components/chat/MessageComposer.tsx | 다중 방 유지 시 `inputId`에 `useId()` 적용하여 label-textarea 접근성 바인딩 보장
 - [변경] src/app/match/chat/page.tsx | `ChatRoom` 직접 렌더링 대신 `ChatHub` 렌더링으로 라우트 진입점 연결
 - [변경] src/app/match/chat/match-chat.css | 목록 카드, 아이템 호버/포커스, 뱃지, 고정 백드롭(`--match-dim`), 우측 슬라이드 패널(`mt-chat-panel`, slide-in 트랜지션, `prefers-reduced-motion` 대응) 스타일 추가
 - [검증] `npm run typecheck` PASS / `npm run build` PASS (정적 17개 라우트 생성, `/match/chat` 7.22 kB 정상 빌드)
-- [안전성] 기존 MATCH-008 차단(즉시 입력 비활성화·응답 취소·해제 확인 모달)/신고 모달 로직 온전히 유지
+- [검증] 브라우저 및 키보드 실검증: 모바일 360px 폭에서 패널 전체 너비 렌더링 확인, 6개 테마(라이트/다크/cyberpunk 등) 배경 딤(`--match-dim`) 및 UI 가독성 확인, 키보드 Tab 포커스 트랩 및 Esc 닫기, 닫기 후 트리거 버튼 포커스 복귀, 다중 방 개설 후 차단/신고 모달 시 상대방 닉네임 일치 확인, `prefers-reduced-motion` 시 애니메이션 생략 확인
+- [안전성] 기존 MATCH-008 차단(즉시 입력 비활성화·응답 취소·해제 확인 모달)/신고 모달 로직 100% 온전히 유지
+- [미실행] 실제 Supabase DB 영속화/RLS(MATCH-003, ADR-005) 및 Realtime WebSocket 채널 연동(주한태 담당 백엔드 구현 대기)
 
