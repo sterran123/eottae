@@ -4,13 +4,15 @@
 
    경로는 루트('/')가 아니라 등록 스코프 기준으로 계산한다 — GitHub Pages의
    '/eottae/' 하위 배포와 로컬 루트 서빙을 같은 파일로 지원하기 위해서다. */
-const CACHE = 'eottae-shell-v3';
+const CACHE = 'eottae-shell-v4';
 // 등록 스코프 URL의 경로 — 로컬 루트는 '/', Pages는 '/eottae/'. 항상 '/'로 끝난다.
 const BASE = new URL(self.registration.scope).pathname;
 const PRECACHE = [
   BASE,
   `${BASE}offline`,
   `${BASE}manifest.webmanifest`,
+  `${BASE}favicon.ico`,
+  `${BASE}icons/favicon-32x32.png`,
   `${BASE}icons/icon-192.png`,
   `${BASE}icons/icon-512.png`,
   `${BASE}icons/apple-touch-icon.png`,

@@ -267,3 +267,21 @@ export function IconSparkle(p: IconProps) {
     </svg>
   );
 }
+
+export function IconChevronLeft(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      {p.title && <title>{p.title}</title>}
+      <path d="M15 6l-6 6l6 6" />
+    </svg>
+  );
+}
+
+export function IconChevronRight(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      {p.title && <title>{p.title}</title>}
+      <path d="M9 6l6 6l-6 6" />
+    </svg>
+  );
+}

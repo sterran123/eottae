@@ -14,10 +14,14 @@ export const metadata: Metadata = {
   manifest: '/eottae/manifest.webmanifest',
   icons: {
     icon: [
+      { url: '/eottae/icons/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/eottae/icons/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
       { url: '/eottae/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
       { url: '/eottae/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+      { url: '/eottae/favicon.ico' },
     ],
     apple: [{ url: '/eottae/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+    shortcut: ['/eottae/favicon.ico'],
   },
   appleWebApp: {
     capable: true,

@@ -186,6 +186,7 @@
   border-radius: 10px;
   justify-content: center;
   padding: 8px 0;
+  min-height: 44px;
   background: var(--match-paper);
   border: 0.5px solid var(--match-line-soft);
   color: var(--match-sub);
@@ -209,7 +210,8 @@
 /* 알약 버튼 */
 .mt-pill {
   font-size: 11px;
-  padding: 7px 13px;
+  padding: 8px 14px;
+  min-height: 44px;
   border-radius: 99px;
   background: var(--match-paper);
   border: 0.5px solid var(--match-chip-line);
@@ -235,7 +237,7 @@
   background: var(--match-paper);
   border: 0.5px dashed var(--match-chip-line);
   border-radius: 12px;
-  padding: 11px 13px;
+  padding: 8px 13px;
 }
 .mt-onb__avoid-toggle {
   width: 100%;
@@ -244,7 +246,8 @@
   justify-content: space-between;
   background: none;
   border: none;
-  padding: 0;
+  padding: 10px 0;
+  min-height: 44px;
   font-family: inherit;
   font-size: 12px;
   color: var(--match-sub);
@@ -518,7 +521,7 @@
   left: 0;
   top: 0;
   bottom: 0;
-  background: linear-gradient(90deg, #ff8fa3, #ff4d6d);
+  background: linear-gradient(90deg, var(--match-accent), var(--match-accent-solid));
   border-radius: 99px;
   transition: width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -548,7 +551,7 @@
 .mt-dist-gauge__dot.is-active {
   border-color: var(--match-accent-solid);
   background: var(--match-paper);
-  box-shadow: 0 0 0 2.5px rgba(255, 77, 109, 0.25);
+  box-shadow: 0 0 0 2.5px var(--match-line-soft);
 }
 .mt-dist-gauge__input {
   position: absolute;
@@ -604,8 +607,8 @@
 .mt-dist-gauge__summary-badge {
   font-size: 10.5px;
   font-weight: 600;
-  color: var(--match-accent-solid);
-  background: rgba(255, 77, 109, 0.1);
+  color: var(--match-accent-ink);
+  background: var(--match-soft);
   padding: 2px 8px;
   border-radius: 99px;
 }
@@ -614,6 +617,59 @@
   color: var(--match-sub);
   margin: 0;
   line-height: 1.4;
+}
+
+/* 공개범위 설정 (MATCH-001) */
+.mt-onb__privacy-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mt-onb__privacy-opt {
+  width: 100%;
+  text-align: left;
+  border: 0.5px solid var(--match-line-soft);
+  background: var(--match-paper);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-family: inherit;
+  color: var(--match-sub);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.mt-onb__privacy-opt.is-on {
+  border: 1.5px solid var(--match-accent);
+  background: var(--match-soft);
+  color: var(--match-ink);
+}
+.mt-onb__privacy-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.mt-onb__privacy-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--match-ink);
+}
+.mt-onb__privacy-badge {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 99px;
+  background: var(--match-ok-bg);
+  color: var(--match-ok-ink);
+  font-weight: 500;
+}
+.mt-onb__privacy-badge--acorn {
+  background: var(--match-acorn-bg);
+  color: var(--match-acorn-ink);
+}
+.mt-onb__privacy-desc {
+  font-size: 11.5px;
+  color: var(--match-sub);
+  margin: 0;
+  line-height: 1.45;
 }
 
 /* 안전 안내 */
@@ -640,23 +696,12 @@
 
 /* 오류 */
 .mt-onb__errors {
-  margin: 0 18px 12px;
-  padding: 10px 12px 10px 28px;
-  background: var(--match-soft);
-  border-radius: 10px;
-  color: var(--match-err-ink);
-  font-size: 12px;
-  line-height: 1.6;
-}
-
-/* 액션 */
-.mt-onb__errors {
   margin: 0 18px 14px;
   padding: 12px 14px;
   border-radius: 12px;
-  background: var(--match-warn-bg, #fff5f5);
-  border: 1px solid var(--match-warn-line, #ffc9c9);
-  color: var(--match-err-ink, #e03131);
+  background: var(--match-warn-bg);
+  border: 1px solid var(--match-warn-line);
+  color: var(--match-err-ink);
   font-size: 12px;
   line-height: 1.5;
   list-style: disc inside;
@@ -664,6 +709,8 @@
   flex-direction: column;
   gap: 4px;
 }
+
+/* 액션 */
 .mt-onb__actions {
   display: flex;
   gap: 9px;
@@ -671,11 +718,15 @@
 }
 .mt-btn {
   padding: 12px;
+  min-height: 44px;
   border-radius: 12px;
   font-size: 13.5px;
   font-family: inherit;
   cursor: pointer;
   border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .mt-btn--ghost {
   flex: 0 0 auto;

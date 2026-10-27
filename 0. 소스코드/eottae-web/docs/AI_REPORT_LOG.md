@@ -419,3 +419,14 @@
 - [변경] tools/pr_review_bot.mjs | 추정 이슈의 남은 항목 판정도 같은 체크박스 형식으로
 - [검증] `node --check` PASS, 새 체크박스 정규식 6가지 형식 대조 PASS
 
+## 2026-10-27 MATCH-001·002·009 1차 매칭 UI 피드백 반영 및 파비콘 최적화 (오하율 작업)
+- [변경] src/lib/match/types.ts | PhotoVisibilitySetting DTO 분리(MATCH-001) — 사용자가 직접 고르는 설정값은 'hidden'|'preview'로 제한, 'revealed'는 서버가 쌍방 매칭 시에만 부여하는 fail-closed 계약 확립
+- [변경] src/components/match/OnboardingForm.tsx | 사진/프로필 공개범위 라디오 선택 UI 구현 ('실루엣 기본' vs '사진 미리보기 허용')
+- [변경] src/components/match/CommonQna.tsx | 공통 질문 거절/건너뛰기 및 다시 답변하기 기능 추가 (MATCH-009)
+- [변경] src/app/match/recommend/match-recommend.css | 320~360px 관심 버튼 카드 밖 넘침 보정, 44px 터치 패딩 확보, 추천 캐러셀 데스크톱 호버 네비게이션 적용
+- [변경] src/components/match/ProfileQna.tsx, CommonQna.tsx, OnboardingForm.tsx | CSS/TSX 내 하드코딩 색상을 --match-* 토큰으로 전환, 캐러셀 prefers-reduced-motion 및 닫기 버튼 44px 확보
+- [신규] tools/generate_favicons.mjs | 탭 파비콘 투명화 및 apple-touch-icon/PWA 아이콘(#faf9fe 불투명 배경) 최적화 생성 스크립트
+- [검증] `npm run typecheck` PASS / `npm run build` PASS (정적 17개 라우트 전수 생성 확인)
+- [검증] 360px 및 다크 테마(7모드) 레이아웃 수동 확인 PASS
+- [설계] 온보딩 사진 공개범위 DTO fail-closed 설계 (미지정 시 기본 'hidden' 처리, 무단 revealed 조작 방지. 향후 주한태 백엔드 연동 시 DB CHECK 제약 적용 예정)
+- [미실행] 서비스워커 오프라인 캐시 및 iOS/Android 실기기 육안 검증 — 김민기님 담당 이슈 #26으로 공식 이관
