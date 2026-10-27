@@ -1,28 +1,38 @@
 # 팀 활동 리포트 — 2026-10-27 (자동 생성)
 
 > 생성: `.github/workflows/team-sync.yml` → `tools/team_activity_report.mjs`
-> 집계 기간: 최근 7일 (2026. 10. 20. 14시 6분 5초 ~ 2026. 10. 27. 14시 6분 7초) · 저장소: sterran123/eottae · 조회 방식: gh
+> 집계 기간: 최근 7일 (2026. 10. 20. 17시 31분 36초 ~ 2026. 10. 27. 17시 31분 40초) · 저장소: sterran123/eottae · 조회 방식: gh
 
 ## main 브랜치 건강 상태
-- 최신 커밋: `1b1310b` feat(CORE-002): 디자인 패스 2차 — 홈 리디자인·WCAG AA 전수 보정·match 테마 추적 복원·README (#18) (김민기, 2026. 10. 27. 14시 5분 34초)
-- CI 상태: ⏳ sync 진행 중
+- 최신 커밋: `5f646e4` fix(ci): ai-review 판정은 마지막 줄만 인정(fail-open 차단) + Devin 4xx 즉시 오류 + CODEOWNERS tools/ (#32) (김민기, 2026. 10. 27. 17시 31분 0초)
+- CI 상태: ⏳ check 진행 중
 
 ## 팀원별 활동 (최근 7일)
 
 | 팀원 | main 커밋 | 열린 PR | 머지된 PR | 다룬 요구사항 ID |
 |---|---|---|---|---|
-| 김민기 (@sterran123) | 29 | 0 | 2 | CORE-002, SEC-002, CORE-003, BRAND-004, CORE-001 |
+| 김민기 (@sterran123) | 34 | 0 | 7 | SEC-002, CORE-001, CORE-004, MATCH-003, CORE-002, CORE-003, BRAND-004, SEC-001, MATCH-004, MATCH-005, MATCH-007 |
 | 오하율 (@HaYul0611) | 7 | 0 | 7 | MATCH-001, MATCH-002, MATCH-009, MATCH-003 |
-| 주한태 (@gksxogksxo1001-sketch) | 0 | 0 | 0 | — |
-| 손준혁 (@sonjunhyek2) | 3 | 0 | 3 | MATCH-008, MATCH-007, SEC-002 |
+| 주한태 (@gksxogksxo1001-sketch) | 1 | 0 | 1 | MATCH-003, MATCH-004 |
+| 손준혁 (@sonjunhyek2) | 4 | 0 | 4 | MATCH-008, MATCH-007, SEC-002 |
 
 
-## 열린 PR (0건)
+## 열린 PR (1건)
 
-현재 열린 PR이 없습니다.
+| # | 제목 | 작성자 | CI | 최근 갱신 |
+|---|---|---|---|---|
+| #25 | 🤖 팀 활동 리포트·매니페스트 자동 갱신 (2026-10-27) | GitHub Actions | 없음 | 2026. 10. 27. 17시 25분 50초 |
 
-## 최근 7일 머지된 PR (17건)
+## 최근 7일 머지된 PR (25건)
 
+- #32 fix(ci): ai-review 판정은 마지막 줄만 인정 — fail-open 차단 (#31 AI 리뷰 지적) — 김민기 (2026. 10. 27. 17시 31분 0초)
+- #31 fix(SEC-002): ai-review — VERDICT 응답이 나오면 즉시 채택 (시간 초과 대응) — 김민기 (2026. 10. 27. 17시 24분 43초)
+- #30 feat(SEC-002): team-sync를 main push마다 실행 + 봇 PR 머지 무한 반복 방지 — 김민기 (2026. 10. 27. 16시 54분 27초)
+- #29 feat(SEC-002): 리뷰 봇 판정 강화 — AI 코드 리뷰·보안 스캔·draft/봇 PR 판정·이슈 자동 종료 안내 — 김민기 (2026. 10. 27. 16시 33분 52초)
+- #28 fix(MATCH-008): --match-dim 토큰 추가 및 차단 해제 확인 모달·안전성 개선 — 손준혁 (2026. 10. 27. 15시 53분 38초)
+- #27 docs(CORE-001): ADR-005 백엔드 = Supabase + GitHub Pages 확정 · CODEOWNERS·배포 Secrets 주입 (#23) — 김민기 (2026. 10. 27. 15시 14분 47초)
+- #24 feat(MATCH-003): 사용자 인증 및 세션 검증·RLS 보안 구현 — 주한태 (2026. 10. 27. 14시 57분 6초)
+- #19 🤖 팀 활동 리포트·매니페스트 자동 갱신 (2026-10-27) — GitHub Actions (2026. 10. 27. 14시 42분 58초)
 - #18 feat(CORE-002): 디자인 패스 2차 — 홈 리디자인·WCAG AA 전수 보정·match 테마 추적 복원·README — 김민기 (2026. 10. 27. 14시 5분 35초)
 - #17 🤖 팀 활동 리포트·매니페스트 자동 갱신 (2026-10-27) — GitHub Actions (2026. 10. 27. 12시 47분 30초)
 - #16 feat(MATCH-008): 신고 사유 모달 및 차단 시스템 구현 — 손준혁 (2026. 10. 27. 10시 14분 59초)
@@ -41,24 +51,32 @@
 - #1 feat(MATCH-001): 취향 온보딩 UI (DEMO) — 오하율 (2026. 10. 25. 4시 56분 2초)
 - #4 feat(MATCH-009): 공통 질문·궁합 토스트 (DEMO) — 오하율 (2026. 10. 24. 19시 41분 10초)
 
-## 활성 브랜치 (12개)
+## 활성 브랜치 (20개)
 
 - `auto/team-sync`
+- `feat/ADR-005-supabase-pages`
 - `feat/MATCH-001-002-match-ui`
 - `feat/MATCH-001-onboarding`
+- `feat/MATCH-003-auth-session`
 - `feat/MATCH-007-chat`
 - `feat/MATCH-008-safety`
 - `feat/MATCH-009-common`
 - `feat/MATCH-a11y-8`
+- `feat/SEC-002-review-gates`
+- `feat/SEC-002-team-sync-on-push`
 - `feat/design-pass`
 - `feat/design-pass-2`
 - `feat/match-ui-mvp1`
+- `fix/MATCH-001-002-009-feedback`
 - `fix/MATCH-007-hydration`
+- `fix/MATCH-008-safety-polish`
+- `fix/SEC-002-ai-review-polling`
+- `fix/ci-ai-review-verdict-last-line`
 - `main` 🔒
 
 ## 다음 액션 제안
 
-- 기간 내 활동이 잡히지 않은 팀원: 주한태 — 진행 상황 확인 또는 작업 배정 점검
+- 리뷰 대기 중인 PR 1건 — CODEOWNERS 담당 리뷰어 확인 필요
 
 ---
 이 파일은 스케줄 워크플로가 자주 갱신하므로 수동 편집 대신 스크립트를 고쳐 주세요.
