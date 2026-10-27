@@ -71,8 +71,8 @@ export interface OnboardingDraft {
   interestIds: string[];
   /** 선호하는 거리 유형 (예: 5km 이내, 거리 무관 등) */
   preferredDistance?: string | null;
-  /** 프로필/사진 공개범위 설정 (MATCH-001) */
-  photoVisibility?: PhotoVisibility;
+  /** 프로필/사진 공개범위 설정 (MATCH-001) - 미지정 시 서버는 'hidden'으로 처리(fail-closed) */
+  photoVisibility?: PhotoVisibilitySetting;
 }
 
 // ---- 유효성 규칙 (UI와 서버가 공유) ----
@@ -90,7 +90,8 @@ export interface SaveOnboardingRequest {
   relationGoal: RelationGoal;
   interestIds: string[];
   preferredDistance?: string | null;
-  photoVisibility?: PhotoVisibility;
+  /** 미지정 시 서버는 'hidden'으로 처리(fail-closed) */
+  photoVisibility?: PhotoVisibilitySetting;
 }
 
 // ---- 표준 에러 형식 (API_계약_초안.md 준수) ----
@@ -117,6 +118,9 @@ export interface ApiError {
  * [안전] 공개는 상대 동의가 전제다. 보는 사람이 상태를 바꿀 수 없다.
  */
 export type PhotoVisibility = 'hidden' | 'preview' | 'revealed';
+
+/** 본인이 고르는 사진 공개 설정. 'revealed'는 서버가 쌍방 관심으로만 계산한다. */
+export type PhotoVisibilitySetting = Exclude<PhotoVisibility, 'revealed'>; // 'hidden' | 'preview'
 
 /** 대략 거리 구간. 정밀 좌표/주소는 쓰지 않는다(안전정책). */
 export type DistanceBand = 'same_town' | 'within_3km' | 'within_5km' | 'within_10km';

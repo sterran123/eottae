@@ -32,7 +32,7 @@ import {
   type MbtiType,
   type MyMbti,
   type OnboardingDraft,
-  type PhotoVisibility,
+  type PhotoVisibilitySetting,
   type RelationGoal,
   type VerifiedIdentity,
 } from '@/lib/match/types';
@@ -130,7 +130,7 @@ export default function OnboardingForm({
   const [preferredDistance, setPreferredDistance] =
     useState<DistancePreference>('within_10km');
   const [photoVisibility, setPhotoVisibility] =
-    useState<PhotoVisibility>('hidden');
+    useState<PhotoVisibilitySetting>('hidden');
   // 펼쳐진 관심사 카테고리(아코디언). 기본은 첫 카테고리만 열림.
   const [openCats, setOpenCats] = useState<Set<InterestCategoryId>>(
     () => new Set([INTEREST_CATEGORIES[0]?.id].filter(Boolean) as InterestCategoryId[]),
