@@ -440,3 +440,9 @@
 - [미구현/보류] 1. 프로젝트 계획서/어때_팀_WBS_요구사항_테스트_제출체크_통합관리.xlsx — 담당자 변경이 아니라 작업 추가라 엑셀은 그대로 둠
 - [미구현/보류] Supabase 프로젝트 실제 생성·Secrets 등록 — 김민기 계정 로그인이 필요해 직접 진행
 
+## 2026-10-27 Supabase 안내 보강 — PR #39 AI 리뷰 권장 반영 (김민기 작업)
+- [보안] HANDOFF §14·ADR-005 | service_role은 복사·등록하지 않음(클라우드 Edge Function에 `SUPABASE_SERVICE_ROLE_KEY` 자동 제공), 외부 키만 `secrets set`. Owner 계정 2FA, `db push --dry-run` 선확인, 공개 전 Redirect URL 축소, 부재 시 임시 권한 위임 절차 추가
+- [변경] ADR-005·.env.example | 공개 키를 Publishable key로 팀 통일(변수 이름은 ANON_KEY 유지), 앞 문단 표현 통일
+- [변경] 실행_결정대기_로그 | DEC-08 행을 DEC-07 뒤로 정렬
+- [검증] 문서만 변경 — 코드 실행 없음. 직전 #39 작업도 문서 변경만이라 실행한 검증 없음(빌드 CI만 통과)
+
