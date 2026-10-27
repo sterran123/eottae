@@ -389,3 +389,26 @@
 - [검증·실환경] 폴링 수정(#31) 머지 후 `/ai-review` 재실행 — **2분 만에 판정 완료**, PR 코멘트 + 상태 `failure` 기록까지 정상. AI 리뷰가 #31 코드에서 fail-open 결함(중간 줄의 `VERDICT: PASS`도 판정으로 인정) 지적
 - [버그수정] ai_code_review.mjs | 판정은 비어 있지 않은 마지막 줄만 인정(`verdictOf`), Devin API 4xx는 즉시 error 처리(25분 대기 없이), 세션 생성 4xx도 실패 경로로 합침 / CODEOWNERS | `tools/` → @sterran123 (AI 리뷰 권장 사항)
 - [검증] `node --check` PASS, 판정 파서 단위 테스트 6건(정상 통과·정상 수정필요·중간 PASS+끝 수정필요→수정필요·진행 메시지 PASS만→error·판정 없음·빈 값) 모두 기대대로. [미실행] Devin 메시지 API 페이지네이션 여부(AI 리뷰 권장, API 문서 미확인)
+
+## 2026-10-27 이슈 진행 자동 동기화 — 체크박스 자동 체크·자동 닫기 (김민기 작업)
+- [신규] tools/issue_progress.mjs | 머지된 PR이 끝낸 이슈 체크 항목 판정. 후보 이슈 = 본문 Closes/Refs > 작성자 담당 > 요구사항 ID 일치. 게이트(AI 리뷰 통과 또는 작성자 외 사람 Approve) → Devin 항목별 판정(done/partial/not_done/needs_human) → done 근거를 **이 PR의 추가 줄 + 머지 커밋 파일**과 기계 대조해 통과한 항목만 체크. 체크리스트가 전부 [x]면 이슈를 닫음. 사람이 본문에서 마지막 체크를 하면 AI 없이 닫음
+- [신규] .github/workflows/issue-progress.yml | 사람 머지(pull_request closed) · 봇 머지 후 dispatch · 이슈 본문 수정(issues edited) 트리거
+- [변경] tools/pr_review_bot.mjs | 사람 PR 머지 후 issue-progress dispatch(GITHUB_TOKEN 머지는 이벤트가 안 생김), 키워드 없는 PR에 추정 이슈 표시, Refs 인식, `api()` 객체 필드(JSON stdin) 지원, PIPELINE_TOOLS에 issue_progress 추가
+- [변경] .github/pull_request_template.md, README.md | Closes(다 끝냄)/Refs(일부) 구분 안내, 비워 둬도 자동 연결됨을 안내
+- [검증] `node --check` 2개 스크립트 PASS
+- [검증] `DRY_RUN=1 PR_NUMBER=28` — 키워드 없는 손준혁 PR에서 후보 #22(담당·MATCH-008·TC-009) 탐지, AI 리뷰 없는 PR이라 게이트에서 체크 생략 판정
+- [검증] 근거 대조 — PR #28 실데이터로 실제 인용(match-tokens.css:57) 통과, 지어낸 인용·diff 밖 파일은 거부
+- [검증] 체크박스 파싱·교체 — CRLF 본문에서 교체가 안 되던 버그 발견 후 수정, 재확인 PASS
+- [보안] AI 리뷰(#33) 지적 반영 — 사람 승인 게이트를 협력자·머지 head sha 승인으로 제한(공개 저장소 외부 Approve·옛 커밋 승인 우회 차단), 비협력자·포크 PR 생략
+- [버그수정] AI 리뷰(#33) 지적 반영 — 생략·실패 안내 코멘트가 '처리 완료' 마커를 달아 재실행이 막히던 문제 → 안내는 별도 마커(NOTE)
+- [변경] 요구사항 ID를 MATCH·ACT·INV·CORE·SEC·FR·TC 접두어로 제한(ADR 번호로 후보 폭증 방지), '46곳·모든·전부' 전수 항목은 자동 체크 안 함, 코드 펜스 안 체크박스 제외, 쓰기 직전 본문 재확인(동시 수정 덮어쓰기 방지), 닫힌 이슈 안내 문구 분기
+- [버그수정] AI 재리뷰(#33) 지적 반영 — 프롬프트용 체크박스 id가 코드 펜스를 세서 실제 id와 어긋나던 문제(엉뚱한 항목 체크·오닫기 가능) → id를 boxes() 하나에서 생성, 판정에 항목 문구를 함께 받아 id와 문구가 맞을 때만 체크
+- [변경] 실제로 [x]로 바꾼 항목만 '체크함'으로 보고, 같은 문구 fallback은 문구가 하나일 때만, ai-review 상태는 github-actions[bot]이 남긴 것만 인정, 긴 이슈 잘림을 프롬프트에 알림
+- [검증] 가짜 Devin 답변으로 판정 단계 E2E(PR #28·이슈 #22 실데이터, 쓰기 없음) — 진짜 근거 1건만 체크, 전수 항목·id/문구 불일치·지어낸 근거 거부, 사람 확인 항목 분리, 남은 항목 6/7 안내 확인
+- [보안] AI 3차 리뷰(#33) 지적 반영 — 후보 이슈를 협력자가 쓴 이슈로 제한(공개 저장소 외부 이슈 본문의 프롬프트 인젝션 차단), 이슈 수정 트리거 step에는 Devin 시크릿 미주입, AI가 쓴 이유 문구의 @멘션·링크 무력화·200자 제한
+- [변경] 이슈 수정 닫기는 '이번 수정으로 마지막 체크가 된 경우'만(PREV_BODY) — 전부 체크된 채 Reopen한 이슈를 다시 닫지 않음, concurrency 그룹 pr-/issue- 분리
+- [버그수정] AI 4차 리뷰(#33) 지적 반영 — PR 템플릿 HTML 주석의 예시 'Closes #20'을 실제 연결로 읽던 문제 → 두 스크립트 모두 주석 제거 후 키워드·ID 검사, 템플릿 예시도 '#이슈번호'로
+- [변경] SEC-00x는 후보 근거에서 제외(인프라 PR마다 #22가 후보가 되던 문제), 규칙 봇 추정 이슈를 issue_progress와 같은 기준(협력자 이슈·남은 항목)으로, 근거 대조 실패 사유에도 safe() 적용
+- [미구현/보류] Devin 메시지 API 페이지네이션 — ai_code_review.mjs와 같이 첫 페이지만 읽음(리뷰 세션은 메시지 수가 적어 현재 문제 없음)
+- [미구현/보류] 실제 Devin 판정·이슈 체크·닫기 — 머지 후 첫 사람 PR에서 확인
+

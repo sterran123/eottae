@@ -38,10 +38,12 @@
 //      머지는 판정한 head sha를 조건으로 걸어 중간에 새 push가 오면 API가 거부한다
 //      (승인의 commit_id는 거부되지 않고 stale 리뷰로 기록된다 — 차단은 머지 가드가 담당).
 //      CODEOWNERS 등 보호 규칙에 막히면 "승인 완료·사람 머지 필요" 코멘트
-//  연결 이슈: 본문에 Closes #번호가 없으면 표에 안내(머지는 막지 않음)
+//  연결 이슈: 본문에 Closes/Refs #번호가 없으면 작성자 담당·요구사항 ID로 추정한 이슈를 표에 안내
+//      (머지는 막지 않음). 머지 후 issue-progress가 끝낸 항목을 검증해 체크하고 다 되면 닫는다
 // 모든 목록 조회(files/comments/reviews/check-runs)는 전 페이지를 따라간다 —
 // 첫 페이지만 보면 100개 이후 위치에 민감 파일을 숨겨 검사를 우회할 수 있다.
-// 머지가 한 건이라도 성공하면 deploy-pages·team-sync를 dispatch해 사이트/매니페스트를 갱신한다.
+// 머지가 한 건이라도 성공하면 deploy-pages·team-sync를 dispatch해 사이트/매니페스트를 갱신하고,
+// 사람 PR마다 issue-progress를 dispatch해 이슈 체크 항목을 갱신한다.
 // (GITHUB_TOKEN 머지는 push 이벤트를 트리거하지 못하므로 dispatch가 필요)
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
@@ -90,6 +92,7 @@ const PIPELINE_TOOLS = new Set([
   "tools/devin_pr_watch.mjs",
   "tools/ai_code_review.mjs", // DEVIN 시크릿으로 실행 — 판정 로직 자체가 머지 게이트
   "tools/devin_mention_bridge.mjs",
+  "tools/issue_progress.mjs", // 이슈 체크·닫기 판정
 ]);
 // 인증·DB·RLS 보안 코드 (ADR-005) — CI는 동작 여부만 보고 '안전한지'는 못 본다.
 // 위조 가능한 세션 서명·하드코딩 키가 CI 통과만으로 자동 머지된 사례(#24) 이후 사람 리뷰 필수.
@@ -180,7 +183,26 @@ function scanSafety(files) {
 }
 
 // 연결 이슈 — 본문에 Closes #번호가 있으면 머지 때 GitHub이 그 이슈를 자동으로 닫는다
-const linkedIssues = (body) => [...String(body || "").matchAll(CLOSES)].map((m) => `#${m[3]}`);
+// HTML 주석(PR 템플릿 안내문)의 예시 "Closes #20"을 실제 연결로 읽지 않는다
+const visible = (body) => String(body || "").replace(/<!--[\s\S]*?-->/g, "");
+const linkedIssues = (body) => [...visible(body).matchAll(CLOSES)].map((m) => `#${m[3]}`);
+const REFS = /\b(refs?|related\s+to|part\s+of)\s*:?\s+#(\d+)/gi;
+// 요구사항·테스트 케이스 접두어만 — ADR 번호와 SEC-00x(인프라 PR 거의 전부가 표기)는 근거로 쓰지 않는다
+const REQ_ID = /\b(MATCH|ACT|INV|CORE|FR|TC)-\d{3}\b/g;
+// 키워드가 없을 때 관련 이슈 추정 — tools/issue_progress.mjs와 같은 기준:
+// 협력자가 쓴 이슈 중 남은 체크 항목이 있고, 작성자 담당이거나 요구사항 ID(MATCH-001 등)가 겹치는 것
+const guessIssues = (pr, openIssues) => {
+  const ids = `${pr.title}\n${pr.head?.ref}\n${visible(pr.body)}`.match(REQ_ID) || [];
+  return openIssues
+    .filter(
+      (i) =>
+        MEMBER_ASSOC.has(i.author_association) &&
+        /^\s*[-*+]\s+\[ \]\s/m.test(String(i.body || "").replace(/\r/g, "")) &&
+        (i.assignees?.some((a) => a.login === pr.user?.login) ||
+          ids.some((id) => `${i.title}\n${i.body}`.includes(id))),
+    )
+    .map((i) => `#${i.number}`);
+};
 
 // 모든 판정 코멘트에 같은 표를 쓴다 — 아직 안 본 항목은 ⏸️로 남겨 어디까지 검사했는지 보이게
 const ROW_ORDER = [
@@ -276,11 +298,15 @@ async function api(path, { method = "GET", fields = {} } = {}) {
   // 1순위: gh CLI (런너·로컬 공통) — 읽기는 인증 없어도 fetch로 폴백
   const args = ["api", path];
   if (method !== "GET") args.push("-X", method);
-  for (const [k, v] of Object.entries(fields)) args.push("-f", `${k}=${v}`);
+  // 객체 값(workflow dispatch의 inputs 등)은 -f로 못 넘긴다 — JSON 본문을 stdin으로
+  const nested = Object.values(fields).some((v) => typeof v === "object");
+  if (nested) args.push("--input", "-");
+  else for (const [k, v] of Object.entries(fields)) args.push("-f", `${k}=${v}`);
   try {
     const out = execFileSync("gh", args, {
       encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"],
+      input: nested ? JSON.stringify(fields) : undefined,
+      stdio: [nested ? "pipe" : "ignore", "pipe", "ignore"],
     });
     return out.trim() ? JSON.parse(out) : null;
   } catch (e) {
@@ -325,11 +351,16 @@ async function apiAll(path, key) {
 async function main() {
   const prs = await apiAll(`repos/${REPO}/pulls?state=open`);
   console.log(`열린 PR ${prs.length}건 점검 (${REPO}${DRY ? ", DRY_RUN" : ""})`);
+  // issues 목록에는 PR도 섞여 나온다 — 이슈만 남긴다(연결 이슈 추정용)
+  const openIssues = (await apiAll(`repos/${REPO}/issues?state=open`).catch(() => [])).filter(
+    (i) => !i.pull_request,
+  );
 
   let approved = 0;
   let merged = 0;
   let commented = 0;
   let mergedHuman = 0; // 봇 PR(리포트)만 머지됐으면 team-sync를 다시 부르지 않는다 — 무한 반복 방지
+  const mergedHumanPrs = []; // 이슈 진행 판정(issue-progress) 대상
 
   for (const pr of prs) {
     const n = pr.number;
@@ -442,13 +473,18 @@ async function main() {
         [f.filename, f.previous_filename].filter(Boolean),
       );
       const issues = linkedIssues(detail.body);
+      const refs = [...visible(detail.body).matchAll(REFS)].map((m) => `#${m[2]}`);
+      const guessed = issues.length || refs.length ? [] : guessIssues(detail, openIssues);
+      const AFTER = "머지 후 AI가 끝낸 항목을 검증해 체크, 전부 체크되면 닫힘";
       const st = {
         author: isBot ? "✅ team-sync 봇 (자동 생성 PR)" : `✅ 협력자 (@${pr.user?.login})`,
         issue: isBot
           ? "— (봇 PR)"
-          : issues.length
-            ? `✅ ${issues.join(" ")} — 머지되면 자동으로 닫힘`
-            : "ℹ️ 없음 — 본문에 `Closes #이슈번호`를 쓰면 머지 때 이슈가 자동으로 닫힙니다",
+          : issues.length || refs.length
+            ? `✅ ${[...issues.map((i) => `${i}(닫기)`), ...refs.map((i) => `${i}(연결)`)].join(" ")} — ${AFTER}`
+            : guessed.length
+              ? `ℹ️ 키워드 없음 — 작성자 담당·요구사항 ID로 ${guessed.join(" ")} 추정. ${AFTER}`
+              : "ℹ️ 없음 — 본문에 `Closes #이슈번호`(다 끝냄) 또는 `Refs #이슈번호`(일부 진행)를 쓰면 이슈와 연결됩니다",
       };
       // 사람 승인 — 봇·작성자 본인이 아닌 사람이 이 head sha에 남긴 Approve.
       // 보호 영역 PR의 머지 조건이고, AI 리뷰 판정보다 사람 판단이 우선한다.
@@ -801,7 +837,10 @@ async function main() {
           },
         });
         merged++;
-        if (!isBot) mergedHuman++;
+        if (!isBot) {
+          mergedHuman++;
+          mergedHumanPrs.push(n);
+        }
         console.log(`- ${title}: 머지 완료`);
       } catch (e) {
         st.merge += ` · 자동 머지 ❌ API 거부 (${e.status || "오류"})`;
@@ -832,6 +871,13 @@ async function main() {
       }).catch((e) => console.log(`! ${wf} dispatch 실패: ${e.message}`));
     }
     console.log("deploy-pages·team-sync dispatch 완료");
+    // 봇 머지는 pull_request closed 이벤트를 만들지 않는다 — PR마다 이슈 진행 판정을 직접 부른다
+    for (const n of mergedHumanPrs) {
+      await api(`repos/${REPO}/actions/workflows/issue-progress.yml/dispatches`, {
+        method: "POST",
+        fields: { ref: "main", inputs: { pr: String(n) } },
+      }).catch((e) => console.log(`! issue-progress(#${n}) dispatch 실패: ${e.message}`));
+    }
   }
 
   console.log(`완료 — 승인 ${approved}건, 머지 ${merged}건, 코멘트 ${commented}건`);
