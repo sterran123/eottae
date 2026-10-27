@@ -29,3 +29,19 @@
 
 ## 팀 간 계약
 오하율: UI state + DTO 타입, 주한태: Auth/매칭 API·RLS, 손준혁: 메시지·신고 요청·실시간 구독, 김민기: 공통 layout/health/deploy. 변경 시 이슈·버전·PR 리뷰 후 통합.
+
+## ADR-005 구현 대응표 (Supabase + GitHub Pages)
+위 경로는 **논리 계약**이다. GitHub Pages에서는 서버 라우트가 실행되지 않으므로, 실제 구현은 브라우저의 `supabase-js` 호출 + RLS / RPC / Edge Function으로 대응한다. 응답 형태(DTO)와 오류 코드 의미는 위 계약을 따른다.
+
+| 논리 계약 | Supabase 구현 | 권한 판정 위치 |
+|---|---|---|
+| `GET /users/me` | `auth.getUser()` + `profiles` select | RLS: `user_id = auth.uid()` |
+| `POST /users/me/interests` | `profile_interests` insert/delete | RLS: 본인 + 검증 성인 |
+| `GET /match/recommendations` | RPC `get_recommendations(cursor)` 또는 RLS view | 본인·차단·탈퇴·휴면·미성년 제외 |
+| `POST /match/likes` | `likes` insert → 트리거/RPC가 쌍방 시 `matches`·`conversations` 1건 생성 | RLS + UNIQUE + `security definer` |
+| `GET /match/mutual` | `matches` select (`match_members` 조인) | RLS: 구성원만 |
+| `GET/POST /conversations/:id/messages` | `messages` select/insert + Realtime 구독 | RLS: 활성 match 구성원 · 미차단 · ACTIVE |
+| `POST /safety/blocks` | `blocks` insert | RLS: `blocker_id = auth.uid()` |
+| `POST /safety/reports` | `reports` insert (조회는 운영자 역할만) | RLS |
+| `DELETE /users/me` | Edge Function `delete-account` (service_role) | 재인증 후 함수 내부 검증 |
+| 성인 인증 결과 기록 | Edge Function `verify-adult` (service_role) | 클라이언트 update 금지 |

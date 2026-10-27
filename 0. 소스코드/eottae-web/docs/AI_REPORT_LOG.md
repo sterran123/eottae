@@ -332,3 +332,16 @@
 - [미실행] 서비스워커 설치·오프라인 폴백 — 검증용 헤드리스 프로필에서 CacheStorage 자체가 내부 오류로 열리지 않아 판정 불가(sw.js 미변경). 실기기/일반 Chrome에서 재확인 필요
 - [미실행] 모션 켠 상태 애니메이션 육안 확인(캡처는 reduced-motion), iOS Safari·Android 실기기 설치, 실사이트(Pages) 반영 확인(머지 후 배포)
 - [미결/회신 — 오하율] /match/recommend 320~360px에서 '관심' 버튼이 카드 밖으로 넘침, 매칭 컴포넌트 터치 타겟 44px 미만(MBTI 칩 32px·더보기 26px·문답 선택지 38px 등) — 컴포넌트 레이아웃이라 손대지 않음
+
+## 2026-10-27 ADR-005 백엔드 결정 — Supabase + GitHub Pages, 이슈 #23 처리 (김민기 작업)
+- [결정] 김민기 확정: 프런트 = GitHub Pages 정적 export 유지, 백엔드 = Supabase(Auth·Postgres RLS·Realtime·Storage·Edge Functions). 근거 — Pages는 정적이라 Next API 라우트가 배포 환경에서 돌지 않음, 기존 ERD·supabase/ 폴더와 일치, 배포 파이프라인 유지. 대안(Firebase, Vercel 이전) 검토 내용은 ADR에 기록
+- [신규] 아키텍처_결정기록_ADR.md ADR-005 | 보안 경계 = RLS(default deny), 브라우저엔 anon key만·service_role은 Edge Function 시크릿에만, MATCH-003~008·CORE-004 각각의 Supabase 구현 원칙(성인 인증 결과는 Edge Function만 기록·fail-closed, 쌍방 매칭은 security definer RPC/트리거 1건, 채팅 Realtime은 RLS 채널로 차단 즉시 정지), 도식 갱신
+- [변경] API_계약_초안.md | `/api/v1` 논리 계약 ↔ Supabase 구현(테이블+RLS / RPC / Edge Function) 대응표 추가
+- [변경] .github/workflows/deploy-pages.yml | build 단계에 Secrets `NEXT_PUBLIC_SUPABASE_URL`·`NEXT_PUBLIC_SUPABASE_ANON_KEY` 주입(없으면 빈 값 → 데모 모드)
+- [변경] eottae-web/.env.example | `SUPABASE_SERVICE_ROLE_KEY` 제거(정적 빌드라 어떤 값이든 브라우저 노출 위험), 값 출처·주의 주석
+- [변경] .github/CODEOWNERS | 채팅 경로 실제 위치로 수정(`src/app/match/chat/`) + `src/components/safety/`·`src/lib/chat/`·`src/lib/safety/` → 손준혁, `src/lib/supabase/`·`src/lib/auth/` → 주한태
+- [검증 기록] 테스트_케이스_마스터.md 실행 기록 신설 — TC-001 PASS, TC-002 PASS(공통 셸)/FAIL(매칭 추천 320·360px 넘침, #20), TC-012 BLOCKED(#26). 근거는 PR #18 실측
+- [정리] 로컬 `.env`의 만료 GH_TOKEN 주석 처리(gh CLI 키링 사용), 커밋 안 된 로컬 파일(`nul`·`tools/__devin_runs.mjs`·`tools/__schema.json`) 저장소 밖으로 이동 — 커밋 대상 아님
+- [이관] CORE-004 계정 삭제·CORE-003 실기기 오프라인·Supabase Secrets 등록은 로그인/실기기/프로젝트 생성 이후라 #26으로 이관 후 #23 종료
+- [검증] 문서·설정 변경 위주 — 로컬 `npm run typecheck`·`npm run build` PASS(정적 16라우트). deploy-pages.yml의 Secrets 주입은 머지 후 배포 실행으로 확인
+- [미실행] 실제 Supabase 프로젝트 생성·마이그레이션 적용·RLS 테스트(주한태 #21), Secrets 등록(#26)
