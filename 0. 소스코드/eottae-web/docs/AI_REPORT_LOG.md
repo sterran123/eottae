@@ -371,3 +371,12 @@
 - [미실행] 실제 Supabase 프로젝트 생성·마이그레이션 적용·RLS 테스트(주한태 #21), Secrets 등록(#26)
 - [변경·추가] tools/pr_review_bot.mjs · .devin/automations/eottae-pr-watch.md · HANDOFF_김민기.md §10 | 인증·DB·RLS 보안 경로(`supabase/`, `src/lib/server|auth|supabase/`, `src/app/api/`)를 자동 승인 금지 영역에 추가 — #24(자체 세션 서명·하드코딩 키 기본값)가 CI 통과만으로 05:57 자동 머지된 사례. 정규식은 실제 경로 6건으로 node 검증(보안 경로 true, match/chat·페이지 false), `node --check` PASS
 - [후속] 머지된 #24 코드는 어떤 화면에서도 import되지 않음을 확인(실사용자·실데이터 없음) → 되돌리지 않고 #21에서 Supabase Auth로 교체
+
+## 2026-10-27 리뷰 봇 판정 강화 — AI 코드 리뷰·보안 스캔·draft/봇 PR 판정·이슈 자동 종료 안내 (김민기 작업)
+- [요청] 김민기: draft·봇 PR도 판정, 보호 영역은 확인 후 머지, 충돌·CI는 재push 시 재검증 유지, 규칙 위반은 항상 안내·재시도 방법 제시, 빌드 확인, **코드가 맞는지·안전한지 확인**, 이슈 자동 종료 방법 안내
+- [신규] tools/ai_code_review.mjs + .github/workflows/ai-review.yml | PR head마다(draft 포함) Devin 세션에 diff·PR 설명·저장소 규칙(ADR-002·003·005, 토큰 색·44px·reduced-motion·담당 영역·AI_REPORT_LOG)을 보내 정확성·보안 판정 → PR 코멘트 + 커밋 상태 `ai-review`(success/failure/error). 같은 head 중복 리뷰 생략, `/ai-review` 댓글(협력자)로 재실행, 25분 시간 초과·VERDICT 누락·시크릿 없음은 error로 fail-closed. 스크립트는 main 기준 checkout으로 실행
+- [변경] tools/pr_review_bot.mjs | ① 모든 코멘트에 공통 검사 표(작성자·보호 영역·보안 스캔·머지 가능성·빌드 CI·AI 리뷰·연결 이슈) ② 추가된 줄 보안 스캔(차단 10종·경고 3종) ③ AI 리뷰 통과 게이트(사람 Approve가 있으면 사람 판단 우선) ④ 보호 영역은 나머지 검사 완료 후 작성자 외 사람 Approve 시 머지 ⑤ draft는 판정만·Ready 전환 시 머지 ⑥ team-sync 봇 PR은 생성 파일만 허용·커밋 상태 `check`를 빌드 결과로 인정·충돌이면 재생성 대기 ⑦ `Closes #번호` 없으면 안내 ⑧ ai_code_review·devin_mention_bridge를 보호 스크립트에 추가
+- [변경] pr-review.yml | ai-review 완료·converted_to_draft에도 재판정, `statuses: read`
+- [문서] PR 템플릿 첫 칸 `Closes #`(자동 종료 키워드 설명), README 협업 방법(검사 표·재시도 방법), HANDOFF §10, .devin 점검 프롬프트
+- [검증] `node --check` 3개 스크립트 PASS. 보안 스캐너 단위 테스트(가짜 diff 7건 → 차단 4·경고 3, 봇 자신의 정규식 소스 오탐 0). 실제 PR 대입: #24 → 보안 경로 6개 + 차단 2건(비밀값 기본값 `session.ts:11`, 하드코딩 `test_auth_match_003.mjs:10`) + 경고 4건 / #18·#27 → 0건. `DRY_RUN=1` 실저장소 실행 — 봇 PR #25: 생성 파일만·커밋 상태 check 통과 → 머지 단계 진입 확인
+- [미실행] Devin AI 리뷰 실제 세션(머지 후 첫 PR에서 확인, PR마다 ACU 소모), 봇 PR 실제 머지(봇 자기 승인 불가 — 브랜치 보호 bypass 설정 전엔 사람 승인 1번 필요)

@@ -14,7 +14,7 @@
 
 열린 PR마다 다음 순서로 판정한다:
 
-1. draft이거나 작성자가 `[bot]`으로 끝나면 스킵.
+1. 작성자가 `github-actions[bot]`이 아닌 다른 `[bot]`이면 스킵. draft·team-sync 봇 PR은 규칙 봇(`pr-review.yml`)이 판정하므로 이 자동화는 코드 리뷰(4번)만 한다.
 2. base가 `main`이 아니면 "이 점검은 main 대상 PR만 자동 처리한다"는 안내 코멘트를 남기고 스킵. 같은 head sha에 이미 같은 내용의 코멘트가 있으면 반복하지 않는다.
 3. PR 파일 목록을 전 페이지 조회해 민감 영역 포함 여부를 확인한다. 이름이 바뀐 파일은 옛 경로(`previous_filename`)도 함께 검사한다 — `.github/workflows/x.yml`을 무해한 이름으로 rename하면 새 경로만 봐서는 우회된다. 아래 중 하나라도 포함되면 자동 승인하지 않고 수동 리뷰 요청 코멘트를 남긴다:
    - `.github/` 전체, 임의 위치의 `CODEOWNERS`
@@ -22,7 +22,7 @@
    - 패키지/빌드 설정: `package.json`, 각종 lock 파일, `.npmrc`/`.yarnrc`, `next.config.*`, `tsconfig*`/`jsconfig*`, babel/postcss/tailwind 설정
    - 인증·DB·RLS 보안 코드(ADR-005): `0. 소스코드/eottae-web/supabase/`, `src/lib/server/`, `src/lib/auth/`, `src/lib/supabase/`, `src/app/api/` — CI 통과만으로는 안전성을 판정할 수 없다
    - `.env*`, `secret`/`credential`이 포함된 경로, `id_rsa`류 키, `*.pem`/`*.key`/`*.p8`/`*.keystore`/`*.tfvars` 등
-4. diff를 직접 읽고 코드 리뷰한다 — 명백한 버그, 보안 문제, 저장소 컨벤션(한국어 주석·docs 로그·요구사항 ID) 위반이 있으면 파일/라인을 지적하는 코멘트를 남긴다. 이 리뷰가 규칙 봇(`pr-review.yml`)과 다른 이 자동화의 핵심 역할이다.
+4. (PR head마다 `ai-review.yml`이 같은 리뷰를 자동 실행해 커밋 상태 `ai-review`로 남긴다 — 이미 판정된 head면 중복 리뷰하지 말고 그 결과를 참고한다.) diff를 직접 읽고 코드 리뷰한다 — 명백한 버그, 보안 문제, 저장소 컨벤션(한국어 주석·docs 로그·요구사항 ID) 위반이 있으면 파일/라인을 지적하는 코멘트를 남긴다. 이 리뷰가 규칙 봇(`pr-review.yml`)과 다른 이 자동화의 핵심 역할이다.
 5. head 커밋의 `check` check-run을 확인한다 — 실패면 재현 절차(`npm ci` → `npm run typecheck` → `npm run build`) 코멘트, 진행 중이면 이번 주기 스킵, 오래됐는데도 없으면 CI 미실행 안내 코멘트.
 6. 전부 통과(협력자 작성·민감 파일 없음·리뷰 문제 없음·CI 통과·충돌 없음)하면 승인하고 squash 머지를 시도한다. 머지는 판정한 head sha를 `sha` 조건으로 걸어 중간에 새 push가 오면 거부되게 한다. 보호 규칙(CODEOWNERS 등)에 막히면 "승인 완료·사람 머지 필요" 코멘트로 넘긴다.
 

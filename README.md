@@ -111,8 +111,18 @@ tools/                     미리보기 서버·캡처·PR 리뷰 봇·매니페
 ## 협업 방법
 
 1. 최신 `main`에서 브랜치를 만듭니다 — `feat/{요구사항ID}-설명` (예: `feat/MATCH-007-chat`)
-2. 작업 후 PR을 엽니다. `main` 직접 push는 막혀 있습니다.
-3. **CI(타입체크+빌드)** 가 통과해야 하며, 자동 리뷰 봇이 판정 결과를 코멘트로 남깁니다. `package.json`·`.github/`·`tools/` 같은 민감 파일을 건드리면 사람 승인이 필요합니다.
+2. 작업 후 PR을 엽니다. `main` 직접 push는 막혀 있습니다. **해결하는 이슈가 있으면 PR 본문에 `Closes #이슈번호`** 를 쓰세요 — 머지될 때 이슈가 자동으로 닫힙니다(일부만 해결했으면 `Refs #번호`).
+3. PR을 열거나 push하면 자동 검사가 돌고, 모두 통과하면 리뷰 봇이 승인·머지합니다.
+
+   | 검사 | 내용 | 통과 못 하면 |
+   |---|---|---|
+   | 빌드 CI | `npm ci` → `typecheck` → `build` | 실패 로그·재현 명령 안내 → 고쳐서 push |
+   | 보안 스캔 | 추가된 줄의 키·토큰 하드코딩, 브라우저 코드의 `service_role`, 비밀값 기본값, `eval` 등 | 위치·고치는 법 안내 → 고쳐서 push |
+   | AI 코드 리뷰 | Devin이 diff를 읽고 정확성·보안(ADR-002·003·005)·저장소 규칙을 판정 | 「반드시 고칠 것」 안내 → 고쳐서 push (재실행은 `/ai-review` 댓글) |
+   | 충돌 | main과 머지 가능한지 | 충돌 파일·해결 명령 안내 → 해결 후 push |
+   | 보호 영역 | `.github/`·`package.json`·`.env*`·인증/DB/RLS 코드(`supabase/`, `src/lib/{server,auth,supabase}/`, `src/app/api/`) | 나머지 검사 통과 후 **담당자 Approve**하면 머지 |
+
+   Draft PR도 판정 결과를 알려 주고, 「Ready for review」로 바꾸면 머지됩니다.
 4. 이슈나 PR 댓글에 `@devin 질문`을 쓰면 AI가 답글을 남깁니다 (collaborator 전용).
 5. 작업을 마치면 `0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md`에 **실행한 검증과 실행하지 못한 항목을 구분해** 기록합니다.
 
