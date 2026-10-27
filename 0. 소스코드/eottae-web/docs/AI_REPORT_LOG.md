@@ -440,8 +440,10 @@
 - [변경] src/components/safety/BlockConfirmModal.tsx & ReportModal.tsx | 다중 방 유지 시 DOM ID 충돌 및 스크린리더 오독(MATCH-008 회귀) 방지를 위해 `titleId`, `detailId`, `categoryName`에 `useId()` 적용
 - [변경] src/components/chat/MessageComposer.tsx | 다중 방 유지 시 `inputId`에 `useId()` 적용하여 label-textarea 접근성 바인딩 보장
 - [변경] src/app/match/chat/page.tsx | `ChatRoom` 직접 렌더링 대신 `ChatHub` 렌더링으로 라우트 진입점 연결
-- [변경] src/app/match/chat/match-chat.css | 목록 카드, 아이템 호버/포커스, 뱃지, 고정 백드롭(`--match-dim`), 우측 슬라이드 패널(`mt-chat-panel`, slide-in 트랜지션, `prefers-reduced-motion` 대응) 스타일 추가
-- [검증] `npm run typecheck` PASS / `npm run build` PASS (정적 17개 라우트 생성, `/match/chat` 7.22 kB 정상 빌드)
+- [변경] src/app/match/chat/match-chat.css | 목록 카드, 아이템 호버/포커스, 뱃지, 고정 백드롭(`--match-dim`), 우측 슬라이드 패널(`mt-chat-panel`, slide-in 트랜지션, `prefers-reduced-motion` 대응) 스타일 추가. 이슈 #22 피드백 반영: 미디어 첨부 버튼(44px), 더보기 메뉴 버튼(44px), 전송 버튼(44px), 모달 확인 버튼(44px) 터치 최소 영역 전수 확보 및 녹음 바/비주얼라이저/보이스웨이브 하드코딩 색상 약 20곳 `--match-*` 시맨틱 토큰으로 전환
+- [문서] 2. 프로젝트 설계서/테스트_케이스_마스터.md | SEC-002 실측 QA 결과 기록 추가 — TC-001(공통 탐색) PASS, TC-002(채팅 반응형·6개 테마 딤·44px 터치 영역) PASS, TC-007(클라이언트 차단 잠금) PASS, TC-009(전송 즉시 차단) PASS, TC-008/010은 서버 구현 대기로 BLOCKED 명시
+- [문서] 3. 구현 이미지(5장이상)/captions.csv & README_캡처_체크리스트.md | 18번 채팅 목록/슬라이드 패널 및 19번 차단/신고 모달 캡처 정보 등록
+- [검증] `npm run typecheck` PASS / `npm run build` PASS (정적 17개 라우트 생성, `/match/chat` 7.4 kB 정상 빌드)
 - [검증] 브라우저 및 키보드 실검증: 모바일 360px 폭에서 패널 전체 너비 렌더링 확인, 6개 테마(라이트/다크/cyberpunk 등) 배경 딤(`--match-dim`) 및 UI 가독성 확인, 키보드 Tab 포커스 트랩 및 Esc 닫기, 닫기 후 트리거 버튼 포커스 복귀, 다중 방 개설 후 차단/신고 모달 시 상대방 닉네임 일치 확인, `prefers-reduced-motion` 시 애니메이션 생략 확인
 - [안전성] 기존 MATCH-008 차단(즉시 입력 비활성화·응답 취소·해제 확인 모달)/신고 모달 로직 100% 온전히 유지
 - [미실행] 실제 Supabase DB 영속화/RLS(MATCH-003, ADR-005) 및 Realtime WebSocket 채널 연동(주한태 담당 백엔드 구현 대기)

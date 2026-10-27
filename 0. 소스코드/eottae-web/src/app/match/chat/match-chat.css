@@ -191,9 +191,9 @@ body:has(.mt-chat-page) .footer::before {
 .mt-chat-input:disabled { opacity: 0.6; cursor: not-allowed; }
 .mt-chat-media-btn {
   position: relative;
-  width: 38px;
-  height: 38px;
-  min-width: 38px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
@@ -212,14 +212,14 @@ body:has(.mt-chat-page) .footer::before {
   background: var(--match-soft);
 }
 .mt-chat-media-btn.is-recording {
-  background: #ff4757;
-  border-color: #ff4757;
-  color: #ffffff;
+  background: var(--match-err-ink);
+  border-color: var(--match-err-ink);
+  color: var(--match-on-accent);
   animation: mt-rec-pulse 1.2s infinite ease-in-out;
 }
 @keyframes mt-rec-pulse {
-  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.45); }
-  50% { transform: scale(1.06); box-shadow: 0 0 0 6px rgba(255, 71, 87, 0); }
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 var(--match-dim); }
+  50% { transform: scale(1.06); box-shadow: 0 0 0 6px transparent; }
 }
 .mt-chat-media-btn:focus-visible {
   outline: 2px solid var(--match-focus);
@@ -230,22 +230,22 @@ body:has(.mt-chat-page) .footer::before {
   cursor: not-allowed;
 }
 .mt-chat-media-btn svg {
-  width: 19px;
-  height: 19px;
+  width: 20px;
+  height: 20px;
 }
 
-/* 녹음 바 (Image 3 스타일) */
+/* 녹음 바 — 토큰화로 6개 테마 완벽 대응 */
 .mt-chat-rec-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(36, 26, 32, 0.94);
-  backdrop-filter: blur(8px);
-  color: #ffffff;
+  background: var(--match-paper);
+  border: 1px solid var(--match-line);
+  color: var(--match-ink);
   padding: 8px 12px;
   border-radius: 12px;
   margin-bottom: 6px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 14px var(--match-toast-shadow);
   animation: mt-rec-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 @keyframes mt-rec-in {
@@ -263,7 +263,7 @@ body:has(.mt-chat-page) .footer::before {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #ff4757;
+  background: var(--match-err-ink);
   animation: mt-rec-blink 1s infinite ease-in-out;
 }
 @keyframes mt-rec-blink {
@@ -282,16 +282,16 @@ body:has(.mt-chat-page) .footer::before {
   display: inline-block;
   width: 3px;
   height: 6px;
-  background: #ff6b81;
+  background: var(--match-accent);
   border-radius: 99px;
   animation: mt-rec-wave-live 0.75s ease-in-out infinite alternate;
 }
 .mt-chat-rec-waves-live span:nth-child(1) { animation-delay: 0.1s; height: 8px; }
-.mt-chat-rec-waves-live span:nth-child(2) { animation-delay: 0.35s; height: 14px; background: #ff4757; }
+.mt-chat-rec-waves-live span:nth-child(2) { animation-delay: 0.35s; height: 14px; background: var(--match-accent-solid); }
 .mt-chat-rec-waves-live span:nth-child(3) { animation-delay: 0.15s; height: 10px; }
-.mt-chat-rec-waves-live span:nth-child(4) { animation-delay: 0.5s; height: 16px; background: #ff4757; }
+.mt-chat-rec-waves-live span:nth-child(4) { animation-delay: 0.5s; height: 16px; background: var(--match-accent-solid); }
 .mt-chat-rec-waves-live span:nth-child(5) { animation-delay: 0.25s; height: 12px; }
-.mt-chat-rec-waves-live span:nth-child(6) { animation-delay: 0.4s; height: 15px; background: #ff4757; }
+.mt-chat-rec-waves-live span:nth-child(6) { animation-delay: 0.4s; height: 15px; background: var(--match-accent-solid); }
 .mt-chat-rec-waves-live span:nth-child(7) { animation-delay: 0.2s; height: 7px; }
 
 @keyframes mt-rec-wave-live {
@@ -308,7 +308,7 @@ body:has(.mt-chat-page) .footer::before {
 .mt-chat-rec-time {
   font-family: monospace;
   font-size: 13px;
-  color: #ffd1d8;
+  color: var(--match-sub);
   font-weight: 600;
   margin-left: 2px;
 }
@@ -321,29 +321,29 @@ body:has(.mt-chat-page) .footer::before {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: none;
-  background: rgba(255, 255, 255, 0.15);
-  color: #ffffff;
+  border: 1px solid var(--match-line-soft);
+  background: var(--match-soft);
+  color: var(--match-ink);
   border-radius: 6px;
   cursor: pointer;
   transition: background 0.15s;
 }
 .mt-chat-rec-btn:hover {
-  background: rgba(255, 255, 255, 0.28);
+  background: var(--match-track);
 }
 .mt-chat-rec-btn--stop {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
 }
 .mt-chat-rec-stop-square {
-  width: 11px;
-  height: 11px;
-  background: #ff4757;
+  width: 12px;
+  height: 12px;
+  background: var(--match-err-ink);
   border-radius: 2px;
 }
 .mt-chat-rec-btn--cancel {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   font-size: 13px;
   line-height: 1;
 }
@@ -357,8 +357,9 @@ body:has(.mt-chat-page) .footer::before {
   user-select: none;
 }
 .mt-chat-voice-play-btn {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
   border-radius: 50%;
   border: none;
   background: currentColor;
@@ -375,12 +376,12 @@ body:has(.mt-chat-page) .footer::before {
   transform: scale(0.92);
 }
 .is-me .mt-chat-voice-play-btn {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--match-tag-bg);
   color: var(--match-accent-solid);
 }
 .is-partner .mt-chat-voice-play-btn {
   background: var(--match-accent-solid);
-  color: #ffffff;
+  color: var(--match-on-accent);
 }
 .mt-chat-voice-waves {
   display: flex;
@@ -417,7 +418,7 @@ body:has(.mt-chat-page) .footer::before {
 }
 
 .mt-chat-send {
-  min-height: 40px;
+  min-height: 44px;
   padding: 0 18px;
   font: inherit;
   font-weight: 600;
@@ -442,8 +443,9 @@ body:has(.mt-chat-page) .footer::before {
   .mt-chat-page { padding: 8px 8px 16px; }
   .mt-chat { border-radius: 14px; height: calc(100dvh - 88px); }
   .mt-chat-row { max-width: 88%; }
-  .mt-chat-media-btn { width: 34px; height: 34px; min-width: 34px; }
-  .mt-chat-media-btn svg { width: 17px; height: 17px; }
+  /* 모바일에서도 44px 터치 영역 완벽 유지 */
+  .mt-chat-media-btn { width: 44px; height: 44px; min-width: 44px; }
+  .mt-chat-media-btn svg { width: 20px; height: 20px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -454,14 +456,14 @@ body:has(.mt-chat-page) .footer::before {
    MATCH-008 신고/차단 — 더보기 메뉴·시스템 알림·차단 바·모달
    ============================================================ */
 
-/* 헤더 더보기 메뉴 */
+/* 헤더 더보기 메뉴 (터치 영역 44px 확보) */
 .mt-chat-menu {
   position: relative;
   margin-left: auto;
 }
 .mt-chat-menu-btn {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   display: grid;
   place-items: center;
   border: 1px solid var(--match-line);
@@ -608,7 +610,7 @@ body:has(.mt-chat-page) .footer::before {
 .mt-safety-error { min-height: 1.2em; margin: 0 0 8px; font-size: 0.8rem; color: var(--match-err-ink); }
 .mt-safety-actions { display: flex; justify-content: flex-end; gap: 8px; }
 .mt-safety-btn {
-  min-height: 40px;
+  min-height: 44px;
   padding: 0 18px;
   font: inherit;
   font-weight: 600;
