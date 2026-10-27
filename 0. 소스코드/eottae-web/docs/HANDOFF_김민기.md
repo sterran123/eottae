@@ -178,16 +178,18 @@ git config --global user.email "본인 GitHub 이메일 또는 noreply"
 프로젝트는 김민기가 만들고 Owner로 갖는다. 주한태는 Developer로 초대받아 작업한다. 값별 보관 위치는 ADR-005 「프로젝트 소유·키 관리」 표를 따른다.
 
 **처음 한 번 (대시보드)**
-1. [supabase.com](https://supabase.com) → **Continue with GitHub**(sterran123) 로그인
+1. [supabase.com](https://supabase.com) → **Continue with GitHub**(sterran123) 로그인. Owner가 한 명뿐이라 **GitHub 계정과 Supabase 계정(Account → Security) 모두 2단계 인증(2FA)을 켠다**
 2. 조직 만들기: 이름 `eottae`, 플랜 **Free**
 3. **New project**: 이름 `eottae` · Database Password는 **Generate a password** → 비밀번호 관리자에 저장(Git·카톡·이슈에 올리지 않기) · Region **Northeast Asia (Seoul)** → Create
-4. **Authentication → URL Configuration**: Site URL `https://sterran123.github.io/eottae/`, Redirect URLs에 `https://sterran123.github.io/eottae/**`, `http://localhost:3000/**` 추가
+4. **Authentication → URL Configuration**: Site URL `https://sterran123.github.io/eottae/`, Redirect URLs에 `https://sterran123.github.io/eottae/**`, `http://localhost:3000/**` 추가 (개발용 — 실사용 공개 전(DEC-01 해결 후)에는 `localhost`를 지우고 `**` 대신 실제 콜백 경로로 좁힌다)
 5. **Organization → Team → Invite**: 주한태 이메일, 역할 **Developer**
-6. **Project Settings → API Keys**에서 두 값을 확인: Project URL(`https://<ref>.supabase.co`)과 공개 키(Publishable key `sb_publishable_…` 또는 Legacy 탭의 `anon` key). **secret / service_role 키는 복사하지 않는다**
+6. **Project Settings → API Keys**에서 두 값을 확인: Project URL(`https://<ref>.supabase.co`)과 공개 키 **Publishable key**(`sb_publishable_…`) — 팀은 이 키 하나로 통일한다(ADR-005). **secret / service_role 키는 복사하지 않는다**
 7. GitHub 저장소 **Settings → Secrets and variables → Actions → New repository secret**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` — 다음 main push부터 배포 빌드에 들어간다 (#26)
 
 **그 뒤 반복 작업**
-- 주한태 마이그레이션 PR이 머지되면 클라우드에 적용: `cd "0. 소스코드/eottae-web"` → `npx supabase login` → `npx supabase link --project-ref <ref>`(DB 비밀번호 입력) → `npx supabase db push`
-- Edge Function 시크릿(성인 인증·계정 삭제용 service_role 등)은 `npx supabase secrets set 이름=값`으로만 — 파일·Secrets 탭에 두지 않는다
+- 주한태 마이그레이션 PR이 머지되면 클라우드에 적용: `cd "0. 소스코드/eottae-web"` → `npx supabase login` → `npx supabase link --project-ref <ref>`(DB 비밀번호 입력) → **`npx supabase db push --dry-run`으로 적용될 마이그레이션 목록 확인** → `npx supabase db push`
+- **service_role은 복사·등록하지 않는다** — 클라우드 Edge Function 안에서 `Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')`로 자동 제공된다(`SUPABASE_` 접두어 이름은 CLI로 등록할 수도 없다)
+- 외부 키(성인 인증 업체 API 키 등)만 `npx supabase secrets set 이름=값`으로 Edge Function 시크릿에 넣는다 — 파일·GitHub Actions Secrets에 두지 않는다
+- 김민기가 자리를 비울 때 `db push`가 급하면 Owner가 대시보드에서 주한태를 임시로 Administrator로 올렸다가 끝나면 되돌린다
 - 무료 플랜은 1주일 비활성 시 일시 정지 — 발표·시연 전날 대시보드에서 상태 확인(정지면 Restore)
 
