@@ -311,3 +311,17 @@
 - [검증] 브라우저 실검증 완료: 차단 시 입력 잠금 및 추가 응답 정지(TC-009 충족), 차단 해제 토글 정상 동작, 신고 모달 유효성 검증(사유 미선택/기타 빈값 방지) 및 Esc 닫기, 테마 전환 시 모달 스타일 정상 표시 확인
 - [보안] 신고/차단 데이터는 클라이언트 DEMO 상태로만 격리(RULES 7), 허위 운영 처리 일정 미약속(RULES 6 준수)
 - [미구현/보류] 서버 DB 영속화 및 운영 대기열 RLS 연동(주한태 담당) 대기
+
+## 2026-10-27 MATCH-003 로그인 및 세션·RLS 보안 구현 (주한태 작업)
+- [신규] supabase/migrations/0001_create_auth_and_users.sql | users 및 consents 테이블 스키마, account_status ENUM(ACTIVE/SUSPENDED/DELETED/PENDING), RLS default deny 및 본인 데이터만 접근 가능한 보안 정책 정의
+- [신규] src/lib/auth/types.ts | Auth/Session DTO, AccountStatus, UserSession, AuthError 및 API 응답 인터페이스 정의
+- [신규] src/lib/server/session.ts | 세션 토큰 Base64URL 인코딩 및 HMAC 서명/검증 모듈, 24시간 만료 시각 자동 검사 및 Fail-closed 차단 로직
+- [신규] src/lib/server/auth.ts | 서버 인증 가드 requireActiveUser(만료 시 401, SUSPENDED/DELETED 시 403 차단), authenticateUser 목업 풀 연동
+- [신규] src/lib/auth/client-auth.ts | 클라이언트 세션 스토리지 매니저 (GitHub Pages 정적 환경 호환 로그인/로그아웃/세션 확인/성인 인증 상태 갱신)
+- [신규] src/app/api/v1/users/me/route.ts | GET /api/v1/users/me 내 세션 및 인증 상태 조회 API (정적 export force-static 계약 호환)
+- [신규] tools/test_auth_match_003.mjs | 세션 서명 무결성, 만료 차단(401), 위변조 토큰 무효화, 정지/탈퇴 계정 차단(403) 단위 검증 테스트 스위트
+- [검증] `node tools/test_auth_match_003.mjs` ALL PASS (5개 단위 테스트 통과)
+- [검증] `npm run typecheck` PASS / `npm run build` PASS (신규 /api/v1/users/me 포함 정적 17개 라우트 정상 생성)
+- [보안] 세션 만료 및 비정상 계정(정지/탈퇴) 접근 시 Fail-closed 원칙 준수 (401/403 차단), 비밀번호/시크릿 하드코딩 배제
+- [미구현/보류] MATCH-004 성인 인증 게이트(PASS/실명인증 또는 데모 게이트) 및 Supabase 실제 원격 인스턴스 환경변수 연결 대기
+
