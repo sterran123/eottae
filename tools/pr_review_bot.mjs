@@ -329,6 +329,7 @@ async function main() {
   let approved = 0;
   let merged = 0;
   let commented = 0;
+  let mergedHuman = 0; // 봇 PR(리포트)만 머지됐으면 team-sync를 다시 부르지 않는다 — 무한 반복 방지
 
   for (const pr of prs) {
     const n = pr.number;
@@ -788,6 +789,7 @@ async function main() {
         if (DRY) {
           console.log(`- ${title}: [DRY] squash 머지 예정`);
           merged++;
+          if (!isBot) mergedHuman++;
           continue;
         }
         await api(`repos/${REPO}/pulls/${n}/merge`, {
@@ -799,6 +801,7 @@ async function main() {
           },
         });
         merged++;
+        if (!isBot) mergedHuman++;
         console.log(`- ${title}: 머지 완료`);
       } catch (e) {
         st.merge += ` · 자동 머지 ❌ API 거부 (${e.status || "오류"})`;
@@ -822,7 +825,7 @@ async function main() {
   // 머지된 PR이 있으면 배포·리포트 파이프라인을 수동 트리거
   // (GITHUB_TOKEN으로 한 머지는 push 이벤트를 발생시키지 않는다)
   if (merged > 0 && !DRY) {
-    for (const wf of ["deploy-pages.yml", "team-sync.yml"]) {
+    for (const wf of mergedHuman > 0 ? ["deploy-pages.yml", "team-sync.yml"] : ["deploy-pages.yml"]) {
       await api(`repos/${REPO}/actions/workflows/${wf}/dispatches`, {
         method: "POST",
         fields: { ref: "main" },
