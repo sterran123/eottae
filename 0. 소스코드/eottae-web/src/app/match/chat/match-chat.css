@@ -621,3 +621,126 @@ body:has(.mt-chat-page) .footer::before {
 .mt-safety-btn.is-primary { color: var(--match-on-accent); background: var(--match-accent-deep); border-color: transparent; }
 .mt-safety-btn.is-danger { color: var(--match-on-accent); background: var(--match-err-ink); border-color: transparent; }
 
+
+/* ============================================================
+   MATCH-007 대화방 목록(ChatList) + 우측 슬라이드 패널
+   ============================================================ */
+
+.mt-chathub-head { padding: 4px 4px 12px; }
+.mt-chathub-title { margin: 0 0 8px; font-size: 1.4rem; line-height: 1.3; color: var(--match-ink); }
+.mt-chathub-note {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--match-warn-ink);
+  background: var(--match-warn-bg);
+  border: 1px solid var(--match-warn-line);
+  border-radius: 10px;
+}
+
+.mt-chatlist {
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: var(--match-paper);
+  border: 1px solid var(--match-line);
+  border-radius: 20px;
+}
+.mt-chatlist-item {
+  width: 100%;
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  font: inherit;
+  text-align: left;
+  color: var(--match-ink);
+  background: transparent;
+  border: 0;
+  border-radius: 14px;
+  cursor: pointer;
+}
+.mt-chatlist-item:hover { background: var(--match-soft); }
+.mt-chatlist-item[aria-current='true'] { background: var(--match-soft); }
+.mt-chatlist-item:focus-visible { outline: 2px solid var(--match-focus); outline-offset: -2px; }
+.mt-chatlist-avatar { width: 48px; height: 48px; flex-shrink: 0; font-size: 1.05rem; }
+.mt-chatlist-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.mt-chatlist-top,
+.mt-chatlist-bottom { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.mt-chatlist-name { font-weight: 700; font-size: 0.95rem; }
+.mt-chatlist-time { flex-shrink: 0; font-size: 0.72rem; color: var(--match-sub); }
+.mt-chatlist-last {
+  min-width: 0;
+  font-size: 0.85rem;
+  color: var(--match-sub);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mt-chatlist-badge {
+  flex-shrink: 0;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  box-sizing: border-box;
+  display: inline-grid;
+  place-items: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--match-on-accent);
+  background: var(--match-accent-deep);
+  border-radius: 99px;
+}
+
+/* 우측 패널 — 닫힌 방은 hidden 으로 마운트만 유지 */
+.mt-chat-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--match-dim);
+}
+.mt-chat-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1001;
+  width: min(440px, 100vw);
+  background: var(--match-paper);
+  box-shadow: -8px 0 32px var(--match-toast-shadow);
+  animation: mt-panel-in 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.mt-chat-panel[hidden] { display: none; }
+.mt-chat-panel .mt-chat {
+  height: 100%;
+  max-height: none;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+}
+@keyframes mt-panel-in {
+  from { transform: translateX(32px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.mt-chat-close {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  font-size: 1.05rem;
+  color: var(--match-ink);
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.mt-chat-close:hover { background: var(--match-line-soft); }
+.mt-chat-close:focus-visible { outline: 2px solid var(--match-focus); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mt-chat-panel { animation: none; }
+}

@@ -25,5 +25,16 @@ export interface ChatPartner {
   nickname: string;
 }
 
+/** 채팅방 목록 1건 (MATCH-007 목록 뷰). 서버 연동 시 `/conversations` 응답으로 교체. */
+export interface ChatRoomInfo {
+  id: string;
+  partner: ChatPartner;
+  initialMessages: ChatMessage[];
+  /** 목록에 표시할 초기 시각 문구 — 시간대·현재 시각에 따라 SSG/hydration이 어긋나지 않도록 고정 문구 사용 */
+  timeLabel: string;
+  /** 목록에 표시할 초기 안 읽은 메시지 수 */
+  unread: number;
+}
+
 /** 메시지 본문 최대 길이 (API 계약: body length 검증) */
 export const MAX_MESSAGE_LENGTH = 500;
