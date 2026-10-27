@@ -185,7 +185,8 @@ function scanSafety(files) {
 // 연결 이슈 — 본문에 Closes #번호가 있으면 머지 때 GitHub이 그 이슈를 자동으로 닫는다
 const linkedIssues = (body) => [...String(body || "").matchAll(CLOSES)].map((m) => `#${m[3]}`);
 const REFS = /\b(refs?|related\s+to|part\s+of)\s*:?\s+#(\d+)/gi;
-const REQ_ID = /\b[A-Z]{2,6}-\d{3}\b/g;
+// 요구사항·테스트 케이스 접두어만 — ADR-005 등 결정 기록 번호는 거의 모든 PR이 언급한다
+const REQ_ID = /\b(MATCH|ACT|INV|CORE|SEC|FR|TC)-\d{3}\b/g;
 // 키워드가 없을 때 관련 이슈 추정 — 작성자 담당이거나 요구사항 ID(MATCH-001 등)가 겹치는 열린 이슈
 const guessIssues = (pr, openIssues) => {
   const ids = `${pr.title}\n${pr.head?.ref}\n${pr.body || ""}`.match(REQ_ID) || [];

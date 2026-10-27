@@ -3,8 +3,10 @@
 // PR 본문에 Closes/Refs가 없어도 작성자 담당 이슈·요구사항 ID로 후보를 찾는다.
 //
 // 엄격 판정 (AI 말만 믿지 않는다 — 셋 다 통과한 항목만 체크):
-//   1. 게이트: PR head에 AI 코드 리뷰(`ai-review`) 통과 또는 작성자 외 사람 Approve가 있어야 한다
-//   2. Devin 판정: 항목별 done / partial / not_done / needs_human. 일부만·애매·사람 확인 필요는 done 아님
+//   1. 게이트: 협력자 브랜치 PR이고, head에 AI 코드 리뷰(`ai-review`) 통과 또는
+//      작성자 외 협력자가 그 head sha에 남긴 Approve가 있어야 한다
+//   2. Devin 판정: 항목별 done / partial / not_done / needs_human. 일부만·애매·사람 확인 필요는 done 아님.
+//      "46곳·모든·전부" 같은 전수 항목은 done이어도 체크하지 않는다(근거 몇 줄로 증명 불가)
 //   3. 근거 기계 검증: done 항목은 근거(파일·줄·인용)가 필요하고, 인용은 **이 PR이 추가한 줄**에
 //      있어야 하며 **머지 커밋의 해당 파일**에도 그대로 있어야 한다 — 하나라도 어긋나면 체크하지 않는다
 // 닫기: 체크 후 이슈 본문의 체크박스가 전부 [x]일 때만 닫는다(사람이 직접 체크한 항목 포함).
@@ -27,9 +29,13 @@ const MAX_ISSUES = 5;
 const END = "ISSUE_PROGRESS_END";
 // 이슈 연결 키워드 — Closes류는 머지 때 GitHub이 닫고, Refs류는 연결만 한다
 const LINKS = /\b(close[sd]?|fix(e[sd])?|resolve[sd]?|refs?|related\s+to|part\s+of)\s*:?\s+#(\d+)/gi;
-const REQ_ID = /\b[A-Z]{2,6}-\d{3}\b/g;
+// 요구사항_마스터·테스트_케이스_마스터의 접두어만 — ADR-005 같은 결정 기록 번호는 거의 모든 PR이 언급해 후보가 폭증한다
+const REQ_ID = /\b(MATCH|ACT|INV|CORE|SEC|FR|TC)-\d{3}\b/g;
+const MEMBER_ASSOC = new Set(["OWNER", "MEMBER", "COLLABORATOR"]);
 // 체크박스 줄: "- [ ] 내용" / "* [x] 내용"
 const BOX = /^(\s*[-*+]\s+\[)([ xX])(\]\s+)(.*)$/;
+// 전수 항목(여러 곳을 전부 고쳐야 끝나는 항목) — AI가 done이라 해도 자동 체크하지 않는다
+const SWEEP = /\d+\s*곳|모든|전부|전체|전수/;
 
 const GH = {
   Accept: "application/vnd.github+json",
@@ -66,13 +72,17 @@ const write = async (path, opts, what) => {
   return gh(path, opts);
 };
 
-// 본문의 체크박스 목록 — id는 본문 안에서 몇 번째 체크박스인지(1부터)
+// 본문의 체크박스 목록 — id는 본문 안에서 몇 번째 체크박스인지(1부터).
+// 코드 펜스 안의 "- [ ]"는 예시일 뿐이라 세지 않는다(전부 체크 판정이 영원히 안 끝나는 것 방지)
 const boxes = (body) => {
   const out = [];
+  let fence = false;
   String(body || "")
     .split("\n")
     .forEach((line, i) => {
-      const m = line.replace(/\r$/, "").match(BOX);
+      const l = line.replace(/\r$/, "");
+      if (/^\s*(```|~~~)/.test(l)) fence = !fence;
+      const m = !fence && l.match(BOX);
       if (m) out.push({ id: out.length + 1, lineNo: i, checked: m[2] !== " ", text: m[4].trim() });
     });
   return out;
@@ -114,8 +124,15 @@ if (pr.user?.login?.endsWith("[bot]")) {
   console.log(`PR #${PR_NUMBER}: 봇 PR — 이슈 작업 아님`);
   process.exit(0);
 }
+// 비협력자·포크 PR은 팀 이슈를 진행시키지 않는다 (포크 PR 이벤트의 토큰은 읽기 전용이기도 하다)
+if (!MEMBER_ASSOC.has(pr.author_association) || pr.head.repo?.full_name !== REPO) {
+  console.log(`PR #${PR_NUMBER}: 협력자 브랜치 PR 아님(${pr.author_association}) — 생략`);
+  process.exit(0);
+}
 const mergeSha = pr.merge_commit_sha;
+// MARK는 판정을 끝낸 코멘트에만 — 생략·실패 안내(NOTE)는 재실행을 막지 않는다
 const MARK = `<!-- issue-progress:pr${PR_NUMBER} -->`;
+const NOTE = `<!-- issue-progress-note:pr${PR_NUMBER} -->`;
 const prComments = await ghAll(`repos/${REPO}/issues/${PR_NUMBER}/comments`);
 if (!FORCE && prComments.some((c) => c.user?.login === BOT && String(c.body).includes(MARK))) {
   console.log(`PR #${PR_NUMBER}: 이미 처리함 — 생략 (FORCE=1로 재실행)`);
@@ -153,22 +170,31 @@ if (!candidates.length) {
 }
 console.log("후보:", candidates.map((i) => `#${i.number}(${why.get(i.number).join(", ")})`).join(" "));
 
-const prComment = async (body) => {
-  await write(`repos/${REPO}/issues/${PR_NUMBER}/comments`, { method: "POST", body: { body: `${MARK}\n${body}` } }, `comment PR #${PR_NUMBER}`);
+const prComment = async (body, mark = MARK) => {
+  await write(`repos/${REPO}/issues/${PR_NUMBER}/comments`, { method: "POST", body: { body: `${mark}\n${body}` } }, `comment PR #${PR_NUMBER}`);
 };
 
-// 게이트 — 코드가 맞는지 확인된 PR만 이슈를 진행시킨다
+// 게이트 — 코드가 맞는지 확인된 PR만 이슈를 진행시킨다.
+// 사람 승인은 규칙 봇과 같은 기준: 머지된 head sha에 남은, 협력자(작성자·봇 제외)의 Approve.
+// 공개 저장소라 아무 GitHub 계정이나 Approve를 남길 수 있고, 옛 커밋 승인은 지금 코드를 본 게 아니다.
 const statuses = await ghAll(`repos/${REPO}/commits/${pr.head.sha}/statuses`).catch(() => []);
 const aiOk = statuses.find((s) => s.context === "ai-review")?.state === "success"; // 최신순
 const reviews = await ghAll(`repos/${REPO}/pulls/${PR_NUMBER}/reviews`);
 const humanOk = reviews.some(
-  (r) => r.state === "APPROVED" && r.user?.type !== "Bot" && r.user?.login !== pr.user.login,
+  (r) =>
+    r.state === "APPROVED" &&
+    r.commit_id === pr.head.sha &&
+    MEMBER_ASSOC.has(r.author_association) &&
+    r.user?.type !== "Bot" &&
+    r.user?.login !== BOT &&
+    r.user?.login !== pr.user.login,
 );
 const refs = candidates.map((i) => `#${i.number}`).join(" ");
 if (!aiOk && !humanOk) {
   await prComment(
     `🤖 **이슈 진행 판정 생략** — 관련 이슈로 보이는 ${refs}의 체크 항목을 자동으로 체크하지 않았습니다.\n\n` +
-      `AI 코드 리뷰 통과나 작성자 외 사람 승인이 없는 PR은 "끝났다"고 인정하지 않습니다. 끝낸 항목은 이슈에서 직접 체크해 주세요 — 모두 체크되면 이슈가 자동으로 닫힙니다.`,
+      `AI 코드 리뷰 통과나 작성자 외 팀원 승인이 없는 PR은 "끝났다"고 인정하지 않습니다. 끝낸 항목은 이슈에서 직접 체크해 주세요 — 모두 체크되면 이슈가 자동으로 닫힙니다.`,
+    NOTE,
   );
   process.exit(0);
 }
@@ -258,6 +284,7 @@ const failNote = (reason) =>
   prComment(
     `🤖 **이슈 진행 판정 실패** (${reason}) — 관련 이슈로 보이는 ${refs}를 체크하지 않았습니다.\n\n` +
       `끝낸 항목은 이슈에서 직접 체크해 주세요(모두 체크되면 자동으로 닫힘). 관리자는 Actions → \`issue-progress\` → Run workflow(pr=${PR_NUMBER})로 다시 판정할 수 있습니다.`,
+    NOTE,
   );
 if (!sess.session_id) {
   console.error("세션 생성 실패:", JSON.stringify(sess).slice(0, 300));
@@ -339,7 +366,10 @@ for (const r of result.issues) {
     if (!box || box.checked) continue;
     if (it.status === "partial" || it.status === "not_done") partial.push({ box, why: it.why });
     else if (it.status === "needs_human") human.push({ box, why: it.why });
-    else if (it.status === "done") {
+    else if (it.status === "done" && SWEEP.test(box.text)) {
+      // "46곳 → 토큰", "모든 버튼"처럼 전수 항목은 인용 몇 줄로 '남은 곳 없음'을 증명할 수 없다
+      rejected.push({ box, why: it.why, fail: "전수 항목 — 근거 몇 줄로 완료를 증명할 수 없어 사람이 확인 후 체크" });
+    } else if (it.status === "done") {
       const evs = Array.isArray(it.evidence) ? it.evidence : [];
       const checks = await Promise.all(evs.map(verify));
       const bad = checks.find((c) => !c.ok);
@@ -349,25 +379,32 @@ for (const r of result.issues) {
   }
   if (!verified.length && !rejected.length && !partial.length && !human.length) continue;
 
-  // 체크 — 판정 사이에 사람이 본문을 고쳤을 수 있으니 최신 본문에서 같은 문구의 줄을 찾아 바꾼다
+  // 체크 — 판정 사이에 사람이 본문을 고쳤을 수 있으니 최신 본문에서 같은 문구의 줄을 찾아 바꾼다.
+  // GitHub에는 조건부 PATCH가 없어, 쓰기 직전에 다시 읽어 그대로일 때만 쓴다(바뀌었으면 새 본문으로 재시도)
   let fresh = await gh(`repos/${REPO}/issues/${issue.number}`);
-  if (verified.length) {
+  for (let attempt = 0; verified.length && attempt < 3; attempt++) {
     const lines = String(fresh.body || "").split("\n");
+    const cur = boxes(fresh.body);
     let changed = 0;
     for (const v of verified) {
-      const cur = boxes(fresh.body);
       const target = cur.find((b) => b.id === v.box.id && b.text === v.box.text) ?? cur.find((b) => b.text === v.box.text);
       if (!target || target.checked) continue;
       // 웹 편집기로 쓴 본문은 CRLF — \r을 떼고 바꾼 뒤 되붙인다(정규식 .은 \r에 안 맞는다)
       const cr = lines[target.lineNo].endsWith("\r") ? "\r" : "";
       lines[target.lineNo] = lines[target.lineNo].replace(/\r$/, "").replace(BOX, "$1x$3$4") + cr;
+      target.checked = true;
       changed++;
     }
-    if (changed) {
-      const body = lines.join("\n");
-      await write(`repos/${REPO}/issues/${issue.number}`, { method: "PATCH", body: { body } }, `check ${changed} in #${issue.number}`);
-      fresh = { ...fresh, body };
+    if (!changed) break;
+    const latest = await gh(`repos/${REPO}/issues/${issue.number}`);
+    if (latest.body !== fresh.body) {
+      fresh = latest;
+      continue;
     }
+    const body = lines.join("\n");
+    await write(`repos/${REPO}/issues/${issue.number}`, { method: "PATCH", body: { body } }, `check ${changed} in #${issue.number}`);
+    fresh = { ...fresh, body };
+    break;
   }
   const after = boxes(fresh.body);
   const left = after.filter((b) => !b.checked);
@@ -390,7 +427,9 @@ for (const r of result.issues) {
     const tail =
       fresh.state === "closed" && left.length
         ? `\n\n⚠️ ${assignees} 이 이슈는 \`Closes\` 키워드로 닫혔지만 **남은 항목이 ${left.length}개** 있습니다. 끝나지 않았다면 Reopen해 주세요 — 다음부터는 일부만 끝낸 PR에 \`Refs #${issue.number}\`를 쓰면 이슈가 열린 채로 연결됩니다.`
-        : `\n\n남은 항목 ${left.length}/${after.length}개 — 모두 체크되면 자동으로 닫힙니다.`;
+        : fresh.state === "closed"
+          ? `\n\n체크리스트 ${after.length}개가 모두 체크됐습니다 (이슈는 이미 닫혀 있음).`
+          : `\n\n남은 항목 ${left.length}/${after.length}개 — 모두 체크되면 자동으로 닫힙니다.`;
     await write(`repos/${REPO}/issues/${issue.number}/comments`, { method: "POST", body: { body: head + sections.join("\n\n") + tail } }, `comment #${issue.number}`);
     summary.push(`#${issue.number} — ${verified.length}개 체크 · 남은 항목 ${left.length}개`);
   }
