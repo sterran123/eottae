@@ -31,6 +31,3 @@ export interface ReportRequest {
   /** 신고와 함께 차단할지 */
   alsoBlock: boolean;
 }
-
-/** 차단 상태 — 'blocked'면 송수신·자동응답 모두 정지 */
-export type BlockState = 'none' | 'blocked';

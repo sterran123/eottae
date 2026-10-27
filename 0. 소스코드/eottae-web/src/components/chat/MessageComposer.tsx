@@ -42,6 +42,12 @@ export default function MessageComposer({
     };
   }, []);
 
+  // 녹음 중 차단 등으로 입력이 비활성화되면 녹음을 취소해 마이크가 켜진 채 남지 않게 한다.
+  useEffect(() => {
+    if (disabled && isRecording) cancelRecording();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [disabled]);
+
   function submitText() {
     if (!trimmed || disabled) return;
     onSend(trimmed);

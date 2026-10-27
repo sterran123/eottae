@@ -47,6 +47,8 @@ export default function ChatRoom() {
   const blockedRef = useRef(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [blockOpen, setBlockOpen] = useState(false);
+  // 확인 모달이 차단용인지 해제용인지 — 열 때 정해 두어 확정 직후 문구가 바뀌지 않게 한다.
+  const [confirmMode, setConfirmMode] = useState<'block' | 'unblock'>('block');
   const [reportOpen, setReportOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuBtnRef = useRef<HTMLButtonElement>(null);
@@ -110,6 +112,22 @@ export default function ChatRoom() {
   function handleReportSubmit(req: ReportRequest) {
     // [DEMO] 서버 전송 없음. 신고 내용은 저장·로깅하지 않는다.
     if (req.alsoBlock) applyBlock();
+  }
+
+  // 차단/해제 확인 모달 열기 (해제도 실수 방지를 위해 항상 확인을 거친다)
+  function openBlockConfirm() {
+    setConfirmMode(blockedRef.current ? 'unblock' : 'block');
+    setBlockOpen(true);
+  }
+
+  // 모달이 닫히면 메뉴 항목이 이미 사라져 포커스가 갈 곳을 잃으므로 트리거로 복귀
+  function closeBlockConfirm() {
+    setBlockOpen(false);
+    menuBtnRef.current?.focus();
+  }
+  function closeReport() {
+    setReportOpen(false);
+    menuBtnRef.current?.focus();
   }
 
   // 더보기 메뉴: 바깥 클릭·Esc로 닫고, Esc일 때 트리거로 포커스 복귀
@@ -209,8 +227,7 @@ export default function ChatRoom() {
                   type="button"
                   onClick={() => {
                     setMenuOpen(false);
-                    if (blocked) releaseBlock();
-                    else setBlockOpen(true);
+                    openBlockConfirm();
                   }}
                 >
                   {blocked ? '차단 해제하기' : '상대방 차단하기'}
@@ -257,7 +274,7 @@ export default function ChatRoom() {
       {blocked && (
         <div className="mt-chat-blocked-bar" role="status">
           <span>차단한 상대와는 대화할 수 없어요</span>
-          <button type="button" onClick={releaseBlock}>
+          <button type="button" onClick={openBlockConfirm}>
             차단 해제
           </button>
         </div>
@@ -271,16 +288,17 @@ export default function ChatRoom() {
 
       <BlockConfirmModal
         open={blockOpen}
+        mode={confirmMode}
         partnerName={DEMO_PARTNER.nickname}
-        onConfirm={applyBlock}
-        onClose={() => setBlockOpen(false)}
+        onConfirm={confirmMode === 'unblock' ? releaseBlock : applyBlock}
+        onClose={closeBlockConfirm}
       />
       <ReportModal
         open={reportOpen}
         partnerId={DEMO_PARTNER.id}
         partnerName={DEMO_PARTNER.nickname}
         onSubmit={handleReportSubmit}
-        onClose={() => setReportOpen(false)}
+        onClose={closeReport}
       />
     </section>
   );
