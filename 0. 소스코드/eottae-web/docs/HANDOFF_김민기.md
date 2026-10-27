@@ -172,3 +172,22 @@ git config --global user.email "본인 GitHub 이메일 또는 noreply"
 
 - `.github/workflows/site-health.yml` + `tools/site_health_check.mjs` — deploy-pages 완료 직후와 매일(18:33 KST) 실사이트 8개 핵심 경로(홈·match·offline·manifest·sw·api/health·아이콘·폰트)의 200+content-type을 검사한다. 실패하면 이슈를 열고(마커 dedupe — 열린 이슈가 있으면 갱신), 전부 복구되면 그 이슈에 복구 코멘트를 달고 자동으로 닫는다.
 - `tools/pr_review_bot.mjs` — 판정 코멘트를 단 PR이 3일 이상 변동 없이 열려 있으면 작성자 핑 코멘트를 단다(sha당 1회, `remind` 마커).
+
+## 14. Supabase 프로젝트 — 김민기 소유 (ADR-005)
+
+프로젝트는 김민기가 만들고 Owner로 갖는다. 주한태는 Developer로 초대받아 작업한다. 값별 보관 위치는 ADR-005 「프로젝트 소유·키 관리」 표를 따른다.
+
+**처음 한 번 (대시보드)**
+1. [supabase.com](https://supabase.com) → **Continue with GitHub**(sterran123) 로그인
+2. 조직 만들기: 이름 `eottae`, 플랜 **Free**
+3. **New project**: 이름 `eottae` · Database Password는 **Generate a password** → 비밀번호 관리자에 저장(Git·카톡·이슈에 올리지 않기) · Region **Northeast Asia (Seoul)** → Create
+4. **Authentication → URL Configuration**: Site URL `https://sterran123.github.io/eottae/`, Redirect URLs에 `https://sterran123.github.io/eottae/**`, `http://localhost:3000/**` 추가
+5. **Organization → Team → Invite**: 주한태 이메일, 역할 **Developer**
+6. **Project Settings → API Keys**에서 두 값을 확인: Project URL(`https://<ref>.supabase.co`)과 공개 키(Publishable key `sb_publishable_…` 또는 Legacy 탭의 `anon` key). **secret / service_role 키는 복사하지 않는다**
+7. GitHub 저장소 **Settings → Secrets and variables → Actions → New repository secret**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` — 다음 main push부터 배포 빌드에 들어간다 (#26)
+
+**그 뒤 반복 작업**
+- 주한태 마이그레이션 PR이 머지되면 클라우드에 적용: `cd "0. 소스코드/eottae-web"` → `npx supabase login` → `npx supabase link --project-ref <ref>`(DB 비밀번호 입력) → `npx supabase db push`
+- Edge Function 시크릿(성인 인증·계정 삭제용 service_role 등)은 `npx supabase secrets set 이름=값`으로만 — 파일·Secrets 탭에 두지 않는다
+- 무료 플랜은 1주일 비활성 시 일시 정지 — 발표·시연 전날 대시보드에서 상태 확인(정지면 Restore)
+
