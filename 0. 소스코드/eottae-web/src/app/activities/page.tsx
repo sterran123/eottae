@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import SubpageHero from '@/components/shared/subpage-hero';
+import { MotifIcon } from '@/components/shared/motif-icon';
 
 export const metadata: Metadata = {
   title: '데이트·소모임',
@@ -21,7 +22,7 @@ export default function ActivitiesPage() {
         eyebrow="MODULE 02 · ACTIVITIES"
         status={{ label: '2차 MVP · 준비 중' }}
         title="데이트와 소모임, 함께하는 하루"
-        motif="✦"
+        motif={<MotifIcon name="spark" size={56} />}
       >
         매칭으로 연결된 사람들과 취향이 맞는 사람들이 오프라인에서도 만날 수 있도록, 데이트
         코스·소모임·일정 관리를 2차 MVP에서 구현합니다.

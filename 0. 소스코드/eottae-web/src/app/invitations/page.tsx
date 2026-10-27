@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import SubpageHero from '@/components/shared/subpage-hero';
+import { MotifIcon } from '@/components/shared/motif-icon';
 
 export const metadata: Metadata = {
   title: '모바일 청첩장',
@@ -21,7 +22,7 @@ export default function InvitationsPage() {
         eyebrow="MODULE 03 · INVITATIONS"
         status={{ label: '3차 MVP · 준비 중' }}
         title="모바일 청첩장, 우리만의 특별한 초대"
-        motif="✉"
+        motif={<MotifIcon name="mail" size={56} />}
       >
         관계가 결실을 맺는 순간을 위해 청첩장 제작·공유·참석 회신을 3차 MVP에서 구현합니다.
         매칭 이용 이력과 무관하게 누구나 독립적으로 이용할 수 있도록 설계합니다.

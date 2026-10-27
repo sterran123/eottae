@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import SubpageHero from '@/components/shared/subpage-hero';
+import { MotifIcon } from '@/components/shared/motif-icon';
 
 export const metadata: Metadata = {
   title: '안전센터',
@@ -17,7 +18,7 @@ const policies = [
 export default function SafetyPage() {
   return (
     <>
-      <SubpageHero eyebrow="TRUST & SAFETY" title="안전센터 · 정책 초안" motif="♡">
+      <SubpageHero eyebrow="TRUST & SAFETY" title="안전센터 · 정책 초안" motif={<MotifIcon name="shield" size={56} />}>
         성인 전용 1:1 데이팅, 상호 동의, 개인정보 최소화, 차단·신고를 개발 최우선 조건으로
         정했습니다.
       </SubpageHero>
