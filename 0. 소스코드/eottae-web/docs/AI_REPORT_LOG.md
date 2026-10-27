@@ -456,3 +456,10 @@
 - [보안] ADR-005·HANDOFF §14 | Developer 실제 권한(service_role·JWT Secret 읽기, Edge Function 배포, SQL Editor RLS 우회, 백업 복원)을 사실대로 적고 「공유 금지」는 팀 규칙임을 명시, 팀원 이탈·키 노출 시 secret key 재발급 회수 절차 추가 (#42 AI 리뷰 수정 필요). 무료 플랜엔 Read-only 역할 없음
 - [변경] .gitignore | supabase/.branches·supabase/.env 추가 · HANDOFF 초대 링크 24시간 유효·CLI 토큰 Revoke 확인
 - [미구현/보류] 팀원 초대(대시보드 전용, 김민기) · `npx supabase logout` + Access Tokens Revoke 확인(김민기) · 앱 코드에 Supabase 연결 전이라 배포 번들 반영 확인은 주한태 연결 코드 머지 후
+
+## 2026-10-27 CORE-003 오프라인 폴백 수정 — 김민기 실기기 확인에서 발견
+- [변경] public/sw.js | 오프라인 폴백 주소를 `/offline` → `/offline/`로 — `trailingSlash: true`라 Pages가 301을 주고, 서비스워커가 저장한 리다이렉트 응답은 페이지 이동에 쓸 수 없어 `ERR_FAILED`가 났다(안드로이드 실기기 캡처)
+- [변경] public/sw.js | `…/index.txt` 주소로의 페이지 이동은 페이지 주소로 302 — Next 15 `output: export`는 RSC 요청이 네트워크 오류로 실패하면 페이로드 주소(index.txt) 그대로 브라우저 이동을 한다(`fetch-server-response.js` catch 분기)
+- [변경] public/sw.js | 설치 때 홈·오프라인 페이지 HTML이 참조하는 `/_next/static/` JS·CSS까지 precache — 첫 방문 직후 오프라인으로 열 때 청크가 없어 「Application error」가 나는 경우 방지. 리다이렉트된 응답은 캐시하지 않음, 캐시 이름 v5
+- [검증] 로컬 Pages 미리보기 + Chromium(playwright-core, 임시 설치)으로 첫 방문 → 서비스워커 설치 → **서버 종료**(context.setOffline은 서비스워커 fetch를 막지 않아 이전 헤드리스 점검이 판정 불가였던 원인) 후 4가지 확인. 기존 sw.js: 홈 새로고침 ok, 매칭 링크 클릭·index.txt 직접 이동·미방문 페이지 3건 `ERR_FAILED`. 수정본: 4건 모두 정상(홈은 캐시, 나머지는 「지금은 오프라인이에요」), pageerror 0건
+- [미구현/보류] 실기기 재확인(TC-012) — 배포 후 김민기가 안드로이드에서 다시 확인. 온라인 상태에서 미리 받아 둔(prefetch) 경로를 오프라인에서 누를 때의 동작은 이번 재현 범위 밖
