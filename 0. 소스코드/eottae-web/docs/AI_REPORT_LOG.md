@@ -384,3 +384,5 @@
 - [시도·실패] main 보호 규칙에 github-actions 앱 bypass(리뷰 요구 예외) 추가 → GitHub API **500** (개인 계정 저장소는 클래식 보호 규칙의 앱 bypass 미지원). 설정 변경 없음 확인
 - [변경] team-sync.yml | main push마다 실행(생성 파일만 바뀐 push는 paths-ignore로 제외) — 사람·관리자 머지 뒤 봇 PR이 낡은 채 남던 문제 해소 / pr_review_bot.mjs | 봇 PR만 머지된 회차에는 team-sync를 다시 dispatch하지 않음(리포트 PR 무한 반복 방지)
 - [버그수정] ai-review 첫 실전(PR #30): Devin 세션 생성·판정 반환까지 성공했으나 PR 코멘트 403(`pull-requests: read`) → `pull-requests: write`로 수정, 판정 커밋 상태를 코멘트보다 먼저 기록하고 코멘트 실패는 best-effort로 처리(상태가 pending에 멈추지 않게)
+- [검증·실환경] 권한 수정 후 `/ai-review` 재실행(PR #30) — Devin 세션이 25분 동안 running으로 남아 시간 초과 → 설계대로 ERROR 코멘트 + 상태 `error`(머지 차단) 확인
+- [버그수정] ai_code_review.mjs | 세션 상태만 기다리던 폴링을 "매 주기 메시지를 읽어 VERDICT 줄이 나오면 즉시 채택"으로 변경 — Devin이 답을 쓴 뒤에도 세션을 열어 두는 경우 대응

@@ -174,13 +174,23 @@ console.log("session:", sess.session_id, url);
 
 let answer = null;
 const deadline = Date.now() + DEADLINE_MS;
+// Devin은 답을 다 쓴 뒤에도 세션을 running으로 열어 둘 때가 있다 — 상태만 기다리면 시간 초과가 난다.
+// 매 주기 메시지를 읽어 VERDICT 줄이 있는 응답이 나오면 바로 채택하고, 세션이 끝나면 마지막 응답을 쓴다.
+const VERDICT_RE = /VERDICT:\s*(PASS|CHANGES_REQUESTED)\s*$/m;
 while (Date.now() < deadline) {
   await new Promise((r) => setTimeout(r, 30_000));
-  const s = await devin(`sessions/${sess.session_id}`);
-  if (s.status === "running") continue;
-  const msgs = await devin(`sessions/${sess.session_id}/messages`);
-  answer = (msgs.items ?? []).filter((m) => m.source === "devin").pop()?.message?.trim() || null;
-  break;
+  const msgs = await devin(`sessions/${sess.session_id}/messages`).catch(() => ({}));
+  const said = (msgs.items ?? []).filter((m) => m.source === "devin").map((m) => m.message?.trim() || "");
+  const done = [...said].reverse().find((m) => VERDICT_RE.test(m));
+  if (done) {
+    answer = done;
+    break;
+  }
+  const s = await devin(`sessions/${sess.session_id}`).catch(() => ({}));
+  if (s.status && s.status !== "running") {
+    answer = said.pop() || null;
+    break;
+  }
 }
 
 const verdict = answer?.match(/VERDICT:\s*(PASS|CHANGES_REQUESTED)\s*$/m)?.[1];
