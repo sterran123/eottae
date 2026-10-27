@@ -383,3 +383,4 @@
 - [검증·실환경] #29 머지 후 새 봇이 실제로 실행 — 봇 PR #25를 끝까지 판정(생성 파일만·보안 스캔 통과·빌드 상태 check 통과·AI 리뷰 대상 아님)하고 "봇 자기 승인 불가 — 사람 승인 1번 필요" 표 코멘트 게시 확인
 - [시도·실패] main 보호 규칙에 github-actions 앱 bypass(리뷰 요구 예외) 추가 → GitHub API **500** (개인 계정 저장소는 클래식 보호 규칙의 앱 bypass 미지원). 설정 변경 없음 확인
 - [변경] team-sync.yml | main push마다 실행(생성 파일만 바뀐 push는 paths-ignore로 제외) — 사람·관리자 머지 뒤 봇 PR이 낡은 채 남던 문제 해소 / pr_review_bot.mjs | 봇 PR만 머지된 회차에는 team-sync를 다시 dispatch하지 않음(리포트 PR 무한 반복 방지)
+- [버그수정] ai-review 첫 실전(PR #30): Devin 세션 생성·판정 반환까지 성공했으나 PR 코멘트 403(`pull-requests: read`) → `pull-requests: write`로 수정, 판정 커밋 상태를 코멘트보다 먼저 기록하고 코멘트 실패는 best-effort로 처리(상태가 pending에 멈추지 않게)

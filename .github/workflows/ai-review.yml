@@ -14,7 +14,7 @@ on:
 
 permissions:
   contents: read
-  pull-requests: read
+  pull-requests: write # PR 코멘트 — PR 이벤트에서는 issues: write만으로는 403
   issues: write     # 리뷰 코멘트
   statuses: write   # ai-review 커밋 상태
 

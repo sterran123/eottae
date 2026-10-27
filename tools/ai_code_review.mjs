@@ -72,10 +72,16 @@ const setStatus = async (state, description, target_url) => {
     body: { state, context: CONTEXT, description: description.slice(0, 140), ...(target_url ? { target_url } : {}) },
   });
 };
+// 코멘트 실패(권한·일시 오류)가 판정 기록을 막지 않게 — 상태는 항상 먼저 남기고 코멘트는 best-effort
 const comment = async (verdict, body) => {
   const full = `${marker(verdict)}\n${body}`;
   if (DRY) return console.log(`[DRY] comment ${verdict}\n${full.slice(0, 600)}`);
-  await gh(`repos/${REPO}/issues/${PR_NUMBER}/comments`, { method: "POST", body: { body: full } });
+  try {
+    await gh(`repos/${REPO}/issues/${PR_NUMBER}/comments`, { method: "POST", body: { body: full } });
+  } catch (e) {
+    console.error(`코멘트 실패(판정 상태는 기록됨): ${e.message}`);
+    process.exitCode = 1;
+  }
 };
 
 // 같은 head sha를 이미 판정했으면 반복하지 않는다 (재실행은 /ai-review 댓글이 FORCE로 요청)
@@ -190,6 +196,7 @@ if (!answer || !verdict) {
 }
 
 const pass = verdict === "PASS";
+await setStatus(pass ? "success" : "failure", pass ? "AI 리뷰 통과" : "AI 리뷰 — 수정 필요", url);
 await comment(
   pass ? "PASS" : "FAIL",
   `${answer.replace(/\n?VERDICT:\s*(PASS|CHANGES_REQUESTED)\s*$/m, "").trim()}\n\n---\n` +
@@ -198,5 +205,4 @@ await comment(
       : `🤖 판정: **수정 필요** (head \`${sha.slice(0, 7)}\`) — 「반드시 고칠 것」을 수정해 push하면 자동으로 다시 리뷰합니다. 판정에 동의하지 않으면 담당자가 PR을 Approve하면 사람 판단이 우선합니다.`) +
     ` · [Devin 세션](${url})`,
 );
-await setStatus(pass ? "success" : "failure", pass ? "AI 리뷰 통과" : "AI 리뷰 — 수정 필요", url);
 console.log("verdict:", verdict);
