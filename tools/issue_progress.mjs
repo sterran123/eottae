@@ -37,7 +37,9 @@ const LINKS = /\b(close[sd]?|fix(e[sd])?|resolve[sd]?|refs?|related\s+to|part\s+
 const REQ_ID = /\b(MATCH|ACT|INV|CORE|FR|TC)-\d{3}\b/g;
 const MEMBER_ASSOC = new Set(["OWNER", "MEMBER", "COLLABORATOR"]);
 // 체크박스 줄: "- [ ] 내용" / "* [x] 내용"
-const BOX = /^(\s*[-*+]\s+\[)([ xX])(\]\s+)(.*)$/;
+// GitHub이 체크박스로 그리는 형식 전부 — 번호 목록("1. [ ]")·인용("> - [ ]")을 빠뜨리면
+// 그 항목이 남아 있어도 '전부 체크'로 보고 이슈를 일찍 닫는다
+const BOX = /^(\s*(?:>\s*)*(?:[-*+]|\d+[.)])\s+\[)([ xX])(\]\s+)(.*)$/;
 // 전수 항목(여러 곳을 전부 고쳐야 끝나는 항목) — AI가 done이라 해도 자동 체크하지 않는다
 const SWEEP = /\d+\s*곳|모든|전부|전체|전수/;
 
@@ -97,6 +99,8 @@ const allChecked = (body) => {
 };
 
 const closeIssue = async (n, body) => {
+  // PR 판정과 이슈 수정 실행은 concurrency 그룹이 달라 동시에 닫을 수 있다 — 이미 닫혔으면 코멘트도 생략
+  if ((await gh(`repos/${REPO}/issues/${n}`)).state !== "open") return console.log(`#${n} 이미 닫힘`);
   await write(`repos/${REPO}/issues/${n}/comments`, { method: "POST", body: { body } }, `comment #${n}`);
   await write(`repos/${REPO}/issues/${n}`, { method: "PATCH", body: { state: "closed", state_reason: "completed" } }, `close #${n}`);
   console.log(`#${n} 닫음`);
@@ -387,8 +391,9 @@ for (const r of result.issues) {
     // id와 함께 옮겨 적은 문구가 그 줄과 맞아야 한다 — id가 어긋난 판정으로 다른 항목을 체크하지 않게
     const said = norm(it.text);
     const sameItem = said.length >= Math.min(20, norm(box.text).length) && norm(box.text).startsWith(said);
-    if (it.status === "done" && !sameItem) {
-      rejected.push({ box, why: it.why, fail: "판정의 id와 항목 문구가 맞지 않음" });
+    if (!sameItem) {
+      // 진행 중·사람 확인 판정도 id가 어긋났으면 엉뚱한 항목 이름으로 보고되니 done만 기록하고 나머지는 버린다
+      if (it.status === "done") rejected.push({ box, why: it.why, fail: "판정의 id와 항목 문구가 맞지 않음" });
     } else if (it.status === "partial" || it.status === "not_done") partial.push({ box, why: it.why });
     else if (it.status === "needs_human") human.push({ box, why: it.why });
     else if (it.status === "done" && SWEEP.test(box.text)) {

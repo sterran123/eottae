@@ -197,7 +197,7 @@ const guessIssues = (pr, openIssues) => {
     .filter(
       (i) =>
         MEMBER_ASSOC.has(i.author_association) &&
-        /^\s*[-*+]\s+\[ \]\s/m.test(String(i.body || "").replace(/\r/g, "")) &&
+        /^\s*(?:>\s*)*(?:[-*+]|\d+[.)])\s+\[ \]\s/m.test(String(i.body || "").replace(/\r/g, "")) &&
         (i.assignees?.some((a) => a.login === pr.user?.login) ||
           ids.some((id) => `${i.title}\n${i.body}`.includes(id))),
     )
