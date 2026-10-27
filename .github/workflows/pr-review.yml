@@ -1,8 +1,9 @@
 # 「어때?」 PR 리뷰 봇 — 열린 PR을 주기적 + 실시간으로 점검한다.
 #   실시간: pull_request(opened/synchronize/reopened/ready_for_review)·pull_request_review(submitted)
 #   주기:   2시간마다 — webhook 이벤트를 놓치거나 머지 가능 상태가 늦게 계산된 경우를 쓸어 담는다
-#   괜찮은 PR(CI 통과·충돌 없음·민감 파일 없음) → 자동 승인 + 머지 시도
-#   문제 있는 PR(충돌/CI 실패/외부 작성자/민감 영역) → 코멘트로 사유 안내
+#   괜찮은 PR(보안 스캔·빌드 CI·AI 코드 리뷰 통과, 충돌 없음) → 자동 승인 + 머지 시도
+#   draft·team-sync 봇 PR도 판정 / 보호 영역 PR은 나머지 검사 후 사람 승인 시 머지
+#   문제 있는 PR(충돌/CI 실패/AI 수정 요청/보안 스캔/외부 작성자) → 위반 사유와 다시 시도하는 방법 코멘트
 #   머지가 발생하면 deploy-pages·team-sync를 dispatch해 사이트/리포트를 갱신한다.
 # 판정 규칙 상세는 tools/pr_review_bot.mjs 상단 주석 참조.
 # 주의: GitHub은 저장소 활동이 60일 없으면 스케줄 워크플로를 자동 비활성화한다 —
@@ -14,11 +15,11 @@ on:
   schedule:
     - cron: "17 */2 * * *" # 2시간마다 (UTC) — 이벤트를 놓쳐도 주기적으로 다시 쓴다
   pull_request:           # 실시간 — PR 생성/새 push/리뷰 전환 때 바로 판정
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
   pull_request_review:    # 사람이 승인하면 조건 충족 시 즉시 머지 시도
     types: [submitted]
-  workflow_run:           # CI(check) 완료 시 재판정 — push 직후엔 check가 아직 없어서
-    workflows: [ci]       # pull_request 이벤트 판정이 'CI 대기'로 끝나는 공백을 메운다
+  workflow_run:           # CI(check)·AI 리뷰 완료 시 재판정 — push 직후엔 결과가 아직 없어서
+    workflows: [ci, ai-review] # pull_request 이벤트 판정이 '대기'로 끝나는 공백을 메운다
     types: [completed]
   workflow_dispatch:      # Actions 탭에서 수동 실행 가능
 
@@ -27,6 +28,7 @@ permissions:
   pull-requests: write   # 승인 리뷰 작성
   issues: write          # PR 코멘트 (issues comments API 사용)
   checks: read           # CI check-run 조회
+  statuses: read         # ai-review 커밋 상태 조회
   actions: write         # 머지 후 deploy-pages·team-sync dispatch
 
 concurrency:

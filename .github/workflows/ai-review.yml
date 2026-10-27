@@ -1,0 +1,48 @@
+# 「어때?」 AI 코드 리뷰 — PR head마다 Devin이 "코드가 맞는지·안전한지"를 판정한다.
+#   결과: PR 코멘트 + 커밋 상태 `ai-review`(success/failure/error) → 규칙 봇(pr-review)의 머지 게이트
+#   트리거: PR 생성·push·reopen·ready_for_review (draft 포함) / 협력자의 `/ai-review` 댓글(재실행)
+#   비용: 실행마다 Devin 세션 1개(조직 ACU) — 같은 head sha는 다시 리뷰하지 않는다
+# 상세는 tools/ai_code_review.mjs 상단 주석 참조.
+name: ai-review
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write # PR 코멘트 — PR 이벤트에서는 issues: write만으로는 403
+  issues: write     # 리뷰 코멘트
+  statuses: write   # ai-review 커밋 상태
+
+concurrency:
+  group: ai-review-${{ github.event.pull_request.number || github.event.issue.number }}
+  cancel-in-progress: true # 새 push가 오면 옛 head 리뷰 대기는 그만둔다
+
+jobs:
+  review:
+    if: >-
+      github.event_name == 'pull_request' ||
+      (github.event.issue.pull_request &&
+       startsWith(github.event.comment.body, '/ai-review') &&
+       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main # 리뷰 스크립트는 항상 main 기준 — PR이 스크립트를 바꿔 판정을 조작하지 못하게
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Devin 코드 리뷰
+        env:
+          DEVIN_API_KEY: ${{ secrets.DEVIN_API_KEY }}
+          DEVIN_ORG_ID: ${{ secrets.DEVIN_ORG_ID }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
+          FORCE: ${{ github.event_name == 'issue_comment' && '1' || '' }}
+        run: node tools/ai_code_review.mjs
