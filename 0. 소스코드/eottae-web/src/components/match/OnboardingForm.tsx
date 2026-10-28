@@ -32,6 +32,7 @@ import {
   type MbtiType,
   type MyMbti,
   type OnboardingDraft,
+  type PhotoVisibilitySetting,
   type RelationGoal,
   type VerifiedIdentity,
 } from '@/lib/match/types';
@@ -128,6 +129,8 @@ export default function OnboardingForm({
   const [interests, setInterests] = useState<string[]>([]);
   const [preferredDistance, setPreferredDistance] =
     useState<DistancePreference>('within_10km');
+  const [photoVisibility, setPhotoVisibility] =
+    useState<PhotoVisibilitySetting>('hidden');
   // 펼쳐진 관심사 카테고리(아코디언). 기본은 첫 카테고리만 열림.
   const [openCats, setOpenCats] = useState<Set<InterestCategoryId>>(
     () => new Set([INTEREST_CATEGORIES[0]?.id].filter(Boolean) as InterestCategoryId[]),
@@ -225,6 +228,7 @@ export default function OnboardingForm({
       relationGoal,
       interestIds: interests,
       preferredDistance,
+      photoVisibility,
     };
     if (onSubmit) {
       onSubmit(draft);
@@ -594,6 +598,50 @@ export default function OnboardingForm({
             </div>
           </>
         )}
+      </fieldset>
+
+      {/* 사진 및 프로필 공개범위 설정 (MATCH-001) */}
+      <fieldset className="mt-onb__field">
+        <legend className="mt-onb__label">
+          프로필 및 사진 공개범위 <span className="mt-onb__accent">공개 설정</span>
+        </legend>
+        <p className="mt-onb__hint">
+          상대방에게 내 사진과 프로필이 어떻게 보일지 설정해요.
+        </p>
+
+        <div className="mt-onb__privacy-options" role="radiogroup" aria-label="프로필 및 사진 공개범위">
+          <button
+            type="button"
+            role="radio"
+            aria-checked={photoVisibility === 'hidden'}
+            className={`mt-onb__privacy-opt${photoVisibility === 'hidden' ? ' is-on' : ''}`}
+            onClick={() => setPhotoVisibility('hidden')}
+          >
+            <div className="mt-onb__privacy-head">
+              <span className="mt-onb__privacy-title">실루엣 기본 (권장)</span>
+              <span className="mt-onb__privacy-badge">안전 블라인드</span>
+            </div>
+            <p className="mt-onb__privacy-desc">
+              서로 호감을 표현하기 전까지는 실루엣으로 보여요. 쌍방 호감 시 자동으로 무료 공개돼요.
+            </p>
+          </button>
+
+          <button
+            type="button"
+            role="radio"
+            aria-checked={photoVisibility === 'preview'}
+            className={`mt-onb__privacy-opt${photoVisibility === 'preview' ? ' is-on' : ''}`}
+            onClick={() => setPhotoVisibility('preview')}
+          >
+            <div className="mt-onb__privacy-head">
+              <span className="mt-onb__privacy-title">사진 미리보기 허용</span>
+              <span className="mt-onb__privacy-badge mt-onb__privacy-badge--acorn">도토리 미리보기 가능</span>
+            </div>
+            <p className="mt-onb__privacy-desc">
+              상대방이 도토리를 사용하여 내 사진을 먼저 열어보는 것을 허용해요.
+            </p>
+          </button>
+        </div>
       </fieldset>
 
       {/* 안전 안내 */}

@@ -25,7 +25,7 @@
 - **결정**: 프런트는 지금처럼 GitHub Pages 정적 export(`output: 'export'`, `basePath: /eottae`)로 배포하고, 백엔드는 **Supabase**(Auth · Postgres+RLS · Realtime · Storage · Edge Functions)를 브라우저에서 `@supabase/supabase-js`로 직접 호출한다.
 - **이유**: Pages는 정적 호스팅이라 Next.js API 라우트(`src/app/api/**`)가 배포 환경에서 실행되지 않는다(빌드 시 정적 파일로만 남는다). Supabase는 ADR-001의 "BaaS(PostgreSQL/Auth/Realtime)" 후보와 일치하고, 기존 ERD·`supabase/` 폴더를 그대로 살릴 수 있으며, 배포 파이프라인을 바꾸지 않아도 된다. 검토한 대안은 Firebase(설계 문서 전부 재작성 필요)와 Vercel 이전(배포 교체 + DB 별도 필요)이다.
 - **보안 경계 = RLS**: 클라이언트 조건은 UI 편의일 뿐이다(ADR-002). 모든 테이블은 RLS를 켜고 default deny로 시작해, 정책이 허용한 행만 접근하게 한다.
-  - 브라우저에는 **anon key만** 들어간다. anon key는 공개돼도 되는 값이지만, **service_role key는 프런트 코드·Git·GitHub Pages 빌드 어디에도 넣지 않는다**(Supabase 대시보드와 Edge Function 시크릿에만 둔다).
+  - 브라우저에는 **공개 키(Publishable key, 옛 이름 anon key)만** 들어간다. 공개돼도 되는 값이지만, **service_role(secret) key는 프런트 코드·Git·GitHub Pages 빌드 어디에도 넣지 않는다**(클라우드 Edge Function에는 `SUPABASE_SERVICE_ROLE_KEY`로 자동 제공되므로 복사할 일도 없다). Edge Function은 로그인한 사용자의 access token(JWT)으로 호출되므로 기본 `verify_jwt`를 유지한다 — Publishable key는 JWT가 아니라서 `verify_jwt`를 켠 함수는 **로그인 세션이 있어야만** 호출된다(로그인 전 호출이 필요한 함수를 만들면 그 함수만 따로 결정, 구현 시 Supabase 문서로 재확인).
   - **로그인/세션 (MATCH-003)**: Supabase Auth를 그대로 사용한다. 자체 세션 토큰·서명은 만들지 않는다. 만료와 로그아웃은 Auth가 처리하고, RLS는 `auth.uid()`로 본인을 판정한다.
   - **성인 인증 (MATCH-004)**: 인증 결과(`adult_verified`, 만료 시각)는 **Edge Function만 쓸 수 있는 컬럼**에 기록한다. 클라이언트 update는 RLS로 막는다. 인증 업체 확정 전 더미 인증은 로컬 Supabase에서만 허용하고, 공개 프로젝트에서는 fail-closed로 둔다. 매칭·채팅 관련 RLS는 모두 "검증된 성인 + ACTIVE 계정" 조건을 포함한다.
   - **관심·상호 매칭 (MATCH-005)**: 좋아요 insert는 본인 행만 허용한다. 쌍방 성립 시 match·conversation 생성은 `security definer` RPC나 트리거가 1건만 만들고(UNIQUE 제약), 클라이언트는 match 테이블에 직접 insert하지 못한다.
@@ -36,6 +36,23 @@
 - **배포 설정**: GitHub 저장소 Secrets `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`를 `deploy-pages.yml`의 build 단계에 주입한다. 값이 없으면 빈 문자열로 빌드되며, 화면은 데모 데이터 모드로 동작해야 한다(키가 없어서 빌드가 깨지지 않게).
 - **API 계약과의 관계**: `API_계약_초안.md`의 `/api/v1/...` 경로는 **논리 계약**으로 유지하고, 실제 구현은 테이블+RLS / RPC / Edge Function으로 대응한다(대응표는 API 계약 문서 하단). `src/app/api/health`처럼 정적으로 둘 수 있는 것 외에는 Next API 라우트를 새로 만들지 않는다.
 - **마이그레이션**: `supabase/migrations/`에 Supabase CLI 형식으로 작성한다. 되돌릴 수 있게 만들고, RLS 정책마다 허용·거부 테스트(TC-003~010)를 같이 둔다. 운영 DB에 AI 에이전트나 MCP를 직접 연결하지 않는다(운영 결정 목록 유지).
+- **프로젝트 소유·키 관리 (2026-10-27 추가)**: Supabase 조직·프로젝트는 **김민기가 만들고 Owner로 소유**한다. 키 발급·교체·Secrets 등록을 한 사람이 맡아 팀원끼리 키를 주고받을 일이 없게 하고, 팀원 계정 사정으로 프로젝트 접근을 잃지 않게 하기 위해서다. 팀원 3명(오하율·주한태·손준혁)은 급할 때 서로 대신 작업할 수 있게 모두 조직에 **Developer**로 초대한다. 스키마·정책은 주한태(DB·RLS 담당)가 주도한다.
+  - **Developer가 할 수 있는 것**([Supabase 권한표](https://supabase.com/docs/guides/platform/access-control) 기준): service_role(secret) key·JWT Secret 읽기, Edge Function 배포·시크릿 보기, SQL Editor 실행(postgres 권한이라 RLS 우회), 백업 다운로드·복원. 무료 플랜에는 Read-only 역할이 없다. 따라서 아래 표의 「공유 금지」와 이 항목의 규칙은 기술적 차단이 아니라 **팀 규칙**이다.
+    - 비밀 키·JWT Secret은 대시보드에서 보더라도 복사·외부 붙여넣기·로컬 저장을 하지 않는다.
+    - 스키마·정책·데이터 변경은 대시보드(Table Editor·SQL Editor)에서 하지 않고 **마이그레이션 PR로만** 한다. 대시보드는 조회·로그 확인·디버깅용이다.
+    - Edge Function 배포도 대시보드·CLI에서 직접 하지 않고 PR 머지 후 Owner만 한다.
+  - **회수 절차**: 팀원이 조직에서 나가거나 키 노출이 의심되면 Owner가 즉시 secret key를 새로 만들고 기존 키를 삭제한다. 레거시 JWT Secret을 쓰고 있다면 같이 교체한다. Edge Function 시크릿(성인 인증 업체 키 등)도 업체 쪽에서 재발급해 `supabase secrets set`으로 바꾼다. 기록은 #26.
+  - 생성: 2026-10-27, 조직·프로젝트 `eottae`(ref `zbwdzdwomiokjmaibglt`). 김민기 브라우저 승인 후 Claude Code가 CLI(Management API)로 **프로젝트 생성·공개 키 조회만** 한 1회 예외이며, DB 연결(`link`·`db push`·SQL)은 하지 않았다. 기록은 #26에 있다.
+  - 지역 **Northeast Asia (Seoul)**, 무료 플랜. 무료 플랜은 1주일간 사용이 없으면 일시 정지되므로 시연 전에 대시보드에서 상태를 확인한다.
+  - 값별 보관 위치:
+
+    | 값 | 보관 위치 | 공유 |
+    |---|---|---|
+    | Project URL · Publishable key(팀 통일) | GitHub Secrets `NEXT_PUBLIC_SUPABASE_URL`·`NEXT_PUBLIC_SUPABASE_ANON_KEY`, 각자 `.env.local` | 팀원 공유 가능(브라우저에 공개되는 값) |
+    | service_role(secret) key | 복사하지 않음 — 클라우드 Edge Function에 자동 제공 | **공유·커밋 금지**(Developer는 대시보드에서 볼 수 있음 — 규칙으로 금지) |
+    | 외부 서비스 키(성인 인증 업체 등) | Edge Function 시크릿(`supabase secrets set`)만 | **공유·커밋 금지** |
+    | DB 비밀번호 | 김민기 비밀번호 관리자 | **공유 금지** |
+  - 마이그레이션 흐름: 주한태는 **로컬 Supabase**(`npx supabase start`, Docker)에서 마이그레이션·RLS 테스트를 만들어 PR로 올린다. 리뷰·머지 후 **김민기가 클라우드 프로젝트에 적용**한다(`npx supabase link --project-ref <ref>` → `npx supabase db push --dry-run`으로 목록 확인 → `npx supabase db push`). 운영 DB 비밀번호를 여러 사람이 갖지 않고, 리뷰를 거친 마이그레이션만 운영에 들어가도록 **규칙으로** 정한다(Developer는 SQL Editor로 직접 바꿀 수 있으므로). 김민기 부재 시 예외: Owner가 Developer 중 한 명을 임시 Administrator로 올려 `db push`를 맡길 수 있다. 끝나면 Developer로 되돌리고 Owner가 DB 비밀번호를 다시 만든다(절차는 HANDOFF §14).
 
 ## 도식
 ```mermaid
@@ -57,4 +74,4 @@ flowchart TD
 ## 운영 결정 목록 (미확정)
 - (확정: 백엔드 = Supabase + GitHub Pages, ADR-005)
 - 도메인/PG/실명성인 인증 업체·실사용 계정 연동, 배포 지역/이용약관, 데이터 삭제·보존 기한, 이미지 콘텐츠 검수, 베타 운영자 시간.
-- 운영 DB에 AI 에이전트/MCP를 연결하거나 외부 저장소 업로드하지 않는다.
+- 운영 DB에 AI 에이전트/MCP를 연결하거나 외부 저장소 업로드하지 않는다. (예외 1회: 2026-10-27 프로젝트 생성·공개 키 조회만, DB 연결 없음 — ADR-005 「프로젝트 소유·키 관리」)

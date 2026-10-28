@@ -116,18 +116,22 @@ export default function ChatHub() {
       // 대화상자(dialog[open])는 브라우저가 자체 포커스를 가두므로 양보
       if (panel.querySelector('dialog[open]')) return;
 
-      const focusables = panel.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), textarea:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])',
-      );
+      const focusables = Array.from(
+        panel.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), textarea:not([disabled]), input:not([disabled]):not([tabindex="-1"]), a[href], [tabindex]:not([tabindex="-1"])',
+        ),
+        // 닫힌 dialog 안·hidden 요소는 제외 (화면에 박스가 없으면 포커스 불가)
+      ).filter((el) => !el.closest('dialog:not([open])') && el.getClientRects().length > 0);
       if (focusables.length === 0) return;
 
       const first = focusables[0];
       const last = focusables[focusables.length - 1];
+      const inside = panel.contains(document.activeElement);
 
-      if (e.shiftKey && document.activeElement === first) {
+      if (e.shiftKey && (document.activeElement === first || !inside)) {
         e.preventDefault();
         last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
+      } else if (!e.shiftKey && (document.activeElement === last || !inside)) {
         e.preventDefault();
         first.focus();
       }

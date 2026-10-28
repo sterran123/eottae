@@ -218,7 +218,7 @@ body:has(.mt-chat-page) .footer::before {
   animation: mt-rec-pulse 1.2s infinite ease-in-out;
 }
 @keyframes mt-rec-pulse {
-  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 var(--match-dim); }
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 color-mix(in srgb, var(--match-err-ink) 45%, transparent); }
   50% { transform: scale(1.06); box-shadow: 0 0 0 6px transparent; }
 }
 .mt-chat-media-btn:focus-visible {
@@ -332,8 +332,8 @@ body:has(.mt-chat-page) .footer::before {
   background: var(--match-track);
 }
 .mt-chat-rec-btn--stop {
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
 }
 .mt-chat-rec-stop-square {
   width: 12px;
@@ -342,8 +342,8 @@ body:has(.mt-chat-page) .footer::before {
   border-radius: 2px;
 }
 .mt-chat-rec-btn--cancel {
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   font-size: 13px;
   line-height: 1;
 }
@@ -357,9 +357,9 @@ body:has(.mt-chat-page) .footer::before {
   user-select: none;
 }
 .mt-chat-voice-play-btn {
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
   border-radius: 50%;
   border: none;
   background: currentColor;
@@ -497,6 +497,7 @@ body:has(.mt-chat-page) .footer::before {
 }
 .mt-chat-menu-list button {
   width: 100%;
+  min-height: 44px;
   padding: 9px 12px;
   text-align: left;
   font: inherit;
@@ -540,6 +541,8 @@ body:has(.mt-chat-page) .footer::before {
   border-top: 1px solid var(--match-warn-line);
 }
 .mt-chat-blocked-bar button {
+  min-height: 44px;
+  padding: 0 8px;
   font: inherit;
   font-weight: 600;
   color: var(--match-accent-ink);

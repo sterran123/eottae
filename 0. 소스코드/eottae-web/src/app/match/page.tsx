@@ -60,7 +60,7 @@ export default function MatchPage() {
               borderRadius: '50%',
               objectFit: 'cover',
               display: 'block',
-              boxShadow: '0 2px 8px rgba(116, 84, 196, 0.15)',
+              boxShadow: '0 2px 8px var(--match-toast-shadow)',
             }}
           />
         }

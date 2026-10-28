@@ -431,20 +431,61 @@
 - [설계] 온보딩 사진 공개범위 DTO fail-closed 설계 (미지정 시 기본 'hidden' 처리, 무단 revealed 조작 방지. 향후 주한태 백엔드 연동 시 DB CHECK 제약 적용 예정)
 - [미실행] 서비스워커 오프라인 캐시 및 iOS/Android 실기기 육안 검증 — 김민기님 담당 이슈 #26으로 공식 이관
 
+## 2026-10-27 Supabase 프로젝트 소유자 확정 — 계획서·설계서 반영 (김민기 작업)
+- [변경] 2. 프로젝트 설계서/아키텍처_결정기록_ADR.md | ADR-005에 「프로젝트 소유·키 관리」 추가 — 김민기 Owner·주한태 Developer, 서울 리전·무료 플랜, 값별 보관 위치 표, 마이그레이션 흐름(로컬 개발 → PR → 김민기가 `db push`)
+- [변경] 1. 프로젝트 계획서/실행_결정대기_로그.md | DEC-04 일부 확정(Pages·Supabase 무료), DEC-08(백엔드·프로젝트 소유) 확정 행 추가
+- [변경] 1. 프로젝트 계획서/plan.md, 팀_작업지시서_WBS.md | 김민기 역할에 Supabase 프로젝트·Secrets·운영 DB 적용, 주한태에 Developer 참여·로컬 개발 명시
+- [변경] docs/HANDOFF_김민기.md §14 | 대시보드 단계별 할 일·반복 작업
+- [변경] .env.example | API Keys 화면 이름·Publishable key 안내
+- [미구현/보류] 1. 프로젝트 계획서/어때_팀_WBS_요구사항_테스트_제출체크_통합관리.xlsx — 담당자 변경이 아니라 작업 추가라 엑셀은 그대로 둠
+- [미구현/보류] Supabase 프로젝트 실제 생성·Secrets 등록 — 김민기 계정 로그인이 필요해 직접 진행
+
+## 2026-10-27 Supabase 안내 보강 — PR #39 AI 리뷰 권장 반영 (김민기 작업)
+- [보안] HANDOFF §14·ADR-005 | service_role은 복사·등록하지 않음(클라우드 Edge Function에 `SUPABASE_SERVICE_ROLE_KEY` 자동 제공), 외부 키만 `secrets set`. Owner 계정 2FA, `db push --dry-run` 선확인, 공개 전 Redirect URL 축소, 부재 시 임시 권한 위임 절차 추가
+- [변경] ADR-005·.env.example | 공개 키를 Publishable key로 팀 통일(변수 이름은 ANON_KEY 유지), 앞 문단 표현 통일
+- [변경] 실행_결정대기_로그 | DEC-08 행을 DEC-07 뒤로 정렬
+- [검증] 문서만 변경 — 코드 실행 없음. 직전 #39 작업도 문서 변경만이라 실행한 검증 없음(빌드 CI만 통과)
+- [보안] HANDOFF §14 | 임시 Administrator 위임 뒤 Owner가 Database Password를 다시 만들고 위임·회수 기록을 #26에 남기는 절차 (#40 AI 리뷰 권장)
+- [변경] ADR-005 | 마이그레이션 흐름에 `db push --dry-run` 추가(HANDOFF와 통일), Publishable key와 `verify_jwt` 범위(로그인 세션 필요) 명시 · deploy-pages.yml 주석 용어 통일
+
+## 2026-10-27 Supabase 프로젝트 생성·팀원 권한 — 김민기 작업
+- [보안] Supabase 조직·프로젝트 `eottae`(ref `zbwdzdwomiokjmaibglt`, Seoul, Free) 생성 — 김민기 브라우저 승인(`supabase login`) 후 Claude Code가 CLI로 생성·공개 키 조회만 한 ADR-005 1회 예외. DB 데이터·스키마는 건드리지 않음, DB 비밀번호·secret 키는 출력하지 않음. 기록은 #26
+- [변경] ADR-005·plan.md·실행_결정대기_로그 DEC-08·HANDOFF §14 | 팀원 3명(오하율·주한태·손준혁) 모두 Developer로 초대 — 급할 때 서로 대신 작업. DB 변경은 대시보드가 아니라 마이그레이션 PR로만
+- [보안] ADR-005 | 김민기 부재 시 임시 Administrator 위임 예외를 ADR에도 명시, HANDOFF에 `db push` 없이 끝나도 DB 비밀번호 재생성 명시 (#41 AI 리뷰 권장)
+- [검증] 공개 키로 `/auth/v1/settings` 호출 200, 틀린 키 401 · GitHub Secrets 2개 등록 확인(`gh secret list`) · 로그인 주소 설정은 김민기 화면 캡처로 확인
+- [보안] ADR-005·HANDOFF §14 | Developer 실제 권한(service_role·JWT Secret 읽기, Edge Function 배포, SQL Editor RLS 우회, 백업 복원)을 사실대로 적고 「공유 금지」는 팀 규칙임을 명시, 팀원 이탈·키 노출 시 secret key 재발급 회수 절차 추가 (#42 AI 리뷰 수정 필요). 무료 플랜엔 Read-only 역할 없음
+- [변경] .gitignore | supabase/.branches·supabase/.env 추가 · HANDOFF 초대 링크 24시간 유효·CLI 토큰 Revoke 확인
+- [미구현/보류] 팀원 초대(대시보드 전용, 김민기) · `npx supabase logout` + Access Tokens Revoke 확인(김민기) · 앱 코드에 Supabase 연결 전이라 배포 번들 반영 확인은 주한태 연결 코드 머지 후
+
+## 2026-10-27 CORE-003 오프라인 폴백 수정 — 김민기 실기기 확인에서 발견
+- [변경] public/sw.js | 오프라인 폴백 주소를 `/offline` → `/offline/`로 — `trailingSlash: true`라 Pages가 301을 주고, 서비스워커가 저장한 리다이렉트 응답은 페이지 이동에 쓸 수 없어 `ERR_FAILED`가 났다(안드로이드 실기기 캡처)
+- [변경] public/sw.js | `…/index.txt` 주소로의 페이지 이동은 페이지 주소로 302 — Next 15 `output: export`는 RSC 요청이 네트워크 오류로 실패하면 페이로드 주소(index.txt) 그대로 브라우저 이동을 한다(`fetch-server-response.js` catch 분기)
+- [변경] public/sw.js | 설치 때 홈·오프라인 페이지 HTML이 참조하는 `/_next/static/` JS·CSS까지 precache — 첫 방문 직후 오프라인으로 열 때 청크가 없어 「Application error」가 나는 경우 방지. 리다이렉트된 응답은 캐시하지 않음, 캐시 이름 v5
+- [검증] 로컬 Pages 미리보기 + Chromium(playwright-core, 임시 설치)으로 첫 방문 → 서비스워커 설치 → **서버 종료**(context.setOffline은 서비스워커 fetch를 막지 않아 이전 헤드리스 점검이 판정 불가였던 원인) 후 4가지 확인. 기존 sw.js: 홈 새로고침 ok, 매칭 링크 클릭·index.txt 직접 이동·미방문 페이지 3건 `ERR_FAILED`. 수정본: 4건 모두 정상(홈은 캐시, 나머지는 「지금은 오프라인이에요」), pageerror 0건
+- [변경] public/sw.js (#43 AI 리뷰) | index.txt → 페이지 302 때 쿼리 유지(`_rsc`만 제거) — 추천 → 질문 보내기(`/match/chat/?partner=&q=`)의 질문이 사라지던 문제. 셸 자산 경로를 페이지 주소 기준으로 해석, 캐시 저장을 `event.waitUntil`로 묶음
+- [검증] 같은 재현에 5번 「쿼리 붙은 index.txt 이동(?partner=p1&q=hello&_rsc=abc)」 추가 → `/match/chat/?partner=p1&q=hello`로 이동·캐시된 채팅 화면 표시, 5건 모두 정상. 테스트_케이스_마스터 TC-012 실행 기록 2줄 추가
+- [미구현/보류] 실기기 재확인(TC-012) — 배포 후 김민기가 안드로이드에서 다시 확인. 온라인 상태에서 미리 받아 둔(prefetch) 경로를 오프라인에서 누를 때의 동작은 이번 재현 범위 밖
+
+## 2026-10-27 CORE-003 캐시 키·응답에서 쿼리 제외, 다른 Pages 프로젝트 캐시 보존 (#45, 김민기 작업)
+- [보안] public/sw.js | 페이지 이동 응답을 경로 키로, 응답은 본문·헤더만으로 다시 만들어 저장(`rememberPage`) — fetch 응답을 그대로 넣으면 키를 경로로 줘도 응답 url(쿼리 포함)이 CacheStorage에 남는다(#45 2차 AI 리뷰, Chrome 실행 확인). 질문 내용·향후 Auth 콜백 code가 키·응답 url 어디에도 남지 않게
+- [보안] public/sw.js | 캐시 이름 v5 → v6 — v5를 이미 받은 기기에 쿼리째 남은 항목·옛 해시 청크를 activate 때 통째로 삭제. 삭제 대상을 `eottae-shell-` 접두 캐시로 좁혀 같은 출처(sterran123.github.io)의 다른 Pages 프로젝트 캐시 보존(v2~v5도 모두 이 접두사)
+- [검증] 로컬 재현(#43과 같은 방식) 1~5 정상 유지. 6 「`?partner=p9&q=secret` 채팅 방문 후 캐시」: 쿼리 붙은 키 0, `/eottae/match/chat/` 항목 응답 url `""` — 대조로 직전 커밋(3b4aa2b) sw.js는 응답 url에 `q=secret`이 남아 FAIL. 7 「다른 프로젝트 캐시 보존」 정상(수정본만 실행)
+- [검증] 8 「업데이트 정리」: main(#43) sw.js 설치 → 쿼리 붙은 채팅 방문(v5에 쿼리 키) → 수정본으로 교체·`reg.update()` → v5 삭제, v6 쿼리 키 0, 다시 쿼리 붙여 방문해도 v6 항목 응답 url `""`. 처음 몇 번은 테스트 스크립트에서 설치가 멈췄는데 main sw.js의 캐시 이름만 바꾼 대조군도 똑같이 멈춰 스크립트 문제로 판단(업데이트 호출 뒤 대기를 넣자 둘 다 정상)
+- [미구현/보류] 옛 해시 청크 누적은 v6로 한 번 정리됨 — 이후에도 이름을 안 바꾸고 배포가 반복되면 다시 쌓이므로 자동 정리는 후속 과제(#26). Auth 콜백처럼 민감한 쿼리를 쓰는 경로는 아예 캐시하지 않는 방안도 로그인 구현 때 검토. 같은 출처를 공유하는 Pages 구조라 CacheStorage를 다른 프로젝트와 분리할 수는 없음
+
 ## 2026-10-27 MATCH-007 카카오톡 스타일 채팅 목록(ChatList) 및 우측 슬라이드 패널 구현 (손준혁 작업)
 - [요청] 가상 채팅방 목록 3~4개(ChatList), 대화방 클릭 시 카카오톡처럼 우측 팝업/패널(ChatRoom) 오픈, 우측 상단 닫기(X)로 목록 복귀, 기존 차단/신고 기능 100% 유지
 - [신규] src/components/chat/ChatList.tsx | 가상 대화방 목록 뷰 — 이니셜 아바타, 닉네임, 마지막 메시지 미리보기(말줄임), 시간 레이블, 안 읽은 메시지 배지(99+ 대응)
-- [신규] src/components/chat/ChatHub.tsx | 대화방 목록과 우측 슬라이드 패널 조율 오케스트레이터 — 방 선택 시 `activeId` 상태 전환, 패널 열림 중 목록 `inert` 및 `body` 스크롤 락(`overflow: hidden`), 패널 내 키보드 Tab 포커스 순환(포커스 트랩), 백드롭 클릭 및 Esc 닫기(활성 패널 내 모달/메뉴 열림 우선 처리), 닫기 시 선택했던 목록 버튼으로 포커스 복귀, 한 번 열린 방 언마운트 없이 상태 보존
+- [신규] src/components/chat/ChatHub.tsx | 대화방 목록과 우측 슬라이드 패널 조율 오케스트레이터 — 방 선택 시 `activeId` 상태 전환, 패널 열림 중 목록 `inert` 및 `body` 스크롤 락(`overflow: hidden`), 닫힌 `<dialog>`·hidden 요소를 제외한 패널 내 정방향 Tab·역방향 Shift+Tab 포커스 트랩 순환, 백드롭 클릭 및 Esc 닫기(활성 패널 내 모달/메뉴 열림 우선 처리), 닫기 시 선택했던 목록 버튼으로 포커스 복귀, 한 번 열린 방 언마운트 없이 상태 보존
 - [변경] src/lib/chat/types.ts & src/lib/chat/demo-data.ts | `ChatRoomInfo` 인터페이스 정의(ADR-003 RLS 보안 메모 추가) 및 4개 가상 대화방(데모 상대, 러닝 메이트, 전시 친구, 보드게임 러버) 샘플 데이터/초기 메시지 구성
 - [변경] src/components/chat/ChatRoom.tsx | 단일 데모 상대 하드코딩 제거 → `room` props 기반으로 일반화, 우측 상단 닫기(`✕`) 버튼(44px) 추가, 메시지 발생 시 목록 미리보기 갱신 콜백(`onLastMessage`) 연동, 차단/신고 모달에 해당 방의 상대 정보 바인딩, 더보기 메뉴 `menuId`에 `useId()` 적용
 - [변경] src/components/safety/BlockConfirmModal.tsx & ReportModal.tsx | 다중 방 유지 시 DOM ID 충돌 및 스크린리더 오독(MATCH-008 회귀) 방지를 위해 `titleId`, `detailId`, `categoryName`에 `useId()` 적용
 - [변경] src/components/chat/MessageComposer.tsx | 다중 방 유지 시 `inputId`에 `useId()` 적용하여 label-textarea 접근성 바인딩 보장
 - [변경] src/app/match/chat/page.tsx | `ChatRoom` 직접 렌더링 대신 `ChatHub` 렌더링으로 라우트 진입점 연결
-- [변경] src/app/match/chat/match-chat.css | 목록 카드, 아이템 호버/포커스, 뱃지, 고정 백드롭(`--match-dim`), 우측 슬라이드 패널(`mt-chat-panel`, slide-in 트랜지션, `prefers-reduced-motion` 대응) 스타일 추가. 이슈 #22 피드백 반영: 미디어 첨부 버튼(44px), 더보기 메뉴 버튼(44px), 전송 버튼(44px), 모달 확인 버튼(44px) 터치 최소 영역 전수 확보 및 녹음 바/비주얼라이저/보이스웨이브 하드코딩 색상 약 20곳 `--match-*` 시맨틱 토큰으로 전환
-- [문서] 2. 프로젝트 설계서/테스트_케이스_마스터.md | SEC-002 실측 QA 결과 기록 추가 — TC-001(공통 탐색) PASS, TC-002(채팅 반응형·6개 테마 딤·44px 터치 영역) PASS, TC-007(클라이언트 차단 잠금) PASS, TC-009(전송 즉시 차단) PASS, TC-008/010은 서버 구현 대기로 BLOCKED 명시
-- [문서] 3. 구현 이미지(5장이상)/captions.csv & README_캡처_체크리스트.md | 18번 채팅 목록/슬라이드 패널 및 19번 차단/신고 모달 캡처 정보 등록
-- [검증] `npm run typecheck` PASS / `npm run build` PASS (정적 17개 라우트 생성, `/match/chat` 7.4 kB 정상 빌드)
-- [검증] 브라우저 및 키보드 실검증: 모바일 360px 폭에서 패널 전체 너비 렌더링 확인, 6개 테마(라이트/다크/cyberpunk 등) 배경 딤(`--match-dim`) 및 UI 가독성 확인, 키보드 Tab 포커스 트랩 및 Esc 닫기, 닫기 후 트리거 버튼 포커스 복귀, 다중 방 개설 후 차단/신고 모달 시 상대방 닉네임 일치 확인, `prefers-reduced-motion` 시 애니메이션 생략 확인
+- [변경] src/app/match/chat/match-chat.css | 목록 카드, 아이템 호버/포커스, 뱃지, 고정 백드롭(`--match-dim`), 우측 슬라이드 패널(`mt-chat-panel`, slide-in 트랜지션, `prefers-reduced-motion` 대응) 스타일 추가. 이슈 #22 및 PR #37 리뷰 피드백 반영: 미디어 첨부·녹음 중지/취소·음성 재생·더보기 메뉴·전송·차단해제·모달 확인 버튼 모두 최소 44px 터치 영역 전수 확보, 녹음 펄스 그림자를 `color-mix(in srgb, var(--match-err-ink) 45%, transparent)`로 보정 및 녹음 바/비주얼라이저/보이스웨이브 하드코딩 색상 약 20곳 `--match-*` 시맨틱 토큰으로 전환
+- [문서] 2. 프로젝트 설계서/테스트_케이스_마스터.md | SEC-002 실측 QA 결과 기록 추가 — TC-001(공통 탐색) PASS, TC-002(채팅 반응형·6개 테마 딤·정방향/역방향 Tab 포커스 트랩·44px 터치 영역) PASS, TC-007(클라이언트 차단 잠금) PASS, TC-009(전송 즉시 차단) PASS, TC-008/010은 서버 구현 대기로 BLOCKED 명시
+- [문서] 3. 구현 이미지(5장이상)/18_매칭_채팅_목록_및_패널.png, 19_매칭_차단_신고_모달.png, captions.csv & README_캡처_체크리스트.md | 18번 채팅 목록/슬라이드 패널 및 19번 차단/신고 모달 실제 캡처 이미지 저장 및 캡션(UTF-8 BOM 유지) 등록
+- [검증] `npm run typecheck` PASS / `npm run build` PASS (정적 17개 라우트 생성, `/match/chat` 정상 빌드)
+- [검증] 브라우저(CDP) 및 키보드 실검증: 모바일 360·390px 폭에서 패널 전체 너비 렌더링 확인, 6개 테마(라이트/다크/cyberpunk 등) 배경 딤(`--match-dim`) 및 UI 가독성 확인, 키보드 정방향 Tab·역방향 Shift+Tab 포커스 트랩 순환 및 Esc 닫기, 닫기 후 트리거 버튼 포커스 복귀, 다중 방 개설 후 차단/신고 모달 시 상대방 닉네임 일치 확인, `prefers-reduced-motion` 시 애니메이션 생략 확인
 - [안전성] 기존 MATCH-008 차단(즉시 입력 비활성화·응답 취소·해제 확인 모달)/신고 모달 로직 100% 온전히 유지
 - [미실행] 실제 Supabase DB 영속화/RLS(MATCH-003, ADR-005) 및 Realtime WebSocket 채널 연동(주한태 담당 백엔드 구현 대기)
-

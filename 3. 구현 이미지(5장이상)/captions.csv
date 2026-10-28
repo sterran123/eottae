@@ -1,4 +1,4 @@
-file,captured_at,environment,requirement_id,note
+﻿file,captured_at,environment,requirement_id,note
 01_공통_홈_데스크톱.png,2026-10-27,Windows + 헤드리스 Chrome(CDP) 1440 전체 높이 · npm run build 정적 산출물 · tools/serve_pages_preview.mjs,CORE-001 / CORE-002,통합 홈 라이트 — 디자인 패스 2차(스티커 모티프 카드·단계 연결선·안전 배지·FAQ Q 스티커·로드맵·새 푸터)
 02_공통_홈_모바일.png,2026-10-27,Windows + 헤드리스 Chrome(CDP) 390 모바일 2x 전체 높이 · npm run build 정적 산출물,CORE-002,통합 홈 모바일 — 어절 단위 줄바꿈·히어로 캐릭터 스티커·가로 스크롤 내비(페이드)
 03_공통_홈_데스크톱_다크.png,2026-10-27,Windows + 헤드리스 Chrome(CDP) 1440 전체 높이 · npm run build 정적 산출물 · tools/serve_pages_preview.mjs · data-theme=dark,CORE-002,통합 홈 다크 — 토큰·다크 로고 스왑(BRAND-004)
