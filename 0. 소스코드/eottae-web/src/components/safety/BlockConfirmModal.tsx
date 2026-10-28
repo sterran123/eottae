@@ -8,6 +8,7 @@
 //  [정직성] 데모에서 실제로 일어나지 않는 효과(추천 목록 제외 등)는 '서버 연동 후'로 명시 (RULES 6).
 // ============================================================
 
+import { useId } from 'react';
 import SafetyDialog from './SafetyDialog';
 
 interface BlockConfirmModalProps {
@@ -26,9 +27,10 @@ export default function BlockConfirmModal({
   onClose,
 }: BlockConfirmModalProps) {
   const isBlock = mode === 'block';
+  const titleId = useId();
 
   return (
-    <SafetyDialog open={open} onClose={onClose} titleId="mt-block-title">
+    <SafetyDialog open={open} onClose={onClose} titleId={titleId}>
       <form
         method="dialog"
         className="mt-safety-form"
@@ -38,7 +40,7 @@ export default function BlockConfirmModal({
           if (submitter?.value === 'confirm') onConfirm();
         }}
       >
-        <h2 id="mt-block-title" className="mt-safety-title">
+        <h2 id={titleId} className="mt-safety-title">
           {partnerName}님{isBlock ? '을 차단할까요?' : ' 차단을 해제할까요?'}
         </h2>
         <p className="mt-safety-text">

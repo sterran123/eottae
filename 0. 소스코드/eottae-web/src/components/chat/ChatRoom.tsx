@@ -11,15 +11,10 @@
 //  [MATCH-008] 헤더 더보기 메뉴 → 차단/신고. 차단 시 입력·전송·자동응답 즉시 정지(TC-009).
 // ============================================================
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import type { ChatMessage } from '@/lib/chat/types';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import type { ChatMessage, ChatRoomInfo } from '@/lib/chat/types';
 import type { ReportRequest } from '@/lib/safety/types';
-import {
-  DEMO_INITIAL_MESSAGES,
-  DEMO_PARTNER,
-  DEMO_REPLIES,
-} from '@/lib/chat/demo-data';
+import { DEMO_REPLIES } from '@/lib/chat/demo-data';
 import BlockConfirmModal from '@/components/safety/BlockConfirmModal';
 import ReportModal from '@/components/safety/ReportModal';
 import MessageBubble from './MessageBubble';
@@ -28,12 +23,29 @@ import MessageComposer from './MessageComposer';
 let seq = 0;
 const nextId = () => `local-${Date.now()}-${seq++}`;
 
-export default function ChatRoom() {
-  const searchParams = useSearchParams();
-  const initialQuestion = searchParams.get('q');
+interface ChatRoomProps {
+  room: ChatRoomInfo;
+  /** 패널이 열려 있는지 — 닫힌 채 유지되는 방은 스크롤 보정을 건너뛴다 */
+  active: boolean;
+  /** 추천 카드의 "가볍게 물어보기"로 진입했을 때 즉시 보낼 질문 */
+  initialQuestion?: string | null;
+  onClose: () => void;
+  /** 새 메시지가 붙을 때마다 목록 미리보기 갱신용으로 알린다 */
+  onLastMessage?: (roomId: string, message: ChatMessage) => void;
+}
+
+export default function ChatRoom({
+  room,
+  active,
+  initialQuestion,
+  onClose,
+  onLastMessage,
+}: ChatRoomProps) {
+  const menuId = useId();
+  const partner = room.partner;
   const hasHandledQuestion = useRef(false);
 
-  const [messages, setMessages] = useState<ChatMessage[]>(DEMO_INITIAL_MESSAGES);
+  const [messages, setMessages] = useState<ChatMessage[]>(room.initialMessages);
   const [typing, setTyping] = useState(false);
   const listEndRef = useRef<HTMLLIElement>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -53,10 +65,19 @@ export default function ChatRoom() {
   const menuRef = useRef<HTMLDivElement>(null);
   const menuBtnRef = useRef<HTMLButtonElement>(null);
 
-  // 새 메시지·입력중 표시마다 맨 아래로 스크롤
+  // 새 메시지·입력중 표시마다 맨 아래로 스크롤 (패널이 열려 있을 때만 의미가 있다)
   useEffect(() => {
-    listEndRef.current?.scrollIntoView({ block: 'end' });
-  }, [messages, typing]);
+    if (active) listEndRef.current?.scrollIntoView({ block: 'end' });
+  }, [messages, typing, active]);
+
+  // 마지막 메시지가 바뀌면 목록 미리보기에 알림 (초기 메시지는 목록이 이미 알고 있다)
+  const lastNotifiedId = useRef(room.initialMessages[room.initialMessages.length - 1]?.id);
+  useEffect(() => {
+    const last = messages[messages.length - 1];
+    if (!last || last.id === lastNotifiedId.current) return;
+    lastNotifiedId.current = last.id;
+    onLastMessage?.(room.id, last);
+  }, [messages, room.id, onLastMessage]);
 
   // 언마운트 시 대기 중 타이머 정리
   useEffect(() => {
@@ -99,8 +120,8 @@ export default function ChatRoom() {
     setMessages((prev) =>
       prev.map((m) => (m.status === 'sending' ? { ...m, status: 'failed' } : m)),
     );
-    pushSystem(`${DEMO_PARTNER.nickname}님을 차단했어요. 더 이상 대화할 수 없어요.`);
-  }, [pushSystem]);
+    pushSystem(`${partner.nickname}님을 차단했어요. 더 이상 대화할 수 없어요.`);
+  }, [pushSystem, partner.nickname]);
 
   const releaseBlock = useCallback(() => {
     if (!blockedRef.current) return;
@@ -196,13 +217,13 @@ export default function ChatRoom() {
   }, [initialQuestion, sendMessage]);
 
   return (
-    <section className="mt-chat" aria-label={`${DEMO_PARTNER.nickname}님과의 1:1 채팅`}>
+    <section className="mt-chat" aria-label={`${partner.nickname}님과의 1:1 채팅`}>
       <header className="mt-chat-head">
         <div className="mt-chat-avatar" aria-hidden="true">
-          {DEMO_PARTNER.nickname.slice(0, 1)}
+          {partner.nickname.slice(0, 1)}
         </div>
         <div className="mt-chat-head-text">
-          <h1 className="mt-chat-title">{DEMO_PARTNER.nickname}</h1>
+          <h2 className="mt-chat-title">{partner.nickname}</h2>
           <span className="mt-chat-demo">
             {blocked ? '차단됨 · ' : ''}DEMO · 실제 채팅이 아니에요
           </span>
@@ -215,13 +236,13 @@ export default function ChatRoom() {
             className="mt-chat-menu-btn"
             aria-label="더보기 메뉴"
             aria-expanded={menuOpen}
-            aria-controls="mt-chat-menu-list"
+            aria-controls={menuId}
             onClick={() => setMenuOpen((o) => !o)}
           >
             <span aria-hidden="true">⋯</span>
           </button>
           {menuOpen && (
-            <ul id="mt-chat-menu-list" className="mt-chat-menu-list">
+            <ul id={menuId} className="mt-chat-menu-list">
               <li>
                 <button
                   type="button"
@@ -248,6 +269,14 @@ export default function ChatRoom() {
             </ul>
           )}
         </div>
+        <button
+          type="button"
+          className="mt-chat-close"
+          aria-label="채팅방 닫기"
+          onClick={onClose}
+        >
+          <span aria-hidden="true">✕</span>
+        </button>
       </header>
 
       <div className="mt-chat-notice" role="note">
@@ -282,21 +311,21 @@ export default function ChatRoom() {
 
       <MessageComposer
         onSend={sendMessage}
-        disabled={blocked}
-        disabledReason="차단한 상대와는 대화할 수 없어요"
+        disabled={blocked || !active}
+        disabledReason={blocked ? '차단한 상대와는 대화할 수 없어요' : undefined}
       />
 
       <BlockConfirmModal
         open={blockOpen}
         mode={confirmMode}
-        partnerName={DEMO_PARTNER.nickname}
+        partnerName={partner.nickname}
         onConfirm={confirmMode === 'unblock' ? releaseBlock : applyBlock}
         onClose={closeBlockConfirm}
       />
       <ReportModal
         open={reportOpen}
-        partnerId={DEMO_PARTNER.id}
-        partnerName={DEMO_PARTNER.nickname}
+        partnerId={partner.id}
+        partnerName={partner.nickname}
         onSubmit={handleReportSubmit}
         onClose={closeReport}
       />

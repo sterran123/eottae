@@ -10,12 +10,12 @@
 
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
-import ChatRoom from '@/components/chat/ChatRoom';
+import ChatHub from '@/components/chat/ChatHub';
 import './match-chat.css';
 
 export const metadata: Metadata = {
-  title: '1:1 채팅',
-  description: '상호 매칭된 상대와의 1:1 채팅 화면 (DEMO)',
+  title: '채팅',
+  description: '상호 매칭된 상대와의 대화방 목록과 1:1 채팅 화면 (DEMO)',
 };
 
 export default function MatchChatPage() {
@@ -23,7 +23,7 @@ export default function MatchChatPage() {
     // 레이아웃이 이미 <main id="content">를 제공하므로 main 중첩을 피해 section 사용
     <section className="mt-chat-page">
       <Suspense fallback={<div style={{ textAlign: 'center', padding: '40px', color: 'var(--match-hint)' }}>채팅방을 준비하고 있어요...</div>}>
-        <ChatRoom />
+        <ChatHub />
       </Suspense>
     </section>
   );

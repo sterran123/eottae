@@ -8,7 +8,7 @@
 //  [개인정보] 신고 내용은 state에만 두고 로그/저장하지 않는다.
 // ============================================================
 
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useId, useState, type FormEvent } from 'react';
 import {
   MAX_REPORT_DETAIL_LENGTH,
   REPORT_CATEGORIES,
@@ -33,6 +33,10 @@ export default function ReportModal({
   onSubmit,
   onClose,
 }: ReportModalProps) {
+  const titleId = useId();
+  const detailId = useId();
+  const categoryName = useId();
+
   const [category, setCategory] = useState<ReportCategory | null>(null);
   const [description, setDescription] = useState('');
   const [alsoBlock, setAlsoBlock] = useState(true);
@@ -66,10 +70,10 @@ export default function ReportModal({
   }
 
   return (
-    <SafetyDialog open={open} onClose={onClose} titleId="mt-report-title">
+    <SafetyDialog open={open} onClose={onClose} titleId={titleId}>
       {done ? (
         <form method="dialog" className="mt-safety-form">
-          <h2 id="mt-report-title" className="mt-safety-title">
+          <h2 id={titleId} className="mt-safety-title">
             신고 내용을 확인했어요
           </h2>
           <p className="mt-safety-text">
@@ -84,7 +88,7 @@ export default function ReportModal({
         </form>
       ) : (
         <form className="mt-safety-form" onSubmit={handleSubmit} noValidate>
-          <h2 id="mt-report-title" className="mt-safety-title">
+          <h2 id={titleId} className="mt-safety-title">
             {partnerName}님 신고하기
           </h2>
 
@@ -94,7 +98,7 @@ export default function ReportModal({
               <label key={c.id} className="mt-safety-radio">
                 <input
                   type="radio"
-                  name="mt-report-category"
+                  name={categoryName}
                   value={c.id}
                   checked={category === c.id}
                   onChange={() => {
@@ -110,12 +114,12 @@ export default function ReportModal({
             ))}
           </fieldset>
 
-          <label className="mt-safety-field" htmlFor="mt-report-detail">
+          <label className="mt-safety-field" htmlFor={detailId}>
             <span className="mt-safety-legend">
               자세한 내용 {category === 'other' ? '(필수)' : '(선택)'}
             </span>
             <textarea
-              id="mt-report-detail"
+              id={detailId}
               className="mt-safety-textarea"
               rows={3}
               maxLength={MAX_REPORT_DETAIL_LENGTH}

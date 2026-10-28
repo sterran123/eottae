@@ -16,3 +16,5 @@
 15_매칭_공통질문_모바일_다크.png,2026-10-24,Windows + Chrome 390x844 모바일 다크 서빙,/match/common (MATCH-009),공통 질문 블라인드 비교 모바일 다크 · 블라인드 잠금 및 답변 비교
 16_공통_홈_6테마_비교.png,2026-10-27,Windows + 헤드리스 Chrome(CDP) 1440 전체 높이 · npm run build 정적 산출물 · tools/serve_pages_preview.mjs,CORE-002,통합 홈 light·cupcake·cyberpunk·disney·dark 비교 (system은 OS 설정에 따라 light/dark와 동일)
 17_매칭_추천_7모드_테마추적.png,2026-10-27,Windows + 헤드리스 Chrome(CDP) 390 모바일 1x 전체 높이 · npm run build 정적 산출물,CORE-002 / MATCH-002,/match/recommend 7모드 — match-tokens 테마 추적 복원(cyberpunk·system 다크)
+18_매칭_채팅_목록_및_패널.png,2026-10-28,Windows + 헤드리스 Chrome(CDP) 960x760 데스크톱 라이트 · npm run build 정적 산출물 · tools/serve_pages_preview.mjs,/match/chat (MATCH-007),1:1 채팅 목록 뷰 및 카카오톡 스타일 우측 슬라이드 패널 · 대화 송수신 및 음성 메모 UI
+19_매칭_차단_신고_모달.png,2026-10-28,Windows + 헤드리스 Chrome(CDP) 390x844 모바일 라이트 · npm run build 정적 산출물 · tools/serve_pages_preview.mjs,/match/chat (MATCH-008),신고 사유 모달(네이티브 dialog) 및 차단 확인 다이얼로그 · 차단 즉시 입력 잠금

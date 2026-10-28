@@ -472,3 +472,20 @@
 - [검증] 로컬 재현(#43과 같은 방식) 1~5 정상 유지. 6 「`?partner=p9&q=secret` 채팅 방문 후 캐시」: 쿼리 붙은 키 0, `/eottae/match/chat/` 항목 응답 url `""` — 대조로 직전 커밋(3b4aa2b) sw.js는 응답 url에 `q=secret`이 남아 FAIL. 7 「다른 프로젝트 캐시 보존」 정상(수정본만 실행)
 - [검증] 8 「업데이트 정리」: main(#43) sw.js 설치 → 쿼리 붙은 채팅 방문(v5에 쿼리 키) → 수정본으로 교체·`reg.update()` → v5 삭제, v6 쿼리 키 0, 다시 쿼리 붙여 방문해도 v6 항목 응답 url `""`. 처음 몇 번은 테스트 스크립트에서 설치가 멈췄는데 main sw.js의 캐시 이름만 바꾼 대조군도 똑같이 멈춰 스크립트 문제로 판단(업데이트 호출 뒤 대기를 넣자 둘 다 정상)
 - [미구현/보류] 옛 해시 청크 누적은 v6로 한 번 정리됨 — 이후에도 이름을 안 바꾸고 배포가 반복되면 다시 쌓이므로 자동 정리는 후속 과제(#26). Auth 콜백처럼 민감한 쿼리를 쓰는 경로는 아예 캐시하지 않는 방안도 로그인 구현 때 검토. 같은 출처를 공유하는 Pages 구조라 CacheStorage를 다른 프로젝트와 분리할 수는 없음
+
+## 2026-10-27 MATCH-007 카카오톡 스타일 채팅 목록(ChatList) 및 우측 슬라이드 패널 구현 (손준혁 작업)
+- [요청] 가상 채팅방 목록 3~4개(ChatList), 대화방 클릭 시 카카오톡처럼 우측 팝업/패널(ChatRoom) 오픈, 우측 상단 닫기(X)로 목록 복귀, 기존 차단/신고 기능 100% 유지
+- [신규] src/components/chat/ChatList.tsx | 가상 대화방 목록 뷰 — 이니셜 아바타, 닉네임, 마지막 메시지 미리보기(말줄임), 시간 레이블, 안 읽은 메시지 배지(99+ 대응 및 `.mt-chat-sr` 스크린리더 전용 낭독 분리)
+- [신규] src/components/chat/ChatHub.tsx | 대화방 목록과 우측 슬라이드 패널 조율 오케스트레이터 — 방 선택 시 `activeId` 상태 전환, 추천 카드(`?partner=&q=`) 진입 시 `partner` id 일치 대화방 매칭(없으면 첫 방 폴백), 패널 열림 중 목록 `inert` 및 `body` 스크롤 락(`overflow: hidden`), 닫힌 `<dialog>`·hidden 요소를 제외한 패널 내 정방향 Tab·역방향 Shift+Tab 포커스 트랩 순환, 백드롭 클릭 및 Esc 닫기(한글 IME 조합 중 `isComposing` 무시 및 활성 패널 내 모달/메뉴 열림 우선 처리), 닫기 시 선택했던 목록 버튼으로 포커스 복귀, 한 번 열린 방 언마운트 없이 상태 보존
+- [변경] src/lib/chat/types.ts & src/lib/chat/demo-data.ts | `ChatRoomInfo` 인터페이스 정의(ADR-003 RLS 보안 메모 추가) 및 4개 가상 대화방(데모 상대, 러닝 메이트, 전시 친구, 보드게임 러버) 샘플 데이터/초기 메시지 구성
+- [변경] src/components/chat/ChatRoom.tsx | 단일 데모 상대 하드코딩 제거 → `room` props 기반으로 일반화, 우측 상단 닫기(`✕`) 버튼(44px) 추가, 패널 비활성화(`!active`) 시 `MessageComposer`를 `disabled`로 전환해 닫힌 패널에서 마이크 녹음이 계속 돌지 않도록 차단, 메시지 발생 시 목록 미리보기 갱신 콜백(`onLastMessage`) 연동, 차단/신고 모달에 해당 방의 상대 정보 바인딩, 더보기 메뉴 `menuId`에 `useId()` 적용
+- [변경] src/components/safety/BlockConfirmModal.tsx & ReportModal.tsx | 다중 방 유지 시 DOM ID 충돌 및 스크린리더 오독(MATCH-008 회귀) 방지를 위해 `titleId`, `detailId`, `categoryName`에 `useId()` 적용
+- [변경] src/components/chat/MessageComposer.tsx | 다중 방 유지 시 `inputId`에 `useId()` 적용하여 label-textarea 접근성 바인딩 보장, 녹음 중 또는 `getUserMedia` 권한 대기 중 패널 닫힘(`disabled` 전환) 시 즉시 타이머·`MediaRecorder`·`MediaStream` 트랙(`track.stop()`)을 종료하도록 보강
+- [변경] src/app/match/chat/page.tsx | `ChatRoom` 직접 렌더링 대신 `ChatHub` 렌더링으로 라우트 진입점 연결
+- [변경] src/app/match/chat/match-chat.css | 목록 카드, 아이템 호버/포커스, 뱃지, 고정 백드롭(`--match-dim`), 우측 슬라이드 패널(`mt-chat-panel`, slide-in 트랜지션, `prefers-reduced-motion` 대응) 스타일 추가. 이슈 #22 및 PR #37 리뷰 피드백 반영: 미디어 첨부·녹음 중지/취소·음성 재생·더보기 메뉴·전송·차단해제·모달 확인 버튼 모두 최소 44px 터치 영역 전수 확보, 녹음 펄스/깜빡임/파형 애니메이션을 `prefers-reduced-motion` 정지 대상에 추가, 녹음 펄스 그림자를 `color-mix(in srgb, var(--match-err-ink) 45%, transparent)`로 보정 및 녹음 바/비주얼라이저/보이스웨이브 하드코딩 색상 약 20곳 `--match-*` 시맨틱 토큰으로 전환
+- [문서] 2. 프로젝트 설계서/테스트_케이스_마스터.md | SEC-002 실측 QA 결과 기록 추가 — TC-001(공통 탐색) PASS, TC-002(채팅 반응형·6개 테마 딤·정방향/역방향 Tab 포커스 트랩·44px 터치 영역) PASS, TC-007(클라이언트 데모 PASS / 서버 BLOCKED), TC-009(클라이언트 잠금 PASS / 서버 BLOCKED), TC-008/010은 서버 구현 대기로 BLOCKED 명시
+- [문서] 3. 구현 이미지(5장이상)/18_매칭_채팅_목록_및_패널.png, 19_매칭_차단_신고_모달.png, captions.csv & README_캡처_체크리스트.md | 18번 채팅 목록/슬라이드 패널(960x760 데스크톱 라이트) 및 19번 차단/신고 모달(390x844 모바일 라이트) 실제 캡처 이미지 저장 및 캡션(UTF-8 BOM 유지) 등록
+- [검증] `npm run typecheck` PASS / `npm run build` PASS (정적 17개 라우트 생성, `/match/chat` 정상 빌드)
+- [검증] 브라우저(CDP) 및 키보드 실검증: 모바일 360·390px 폭에서 패널 전체 너비 렌더링 확인, 6개 테마(라이트/다크/cyberpunk 등) 배경 딤(`--match-dim`) 및 UI 가독성 확인, 키보드 정방향 Tab·역방향 Shift+Tab 포커스 트랩 순환 및 Esc 닫기, 음성 녹음 시작 후 닫기(`✕`) 및 `Esc`로 패널을 닫았을 때 녹음 상태·타이머·마이크 스트림 트랙(`readyState === 'ended'`)이 즉시 종료됨을 확인, 닫기 후 트리거 버튼 포커스 복귀, 다중 방 개설 후 차단/신고 모달 시 상대방 닉네임 일치 확인, `prefers-reduced-motion` 시 애니메이션 생략 확인
+- [안전성] 기존 MATCH-008 차단(즉시 입력 비활성화·응답 취소·해제 확인 모달)/신고 모달 로직 100% 온전히 유지
+- [미실행] 실제 Supabase DB 영속화/RLS(MATCH-003, ADR-005) 및 Realtime WebSocket 채널 연동(주한태 담당 백엔드 구현 대기)

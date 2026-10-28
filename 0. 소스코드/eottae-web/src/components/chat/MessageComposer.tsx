@@ -6,7 +6,7 @@
 //  역할: 메시지 입력창 + 사진 첨부 + 음성 메모 녹음 (Record Audio).
 // ============================================================
 
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from 'react';
+import { useEffect, useId, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from 'react';
 import { MAX_MESSAGE_LENGTH } from '@/lib/chat/types';
 
 interface MessageComposerProps {
@@ -20,6 +20,7 @@ export default function MessageComposer({
   disabled = false,
   disabledReason,
 }: MessageComposerProps) {
+  const inputId = useId();
   const [value, setValue] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [recordSeconds, setRecordSeconds] = useState(0);
@@ -28,6 +29,9 @@ export default function MessageComposer({
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const recordingActiveRef = useRef(false);
+  const recordingSessionRef = useRef(0);
+  const disabledRef = useRef(disabled);
 
   const trimmed = value.trim();
   const canSend = !disabled && (trimmed.length > 0 || isRecording);
@@ -35,6 +39,8 @@ export default function MessageComposer({
   // 녹음 언마운트 시 정리
   useEffect(() => {
     return () => {
+      recordingActiveRef.current = false;
+      recordingSessionRef.current += 1;
       if (timerRef.current) clearInterval(timerRef.current);
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
@@ -42,11 +48,14 @@ export default function MessageComposer({
     };
   }, []);
 
-  // 녹음 중 차단 등으로 입력이 비활성화되면 녹음을 취소해 마이크가 켜진 채 남지 않게 한다.
+  // 녹음 중(또는 마이크 권한 대기 중) 차단·패널 닫힘 등으로 입력이 비활성화되면 녹음을 즉시 취소해 마이크가 켜진 채 남지 않게 한다.
   useEffect(() => {
-    if (disabled && isRecording) cancelRecording();
+    disabledRef.current = disabled;
+    if (disabled && (isRecording || recordingActiveRef.current)) {
+      cancelRecording();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [disabled]);
+  }, [disabled, isRecording]);
 
   function submitText() {
     if (!trimmed || disabled) return;
@@ -81,6 +90,8 @@ export default function MessageComposer({
   // ---- 녹음 시작 ----
   async function startRecording() {
     if (disabled || isRecording) return;
+    const sessionId = ++recordingSessionRef.current;
+    recordingActiveRef.current = true;
     setIsRecording(true);
     setRecordSeconds(0);
 
@@ -93,6 +104,15 @@ export default function MessageComposer({
     if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // 권한 프롬프트 대기 도중 패널이 닫히거나 녹음이 취소된 경우 즉시 트랙을 닫는다.
+        if (
+          !recordingActiveRef.current ||
+          recordingSessionRef.current !== sessionId ||
+          disabledRef.current
+        ) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
         streamRef.current = stream;
         const mr = new MediaRecorder(stream);
         mediaRecorderRef.current = mr;
@@ -106,6 +126,8 @@ export default function MessageComposer({
   // ---- 녹음 완료 및 전송 ----
   function finishRecording() {
     if (!isRecording) return;
+    recordingActiveRef.current = false;
+    recordingSessionRef.current += 1;
     if (timerRef.current) clearInterval(timerRef.current);
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       try {
@@ -131,6 +153,8 @@ export default function MessageComposer({
 
   // ---- 녹음 취소 ----
   function cancelRecording() {
+    recordingActiveRef.current = false;
+    recordingSessionRef.current += 1;
     if (timerRef.current) clearInterval(timerRef.current);
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       try {
@@ -263,11 +287,11 @@ export default function MessageComposer({
           )}
         </button>
 
-        <label htmlFor="mt-chat-input" className="mt-chat-sr">
+        <label htmlFor={inputId} className="mt-chat-sr">
           메시지 입력
         </label>
         <textarea
-          id="mt-chat-input"
+          id={inputId}
           className="mt-chat-input"
           rows={1}
           value={value}
