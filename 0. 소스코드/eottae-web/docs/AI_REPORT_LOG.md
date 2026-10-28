@@ -519,3 +519,5 @@
 - [검증] PR #48 2차 Grok 리뷰(9cc854e, 695초, API 환산 $2.19, 수정 필요) 반영: PR 트리 링크는 링크만 삭제, `devin-mention.yml` checkout을 main으로 고정(PR 리뷰 코멘트 이벤트에서 PR이 바꾼 브릿지가 Devin 키로 실행되던 **기존** 문제), 변경 파일 3000건(API 한도) 잘림이면 생략·자동 승인 안 함
 - [검증] PR #48 3차 Grok 리뷰(a44549f, 903초, 입력 119만·출력 10만 토큰, API 환산 $2.84) **통과**. 권장 사항 반영: 자식 환경변수 허용 목록(가짜 XAI_API_KEY·DATABASE_URL·npm 토큰이 넘어가지 않음 확인), 읽기 금지를 `C:/Users` 전체·메인 클론으로, 생성 파일 생략도 옛 경로 검사, 작업자 잠금 `wx`(동시 시작 시 하나만 실행 확인), fetch·git 시간 제한, stdout UTF-8, 브릿지 스크립트도 OWNER만. 줄인 환경으로 실제 Grok 정상 동작(5초)
 - [미실행] 구독 사용량 차감·추가 결제 여부(김민기 대시보드 확인 필요), Grok Bot(데스크톱 앱 Cursor 로그인·GitHub 연결 필요 — CLI로는 불가). 다른 드라이브 등 사용자 프로필 밖 절대 경로는 읽기 금지로 막지 못함(Windows sandbox 없음 — 작업자 PC에 비밀 파일을 그런 곳에 두지 않기)
+- [운영] 2026-10-28 PR #48 머지(e88df6e) 후 Devin 쪽 자동화 `eottae-pr-watch`(2시간 주기 + PR 이벤트, 최근 3.3일 세션의 41%)를 API로 끔(`enabled=false` 확인). ai-review(Actions)와 같은 일을 한 번 더 하던 것. `eottae-pr-mentions`(소유자 `@devin` 응답)는 유지. 되살리려면 `UPDATE=1 node tools/devin_pr_watch.mjs` 또는 Devin Automations 화면에서 켜기
+- [미실행] 저장소 변수 `AI_REVIEW_ENGINE=grok-local` 전환은 하지 않음 — 구독 사용량 차감 확인·작업자 상시 실행 여부를 김민기가 정한 뒤
