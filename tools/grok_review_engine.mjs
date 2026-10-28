@@ -122,11 +122,15 @@ export async function runGrok(prompt, { cwd, timeoutMs }) {
     j.num_turns != null ? `${j.num_turns}턴` : null,
     `입력 ${input.toLocaleString("en-US")}·출력 ${(u.output_tokens || 0).toLocaleString("en-US")} 토큰`,
     j.stopReason ? `종료 ${j.stopReason}` : null,
+    // 구독 로그인이어도 CLI가 API 단가로 환산한 값을 준다 — 실제 청구액이 아니라 사용량 비교용
+    typeof j.total_cost_usd === "number" ? `API 환산 $${j.total_cost_usd.toFixed(2)}` : null,
   ]
     .filter(Boolean)
     .join(", ");
 
   const leaked = authValues().some((v) => j.text.includes(v)) || TOKEN_LIKE.test(j.text);
   if (leaked) return { ok: false, kind: "blocked", reason: "응답에 인증 정보로 보이는 값 — 게시하지 않음", info };
-  return { ok: true, answer: j.text, info };
+  // 최종 답 앞에 진행 문구("먼저 확인합니다…")가 붙어 나온다 — 제목 줄부터 쓴다
+  const start = j.text.indexOf("## AI 코드 리뷰");
+  return { ok: true, answer: start > 0 ? j.text.slice(start) : j.text, info };
 }
