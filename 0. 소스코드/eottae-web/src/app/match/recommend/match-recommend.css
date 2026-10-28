@@ -534,10 +534,16 @@
   justify-content: center;
   padding: 16px;
   animation: mt-fade-in 0.18s ease;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .mt-report-modal {
   width: 100%;
   max-width: 380px;
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 16px;
@@ -649,13 +655,20 @@
   border-radius: 10px;
   border: 1px solid #cbd5e1;
   background: #ffffff;
-  font-size: 13px;
+  /* 모바일(iOS 사파리 등) 포커스 시 화면 강제 확대(줌인) 방지: 16px 이상 필수 */
+  font-size: 16px;
+  line-height: 1.45;
   font-family: inherit;
   color: #0f172a;
   resize: vertical;
   min-height: 74px;
   outline: none !important;
   transition: border-color 0.15s, box-shadow 0.15s;
+}
+@media (min-width: 768px) {
+  .mt-report-textarea {
+    font-size: 13.5px;
+  }
 }
 .mt-report-textarea:focus,
 .mt-report-textarea:focus-visible {

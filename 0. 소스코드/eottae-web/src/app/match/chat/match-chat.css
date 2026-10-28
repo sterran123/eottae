@@ -175,12 +175,17 @@ body:has(.mt-chat-page) .footer::before {
   max-height: 120px;
   padding: 10px 14px;
   font: inherit;
-  font-size: 0.92rem;
+  font-size: 16px; /* 모바일 포커스 시 화면 자동 줌 방지: 16px 이상 필수 */
   line-height: 1.4;
   color: var(--match-ink);
   background: var(--match-bg);
   border: 1px solid var(--match-line);
   border-radius: 18px;
+}
+@media (min-width: 768px) {
+  .mt-chat-input {
+    font-size: 0.92rem;
+  }
 }
 .mt-chat-input::placeholder { color: var(--match-hint); }
 .mt-chat-input:focus-visible,
@@ -562,6 +567,10 @@ body:has(.mt-chat-page) .footer::before {
 /* 모달 — display는 [open]에만 지정해 닫힌 상태를 깨지 않는다 */
 .mt-safety-dialog {
   width: min(92vw, 420px);
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 0;
   color: var(--match-ink);
   background: var(--match-paper);
@@ -606,11 +615,17 @@ body:has(.mt-chat-page) .footer::before {
   resize: vertical;
   padding: 10px 12px;
   font: inherit;
-  font-size: 0.88rem;
+  font-size: 16px; /* 모바일 포커스 시 화면 자동 줌 방지: 16px 이상 필수 */
+  line-height: 1.45;
   color: var(--match-ink);
   background: var(--match-bg);
   border: 1px solid var(--match-line);
   border-radius: 10px;
+}
+@media (min-width: 768px) {
+  .mt-safety-textarea {
+    font-size: 0.88rem;
+  }
 }
 .mt-safety-textarea:focus-visible { outline: 2px solid var(--match-focus); outline-offset: 2px; }
 .mt-safety-count { display: block; text-align: right; color: var(--match-hint); font-size: 0.72rem; }
