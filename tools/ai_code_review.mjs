@@ -116,6 +116,15 @@ if (prior && process.env.FORCE !== "1") {
 }
 
 const files = await ghAll(`repos/${REPO}/pulls/${PR_NUMBER}/files`);
+// 파일 목록 API는 3000건에서 잘린다 — 잘린 목록으로 아래 생략 판정(success)을 하면 안 보이는 파일이 그냥 지나간다
+if (files.length >= 3000 || files.length < (pr.changed_files ?? files.length)) {
+  await setStatus("error", "변경 파일 목록이 잘림 — PR을 나눠 주세요");
+  await comment(
+    "ERROR",
+    "🤖 **변경 파일을 모두 보지 못했습니다** (GitHub API는 PR당 3000개에서 잘립니다).\n\n보이지 않는 파일을 판정할 수 없어 자동 머지를 열지 않습니다. PR을 나눠 주세요.",
+  );
+  process.exit(0);
+}
 const names = files.map((f) => f.filename);
 if (names.length && names.every((f) => GENERATED.has(f))) {
   await setStatus("success", "자동 생성 파일만 변경 — 코드 리뷰 대상 없음");
@@ -126,7 +135,7 @@ if (names.length && names.every((f) => GENERATED.has(f))) {
 // 허용 목록 방식: 에이전트 지시문(AI_협업_지시문·AGENTS.md 등)·ADR·설계 문서는 .md여도 계속 리뷰한다.
 // (보안 스캔·충돌·CI는 규칙 봇이 그대로 본다)
 const RECORD_FILE =
-  /^(3\. 구현 이미지\(5장이상\)\/[^/]+\.(png|jpe?g|webp|gif|csv|md)|0\. 소스코드\/eottae-web\/docs\/AI_REPORT_LOG\.md|2\. 프로젝트 설계서\/테스트_케이스_마스터\.md)$/;
+  /^(3\. 구현 이미지\(5장이상\)\/[^/]+\.(png|jpe?g|webp|gif)|0\. 소스코드\/eottae-web\/docs\/AI_REPORT_LOG\.md|2\. 프로젝트 설계서\/테스트_케이스_마스터\.md)$/;
 const isRecord = (f) => RECORD_FILE.test(f.filename) && (!f.previous_filename || RECORD_FILE.test(f.previous_filename));
 if (files.length && files.every(isRecord)) {
   await setStatus("success", "기록 문서·캡처만 변경 — AI 리뷰 생략");

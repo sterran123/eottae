@@ -25,6 +25,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main # PR 리뷰 코멘트 이벤트의 기본 checkout은 PR 머지 커밋 — PR이 바꾼 브릿지가 Devin 키로 실행되지 않게
       - uses: actions/setup-node@v4
         with:
           node-version: 22

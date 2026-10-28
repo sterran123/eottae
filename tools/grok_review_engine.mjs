@@ -15,7 +15,8 @@
 import { spawn } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const BIN = process.env.GROK_BIN || "grok";
 const GROK_HOME = process.env.GROK_HOME || join(homedir(), ".grok");
@@ -23,9 +24,12 @@ const GROK_HOME = process.env.GROK_HOME || join(homedir(), ".grok");
 const TOOLS = "read_file,grep";
 const MAX_TURNS = Number(process.env.GROK_MAX_TURNS || 40);
 const slash = (p) => p.replace(/\\/g, "/");
-// 리뷰어가 읽으면 안 되는 위치 — 홈 전체와 GROK_HOME(홈 밖으로 옮긴 경우)
-const DENY_ROOTS = [...new Set([slash(homedir()), slash(GROK_HOME)])];
-const HIDDEN_ENV = /^(XAI_API_KEY|GITHUB_TOKEN|GH_TOKEN|DEVIN_API_KEY|DEVIN_ORG_ID)$/i;
+// 리뷰어가 읽으면 안 되는 위치 — 홈 전체, GROK_HOME(홈 밖으로 옮긴 경우), 이 스크립트가 있는 메인 클론
+// (메인 클론에는 .env·.devin/.env가 있을 수 있고, worktree의 .git 파일이 그 경로를 알려 준다)
+const MAIN_CLONE = slash(join(dirname(fileURLToPath(import.meta.url)), ".."));
+const DENY_ROOTS = [...new Set([slash(homedir()), slash(GROK_HOME), MAIN_CLONE])];
+// 자식에게 넘기지 않는 환경변수 — 이름으로 아는 키와, 토큰·키·비밀값 형태의 이름 전부(DEVIN_TOKEN 같은 별칭 포함)
+const HIDDEN_ENV = /^(XAI_API_KEY|GITHUB_TOKEN|GH_TOKEN)$|^DEVIN_|_(TOKEN|KEY|SECRET|PASSWORD|PAT)$|^(SUPABASE|NEXT_PUBLIC_SUPABASE)_/i;
 const TOKEN_LIKE =
   /\b(gh[pousr]_[A-Za-z0-9]{20,}|github_pat_\w{20,}|sb_secret_[\w-]{10,}|xai-[A-Za-z0-9]{20,}|cog_[A-Za-z0-9]{20,}|eyJ[\w-]{10,}\.[\w-]{10,}\.[\w-]{10,})/;
 

@@ -510,7 +510,9 @@ async function main() {
 
       // 파일 목록이 조회 한계로 잘렸으면 민감 파일 검사를 신뢰할 수 없다 → 수동 리뷰.
       // 잘림 판정은 엔트리 건수(files.length)로 한다 — names는 rename당 2건라 부적합
-      if ((files || []).length < (detail.changed_files ?? (files || []).length)) {
+      // 3000건이면 changed_files도 같은 한도에서 잘렸을 수 있다 — 같다고 해서 전부 본 것이 아니다
+      const listed = (files || []).length;
+      if (listed >= MAX_PAGES * 100 || listed < (detail.changed_files ?? listed)) {
         st.scope = `⚠️ 판정 불가 — ${detail.changed_files}개 중 ${(files || []).length}개만 조회됨`;
         await say(
           "scope",

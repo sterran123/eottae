@@ -18,7 +18,7 @@
 // 한 번에 한 PR, 주기당 최대 MAX_PER_CYCLE건, 로그인·사용량 문제면 즉시 멈춘다(재시도 반복 없음).
 // 실행 기록: REVIEW_ROOT/runs.jsonl (시각·PR·sha·결과·소요·토큰)
 import { execFileSync, spawn } from "node:child_process";
-import { appendFileSync, mkdirSync, readdirSync, renameSync, rmSync } from "node:fs";
+import { appendFileSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -32,9 +32,10 @@ const MAX_PER_CYCLE = Number(process.env.MAX_PER_CYCLE || 3);
 const REVIEW_ROOT =
   process.env.REVIEW_ROOT || (process.platform === "win32" ? "C:\\eottae-grok-review" : "/var/tmp/eottae-grok-review");
 // PR이 들고 온 에이전트 설정 — 신뢰 전이라 실행되지 않지만, 읽히지도 않게 지운다
+// 이름 비교는 소문자로 — Windows에서는 .Grok·agents.md도 같은 파일로 열린다
 const AGENT_CONFIG = new Set([".grok", ".claude", ".cursor", ".mcp.json"]);
-// Grok이 루트에서 규칙으로 자동 로드하는 파일 — PR이 바꾼 지시가 리뷰어 규칙이 되지 않게 이름만 바꾼다(내용은 읽을 수 있다)
-const AUTO_RULES = ["AGENTS.md", "Agents.md", "AGENT.md", "CLAUDE.md", "Claude.md", "CLAUDE.local.md"];
+// Grok이 규칙으로 자동 로드하는 파일 — PR이 바꾼 지시가 리뷰어 규칙이 되지 않게 이름만 바꾼다(내용은 읽을 수 있다)
+const AUTO_RULES = new Set(["agents.md", "agent.md", "claude.md", "claude.local.md"]);
 const RULES_SUFFIX = ".pr-content";
 // 리뷰 도중 작업자가 죽어 "리뷰하는 중"으로 남은 상태는 이 시간이 지나면 다시 집는다
 const STALE_MS = 40 * 60_000;
@@ -68,15 +69,19 @@ const gh = async (path) => {
 };
 const git = (...args) => execFileSync("git", ["-C", ROOT, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
 
-// PR 트리 정리: 에이전트 설정은 지우고, 자동 로드되는 규칙 파일은 이름을 바꾼다(하위 폴더 포함).
-// 링크는 따라가지 않는다 — PR의 심볼릭 링크가 홈을 가리키면 `링크/.grok`을 지우는 순간 실제 ~/.grok이 지워진다
+// PR 트리 정리: 링크는 링크 자체만 지운다(따라가지 않는다 — `링크/.grok`을 지우면 실제 ~/.grok이 지워지고,
+// 남겨 두면 리뷰어가 링크를 통해 홈 파일을 읽는다). 에이전트 설정은 지우고, 자동 로드 규칙 파일은 이름을 바꾼다.
 const sanitize = (dir) => {
   for (const ent of readdirSync(dir, { withFileTypes: true })) {
-    if (ent.name === ".git" || ent.isSymbolicLink()) continue;
+    if (ent.name === ".git") continue;
     const p = join(dir, ent.name);
-    if (AGENT_CONFIG.has(ent.name)) rmSync(p, { recursive: true, force: true });
-    else if (ent.isFile() && AUTO_RULES.includes(ent.name)) renameSync(p, p + RULES_SUFFIX);
-    else if (ent.isDirectory()) sanitize(p);
+    const name = ent.name.toLowerCase();
+    if (ent.isSymbolicLink()) unlinkSync(p);
+    else if (AGENT_CONFIG.has(name)) rmSync(p, { recursive: true, force: true });
+    else if (ent.isFile() && AUTO_RULES.has(name)) {
+      rmSync(p + RULES_SUFFIX, { force: true }); // 같은 이름이 이미 있으면 Windows rename이 실패한다
+      renameSync(p, p + RULES_SUFFIX);
+    } else if (ent.isDirectory()) sanitize(p);
   }
 };
 
@@ -86,7 +91,9 @@ const sanitize = (dir) => {
 const OWNER = REPO.split("/")[0];
 async function waiting() {
   if (ONLY) {
+    // 수동 실행 — draft도 리뷰한다. 포크 PR은 소유자 구독·PC로 돌리지 않는다
     const pr = await gh(`repos/${REPO}/pulls/${ONLY}`);
+    if (pr.head.repo?.full_name !== REPO) throw new Error(`PR #${ONLY}은 포크에서 온 PR — 로컬 리뷰 대상 아님`);
     return [{ pr, force: FORCE }];
   }
   const out = [];
@@ -108,14 +115,29 @@ async function waiting() {
   return out.slice(0, MAX_PER_CYCLE);
 }
 
-function review({ pr, force }) {
+const removeWorktree = (wt) => {
+  try {
+    git("worktree", "remove", "--force", wt);
+  } catch {
+    rmSync(wt, { recursive: true, force: true });
+  }
+};
+
+async function review({ pr, force }) {
   const sha = pr.head.sha;
   const wt = join(REVIEW_ROOT, `pr-${pr.number}-${sha.slice(0, 7)}`);
-  git("fetch", "--quiet", "origin", `pull/${pr.number}/head`);
-  rmSync(wt, { recursive: true, force: true });
-  git("worktree", "prune");
-  git("worktree", "add", "--quiet", "--detach", wt, sha);
-  sanitize(wt);
+  // 준비 단계 실패(fetch·체크아웃·정리)는 이 PR만 건너뛴다 — 작업자 전체가 같은 PR에서 반복해 죽지 않게
+  try {
+    git("fetch", "--quiet", "origin", `pull/${pr.number}/head`);
+    rmSync(wt, { recursive: true, force: true });
+    git("worktree", "prune");
+    git("worktree", "add", "--quiet", "--detach", wt, sha);
+    sanitize(wt);
+  } catch (e) {
+    console.error(`PR #${pr.number} 준비 실패 — 건너뜀: ${e.message.split("\n")[0]}`);
+    removeWorktree(wt);
+    return 1;
+  }
   const started = Date.now();
   return new Promise((resolve) => {
     const child = spawn(process.execPath, [join(ROOT, "tools", "ai_code_review.mjs")], {
@@ -136,11 +158,7 @@ function review({ pr, force }) {
       process.stdout.write(d);
     });
     child.on("close", (code) => {
-      try {
-        git("worktree", "remove", "--force", wt);
-      } catch {
-        rmSync(wt, { recursive: true, force: true });
-      }
+      removeWorktree(wt);
       const rec = {
         at: new Date().toISOString(),
         pr: pr.number,
@@ -157,6 +175,28 @@ function review({ pr, force }) {
 }
 
 mkdirSync(REVIEW_ROOT, { recursive: true });
+// 작업자는 하나만 — 둘이 같은 대기 PR을 집으면 Grok이 두 번 돈다
+const LOCK = join(REVIEW_ROOT, "worker.lock");
+const alive = (pid) => {
+  try {
+    process.kill(pid, 0); // 신호 0 — 프로세스가 있는지만 본다
+    return true;
+  } catch {
+    return false;
+  }
+};
+let held = 0;
+try {
+  held = Number(readFileSync(LOCK, "utf8")) || 0;
+} catch {}
+if (held && alive(held)) {
+  console.error(`다른 작업자(pid ${held})가 실행 중 — 종료합니다`);
+  process.exit(4);
+}
+writeFileSync(LOCK, String(process.pid)); // 잠금 파일이 없거나 주인이 죽었으면 새로 잡는다
+const unlock = () => rmSync(LOCK, { force: true });
+process.on("exit", unlock);
+process.on("SIGINT", () => process.exit(130));
 for (;;) {
   let jobs = [];
   try {
