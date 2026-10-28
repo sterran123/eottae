@@ -132,7 +132,9 @@ async function waitingProgress() {
     if (!pr.merged_at || Date.parse(pr.merged_at) < recent) continue;
     const comments = await gh(`repos/${REPO}/issues/${pr.number}/comments?per_page=100`);
     const trusted = (c) => c.user?.login === BOT || c.user?.login === OWNER;
-    const wait = comments.find((c) => c.user?.login === BOT && String(c.body).includes(`<!-- issue-progress-wait:pr${pr.number} -->`));
+    // 가장 최근 대기 표시 기준 — 재판정(Run workflow force)은 새 표시를 남기고, " force"가 붙어 있으면 FORCE로 넘긴다
+    const waitRe = new RegExp(`<!-- issue-progress-wait:pr${pr.number}( force)? -->`);
+    const wait = comments.filter((c) => c.user?.login === BOT && waitRe.test(String(c.body))).at(-1);
     if (!wait) continue;
     const done = comments.some(
       (c) =>
@@ -141,7 +143,7 @@ async function waitingProgress() {
         (String(c.body).includes(`<!-- issue-progress:pr${pr.number} -->`) ||
           String(c.body).includes(`<!-- issue-progress-note:pr${pr.number} -->`)),
     );
-    if (!done) out.push({ pr });
+    if (!done) out.push({ pr, force: String(wait.body).match(waitRe)?.[1] === " force" });
   }
   return out.slice(0, MAX_PER_CYCLE);
 }
@@ -164,21 +166,33 @@ async function waitingMentions() {
     writeFileSync(STATE, JSON.stringify(state));
     return [];
   }
-  const recentComments = await gh(
-    `repos/${REPO}/issues/comments?since=${encodeURIComponent(state.mentionsSince)}&sort=created&direction=asc&per_page=100`,
-  );
+  // 봇 댓글이 많아 한 페이지(100개)로는 모자란다 — 끝까지 넘기고(최대 1000개), 조회 시작점은 아래에서 앞으로 옮긴다.
+  // 7일보다 오래된 요청은 보지 않는다(작업자가 오래 꺼져 있었을 때 옛 요청에 몰아서 답하지 않게)
+  const since = new Date(Math.max(Date.parse(state.mentionsSince), Date.now() - 7 * 24 * 3600_000)).toISOString();
+  const recentComments = [];
+  for (let page = 1; page <= 10; page++) {
+    const items = await gh(
+      `repos/${REPO}/issues/comments?since=${encodeURIComponent(since)}&sort=created&direction=asc&per_page=100&page=${page}`,
+    );
+    recentComments.push(...items);
+    if (items.length < 100) break;
+  }
   const answered = new Set(
     recentComments.flatMap((c) => [...String(c.body).matchAll(/<!-- grok-answer:(\d+) -->/g)].map((m) => m[1])),
   );
-  return recentComments
-    .filter(
-      (c) =>
-        c.user?.login === OWNER &&
-        c.author_association === "OWNER" &&
-        /(^|\s)@grok\b/i.test(String(c.body)) &&
-        !String(c.body).includes("<!-- grok-answer:") && // 작업자 자신의 답 댓글
-        !answered.has(String(c.id)),
-    )
+  const pending = recentComments.filter(
+    (c) =>
+      c.user?.login === OWNER &&
+      c.author_association === "OWNER" &&
+      /(^|\s)@grok\b/i.test(String(c.body)) &&
+      !String(c.body).includes("<!-- grok-answer:") && // 작업자 자신의 답 댓글
+      !answered.has(String(c.id)),
+  );
+  // 시작점 이동: 남은 요청이 있으면 가장 오래된 요청 시각(그 답도 범위 안에 들어온다), 없으면 마지막으로 본 댓글 시각
+  const last = recentComments.at(-1)?.created_at;
+  const next = pending[0]?.created_at ?? last;
+  if (next && next > state.mentionsSince) writeFileSync(STATE, JSON.stringify({ ...state, mentionsSince: next }));
+  return pending
     .slice(0, MAX_PER_CYCLE)
     .map((c) => ({ comment: c, number: Number(String(c.issue_url).split("/").pop()) }));
 }
@@ -243,13 +257,13 @@ const review = ({ pr, force }) =>
     script: "ai_code_review.mjs",
     env: { PR_NUMBER: String(pr.number), FORCE: force ? "1" : "" },
   });
-const progress = ({ pr }) =>
+const progress = ({ pr, force }) =>
   runIn({
     label: `progress-${pr.number}`,
     fetchRef: "main",
     sha: pr.merge_commit_sha,
     script: "issue_progress.mjs",
-    env: { PR_NUMBER: String(pr.number), FORCE: "" },
+    env: { PR_NUMBER: String(pr.number), FORCE: force ? "1" : "" },
   });
 const mention = async ({ comment, number }) => {
   const issue = await gh(`repos/${REPO}/issues/${number}`);

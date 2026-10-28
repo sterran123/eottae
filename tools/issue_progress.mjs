@@ -152,7 +152,8 @@ const mergeSha = pr.merge_commit_sha;
 const MARK = `<!-- issue-progress:pr${PR_NUMBER} -->`;
 const NOTE = `<!-- issue-progress-note:pr${PR_NUMBER} -->`;
 // 로컬 Grok 대기 표시 — grok_review_worker.mjs가 같은 문자열로 찾는다
-const WAIT = `<!-- issue-progress-wait:pr${PR_NUMBER} -->`;
+// 재판정(Run workflow force)이면 " force"를 붙인다 — 작업자가 이를 보고 FORCE로 넘겨 "이미 처리함"에서 멈추지 않게
+const WAIT = `<!-- issue-progress-wait:pr${PR_NUMBER}${FORCE ? " force" : ""} -->`;
 // 판정 코멘트는 Actions 봇과 저장소 소유자(로컬 Grok 작업자)가 남긴 것만 인정
 const TRUSTED = new Set([BOT, REPO.split("/")[0]]);
 const prComments = await ghAll(`repos/${REPO}/issues/${PR_NUMBER}/comments`);
