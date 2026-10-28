@@ -613,7 +613,7 @@ async function main() {
             "conflict",
             `**자동 생성 PR이 최신 main과 충돌합니다 — 그대로 두면 됩니다.**\n\n` +
               statusTable(st) +
-              `\n\n이 PR이 만들어진 뒤 main이 바뀌어 리포트·매니페스트가 낡았습니다. 다음 \`team-sync\` 실행(매주 월요일)이 같은 브랜치를 최신 내용으로 덮어쓰면 자동으로 다시 판정합니다. 급하면 Actions → \`team-sync\` → Run workflow.`,
+              `\n\n이 PR이 만들어진 뒤 main이 바뀌어 리포트·매니페스트가 낡았습니다. 다음 \`team-sync\` 실행(매주 월요일)이 같은 브랜치를 최신 내용으로 덮어쓰면 자동으로 다시 판정합니다(최신 결과가 main과 같으면 이 PR을 닫습니다). 급하면 Actions → \`team-sync\` → Run workflow.`,
           );
           continue;
         }

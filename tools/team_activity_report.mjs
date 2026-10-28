@@ -178,11 +178,11 @@ const stable = (s) =>
     .replace(/^> 집계 기간: .*$/m, "")
     .replace(/^- CI 상태: .*$/m, "")
     .replace(KST_RE, "");
+// process.exit는 쓰지 않는다 — 남은 fetch 소켓이 있으면 Windows에서 비정상 종료될 수 있다
 if (existsSync(OUT) && stable(readFileSync(OUT, "utf8")) === stable(md)) {
   console.log("TEAM_ACTIVITY.md 그대로 — 시각·main CI 상태 말고 바뀐 내용 없음");
-  process.exit(0);
+} else {
+  mkdirSync(dirname(OUT), { recursive: true });
+  writeFileSync(OUT, md, "utf8");
+  console.log(`TEAM_ACTIVITY.md 갱신 완료 — ${REPO}, 최근 ${DAYS}일, main 커밋 ${commits.length}건, 열린 PR ${openPrs.length}건 (${usedAuth})`);
 }
-
-mkdirSync(dirname(OUT), { recursive: true });
-writeFileSync(OUT, md, "utf8");
-console.log(`TEAM_ACTIVITY.md 갱신 완료 — ${REPO}, 최근 ${DAYS}일, main 커밋 ${commits.length}건, 열린 PR ${openPrs.length}건 (${usedAuth})`);

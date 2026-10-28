@@ -82,6 +82,13 @@ jobs:
 
           if git diff --cached --quiet; then
             echo "갱신할 변경 없음 — PR 생성 건너뜀"
+            # 열린 봇 PR이 있으면 main보다 낡은 내용이다(최신으로 만든 결과가 main과 같으므로) — 닫는다.
+            # 그대로 두면 충돌 안내("다음 실행이 덮어씀")와 달리 영영 남는다
+            OLD_PR=$(gh pr list --head auto/team-sync --json number -q '.[0].number' || true)
+            if [ -n "$OLD_PR" ]; then
+              gh pr close "$OLD_PR" --delete-branch \
+                --comment "최신 main 기준으로 다시 만든 리포트·매니페스트가 main과 같아 이 PR은 필요 없어졌습니다 — team-sync가 자동으로 닫습니다." || true
+            fi
             exit 0
           fi
 
