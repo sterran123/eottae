@@ -490,6 +490,17 @@
 - [안전성] 기존 MATCH-008 차단(즉시 입력 비활성화·응답 취소·해제 확인 모달)/신고 모달 로직 100% 온전히 유지
 - [미실행] 실제 Supabase DB 영속화/RLS(MATCH-003, ADR-005) 및 Realtime WebSocket 채널 연동(주한태 담당 백엔드 구현 대기)
 
+## 2026-10-28 MATCH-007·008 Supabase 연동 준비 — DTO·매퍼·데모 데이터 소스 분리 및 TC-009 기록 정리 (손준혁 작업)
+- [요청] 이슈 #22 Devin/팀 리드 지시사항 중 한태님 백엔드 PR(#21) 대기 없이 즉시 착수 가능한 항목(1~4번) 반영
+- [변경] 2. 프로젝트 설계서/테스트_케이스_마스터.md | 실행 기록 39행의 TC-007(대화방 차단)을 TC-009 보조 기록으로 이동 (TC-007은 MATCH-006 추천 필터 항목이라 주한태 추천 RPC 구현 후 기록하도록 분리)
+- [변경] src/lib/chat/types.ts | Supabase `public.messages` 테이블 행 타입 `MessageRow { id, conversation_id, sender_id, body, created_at }` 및 클라이언트 `ChatMessage` 변환 함수 `toChatMessage(row, myId)` 추가
+- [변경] src/lib/safety/types.ts | `ReportCategory`(`'abuse'|'sexual'|'scam'|'other'`)가 `public.reports.category` CHECK 제약과 일치함을 명시하고 차단 요청 DTO `BlockRequest { blockedUserId }` 추가
+- [신규] src/lib/chat/chat-service.ts | `ChatDataSource` 인터페이스 및 `createDemoChatDataSource` 구현체 신설 — `ChatRoom.tsx`의 인라인 `setTimeout` 데모 자동응답 로직을 데이터 소스 계층으로 분리하고, Supabase 환경변수가 없을 때 데모 모드로 안전하게 동작(`isSupabaseChatConfigured`)하도록 구성
+- [변경] src/lib/chat/demo-data.ts & src/components/chat/ChatHub.tsx | 추천 카드(`rec_bada`, `rec_haneul`, `rec_gaeul`, `rec_doyun`)에서 `?partner=&q=`로 진입 시 데모 대화방과 매핑하는 `DEMO_RECOMMENDATION_ROOM_MAP`·`resolveDemoRoomId` 추가
+- [변경] src/components/chat/ChatRoom.tsx | 인라인 `setTimeout`·타이머 배열을 제거하고 `createDemoChatDataSource`를 통해 전송·자동응답·차단 시 `dispose()` 정리를 수행하도록 리팩터링
+- [검증] `npm run typecheck` PASS / `npm run build` PASS (정적 17개 라우트 정상 생성)
+- [미구현/보류] `0004_chat_safety.sql` 마이그레이션(`messages`·`reports`·Storage RLS) 및 프런트 Supabase Realtime 실제 연결 — 주한태 PR(#21 `0003_match_core.sql`) 머지 후 진행 예정
+
 ## 2026-10-28 AI 코드 리뷰 — 로컬 Grok 엔진 추가·Devin 크레딧 절약 (김민기 작업)
 - [요청] Devin 크레딧 대신 이미 결제한 Grok 구독(X Subscription Ultra)으로 PR 자동 리뷰를 대체할 수 있는지 공식 문서로 검증하고, 가능한 부분은 구현
 - [조사] Devin 사용 현황(API 조회, 2026-10-25~28 세션 100개): Devin 쪽 자동화 `eottae-pr-watch`(2시간 주기 + PR 이벤트) 41개, API(ai-review·issue-progress·@devin 브릿지) 59개 — ai-review와 같은 일을 자동화가 한 번 더 함. API의 `acus_consumed`는 모두 0이라 실제 금액은 대시보드에서만 확인 가능

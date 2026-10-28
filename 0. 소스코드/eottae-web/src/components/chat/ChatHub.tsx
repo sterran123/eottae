@@ -12,7 +12,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { DEMO_ROOMS } from '@/lib/chat/demo-data';
+import { DEMO_ROOMS, resolveDemoRoomId } from '@/lib/chat/demo-data';
 import type { ChatMessage } from '@/lib/chat/types';
 import ChatList, { type ChatRoomPreview } from './ChatList';
 import ChatRoom from './ChatRoom';
@@ -32,10 +32,8 @@ export default function ChatHub() {
   const searchParams = useSearchParams();
   const initialPartnerId = searchParams.get('partner');
   const initialQuestion = searchParams.get('q');
-  // 추천 카드(?partner=&q=) 진입 시 일치하는 partner/room id가 있으면 해당 방을 열고, 없으면 첫 데모 방으로 폴백
-  const questionRoomId =
-    DEMO_ROOMS.find((r) => r.partner.id === initialPartnerId || r.id === initialPartnerId)?.id ??
-    DEMO_ROOMS[0].id;
+  // 추천 카드(?partner=&q=) 진입 시 일치하는 partner/room id 또는 추천 프로필 매핑으로 방을 열고, 없으면 첫 데모 방으로 폴백
+  const questionRoomId = resolveDemoRoomId(initialPartnerId);
 
   const [activeId, setActiveId] = useState<string | null>(null);
   // 한 번이라도 연 방 — 닫아도 마운트를 유지해 상태를 보존한다.
