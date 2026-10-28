@@ -127,6 +127,8 @@ const CODE_FILE = /\.(ts|tsx|js|jsx|mjs|cjs|sql)$/;
 // PR 본문의 이슈 자동 종료 키워드 — 머지 때 GitHub이 해당 이슈를 닫는다
 const CLOSES = /\b(close[sd]?|fix(e[sd])?|resolve[sd]?)\s*:?\s+#(\d+)/gi;
 const AI_CONTEXT = "ai-review"; // tools/ai_code_review.mjs가 남기는 커밋 상태
+// ai-review를 남길 수 있는 계정: Actions(Devin 리뷰·대기 표시)와 저장소 소유자(로컬 Grok 작업자, tools/grok_review_worker.mjs)
+const AI_TRUSTED = new Set([BOT, REPO.split("/")[0]]);
 // AI 리뷰는 수 분~25분 걸린다 — 이 시간을 넘겨도 상태가 없으면 재실행 안내
 const AI_GRACE_MS = 45 * 60 * 1000;
 const MAX_PAGES = 30; // 목록 페이지네이션 상한 (3000건 — GitHub PR 파일 표시 한도와 동일)
@@ -732,7 +734,9 @@ async function main() {
       // 봇 PR(생성 파일만)은 리뷰할 코드가 없어 제외. 사람 승인이 있으면 사람 판단이 우선한다.
       if (!isBot) {
         const statuses = await apiAll(`repos/${REPO}/commits/${sha}/statuses`).catch(() => []);
-        const ai = statuses.find((s) => s.context === AI_CONTEXT); // 최신순 정렬
+        // 우리 워크플로(봇)나 저장소 소유자(로컬 Grok 작업자)가 남긴 상태만 인정 — 상태 쓰기 권한만 있으면
+        // 협력자도 ai-review=success를 직접 남길 수 있다
+        const ai = statuses.find((s) => s.context === AI_CONTEXT && AI_TRUSTED.has(s.creator?.login)); // 최신순 정렬
         const aiLink = ai?.target_url ? ` ([세션](${ai.target_url}))` : "";
         if (!ai || ai.state === "pending") {
           if (humanOk) {
