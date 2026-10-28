@@ -1,17 +1,17 @@
 # 팀 활동 리포트 — 2026-10-28 (자동 생성)
 
 > 생성: `.github/workflows/team-sync.yml` → `tools/team_activity_report.mjs`
-> 집계 기간: 최근 7일 (2026. 10. 21. 16시 52분 51초 ~ 2026. 10. 28. 16시 52분 55초) · 저장소: sterran123/eottae · 조회 방식: gh
+> 집계 기간: 최근 7일 (2026. 10. 21. 21시 20분 38초 ~ 2026. 10. 28. 21시 20분 46초) · 저장소: sterran123/eottae · 조회 방식: gh
 
 ## main 브랜치 건강 상태
-- 최신 커밋: `42797bf` feat(MATCH-007): Supabase 메시지 DTO·매퍼 정의 및 데모 데이터 소스 분리 (Refs #22) (#47) (손준혁, 2026. 10. 28. 16시 52분 3초)
-- CI 상태: ⏳ progress 진행 중
+- 최신 커밋: `dd6f82c` docs(ai): 로컬 Grok 작업자 로그인 자동 시작 등록 방법 (#52) (김민기, 2026. 10. 28. 21시 19분 48초)
+- CI 상태: ⏳ deploy 진행 중
 
 ## 팀원별 활동 (최근 7일)
 
 | 팀원 | main 커밋 | 열린 PR | 머지된 PR | 다룬 요구사항 ID |
 |---|---|---|---|---|
-| 김민기 (@sterran123) | 43 | 0 | 16 | CORE-003, CORE-001, SEC-002, CORE-004, MATCH-003, CORE-002, BRAND-004, SEC-001, MATCH-008, MATCH-004, MATCH-005, MATCH-007 |
+| 김민기 (@sterran123) | 47 | 0 | 20 | CORE-003, CORE-001, SEC-002, CORE-004, MATCH-003, CORE-002, BRAND-004, SEC-001, MATCH-008, MATCH-004, MATCH-005, MATCH-007 |
 | 오하율 (@HaYul0611) | 8 | 0 | 8 | BRAND-004, MATCH-001, MATCH-009, MATCH-002, MATCH-003 |
 | 주한태 (@gksxogksxo1001-sketch) | 1 | 0 | 1 | MATCH-003, MATCH-004 |
 | 손준혁 (@sonjunhyek2) | 6 | 0 | 6 | MATCH-007, MATCH-008, SEC-002 |
@@ -21,10 +21,15 @@
 
 | # | 제목 | 작성자 | CI | 최근 갱신 |
 |---|---|---|---|---|
-| #44 | 🤖 팀 활동 리포트·매니페스트 자동 갱신 (2026-10-27) | GitHub Actions | 없음 | 2026. 10. 28. 14시 42분 43초 |
+| #50 | 🤖 팀 활동 리포트·매니페스트 자동 갱신 (2026-10-28) | GitHub Actions | 없음 | 2026. 10. 28. 20시 49분 25초 |
 
-## 최근 7일 머지된 PR (40건)
+## 최근 7일 머지된 PR (45건)
 
+- #52 docs(ai): 로컬 Grok 작업자 로그인 자동 시작 등록 방법 — 김민기 (2026. 10. 28. 21시 19분 49초)
+- #51 feat(ai): 이슈 진행 판정·멘션 응답도 로컬 Grok으로 — Devin 완전 대체 준비 — 김민기 (2026. 10. 28. 20시 48분 15초)
+- #49 docs(ai-review): Devin eottae-pr-watch 자동화 끈 기록 — 김민기 (2026. 10. 28. 20시 14분 30초)
+- #48 feat(ai-review): 로컬 Grok 리뷰 엔진 추가·Devin 크레딧 절약 (기본값 Devin) — 김민기 (2026. 10. 28. 20시 12분 53초)
+- #44 🤖 팀 활동 리포트·매니페스트 자동 갱신 (2026-10-27) — GitHub Actions (2026. 10. 28. 18시 39분 3초)
 - #47 feat(MATCH-007): Supabase 메시지 DTO·매퍼 정의 및 데모 데이터 소스 분리 (Refs #22) — 손준혁 (2026. 10. 28. 16시 52분 4초)
 - #37 feat(MATCH-007): 카카오톡 스타일 채팅방 목록 및 우측 슬라이드 패널 구현 — 손준혁 (2026. 10. 28. 11시 9분 47초)
 - #46 docs(CORE-003): TC-012 안드로이드 실기기 재확인 PASS 기록 — 김민기 (2026. 10. 28. 11시 39분 10초)
@@ -66,9 +71,11 @@
 - #1 feat(MATCH-001): 취향 온보딩 UI (DEMO) — 오하율 (2026. 10. 25. 4시 56분 2초)
 - #4 feat(MATCH-009): 공통 질문·궁합 토스트 (DEMO) — 오하율 (2026. 10. 24. 19시 41분 10초)
 
-## 활성 브랜치 (25개)
+## 활성 브랜치 (27개)
 
 - `auto/team-sync`
+- `docs/devin-pr-watch-off`
+- `docs/grok-worker-startup`
 - `docs/tc-012-device-pass`
 - `feat/ADR-005-supabase-pages`
 - `feat/MATCH-001-002-match-ui`
