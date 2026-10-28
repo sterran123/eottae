@@ -122,6 +122,18 @@ if (names.length && names.every((f) => GENERATED.has(f))) {
   console.log("생성 파일만 변경 — success");
   process.exit(0);
 }
+// 문서·이미지만 바꾼 PR도 AI 세션을 쓰지 않는다 — 실행되는 코드가 없다.
+// 단, 에이전트 지시 파일(AGENTS.md·CLAUDE.md·.devin/ 등)과 자동화 경로는 문서여도 리뷰한다.
+// (보안 스캔·충돌·CI는 규칙 봇이 그대로 본다)
+const DOC_FILE = /\.(md|png|jpe?g|webp|gif|csv)$/i;
+const NOT_DOC = /^(\.github|\.devin|\.grok|\.claude|\.cursor|tools)\/|(^|\/)(AGENTS|CLAUDE|GEMINI)\.md$|\/src\//i;
+const isDoc = (f) => DOC_FILE.test(f.filename) && !NOT_DOC.test(f.filename) &&
+  (!f.previous_filename || (DOC_FILE.test(f.previous_filename) && !NOT_DOC.test(f.previous_filename)));
+if (files.length && files.every(isDoc)) {
+  await setStatus("success", "문서·이미지만 변경 — AI 리뷰 생략");
+  console.log("문서만 변경 — success");
+  process.exit(0);
+}
 
 // Actions가 로컬 Grok으로 넘기는 모드 — Devin을 부르지 않는다. /ai-review 재실행은 설명에 표시해
 // 작업자가 FORCE로 다시 리뷰하게 한다.

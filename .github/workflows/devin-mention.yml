@@ -17,9 +17,10 @@ concurrency:
 
 jobs:
   bridge:
+    # Devin 세션은 호출마다 크레딧을 쓴다 — 저장소 소유자만 부를 수 있다
     if: >-
       contains(github.event.comment.body, '@devin') &&
-      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association) &&
+      github.event.comment.author_association == 'OWNER' &&
       github.event.comment.user.type != 'Bot'
     runs-on: ubuntu-latest
     steps:
