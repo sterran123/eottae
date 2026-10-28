@@ -31,8 +31,20 @@ export default function SafetyDialog({ open, onClose, titleId, children }: Safet
   }, [open]);
 
   return (
-    <dialog ref={ref} className="mt-safety-dialog" aria-labelledby={titleId} onClose={onClose}>
-      {children}
+    <dialog
+      ref={ref}
+      className="mt-safety-dialog"
+      aria-labelledby={titleId}
+      onClose={onClose}
+      onClick={(e) => {
+        if (e.target === ref.current) {
+          onClose();
+        }
+      }}
+    >
+      <div className="mt-safety-dialog-inner">
+        {children}
+      </div>
     </dialog>
   );
 }

@@ -596,89 +596,345 @@ body:has(.mt-chat-page) .footer::before {
   text-decoration: underline;
 }
 
-/* 모달 — display는 [open]에만 지정해 닫힌 상태를 깨지 않는다 */
+/* ============================================================
+   안전 다이얼로그 (신고·차단 모달 전면 리뉴얼 디자인)
+   ============================================================ */
+
 .mt-safety-dialog {
-  width: min(92vw, 420px);
-  max-height: calc(100vh - 32px);
-  max-height: calc(100dvh - 32px);
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  width: min(92vw, 410px);
+  max-height: min(90vh, 90dvh);
   padding: 0;
   color: var(--match-ink);
   background: var(--match-paper);
   border: 1px solid var(--match-line);
-  border-radius: 18px;
-  box-shadow: 0 16px 48px var(--match-toast-shadow);
+  border-radius: 20px;
+  box-shadow: 0 20px 48px -10px var(--match-toast-shadow);
+  overflow: hidden; /* 테두리 밖으로 스크롤바가 튀어나오거나 코너가 잘리는 현상 방지 */
 }
-.mt-safety-dialog::backdrop { background: var(--match-dim); }
-.mt-safety-dialog[open] { display: block; }
-.mt-safety-form { padding: 20px; }
-.mt-safety-title { margin: 0 0 10px; font-size: 1.05rem; }
-.mt-safety-text { margin: 0 0 10px; font-size: 0.9rem; line-height: 1.6; color: var(--match-sub); }
-.mt-safety-demo {
-  margin: 0 0 14px;
-  padding: 6px 10px;
-  font-size: 0.76rem;
-  color: var(--match-warn-ink);
-  background: var(--match-warn-bg);
-  border: 1px solid var(--match-warn-line);
+.mt-safety-dialog::backdrop {
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(3px);
+}
+.mt-safety-dialog[open] {
+  display: block;
+  animation: mt-scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 내부 스크롤 래퍼 (슬림 커스텀 스크롤바) */
+.mt-safety-dialog-inner {
+  max-height: min(90vh, 90dvh);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--match-line-soft) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+.mt-safety-dialog-inner::-webkit-scrollbar {
+  width: 5px;
+}
+.mt-safety-dialog-inner::-webkit-scrollbar-thumb {
+  background: var(--match-line);
+  border-radius: 10px;
+}
+.mt-safety-dialog-inner::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mt-safety-form {
+  padding: 22px 20px 20px;
+}
+
+/* 모달 헤더 */
+.mt-safety-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.mt-safety-title {
+  margin: 0;
+  font-size: 1.08rem;
+  font-weight: 700;
+  color: var(--match-ink);
+  line-height: 1.3;
+}
+.mt-safety-desc {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  color: var(--match-sub);
+  line-height: 1.45;
+}
+.mt-safety-close-btn {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--match-line);
+  background: var(--match-bg);
+  color: var(--match-sub);
   border-radius: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
 }
-.mt-safety-fieldset { margin: 0 0 12px; padding: 0; border: 0; }
-.mt-safety-legend { display: block; margin-bottom: 8px; padding: 0; font-size: 0.86rem; font-weight: 700; }
+.mt-safety-close-btn:hover {
+  background: var(--match-soft);
+  color: var(--match-ink);
+  border-color: var(--match-line-soft);
+}
+.mt-safety-close-btn:focus-visible {
+  outline: 2px solid var(--match-focus);
+  outline-offset: 2px;
+}
+
+.mt-safety-text {
+  margin: 0 0 14px;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--match-sub);
+}
+
+/* 사유 선택 필드셋 */
+.mt-safety-fieldset {
+  margin: 0 0 14px;
+  padding: 0;
+  border: 0;
+}
+.mt-safety-legend {
+  display: block;
+  margin-bottom: 10px;
+  padding: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--match-ink);
+}
+.mt-safety-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 .mt-safety-radio {
   display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  padding: 8px 10px;
-  margin-bottom: 6px;
-  border: 1px solid var(--match-line);
-  border-radius: 10px;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border: 1.5px solid var(--match-line);
+  border-radius: 12px;
+  background: var(--match-paper);
   cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
 }
-.mt-safety-radio:has(input:checked) { border-color: var(--match-accent); background: var(--match-soft); }
-.mt-safety-radio input { margin-top: 3px; accent-color: var(--match-accent-deep); }
-.mt-safety-radio span { display: flex; flex-direction: column; gap: 2px; font-size: 0.88rem; }
-.mt-safety-radio small { color: var(--match-sub); font-size: 0.76rem; }
-.mt-safety-field { display: block; margin-bottom: 12px; }
+.mt-safety-radio:hover {
+  background: var(--match-soft);
+  border-color: var(--match-line-soft);
+}
+.mt-safety-radio.is-selected,
+.mt-safety-radio:has(input:checked) {
+  border-color: var(--match-accent-deep);
+  background: var(--match-soft);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+.mt-safety-radio input[type='radio'] {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
+  margin: 0;
+  accent-color: var(--match-accent-deep);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.mt-safety-radio-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+.mt-safety-radio-content strong {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--match-ink);
+  line-height: 1.35;
+}
+.mt-safety-radio-content small {
+  font-size: 0.76rem;
+  color: var(--match-sub);
+  line-height: 1.35;
+}
+
+/* 상세 텍스트 영역 */
+.mt-safety-field {
+  display: block;
+  margin-bottom: 12px;
+}
+.mt-safety-field-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--match-ink);
+}
 .mt-safety-textarea {
   width: 100%;
   box-sizing: border-box;
-  resize: vertical;
   padding: 10px 12px;
-  font: inherit;
-  font-size: 16px; /* 모바일 포커스 시 화면 자동 줌 방지: 16px 이상 필수 */
+  font-family: inherit;
+  font-size: 16px; /* 모바일 자동 줌 방지 */
   line-height: 1.45;
   color: var(--match-ink);
   background: var(--match-bg);
-  border: 1px solid var(--match-line);
-  border-radius: 10px;
+  border: 1.5px solid var(--match-line);
+  border-radius: 12px;
+  resize: vertical;
+  min-height: 74px;
+  outline: none !important;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 @media (min-width: 768px) {
   .mt-safety-textarea {
     font-size: 0.88rem;
   }
 }
-.mt-safety-textarea:focus-visible { outline: 2px solid var(--match-focus); outline-offset: 2px; }
-.mt-safety-count { display: block; text-align: right; color: var(--match-hint); font-size: 0.72rem; }
-.mt-safety-check { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; font-size: 0.86rem; }
-.mt-safety-check input { accent-color: var(--match-accent-deep); }
-/* 오류 문구 자리를 항상 확보해 레이아웃이 밀리지 않게 한다 */
-.mt-safety-error { min-height: 1.2em; margin: 0 0 8px; font-size: 0.8rem; color: var(--match-err-ink); }
-.mt-safety-actions { display: flex; justify-content: flex-end; gap: 8px; }
-.mt-safety-btn {
-  min-height: 44px;
-  padding: 0 18px;
-  font: inherit;
+.mt-safety-textarea:focus,
+.mt-safety-textarea:focus-visible {
+  border-color: var(--match-accent-deep) !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12) !important;
+}
+.mt-safety-textarea-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+.mt-safety-count {
+  font-size: 0.74rem;
+  color: var(--match-hint);
+}
+
+/* 차단 동시 진행 체크박스 타일 */
+.mt-safety-check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  margin: 12px 0;
+  background: var(--match-soft);
+  border: 1.5px solid var(--match-line-soft);
+  border-radius: 12px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+.mt-safety-check:hover {
+  background: var(--match-paper);
+  border-color: var(--match-line);
+}
+.mt-safety-check.is-checked,
+.mt-safety-check:has(input:checked) {
+  border-color: var(--match-accent);
+  background: var(--match-soft);
+}
+.mt-safety-check input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
+  accent-color: var(--match-accent-deep);
+  cursor: pointer;
+  margin: 0;
+  flex-shrink: 0;
+}
+.mt-safety-check-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.35;
+}
+.mt-safety-check-text strong {
+  font-size: 0.88rem;
   font-weight: 600;
   color: var(--match-ink);
-  background: var(--match-bg);
-  border: 1px solid var(--match-line);
-  border-radius: 99px;
-  cursor: pointer;
 }
-.mt-safety-btn.is-primary { color: var(--match-on-accent); background: var(--match-accent-deep); border-color: transparent; }
-.mt-safety-btn.is-danger { color: var(--match-on-accent); background: var(--match-err-ink); border-color: transparent; }
+.mt-safety-check-text small {
+  font-size: 0.75rem;
+  color: var(--match-sub);
+}
+
+/* 오류 및 데모 안내 */
+.mt-safety-error {
+  margin: 0 0 10px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--match-err-ink);
+  background: rgba(239, 68, 68, 0.08);
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+.mt-safety-demo {
+  margin: 0 0 16px;
+  padding: 8px 12px;
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: var(--match-warn-ink);
+  background: var(--match-warn-bg);
+  border: 1px solid var(--match-warn-line);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mt-safety-demo svg {
+  flex-shrink: 0;
+}
+
+/* 하단 버튼 */
+.mt-safety-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+.mt-safety-btn {
+  flex: 1;
+  min-height: 44px;
+  padding: 0 16px;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--match-ink);
+  background: var(--match-soft);
+  border: 1px solid var(--match-line);
+  border-radius: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+.mt-safety-btn:hover {
+  background: var(--match-line-soft);
+}
+.mt-safety-btn.is-primary {
+  color: #ffffff;
+  background: var(--match-err-ink, #ef4444);
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+}
+.mt-safety-btn.is-primary:hover {
+  background: #dc2626;
+}
+.mt-safety-btn.is-danger {
+  color: #ffffff;
+  background: var(--match-err-ink, #ef4444);
+  border-color: transparent;
+}
+.mt-safety-btn:active {
+  transform: scale(0.98);
+}
 
 
 /* ============================================================
