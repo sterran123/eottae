@@ -489,3 +489,15 @@
 - [검증] 브라우저(CDP) 및 키보드 실검증: 모바일 360·390px 폭에서 패널 전체 너비 렌더링 확인, 6개 테마(라이트/다크/cyberpunk 등) 배경 딤(`--match-dim`) 및 UI 가독성 확인, 키보드 정방향 Tab·역방향 Shift+Tab 포커스 트랩 순환 및 Esc 닫기, 음성 녹음 시작 후 닫기(`✕`) 및 `Esc`로 패널을 닫았을 때 녹음 상태·타이머·마이크 스트림 트랙(`readyState === 'ended'`)이 즉시 종료됨을 확인, 닫기 후 트리거 버튼 포커스 복귀, 다중 방 개설 후 차단/신고 모달 시 상대방 닉네임 일치 확인, `prefers-reduced-motion` 시 애니메이션 생략 확인
 - [안전성] 기존 MATCH-008 차단(즉시 입력 비활성화·응답 취소·해제 확인 모달)/신고 모달 로직 100% 온전히 유지
 - [미실행] 실제 Supabase DB 영속화/RLS(MATCH-003, ADR-005) 및 Realtime WebSocket 채널 연동(주한태 담당 백엔드 구현 대기)
+
+## 2026-10-28 AI 코드 리뷰 — 로컬 Grok 엔진 추가·Devin 크레딧 절약 (김민기 작업)
+- [요청] Devin 크레딧 대신 이미 결제한 Grok 구독(X Subscription Ultra)으로 PR 자동 리뷰를 대체할 수 있는지 공식 문서로 검증하고, 가능한 부분은 구현
+- [조사] Devin 사용 현황(API 조회, 2026-10-25~28 세션 100개): Devin 쪽 자동화 `eottae-pr-watch`(2시간 주기 + PR 이벤트) 41개, API(ai-review·issue-progress·@devin 브릿지) 59개 — ai-review와 같은 일을 자동화가 한 번 더 함. API의 `acus_consumed`는 모두 0이라 실제 금액은 대시보드에서만 확인 가능
+- [조사] Grok CLI 1.0.70(공식 배포, X Corp. 서명 확인): `grok -p`·`--prompt-file`·`--output-format json`·`--cwd`·`--tools`·`--disable-web-search`·`--max-turns`·`--deny` 지원 확인. 로그인 없이 실행하면 JSON 오류 후 종료. 공식 문서는 CI에 `XAI_API_KEY`를 권하고 `auth.json`을 공유 위치에 복사하지 말라고 함. sandbox는 Linux·macOS만
+- [신규] tools/grok_review_engine.mjs | Grok CLI 헤드리스 실행 — 읽기 도구만, 웹 없음, `--trust` 없음, 자식 환경에서 XAI_API_KEY·GitHub·Devin 토큰 제거(API 과금 차단), 로그인·사용량 오류는 작업자 정지, 응답에 인증 정보로 보이는 값이 있으면 게시 거부
+- [신규] tools/grok_review_worker.mjs | PC에서 "로컬 Grok 리뷰 대기" PR을 찾아 별도 worktree에서 리뷰, PR이 들고 온 에이전트 설정(.grok·.claude·.cursor·.mcp.json) 제거, 실행 기록 runs.jsonl
+- [변경] tools/ai_code_review.mjs | `AI_ENGINE=grok` 경로·공통 마무리 분리. 저장소 변수 `AI_REVIEW_ENGINE=grok-local`이면 Actions가 Devin을 부르지 않고 대기 표시만(변수 미설정이면 기존과 같음). 문서·이미지만 바뀐 PR은 AI 리뷰 생략(에이전트 지시 파일·자동화 경로 제외)
+- [변경] .github/workflows/ai-review.yml(변수 전달), devin-mention.yml(OWNER만), tools/pr_review_bot.mjs(새 스크립트 보호 영역)
+- [검증] Devin 경로 회귀: PR #37·#45·#46 DRY 프롬프트가 수정 전 스크립트와 동일. 가짜 grok으로 9경로(통과·수정 필요·판정 줄 없음·본문 중간 VERDICT·로그인 없음·사용량 한도·JSON 깨짐·비정상 종료·인증 정보 유출) + 시간 초과 — 모두 의도대로(로그인·한도는 작업자 exit 3). 전달 인자·환경 기록상 XAI_API_KEY·GITHUB_TOKEN 0회 전달, worktree 정리 확인. 실제 grok 1.0.70이 같은 인자 조합을 받아들이고 가짜 XAI_API_KEY가 있어도 "로그인 필요"로 끝남
+- [검증] 문서 전용 판별: PR #46 생략, #37·#42·#43·#45 리뷰. `.devin/`·AGENTS.md·CLAUDE.md·tools/·src/ 아래 md는 리뷰
+- [미실행] 실제 Grok 로그인 리뷰(구독 사용량 차감 여부·리뷰 품질·#43 회귀 검출), GitHub 게시, Grok Bot(Cursor 로그인·GitHub 연결 필요) — 계정 연결 전이라 실행 안 함. 운영 전환(저장소 변수 설정·Devin 자동화 끄기)은 승인 대기
