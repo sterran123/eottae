@@ -12,9 +12,9 @@
 // ============================================================
 
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { createDemoChatDataSource, type ChatDataSource } from '@/lib/chat/chat-service';
 import type { ChatMessage, ChatRoomInfo } from '@/lib/chat/types';
-import type { ReportRequest } from '@/lib/safety/types';
-import { DEMO_REPLIES } from '@/lib/chat/demo-data';
+import type { BlockRequest, ReportRequest } from '@/lib/safety/types';
 import BlockConfirmModal from '@/components/safety/BlockConfirmModal';
 import ReportModal from '@/components/safety/ReportModal';
 import MessageBubble from './MessageBubble';
@@ -48,10 +48,7 @@ export default function ChatRoom({
   const [messages, setMessages] = useState<ChatMessage[]>(room.initialMessages);
   const [typing, setTyping] = useState(false);
   const listEndRef = useRef<HTMLLIElement>(null);
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const replyIdx = useRef(0);
-  // 아직 응답이 오지 않은 내 메시지 수 — 연속 전송 시 '입력 중' 표시가 먼저 꺼지지 않게 한다.
-  const pendingReplies = useRef(0);
+  const dataSourceRef = useRef<ChatDataSource | null>(null);
 
   // ---- MATCH-008 안전 기능 ----
   const [blocked, setBlocked] = useState(false);
@@ -79,21 +76,30 @@ export default function ChatRoom({
     onLastMessage?.(room.id, last);
   }, [messages, room.id, onLastMessage]);
 
-  // 언마운트 시 대기 중 타이머 정리
-  useEffect(() => {
-    const pending = timers.current;
-    return () => pending.forEach(clearTimeout);
+  // 데이터 소스 연결 및 언마운트 시 대기 중 타이머/구독 정리
+  const createSource = useCallback(() => {
+    dataSourceRef.current?.dispose();
+    dataSourceRef.current = createDemoChatDataSource({
+      onMessageSent: (messageId) => {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === messageId ? { ...m, status: 'sent' } : m)),
+        );
+      },
+      onTypingChange: (isTyping) => {
+        setTyping(isTyping);
+      },
+      onIncomingMessage: (incoming) => {
+        setMessages((prev) => [...prev, incoming]);
+      },
+    });
   }, []);
 
-  const later = useCallback((fn: () => void, ms: number) => {
-    const t = setTimeout(() => {
-      // 실행이 끝난 타이머는 배열에서 제거해 누적을 막는다.
-      const i = timers.current.indexOf(t);
-      if (i !== -1) timers.current.splice(i, 1);
-      fn();
-    }, ms);
-    timers.current.push(t);
-  }, []);
+  useEffect(() => {
+    createSource();
+    return () => {
+      dataSourceRef.current?.dispose();
+    };
+  }, [createSource]);
 
   const pushSystem = useCallback((body: string) => {
     setMessages((prev) => [
@@ -108,27 +114,27 @@ export default function ChatRoom({
     ]);
   }, []);
 
-  // 차단 적용: 대기 중 전송·자동응답 타이머 전부 취소, 미전송 메시지는 실패 처리
+  // 차단 적용: 대기 중 전송·자동응답·구독 전부 해제, 미전송 메시지는 실패 처리
   const applyBlock = useCallback(() => {
     if (blockedRef.current) return;
+    const req: BlockRequest = { blockedUserId: partner.id };
+    void req; // [DEMO] Supabase 연동 시 blocks 테이블 insert에 사용
     blockedRef.current = true;
     setBlocked(true);
-    timers.current.forEach(clearTimeout);
-    timers.current.length = 0;
-    pendingReplies.current = 0;
-    setTyping(false);
+    dataSourceRef.current?.dispose();
     setMessages((prev) =>
       prev.map((m) => (m.status === 'sending' ? { ...m, status: 'failed' } : m)),
     );
     pushSystem(`${partner.nickname}님을 차단했어요. 더 이상 대화할 수 없어요.`);
-  }, [pushSystem, partner.nickname]);
+  }, [pushSystem, partner.id, partner.nickname]);
 
   const releaseBlock = useCallback(() => {
     if (!blockedRef.current) return;
     blockedRef.current = false;
     setBlocked(false);
+    createSource();
     pushSystem('차단을 해제했어요. 다시 대화할 수 있어요.');
-  }, [pushSystem]);
+  }, [createSource, pushSystem]);
 
   function handleReportSubmit(req: ReportRequest) {
     // [DEMO] 서버 전송 없음. 신고 내용은 저장·로깅하지 않는다.
@@ -171,42 +177,15 @@ export default function ChatRoom({
     };
   }, [menuOpen]);
 
-  const sendMessage = useCallback(
-    (body: string) => {
-      if (blockedRef.current) return; // 차단 중에는 어떤 경로로도 전송 금지
-      const id = nextId();
-      pendingReplies.current += 1;
-      setMessages((prev) => [
-        ...prev,
-        { id, sender: 'me', body, createdAt: new Date().toISOString(), status: 'sending' },
-      ]);
-
-      // [DEMO] 서버 응답 대신 타이머로 전송 완료·상대 응답을 흉내낸다.
-      later(() => {
-        setMessages((prev) =>
-          prev.map((m) => (m.id === id ? { ...m, status: 'sent' } : m)),
-        );
-        setTyping(true);
-      }, 400);
-
-      later(() => {
-        const reply = DEMO_REPLIES[replyIdx.current++ % DEMO_REPLIES.length];
-        pendingReplies.current -= 1;
-        setTyping(pendingReplies.current > 0);
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: nextId(),
-            sender: 'partner',
-            body: reply,
-            createdAt: new Date().toISOString(),
-            status: 'sent',
-          },
-        ]);
-      }, 1600);
-    },
-    [later],
-  );
+  const sendMessage = useCallback((body: string) => {
+    if (blockedRef.current) return; // 차단 중에는 어떤 경로로도 전송 금지
+    const id = nextId();
+    setMessages((prev) => [
+      ...prev,
+      { id, sender: 'me', body, createdAt: new Date().toISOString(), status: 'sending' },
+    ]);
+    dataSourceRef.current?.sendMessage(id, body);
+  }, []);
 
   // 추천 카드에서 "가볍게 물어보기" 버튼 클릭하여 진입한 경우, 해당 질문을 즉시 전송
   useEffect(() => {

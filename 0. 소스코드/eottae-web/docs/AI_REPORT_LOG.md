@@ -489,3 +489,14 @@
 - [검증] 브라우저(CDP) 및 키보드 실검증: 모바일 360·390px 폭에서 패널 전체 너비 렌더링 확인, 6개 테마(라이트/다크/cyberpunk 등) 배경 딤(`--match-dim`) 및 UI 가독성 확인, 키보드 정방향 Tab·역방향 Shift+Tab 포커스 트랩 순환 및 Esc 닫기, 음성 녹음 시작 후 닫기(`✕`) 및 `Esc`로 패널을 닫았을 때 녹음 상태·타이머·마이크 스트림 트랙(`readyState === 'ended'`)이 즉시 종료됨을 확인, 닫기 후 트리거 버튼 포커스 복귀, 다중 방 개설 후 차단/신고 모달 시 상대방 닉네임 일치 확인, `prefers-reduced-motion` 시 애니메이션 생략 확인
 - [안전성] 기존 MATCH-008 차단(즉시 입력 비활성화·응답 취소·해제 확인 모달)/신고 모달 로직 100% 온전히 유지
 - [미실행] 실제 Supabase DB 영속화/RLS(MATCH-003, ADR-005) 및 Realtime WebSocket 채널 연동(주한태 담당 백엔드 구현 대기)
+
+## 2026-10-28 MATCH-007·008 Supabase 연동 준비 — DTO·매퍼·데모 데이터 소스 분리 및 TC-009 기록 정리 (손준혁 작업)
+- [요청] 이슈 #22 Devin/팀 리드 지시사항 중 한태님 백엔드 PR(#21) 대기 없이 즉시 착수 가능한 항목(1~4번) 반영
+- [변경] 2. 프로젝트 설계서/테스트_케이스_마스터.md | 실행 기록 39행의 TC-007(대화방 차단)을 TC-009 보조 기록으로 이동 (TC-007은 MATCH-006 추천 필터 항목이라 주한태 추천 RPC 구현 후 기록하도록 분리)
+- [변경] src/lib/chat/types.ts | Supabase `public.messages` 테이블 행 타입 `MessageRow { id, conversation_id, sender_id, body, created_at }` 및 클라이언트 `ChatMessage` 변환 함수 `toChatMessage(row, myId)` 추가
+- [변경] src/lib/safety/types.ts | `ReportCategory`(`'abuse'|'sexual'|'scam'|'other'`)가 `public.reports.category` CHECK 제약과 일치함을 명시하고 차단 요청 DTO `BlockRequest { blockedUserId }` 추가
+- [신규] src/lib/chat/chat-service.ts | `ChatDataSource` 인터페이스 및 `createDemoChatDataSource` 구현체 신설 — `ChatRoom.tsx`의 인라인 `setTimeout` 데모 자동응답 로직을 데이터 소스 계층으로 분리하고, Supabase 환경변수가 없을 때 데모 모드로 안전하게 동작(`isSupabaseChatConfigured`)하도록 구성
+- [변경] src/lib/chat/demo-data.ts & src/components/chat/ChatHub.tsx | 추천 카드(`rec_bada`, `rec_haneul`, `rec_gaeul`, `rec_doyun`)에서 `?partner=&q=`로 진입 시 데모 대화방과 매핑하는 `DEMO_RECOMMENDATION_ROOM_MAP`·`resolveDemoRoomId` 추가
+- [변경] src/components/chat/ChatRoom.tsx | 인라인 `setTimeout`·타이머 배열을 제거하고 `createDemoChatDataSource`를 통해 전송·자동응답·차단 시 `dispose()` 정리를 수행하도록 리팩터링
+- [검증] `npm run typecheck` PASS / `npm run build` PASS (정적 17개 라우트 정상 생성)
+- [미구현/보류] `0004_chat_safety.sql` 마이그레이션(`messages`·`reports`·Storage RLS) 및 프런트 Supabase Realtime 실제 연결 — 주한태 PR(#21 `0003_match_core.sql`) 머지 후 진행 예정
