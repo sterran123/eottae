@@ -126,7 +126,8 @@ if (files.length >= 3000 || files.length < (pr.changed_files ?? files.length)) {
   process.exit(0);
 }
 const names = files.map((f) => f.filename);
-if (names.length && names.every((f) => GENERATED.has(f))) {
+// rename은 옛 경로도 생성 파일이어야 한다 — 소스를 FILE_INDEX.csv 같은 이름으로 옮겨 리뷰를 건너뛰지 못하게
+if (names.length && files.every((f) => GENERATED.has(f.filename) && (!f.previous_filename || GENERATED.has(f.previous_filename)))) {
   await setStatus("success", "자동 생성 파일만 변경 — 코드 리뷰 대상 없음");
   console.log("생성 파일만 변경 — success");
   process.exit(0);

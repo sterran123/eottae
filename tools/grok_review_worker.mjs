@@ -63,11 +63,13 @@ const gh = async (path) => {
       Authorization: `Bearer ${token}`,
       "User-Agent": "eottae-grok-worker",
     },
+    signal: AbortSignal.timeout(60_000), // 연결이 멈춰도 잠금을 쥔 채 서 있지 않게
   });
   if (!r.ok) throw new Error(`GitHub ${r.status} ${path}`);
   return r.json();
 };
-const git = (...args) => execFileSync("git", ["-C", ROOT, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+const git = (...args) =>
+  execFileSync("git", ["-C", ROOT, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], timeout: 5 * 60_000 });
 
 // PR 트리 정리: 링크는 링크 자체만 지운다(따라가지 않는다 — `링크/.grok`을 지우면 실제 ~/.grok이 지워지고,
 // 남겨 두면 리뷰어가 링크를 통해 홈 파일을 읽는다). 에이전트 설정은 지우고, 자동 로드 규칙 파일은 이름을 바꾼다.
@@ -101,7 +103,10 @@ async function waiting() {
     const prs = await gh(`repos/${REPO}/pulls?state=open&base=main&per_page=100&page=${page}`);
     for (const pr of prs) {
       if (pr.draft || pr.head.repo?.full_name !== REPO) continue;
-      const st = (await gh(`repos/${REPO}/commits/${pr.head.sha}/statuses?per_page=100`)).find((s) => s.context === "ai-review");
+      // 규칙 봇의 머지 게이트와 같이 봇·소유자 상태만 본다 — 협력자 상태가 대기 표시를 가리지 못하게
+      const st = (await gh(`repos/${REPO}/commits/${pr.head.sha}/statuses?per_page=100`)).find(
+        (s) => s.context === "ai-review" && (s.creator?.login === BOT || s.creator?.login === OWNER),
+      );
       if (st?.state !== "pending") continue;
       const queued = st.creator?.login === BOT && st.description?.startsWith(LOCAL_WAIT);
       const stale =
@@ -185,15 +190,32 @@ const alive = (pid) => {
     return false;
   }
 };
-let held = 0;
-try {
-  held = Number(readFileSync(LOCK, "utf8")) || 0;
-} catch {}
-if (held && alive(held)) {
-  console.error(`다른 작업자(pid ${held})가 실행 중 — 종료합니다`);
-  process.exit(4);
+// "wx"(없을 때만 생성)로 잡는다 — 읽고 나서 쓰면 동시에 띄운 두 작업자가 모두 통과한다.
+// 이미 있는데 주인이 죽었으면 지우고 한 번 더 시도한다.
+const takeLock = () => {
+  try {
+    writeFileSync(LOCK, String(process.pid), { flag: "wx" });
+    return true;
+  } catch (e) {
+    if (e.code !== "EEXIST") throw e;
+    return false;
+  }
+};
+if (!takeLock()) {
+  let held = 0;
+  try {
+    held = Number(readFileSync(LOCK, "utf8")) || 0;
+  } catch {}
+  if (held && alive(held)) {
+    console.error(`다른 작업자(pid ${held})가 실행 중 — 종료합니다`);
+    process.exit(4);
+  }
+  rmSync(LOCK, { force: true });
+  if (!takeLock()) {
+    console.error("작업자 잠금을 잡지 못함(동시에 시작됨) — 종료합니다");
+    process.exit(4);
+  }
 }
-writeFileSync(LOCK, String(process.pid)); // 잠금 파일이 없거나 주인이 죽었으면 새로 잡는다
 const unlock = () => rmSync(LOCK, { force: true });
 process.on("exit", unlock);
 process.on("SIGINT", () => process.exit(130));
