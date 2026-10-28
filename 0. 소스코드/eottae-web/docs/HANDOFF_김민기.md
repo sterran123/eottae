@@ -170,7 +170,7 @@ git config --global user.email "본인 GitHub 이메일 또는 noreply"
 - **무엇:** Devin 크레딧 대신 김민기의 Grok 구독(X Subscription Ultra)으로 AI 작업을 처리한다. 저장소 변수 `AI_REVIEW_ENGINE=grok-local`(Settings → Secrets and variables → Actions → Variables)이면 Actions는 Devin을 부르지 않고 대기 표시만 남기고, 김민기 PC의 작업자(`tools/grok_review_worker.mjs`)가 처리한다.
   - **AI 리뷰** — `ai-review` 상태 "로컬 Grok 리뷰 대기" → PR head를 홈 밖 worktree(`C:\eottae-grok-review\`)에 체크아웃해 리뷰 → 상태·코멘트(작성자 sterran123). 머지는 지금처럼 규칙 봇(§10)
   - **이슈 진행** — 머지된 PR의 "로컬 Grok 이슈 진행 판정 대기" 코멘트 → 머지 커밋으로 판정 → 이슈 체크·닫기
-  - **@grok** — 소유자가 이슈·PR 댓글에 `@grok 요청`을 쓰면 읽기 전용으로 답 댓글(👀 반응 후). 다른 사람의 `@grok`은 무시
+  - **@grok** — 팀원(저장소 write 권한 이상 협력자 — GitHub 권한 API로 확인, 2026-10-29~)이 이슈·PR 댓글에 `@grok 요청`을 쓰면 읽기 전용으로 답 댓글(👀 반응 후, 요청한 팀원 멘션). 외부인·봇의 `@grok`은 무시. 팀원 요청도 김민기 구독 사용량을 쓰고 답은 sterran123 이름으로 게시된다
 - **상시 실행:** 전용 클론 `C:\eottae-grok-review\repo`(main)에서 `tools\grok_worker_loop.cmd`가 작업자를 띄우고 끝나면 다시 띄운다. 주기마다 origin/main으로 빨리감기하고, 작업자 코드가 바뀌면 스스로 다시 시작한다. 로그 `C:\eottae-grok-review\worker.log`, 실행 기록 `runs.jsonl`(소요·토큰·API 환산 비용).
   - **처음 한 번 — 순서대로(김민기가 직접):**
     1. 전용 클론: `git clone https://github.com/sterran123/eottae.git C:\eottae-grok-review\repo` (비밀 파일 `.env`를 이 클론에 두지 않는다). `%USERPROFILE%\.grok\bin\grok.exe`가 있는지(Grok CLI 설치·`grok login`)도 확인
