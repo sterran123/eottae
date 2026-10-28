@@ -171,7 +171,8 @@ async function isTeam(user) {
     if (/^GitHub 404 /.test(e.message)) return false;
     throw e;
   }
-  return TEAM_ROLES.has(p?.permission) || TEAM_ROLES.has(p?.role_name);
+  // permission(기반 역할)만 본다 — role_name은 조직의 커스텀 역할 이름일 수 있다. maintain은 여기서 write로 나온다
+  return TEAM_ROLES.has(p?.permission);
 }
 const STATE = join(REVIEW_ROOT, "state.json");
 const loadState = () => {
@@ -191,7 +192,9 @@ async function waitingMentions() {
   }
   // 봇 댓글이 많아 한 페이지(100개)로는 모자란다 — 끝까지 넘기고(최대 1000개), 조회 시작점은 아래에서 앞으로 옮긴다.
   // 7일보다 오래된 요청은 보지 않는다(작업자가 오래 꺼져 있었을 때 옛 요청에 몰아서 답하지 않게)
-  const since = new Date(Math.max(Date.parse(state.mentionsSince), Date.now() - 7 * 24 * 3600_000)).toISOString();
+  // 1초 당긴다 — 시작점을 남은 요청의 created_at에 두므로, 그 시각과 같은 댓글이 빠지면 재시도(exit 1·3)가 놓친다.
+  // 이미 답한 댓글은 grok-answer 마커로 걸러진다
+  const since = new Date(Math.max(Date.parse(state.mentionsSince) - 1000, Date.now() - 7 * 24 * 3600_000)).toISOString();
   const recentComments = [];
   for (let page = 1; page <= 10; page++) {
     const items = await gh(

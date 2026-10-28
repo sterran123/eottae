@@ -58,7 +58,7 @@ async function main() {
       }
     }
   }
-  if (!TEAM_ROLES.has(perm?.permission) && !TEAM_ROLES.has(perm?.role_name)) {
+  if (!TEAM_ROLES.has(perm?.permission)) {
     console.log(`팀원 댓글 아님(@${asker}) — 건너뜀`);
     return 0;
   }
