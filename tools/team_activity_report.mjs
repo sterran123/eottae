@@ -164,16 +164,22 @@ ${actions.map((a) => `- ${a}`).join("\n")}
 이 파일은 스케줄 워크플로가 자주 갱신하므로 수동 편집 대신 스크립트를 고쳐 주세요.
 `;
 
-// 시각·진행 상태만 바뀐 리포트는 쓰지 않는다 — 집계 시각이 실행마다 달라 내용이 같아도 봇 PR이 생긴다.
+// 시각(제목 날짜·집계 기간·각종 시각 표기)과 main CI 상태만 바뀐 리포트는 쓰지 않는다 — 집계 시각이
+// 실행마다 달라 내용이 같아도 봇 PR이 생긴다. 열린 PR의 CI 열은 비교에 남긴다(바뀌면 알릴 일).
 // 파일을 그대로 두면 해시도 같아 매니페스트도 바뀌지 않고, team-sync가 "갱신할 변경 없음"으로 끝난다.
+// 시각 패턴은 kst()의 실제 출력에서 만든다 — ICU가 표기를 바꿔도 따라간다(바뀐 첫 실행만 한 번 다시 쓴다)
+const KST_RE = new RegExp(
+  kst(Date.UTC(2001, 0, 2, 3, 4, 5)).replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\d+/g, "\\d+"),
+  "g",
+);
 const stable = (s) =>
   s
     .replace(/^# 팀 활동 리포트 — .*$/m, "")
     .replace(/^> 집계 기간: .*$/m, "")
     .replace(/^- CI 상태: .*$/m, "")
-    .replace(/\d{4}\. \d{1,2}\. \d{1,2}\. \d{1,2}시 \d{1,2}분 \d{1,2}초/g, "");
+    .replace(KST_RE, "");
 if (existsSync(OUT) && stable(readFileSync(OUT, "utf8")) === stable(md)) {
-  console.log("TEAM_ACTIVITY.md 그대로 — 시각·진행 상태 말고 바뀐 내용 없음");
+  console.log("TEAM_ACTIVITY.md 그대로 — 시각·main CI 상태 말고 바뀐 내용 없음");
   process.exit(0);
 }
 

@@ -543,4 +543,5 @@
 - [변경] tools/pr_review_bot.mjs·pr-review.yml | 머지 후 team-sync dispatch 제거(deploy-pages·issue-progress dispatch는 유지)
 - [문서] HANDOFF §9·§10, AI_에이전트_협업_가이드 §8
 - [검증] 로컬 실행 4가지: ① 실제 변화(#50 머지 등) → 리포트 갱신 ② 직후 재실행(시각만 다름) → 파일 그대로 ③ 그때 MANIFEST.sha256도 그대로 ④ 팀원 커밋 수 1 변경 → 다시 씀. 시험 뒤 생성 파일 원복(커밋에 넣지 않음)
+- [검증] PR #53 Grok 리뷰(58f6418, 229초, API 환산 $0.36) 통과. 권장 반영: 시각 패턴을 정규식 고정 대신 `kst()` 실제 출력에서 만듦(ICU 표기가 바뀌어도 따라감), 주석을 실제 동작(main CI 줄만 무시, 열린 PR CI 열은 비교에 남김)에 맞춤. 단위 테스트는 tools에 체계가 없어 보류
 - [미실행] Actions에서 스케줄 실행 — 다음 월요일(11-02)에 처음 확인됨
