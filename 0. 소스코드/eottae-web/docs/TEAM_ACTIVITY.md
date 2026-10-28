@@ -1,31 +1,36 @@
-# 팀 활동 리포트 — 2026-10-27 (자동 생성)
+# 팀 활동 리포트 — 2026-10-28 (자동 생성)
 
 > 생성: `.github/workflows/team-sync.yml` → `tools/team_activity_report.mjs`
-> 집계 기간: 최근 7일 (2026. 10. 20. 23시 15분 40초 ~ 2026. 10. 27. 23시 15분 45초) · 저장소: sterran123/eottae · 조회 방식: gh
+> 집계 기간: 최근 7일 (2026. 10. 21. 16시 52분 51초 ~ 2026. 10. 28. 16시 52분 55초) · 저장소: sterran123/eottae · 조회 방식: gh
 
 ## main 브랜치 건강 상태
-- 최신 커밋: `3af5c1b` docs(CORE-001): Supabase 팀원 3명 Developer 초대·DB 변경은 PR로만 (#42) (김민기, 2026. 10. 27. 23시 14분 55초)
-- CI 상태: ✅ check 통과 (2026. 10. 27. 23시 15분 37초)
+- 최신 커밋: `42797bf` feat(MATCH-007): Supabase 메시지 DTO·매퍼 정의 및 데모 데이터 소스 분리 (Refs #22) (#47) (손준혁, 2026. 10. 28. 16시 52분 3초)
+- CI 상태: ⏳ progress 진행 중
 
 ## 팀원별 활동 (최근 7일)
 
 | 팀원 | main 커밋 | 열린 PR | 머지된 PR | 다룬 요구사항 ID |
 |---|---|---|---|---|
-| 김민기 (@sterran123) | 40 | 0 | 13 | CORE-001, SEC-002, CORE-004, MATCH-003, CORE-002, CORE-003, BRAND-004, SEC-001, MATCH-008, MATCH-004, MATCH-005, MATCH-007 |
+| 김민기 (@sterran123) | 43 | 0 | 16 | CORE-003, CORE-001, SEC-002, CORE-004, MATCH-003, CORE-002, BRAND-004, SEC-001, MATCH-008, MATCH-004, MATCH-005, MATCH-007 |
 | 오하율 (@HaYul0611) | 8 | 0 | 8 | BRAND-004, MATCH-001, MATCH-009, MATCH-002, MATCH-003 |
 | 주한태 (@gksxogksxo1001-sketch) | 1 | 0 | 1 | MATCH-003, MATCH-004 |
-| 손준혁 (@sonjunhyek2) | 4 | 1 | 4 | MATCH-008, MATCH-007, SEC-002 |
+| 손준혁 (@sonjunhyek2) | 6 | 0 | 6 | MATCH-007, MATCH-008, SEC-002 |
 
 
-## 열린 PR (2건)
+## 열린 PR (1건)
 
 | # | 제목 | 작성자 | CI | 최근 갱신 |
 |---|---|---|---|---|
-| #38 | 🤖 팀 활동 리포트·매니페스트 자동 갱신 (2026-10-27) | GitHub Actions | 없음 | 2026. 10. 27. 20시 30분 27초 |
-| #37 | feat(MATCH-007): 카카오톡 스타일 채팅방 목록 및 우측 슬라이드 패널 구현 | 손준혁 | 없음 | 2026. 10. 27. 21시 9분 9초 |
+| #44 | 🤖 팀 활동 리포트·매니페스트 자동 갱신 (2026-10-27) | GitHub Actions | 없음 | 2026. 10. 28. 14시 42분 43초 |
 
-## 최근 7일 머지된 PR (34건)
+## 최근 7일 머지된 PR (40건)
 
+- #47 feat(MATCH-007): Supabase 메시지 DTO·매퍼 정의 및 데모 데이터 소스 분리 (Refs #22) — 손준혁 (2026. 10. 28. 16시 52분 4초)
+- #37 feat(MATCH-007): 카카오톡 스타일 채팅방 목록 및 우측 슬라이드 패널 구현 — 손준혁 (2026. 10. 28. 11시 9분 47초)
+- #46 docs(CORE-003): TC-012 안드로이드 실기기 재확인 PASS 기록 — 김민기 (2026. 10. 28. 11시 39분 10초)
+- #45 fix(CORE-003): 페이지 캐시 키에서 쿼리 제외·다른 Pages 프로젝트 캐시 보존 — 김민기 (2026. 10. 28. 0시 3분 32초)
+- #43 fix(CORE-003): 오프라인 폴백이 ERR_FAILED로 실패하던 문제 수정 — 김민기 (2026. 10. 27. 23시 47분 13초)
+- #38 🤖 팀 활동 리포트·매니페스트 자동 갱신 (2026-10-27) — GitHub Actions (2026. 10. 27. 23시 21분 20초)
 - #42 docs(CORE-001): Supabase 팀원 3명 Developer 초대·DB 변경은 PR로만 — 김민기 (2026. 10. 27. 23시 14분 55초)
 - #41 docs(CORE-001): 임시 권한 위임 후 DB 비밀번호 재생성 절차·ADR 흐름 통일 — 김민기 (2026. 10. 27. 20시 29분 21초)
 - #40 docs(CORE-001): Supabase 안내 보강 — service_role 복사 불필요·2FA·db push 사전 확인 — 김민기 (2026. 10. 27. 20시 26분 11초)
@@ -61,14 +66,16 @@
 - #1 feat(MATCH-001): 취향 온보딩 UI (DEMO) — 오하율 (2026. 10. 25. 4시 56분 2초)
 - #4 feat(MATCH-009): 공통 질문·궁합 토스트 (DEMO) — 오하율 (2026. 10. 24. 19시 41분 10초)
 
-## 활성 브랜치 (21개)
+## 활성 브랜치 (25개)
 
 - `auto/team-sync`
+- `docs/tc-012-device-pass`
 - `feat/ADR-005-supabase-pages`
 - `feat/MATCH-001-002-match-ui`
 - `feat/MATCH-001-onboarding`
 - `feat/MATCH-003-auth-session`
 - `feat/MATCH-007-chat`
+- `feat/MATCH-007-chat-dto-prep`
 - `feat/MATCH-007-chat-list-modal`
 - `feat/MATCH-008-safety`
 - `feat/MATCH-009-common`
@@ -83,11 +90,13 @@
 - `fix/MATCH-008-safety-polish`
 - `fix/SEC-002-ai-review-polling`
 - `fix/ci-ai-review-verdict-last-line`
+- `fix/core-003-sw-cache-key`
+- `fix/core-003-sw-offline-fallback`
 - `main` 🔒
 
 ## 다음 액션 제안
 
-- 리뷰 대기 중인 PR 2건 — CODEOWNERS 담당 리뷰어 확인 필요
+- 리뷰 대기 중인 PR 1건 — CODEOWNERS 담당 리뷰어 확인 필요
 
 ---
 이 파일은 스케줄 워크플로가 자주 갱신하므로 수동 편집 대신 스크립트를 고쳐 주세요.
