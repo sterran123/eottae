@@ -91,6 +91,8 @@ const PIPELINE_TOOLS = new Set([
   "tools/update_package_manifest.py",
   "tools/devin_pr_watch.mjs",
   "tools/ai_code_review.mjs", // DEVIN 시크릿으로 실행 — 판정 로직 자체가 머지 게이트
+  "tools/grok_review_engine.mjs", // 로컬 Grok 리뷰 — 같은 머지 게이트, 김민기 PC의 쓰기 토큰으로 실행
+  "tools/grok_review_worker.mjs",
   "tools/devin_mention_bridge.mjs",
   "tools/issue_progress.mjs", // 이슈 체크·닫기 판정
 ]);
