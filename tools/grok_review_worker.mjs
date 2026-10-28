@@ -3,7 +3,7 @@
 //   1. AI 리뷰 — head sha의 pending "로컬 Grok 리뷰 대기"(ai-review.yml) → PR head 체크아웃 → tools/ai_code_review.mjs
 //      → 통과/수정 필요/오류 상태 + 코멘트. 머지 판단은 지금처럼 규칙 봇(pr_review_bot.mjs)이 한다.
 //   2. 이슈 진행 — 머지된 PR의 대기 표시 코멘트(issue-progress.yml) → 머지 커밋 체크아웃 → tools/issue_progress.mjs
-//   3. @grok — 소유자가 이슈·PR 댓글에 쓴 `@grok 요청` → tools/grok_mention.mjs가 답 댓글 (Devin 멘션 대체)
+//   3. @grok — 팀원(write 권한 이상 협력자)이 이슈·PR 댓글에 쓴 `@grok 요청` → tools/grok_mention.mjs가 답 댓글 (Devin 멘션 대체)
 // PC가 꺼져 있으면 기다린다 — AI 리뷰 게이트는 열리지 않는다(fail-closed).
 //
 // 사용 (전용 클론의 main에서 — 실행 스크립트는 이 클론의 것을 쓰고, 주기마다 origin/main으로 빨리감기한다):
@@ -154,8 +154,16 @@ async function waitingProgress() {
   return out.slice(0, MAX_PER_CYCLE);
 }
 
-// @grok 요청: 처음 실행한 뒤 소유자가 단 이슈·PR 댓글 중 `@grok`이 들어 있고 아직 답(<!-- grok-answer:id -->)이 없는 것.
+// @grok 요청: 처음 실행한 뒤 팀원이 단 이슈·PR 댓글 중 `@grok`이 들어 있고 아직 답(<!-- grok-answer:id -->)이 없는 것.
 // 처음 실행 전의 옛 댓글에는 답하지 않는다(state.json의 mentionsSince).
+// 팀원 = 저장소 write 권한 이상 협력자(소유자 포함) — 공개 저장소라 아무나 댓글을 달 수 있어 그 밖은 무시한다.
+// 권한은 GitHub에 묻는다(팀원이 바뀌어도 코드 수정 없음). 외부인은 공개 저장소라 "read"로 나온다.
+// grok_mention.mjs도 같은 검사를 한 번 더 한다(이 파일은 import하면 작업자가 돌기 시작해 함수를 나누지 않는다)
+async function isTeam(user) {
+  if (!user?.login || user.type === "Bot") return false;
+  const p = await gh(`repos/${REPO}/collaborators/${encodeURIComponent(user.login)}/permission`).catch(() => null);
+  return p?.permission === "admin" || p?.permission === "write";
+}
 const STATE = join(REVIEW_ROOT, "state.json");
 const loadState = () => {
   try {
@@ -186,14 +194,16 @@ async function waitingMentions() {
   const answered = new Set(
     recentComments.flatMap((c) => [...String(c.body).matchAll(/<!-- grok-answer:(\d+) -->/g)].map((m) => m[1])),
   );
-  const pending = recentComments.filter(
+  const asks = recentComments.filter(
     (c) =>
-      c.user?.login === OWNER &&
-      c.author_association === "OWNER" &&
       /(^|\s)@grok\b/i.test(String(c.body)) &&
       !String(c.body).includes("<!-- grok-answer:") && // 작업자 자신의 답 댓글
       !answered.has(String(c.id)),
   );
+  // 권한 조회는 @grok 댓글 작성자만, 한 번씩
+  const team = new Map();
+  for (const c of asks) if (!team.has(c.user?.login)) team.set(c.user?.login, await isTeam(c.user));
+  const pending = asks.filter((c) => team.get(c.user?.login));
   // 시작점 이동: 남은 요청이 있으면 가장 오래된 요청 시각(그 답도 범위 안에 들어온다), 없으면 마지막으로 본 댓글 시각
   const last = recentComments.at(-1)?.created_at;
   const next = pending[0]?.created_at ?? last;

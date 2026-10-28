@@ -548,3 +548,11 @@
 - [변경] PR #53 3차 Grok 리뷰(db4a7c4, 696초, API 환산 $0.96) 통과 후 권장 반영: 봇 PR 닫기 전 main으로 체크아웃(체크아웃 중 브랜치 삭제 거부 대비)·작성자가 Actions 봇인 PR만·실패 시 경고 로그, 문서 범위를 스크립트와 같게(열린 PR 최근 갱신 시각 포함, CI 열·다음 액션은 비교에 남음)
 - [변경] PR #53 4차 Grok 리뷰(a2d5192, 1042초, API 환산 $1.26) 통과 후 권장 반영: 머지 목록을 머지 시각 순으로 정렬(조회가 갱신 순이라 본문·댓글만 바뀌어도 순서가 달라져 다시 쓰던 것), 봇 PR 코멘트와 닫기를 나눔(코멘트 실패가 브랜치 삭제를 막지 않게). "봇 PR이 없으면 null이 찍힌다"는 지적은 실제 gh 실행으로 빈 값 확인 — 해당 없음. 닫은 뒤 다음 주 리포트가 한 번 더 바뀌는 점은 주 1건 수준이라 보류
 - [미실행] Actions에서 스케줄 실행·열린 봇 PR 자동 닫기 — 다음 월요일(11-02)에 처음 확인됨
+
+## 2026-10-29 @grok을 팀원도 쓰게 — 소유자 전용 → write 권한 이상 협력자 (김민기 작업)
+- [요청] "팀원들만은 PR이든 이슈에서든 @grok을 쓸 수 있으면"
+- [변경] tools/grok_review_worker.mjs·tools/grok_mention.mjs | `@grok` 댓글 작성자를 GitHub 권한 API(`collaborators/{user}/permission`)로 확인해 admin·write만 처리(팀원 목록을 코드에 두지 않음 — 협력자가 바뀌어도 수정 없음). 외부인(공개 저장소라 `read`)·봇은 무시. 작업자가 고를 때와 응답 스크립트 실행 때 두 번 검사
+- [변경] tools/grok_mention.mjs | 답 머리에 요청한 팀원을 멘션(알림), 프롬프트에 요청자 표시. 본문의 멘션은 그대로 끊음
+- [버그수정] tools/grok_mention.mjs | fetch 직후 `process.exit()`가 Windows에서 libuv assertion(`UV_HANDLE_CLOSING`)으로 죽던 것 → 본문을 `main()`으로 감싸 `process.exitCode`로 종료(계정 문제 종료 코드 3이 사라지지 않게)
+- [검증] 권한 API: sterran123 admin, 팀원 3명 write, 외부 계정 2개 read. 가짜 grok·DRY(쓰기 없음): 소유자 댓글 → 답 머리 `@sterran123 요청`·exit 0, 봇 댓글 → 건너뜀·exit 0(3회 반복 assertion 없음, 수정 전에는 assertion), 사용량 한도 → exit 3
+- [미실행] 팀원 계정의 실제 `@grok` 댓글 — 팀원이 처음 쓸 때 확인
