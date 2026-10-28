@@ -154,6 +154,8 @@ git config --global user.email "본인 GitHub 이메일 또는 noreply"
 
 ## 11. Devin 자동화 — PR 점검(주기+실시간)과 멘션 응답
 
+> **2026-10-28부터 Devin은 쓰지 않는다 — §11-1 로컬 Grok 작업자로 넘어감.** `eottae-pr-watch`·`eottae-pr-mentions`는 Devin 쪽에서 꺼 두었고(API `enabled=false`), 아래 내용은 되돌릴 때를 위한 기록이다.
+
 - GitHub Actions 봇(§10)과 별개로 **Devin 측 자동화 2개**를 둔다:
   - `eottae-pr-watch` — Devin 세션이 열린 PR을 직접 열어 diff 코드 리뷰까지 수행한다 (Actions 봇은 규칙 판정만 — 이쪽이 실제 품질 검토). 트리거 2개: **2시간 주기 스케줄**(RRULE `FREQ=HOURLY;INTERVAL=2`) + **`github:pull_request` 이벤트**(opened·synchronize·reopened·ready_for_review) — PR이 올라오거나 새 push가 되면 즉시 세션이 뜬다. 이벤트 실행은 페이로드의 그 PR만 처리한다.
   - `eottae-pr-mentions` — PR·이슈 댓글(리뷰 댓글 포함)에서 **@devin 멘션**(`mentioned=true` — 모든 댓글이 아니라 호출할 때만 반응, 봇 간 무한 답글 방지)이 달리면 세션이 댓글 내용을 읽고 `post_response`로 그 스레드에 자동 답글한다. 응답 전용 — 승인·머지·커밋은 안 한다.
@@ -161,6 +163,19 @@ git config --global user.email "본인 GitHub 이메일 또는 noreply"
 - 등록: 루트 `.env` 또는 `.devin/.env`에 `DEVIN_API_KEY=`(Settings > Devin API > Service users 탭에서 발급, ManageOrgAutomations 권한 — `cog_` 접두사)·`DEVIN_ORG_ID=`(같은 페이지 상단, `org-*`)를 적고 `node tools/devin_pr_watch.mjs` 실행. 스크립트가 두 자동화를 이름 기준으로 생성/갱신한다(UPDATE=1이면 갱신, DRY_RUN=1이면 페이로드만 출력). 셸 환경변수로 줘도 된다 — 환경변수가 .env보다 우선.
 - 참고: GitHub 트리거가 발화하려면 Devin GitHub 연동이 이 저장소에 설치돼 있어야 한다(본 저장소는 이미 devin-ai-integration[bot]이 PR을 만들 수 있는 상태라 연동됨). 댓글 트리거가 전혀 안 먹으면 Settings > Integrations에서 GitHub 연동의 저장소 범위를 확인.
 - 세션에 GitHub 쓰기 권한(연동된 계정 또는 `GH_TOKEN` 시크릿)이 없으면 읽기 전용 점검+요약 보고만 한다 — 코멘트·승인·머지는 토큰이 있는 경우에만.
+
+## 11-1. 로컬 Grok 작업자 — AI 리뷰·이슈 진행·@grok (Devin 대체, 2026-10-28~)
+
+- **무엇:** Devin 크레딧 대신 김민기의 Grok 구독(X Subscription Ultra)으로 AI 작업을 처리한다. 저장소 변수 `AI_REVIEW_ENGINE=grok-local`(Settings → Secrets and variables → Actions → Variables)이면 Actions는 Devin을 부르지 않고 대기 표시만 남기고, 김민기 PC의 작업자(`tools/grok_review_worker.mjs`)가 처리한다.
+  - **AI 리뷰** — `ai-review` 상태 "로컬 Grok 리뷰 대기" → PR head를 홈 밖 worktree(`C:\eottae-grok-review\`)에 체크아웃해 리뷰 → 상태·코멘트(작성자 sterran123). 머지는 지금처럼 규칙 봇(§10)
+  - **이슈 진행** — 머지된 PR의 "로컬 Grok 이슈 진행 판정 대기" 코멘트 → 머지 커밋으로 판정 → 이슈 체크·닫기
+  - **@grok** — 소유자가 이슈·PR 댓글에 `@grok 요청`을 쓰면 읽기 전용으로 답 댓글(👀 반응 후). 다른 사람의 `@grok`은 무시
+- **상시 실행:** 전용 클론 `C:\eottae-grok-review\repo`(main)에서 `tools\grok_worker_loop.cmd`가 작업자를 띄우고 끝나면 다시 띄운다. Windows 로그인 때 시작프로그램(`eottae-grok-worker.vbs`, 창 없이)으로 자동 시작. 주기마다 origin/main으로 빨리감기하고, 작업자 코드가 바뀌면 스스로 다시 시작한다. 로그 `C:\eottae-grok-review\worker.log`, 실행 기록 `runs.jsonl`(소요·토큰·API 환산 비용).
+- **PC가 꺼져 있으면** PR은 AI 리뷰를 기다린다(게이트가 열리지 않음 — 45분 뒤 규칙 봇이 "로컬 Grok 작업자 대기" 안내). 급하면 작성자 외 팀원이 코드를 읽고 Approve하면 머지된다.
+- **멈췄을 때:** `worker.log`에서 종료 코드 확인 — 3은 Grok 로그인·사용량(`grok login` 후 1시간 안에 자동 재시도), 4는 잠금·클론 상태(전용 클론에서 `git status`). 수동 1회: 전용 클론에서 `node tools/grok_review_worker.mjs --once`, 특정 PR: `--pr 번호 --force`.
+- **안전장치:** 읽기 도구(read_file·grep)만·웹 없음·`--trust` 없음, 자식 환경변수 허용 목록(API 키가 없어 토큰당 과금으로 넘어가지 않음), 사용자 프로필(`C:\Users`)·메인 클론 읽기 금지, PR 트리의 링크·에이전트 설정 삭제, 인증 정보로 보이는 응답은 게시 거부. Grok 로그인 파일(`~/.grok/auth.json`)은 **절대 GitHub Secret에 넣지 않는다** — 팀원이 브랜치에서 워크플로를 고쳐 꺼낼 수 있다.
+- **Devin으로 되돌리기:** 저장소 변수 `AI_REVIEW_ENGINE`을 지우면 즉시 Devin 리뷰·이슈 진행·`@devin`이 다시 돈다(Devin 시크릿은 남겨 둠). Devin 쪽 자동화는 `UPDATE=1 node tools/devin_pr_watch.mjs` 또는 Devin Automations 화면에서 켠다.
+- 비용 참고(2026-10-28 실측): 리뷰 1건 9~18분, API 환산 $1~3 — 구독 사용량에서 차감, 추가 결제 0(대시보드 확인).
 
 ## 12. 로컬 저장소 자동 동기화
 

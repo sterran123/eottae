@@ -93,6 +93,8 @@ const PIPELINE_TOOLS = new Set([
   "tools/ai_code_review.mjs", // DEVIN 시크릿으로 실행 — 판정 로직 자체가 머지 게이트
   "tools/grok_review_engine.mjs", // 로컬 Grok 리뷰 — 같은 머지 게이트, 김민기 PC의 쓰기 토큰으로 실행
   "tools/grok_review_worker.mjs",
+  "tools/grok_mention.mjs", // @grok 답 — 소유자 토큰으로 게시
+  "tools/grok_worker_loop.cmd",
   "tools/devin_mention_bridge.mjs",
   "tools/issue_progress.mjs", // 이슈 체크·닫기 판정
 ]);
@@ -744,12 +746,16 @@ async function main() {
           if (humanOk) {
             st.ai = `⏭️ ${ai ? "진행 중" : "기록 없음"} — 사람 승인(${humanApprovers.join(" ")})으로 대체`;
           } else if (Date.now() - pushedAt > AI_GRACE_MS) {
-            st.ai = `❌ ${ai ? "진행 중에서 멈춤" : "기록 없음"} (커밋 후 ${minutes}분)`;
+            // 로컬 Grok 대기(ai_code_review.mjs의 grok-local 모드)는 작업자 PC가 꺼져 있으면 오래 기다릴 수 있다
+            const local = String(ai?.description || "").startsWith("로컬 Grok");
+            st.ai = `❌ ${local ? "로컬 Grok 작업자 대기" : ai ? "진행 중에서 멈춤" : "기록 없음"} (커밋 후 ${minutes}분)`;
             await say(
               "ai-missing",
               `**자동 승인 불가 — AI 코드 리뷰 결과가 없습니다.**\n\n` +
                 statusTable(st) +
-                `\n\n**처리:** 이 PR에 \`/ai-review\` 댓글을 달면 다시 리뷰합니다. 계속 실패하면 담당자가 직접 코드를 읽고 Approve해 주세요 — 사람 승인이 있으면 머지됩니다.`,
+                (local
+                  ? `\n\n**처리:** AI 리뷰는 김민기 PC의 로컬 Grok 작업자가 합니다 — PC가 켜지면 자동으로 이어집니다. 급하면 담당자가 직접 코드를 읽고 Approve해 주세요 — 사람 승인이 있으면 머지됩니다.`
+                  : `\n\n**처리:** 이 PR에 \`/ai-review\` 댓글을 달면 다시 리뷰합니다. 계속 실패하면 담당자가 직접 코드를 읽고 Approve해 주세요 — 사람 승인이 있으면 머지됩니다.`),
             );
             continue;
           } else {

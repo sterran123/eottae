@@ -5,6 +5,7 @@
 #     - 규칙 봇이 머지한 뒤 dispatch (GITHUB_TOKEN 머지는 pull_request 이벤트를 만들지 않는다)
 #     - 사람이 이슈 본문을 고쳤을 때 — 마지막 체크박스까지 체크했으면 닫기만 (AI 호출 없음)
 #   비용: 머지된 PR당 Devin 세션 1개(후보 이슈가 있을 때만). 같은 PR은 다시 판정하지 않는다(force로 재실행)
+#         저장소 변수 AI_REVIEW_ENGINE=grok-local이면 Devin 대신 로컬 Grok 작업자(김민기 PC, 구독 사용량)
 # 상세는 tools/issue_progress.mjs 상단 주석 참조.
 name: issue-progress
 
@@ -57,6 +58,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr }}
           FORCE: ${{ inputs.force }}
+          # 저장소 변수 — 'grok-local'이면 Devin을 부르지 않고 PR에 대기 표시만 남긴다(tools/grok_review_worker.mjs가 처리)
+          AI_REVIEW_ENGINE: ${{ vars.AI_REVIEW_ENGINE }}
         run: node tools/issue_progress.mjs
       # 이슈 본문 수정은 외부인도 (자기 이슈에) 일으킬 수 있다 — Devin 시크릿을 넘기지 않는다
       - name: 체크리스트 완료 시 닫기 (이슈 수정)
