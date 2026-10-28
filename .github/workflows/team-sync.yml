@@ -4,7 +4,8 @@
 #   - 머지마다 돌지 않는다 — 머지마다 봇 PR이 생겨 승인할 일만 늘었다(4일에 10건). 매니페스트는 제출 때만 최신이면 된다
 #   - 제출 직전·리포트가 바로 필요할 때: Actions 탭 → "Run workflow" (집계 기간 입력 가능)
 #   - 매일 점검으로 바꾸려면 cron을 '0 0 * * *' 로 수정
-#   - 시각·진행 상태만 바뀐 리포트는 다시 쓰지 않는다(tools/team_activity_report.mjs) → 바뀐 게 없으면 PR도 없다
+#   - 시각(제목 날짜·집계 기간·열린 PR 최근 갱신 등)과 main CI 상태 줄만 바뀐 리포트는 다시 쓰지 않는다
+#     (tools/team_activity_report.mjs) → 바뀐 게 없으면 PR도 없고, 열려 있던 봇 PR은 낡았으므로 닫는다
 #
 # 하는 일:
 #   1) main 건강검사 — npm ci → typecheck → build (실패 시 작업 중단, 리포트 없음)
@@ -84,10 +85,12 @@ jobs:
             echo "갱신할 변경 없음 — PR 생성 건너뜀"
             # 열린 봇 PR이 있으면 main보다 낡은 내용이다(최신으로 만든 결과가 main과 같으므로) — 닫는다.
             # 그대로 두면 충돌 안내("다음 실행이 덮어씀")와 달리 영영 남는다
-            OLD_PR=$(gh pr list --head auto/team-sync --json number -q '.[0].number' || true)
+            OLD_PR=$(gh pr list --head auto/team-sync --author app/github-actions --json number -q '.[0].number' || true)
             if [ -n "$OLD_PR" ]; then
+              git checkout -q main # 체크아웃 중인 브랜치는 지울 수 없다
               gh pr close "$OLD_PR" --delete-branch \
-                --comment "최신 main 기준으로 다시 만든 리포트·매니페스트가 main과 같아 이 PR은 필요 없어졌습니다 — team-sync가 자동으로 닫습니다." || true
+                --comment "최신 main 기준으로 다시 만든 리포트·매니페스트가 main과 같아 이 PR은 필요 없어졌습니다 — team-sync가 자동으로 닫습니다." \
+                || echo "::warning::낡은 봇 PR #$OLD_PR 닫기 실패 — 직접 닫아 주세요"
             fi
             exit 0
           fi

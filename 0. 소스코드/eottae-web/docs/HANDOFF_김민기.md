@@ -123,7 +123,7 @@ git config --global user.email "본인 GitHub 이메일 또는 noreply"
 
 - `.github/workflows/team-sync.yml`이 **매주 월요일 09:00 KST** 자동 실행된다 (매일로 바꾸려면 cron을 `0 0 * * *`로).
 - Actions 탭 → `team-sync` → **Run workflow**로 수동 실행 가능 (`days` 입력으로 집계 기간 조절). **제출 직전에 한 번 실행**해 `FILE_INDEX.csv`/`MANIFEST.sha256`을 최신으로 만든다.
-- 머지마다 돌지 않는다(2026-10-29부터) — 머지마다 봇 PR이 생겨 승인할 일만 늘었다(4일에 10건). 시각·진행 상태만 바뀐 리포트는 다시 쓰지 않으므로 바뀐 게 없으면 PR도 생기지 않는다.
+- 머지마다 돌지 않는다(2026-10-29부터) — 머지마다 봇 PR이 생겨 승인할 일만 늘었다(4일에 10건). 시각(제목 날짜·집계 기간·열린 PR 최근 갱신 등)과 main CI 상태 줄만 바뀐 리포트는 다시 쓰지 않으므로 바뀐 게 없으면 PR도 생기지 않고, 열려 있던 봇 PR은 낡았으므로 닫는다. 열린 PR의 CI 열·팀원 집계·머지 목록·다음 액션이 바뀌면 다시 쓴다.
 - 하는 일: main 건강검사(npm ci→typecheck→build) → `docs/TEAM_ACTIVITY.md` 갱신(팀원별 커밋·PR·요구사항 ID·CI 상태·비활동 팀원) → `FILE_INDEX.csv`/`MANIFEST.sha256` 재생성 → `auto/team-sync` 브랜치로 **PR 자동 생성**.
 - 봇이 올린 PR도 **리뷰 승인 후 사람이 머지**한다 (main 보호 규칙 그대로).
 - 로컬에서 같은 리포트를 만들려면: `node tools/team_activity_report.mjs` (gh 로그인 또는 `GH_TOKEN` 필요 — 없으면 public 비인증 조회).
