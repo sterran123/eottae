@@ -65,3 +65,29 @@ export const DEMO_REPLIES: string[] = [
   '주말엔 보통 뭐 하세요?',
   '재미있네요 ㅎㅎ',
 ];
+
+/**
+ * 추천 카드(`src/lib/match/demo-recommendations.ts`)의 데모 프로필 ID(`rec_*`)를
+ * 데모 대화방 ID와 연결하는 매핑.
+ */
+export const DEMO_RECOMMENDATION_ROOM_MAP: Readonly<Record<string, string>> = {
+  rec_bada: 'demo-room-1',
+  rec_gaeul: 'demo-room-2',
+  rec_haneul: 'demo-room-3',
+  rec_doyun: 'demo-room-4',
+};
+
+/**
+ * 쿼리 파라미터(`?partner=`)로 전달된 ID로 대상 대화방 ID를 찾는다.
+ * 일치하는 방이나 추천 프로필 매핑이 없으면 첫 번째 데모 방(`DEMO_ROOMS[0].id`)으로 폴백한다.
+ */
+export function resolveDemoRoomId(partnerOrRoomId: string | null | undefined): string {
+  if (!partnerOrRoomId) return DEMO_ROOMS[0].id;
+  const direct = DEMO_ROOMS.find(
+    (r) => r.id === partnerOrRoomId || r.partner.id === partnerOrRoomId,
+  );
+  if (direct) return direct.id;
+  const mappedRoomId = DEMO_RECOMMENDATION_ROOM_MAP[partnerOrRoomId];
+  if (mappedRoomId) return mappedRoomId;
+  return DEMO_ROOMS[0].id;
+}

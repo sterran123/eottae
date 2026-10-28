@@ -1,12 +1,13 @@
 // ============================================================
 //  저장 경로: src/lib/safety/types.ts
 //  담당: 손준혁 · MATCH-008 (신고/차단)
-//  역할: 신고·차단 UI 전용 DTO. API_계약_초안의
-//        `POST /safety/reports`, `POST /safety/blocks` 요청 형태에 맞춰
-//        추후 서버 연동 시 그대로 교체할 수 있게 둔다.
-//  [경계] 실제 접수·운영 대기열·권한은 주한태 서버/RLS 영역. 여기는 DEMO 상태만 다룬다.
+//  역할: 신고·차단 UI 및 Supabase `public.reports`·`public.blocks` 연동용 DTO.
+//        `ReportCategory` 값은 DB `reports.category` CHECK 제약(`'abuse'|'sexual'|'scam'|'other'`)과
+//        1:1로 일치한다 (ADR-005).
+//  [경계] 실제 접수·운영 대기열·권한 분리는 Postgres RLS로 강제한다.
 // ============================================================
 
+/** Supabase `public.reports.category` CHECK 제약 값과 동일 */
 export type ReportCategory = 'abuse' | 'sexual' | 'scam' | 'other';
 
 export const REPORT_CATEGORIES: ReadonlyArray<{
@@ -20,14 +21,22 @@ export const REPORT_CATEGORIES: ReadonlyArray<{
   { id: 'other', label: '기타', hint: '위에 해당하지 않아요 (직접 적어주세요)' },
 ];
 
-/** 상세 사유 최대 길이 */
+/** 상세 사유 최대 길이 (DB `check (char_length(description) <= 200)` 와 동일) */
 export const MAX_REPORT_DETAIL_LENGTH = 200;
 
-/** `POST /safety/reports` 요청 본문 (DEMO에서는 서버로 전송하지 않는다) */
+/** `public.reports` insert 및 신고 제출 요청 DTO */
 export interface ReportRequest {
   reportedUserId: string;
   category: ReportCategory;
   description: string;
-  /** 신고와 함께 차단할지 */
+  /** 신고와 함께 차단(`public.blocks` 동시 insert) 여부 */
   alsoBlock: boolean;
+}
+
+/**
+ * `public.blocks` insert 및 차단 요청 DTO (MATCH-008).
+ * `blocker_id`는 RLS(`blocker_id = auth.uid()`)로 강제하므로 클라이언트는 차단 대상 ID만 지정한다.
+ */
+export interface BlockRequest {
+  blockedUserId: string;
 }
