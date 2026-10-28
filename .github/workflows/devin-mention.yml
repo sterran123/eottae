@@ -1,9 +1,9 @@
 name: devin-mention
 
+# pull_request_review_comment 트리거는 두지 않는다 — 그 이벤트는 워크플로 파일까지 PR 머지 ref 버전으로 실행해
+# PR이 바꾼 YAML·스크립트가 Devin 키를 받는다. (브릿지는 PR의 소유자 호출을 어차피 Devin 자체 처리에 넘긴다)
 on:
   issue_comment:
-    types: [created]
-  pull_request_review_comment:
     types: [created]
 
 permissions:
@@ -26,7 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main # PR 리뷰 코멘트 이벤트의 기본 checkout은 PR 머지 커밋 — PR이 바꾼 브릿지가 Devin 키로 실행되지 않게
+          ref: main # 브릿지 스크립트는 항상 main 기준 — PR이 바꾼 브릿지가 Devin 키로 실행되지 않게
       - uses: actions/setup-node@v4
         with:
           node-version: 22

@@ -268,7 +268,9 @@ if (ENGINE === "grok") {
     );
     process.exit(1);
   }
-  await finish(r.answer, { ref: `로컬 Grok 리뷰 (${r.info})`, timeout: "시간 초과" });
+  // 작업자 코멘트는 소유자 토큰으로 올라간다 — 본문의 @devin·@사람이 Devin 자동화를 깨우거나 알림을 보내지 않게 끊는다
+  const safe = r.answer.replace(/@(?=[A-Za-z0-9-])/g, "@​");
+  await finish(safe, { ref: `로컬 Grok 리뷰 (${r.info})`, timeout: "시간 초과" });
   process.exit(process.exitCode ?? 0); // 코멘트 실패(exitCode=1)를 덮어쓰지 않는다
 }
 
