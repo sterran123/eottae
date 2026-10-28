@@ -83,6 +83,10 @@ const SENSITIVE =
 // 진입점 스크립트만 막으면 postinstall 한 줄로 쓰기 토큰 작업에 코드를 심을 수 있다.
 const BUILD_CONTROL =
   /(^|\/)(package\.json|package-lock\.json|npm-shrinkwrap\.json|yarn\.lock|pnpm-lock\.yaml|bun\.lockb?|\.npmrc|\.yarnrc(\.yml)?|\.pnpmfile\.cjs|next\.config\.[cm]?[jt]s|tsconfig[^/]*\.json|jsconfig[^/]*\.json|babel\.config\.[cm]?[jt]s|\.babelrc(\..*)?$|postcss\.config\.[cm]?[jt]s|tailwind\.config\.[cm]?[jt]s)$/i;
+// Windows 실행 파일·스크립트 — 로컬 Grok 작업자 PC(김민기, 소유자 토큰·Grok 로그인)는 이 저장소를 빨리감기하고,
+// cmd·node는 현재 폴더의 node.cmd·timeout.bat 등을 PATH보다 먼저 찾는다. 위치와 상관없이 사람 리뷰
+// (.js·.jse도 PATHEXT에 있어 `node` 호출이 루트의 node.js를 집을 수 있다 — 일반 소스와 구분해 루트만)
+const WIN_EXEC = /\.(cmd|bat|exe|com|ps1|psm1|vbs|vbe|wsf|wsh|msi|msc|scr|lnk|hta|cpl|reg)$|^[^/]+\.jse?$/i;
 // 스케줄 워크플로가 write 권한 토큰으로 실행하는 자동화 진입점 —
 // 워크플로 YAML을 막아도 이 스크립트들이 열려 있으면 같은 우회가 된다
 const PIPELINE_TOOLS = new Set([
@@ -157,6 +161,7 @@ const whyBlocked = (f) => {
   if (BUILD_CONTROL.test(f)) return "패키지·빌드 설정 — npm/next가 정의한 코드를 실행";
   if (SECURITY_CODE.test(f)) return "인증·DB·RLS 보안 코드 — 담당자·김민기 리뷰 필요 (ADR-005)";
   if (SENSITIVE.test(f)) return "환경설정·키류 — 공개 저장소라 즉시 공개됨";
+  if (WIN_EXEC.test(f)) return "Windows 실행 파일·스크립트 — 로컬 작업자 PC에서 실행될 수 있음";
   return "보호 영역";
 };
 
@@ -552,6 +557,7 @@ async function main() {
               CODEOWNERS.test(f) ||
               BUILD_CONTROL.test(f) ||
               SECURITY_CODE.test(f) ||
+              WIN_EXEC.test(f) ||
               PIPELINE_TOOLS.has(f),
           ),
         ),

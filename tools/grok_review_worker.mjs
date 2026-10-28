@@ -33,6 +33,12 @@ const MAX_PER_CYCLE = Number(process.env.MAX_PER_CYCLE || 3);
 // 홈 밖에 둔다 — 엔진이 홈 디렉터리 전체를 읽기 금지로 막기 때문(grok_review_engine.mjs)
 const REVIEW_ROOT =
   process.env.REVIEW_ROOT || (process.platform === "win32" ? "C:\\eottae-grok-review" : "/var/tmp/eottae-grok-review");
+// 어떤 프로세스(gh·git·grok)를 띄우기 전에: Windows의 cmd·Node는 실행 파일을 현재 폴더에서 PATH보다 먼저 찾는다.
+// 클론에는 팀원이 머지한 파일(node.cmd·git.bat 등)이 들어오므로, 현재 폴더 검색을 끄고 클론 밖으로 옮긴다.
+// (스크립트·저장소 경로는 import.meta.url·git -C로 정하므로 현재 폴더와 무관하다)
+process.env.NoDefaultCurrentDirectoryInExePath = "1";
+mkdirSync(REVIEW_ROOT, { recursive: true });
+process.chdir(REVIEW_ROOT);
 // PR이 들고 온 에이전트 설정 — 신뢰 전이라 실행되지 않지만, 읽히지도 않게 지운다
 // 이름 비교는 소문자로 — Windows에서는 .Grok·agents.md도 같은 파일로 열린다
 const AGENT_CONFIG = new Set([".grok", ".claude", ".cursor", ".mcp.json"]);
