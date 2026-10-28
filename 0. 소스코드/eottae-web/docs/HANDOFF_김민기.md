@@ -171,15 +171,18 @@ git config --global user.email "본인 GitHub 이메일 또는 noreply"
   - **이슈 진행** — 머지된 PR의 "로컬 Grok 이슈 진행 판정 대기" 코멘트 → 머지 커밋으로 판정 → 이슈 체크·닫기
   - **@grok** — 소유자가 이슈·PR 댓글에 `@grok 요청`을 쓰면 읽기 전용으로 답 댓글(👀 반응 후). 다른 사람의 `@grok`은 무시
 - **상시 실행:** 전용 클론 `C:\eottae-grok-review\repo`(main)에서 `tools\grok_worker_loop.cmd`가 작업자를 띄우고 끝나면 다시 띄운다. 주기마다 origin/main으로 빨리감기하고, 작업자 코드가 바뀌면 스스로 다시 시작한다. 로그 `C:\eottae-grok-review\worker.log`, 실행 기록 `runs.jsonl`(소요·토큰·API 환산 비용).
-  - **로그인 때 자동 시작(김민기가 직접 등록):** `Win+R` → `shell:startup` → 그 폴더에 `eottae-grok-worker.vbs`를 만들고 아래 세 줄을 넣는다(창 없이 실행). 끄려면 이 파일을 지우고 작업 관리자에서 `node.exe`(작업자) 종료.
-    ```vb
-    Set sh = CreateObject("WScript.Shell")
-    sh.Environment("Process")("GROK_BIN") = sh.ExpandEnvironmentStrings("%USERPROFILE%") & "\.grok\bin\grok.exe"
-    sh.Run """C:\eottae-grok-review\repo\tools\grok_worker_loop.cmd""", 0, False
-    ```
-  - 처음 한 번 전용 클론 만들기: `git clone https://github.com/sterran123/eottae.git C:\eottae-grok-review\repo` (비밀 파일 `.env`를 이 클론에 두지 않는다)
+  - **처음 한 번 — 순서대로(김민기가 직접):**
+    1. 전용 클론: `git clone https://github.com/sterran123/eottae.git C:\eottae-grok-review\repo` (비밀 파일 `.env`를 이 클론에 두지 않는다). `%USERPROFILE%\.grok\bin\grok.exe`가 있는지(Grok CLI 설치·`grok login`)도 확인
+    2. 로그인 때 자동 시작: `Win+R` → `shell:startup` → 그 폴더에 `eottae-grok-worker.vbs`를 만들고 아래 세 줄을 넣는다(창 없이 실행)
+       ```vb
+       Set sh = CreateObject("WScript.Shell")
+       sh.Environment("Process")("GROK_BIN") = sh.ExpandEnvironmentStrings("%USERPROFILE%") & "\.grok\bin\grok.exe"
+       sh.Run """C:\eottae-grok-review\repo\tools\grok_worker_loop.cmd""", 0, False
+       ```
+    3. vbs를 더블클릭해 한 번 실행하고 `C:\eottae-grok-review\worker.log`에 `start`가 찍히는지 확인
+  - **끄기:** 시작프로그램의 `eottae-grok-worker.vbs`를 지우고, 작업 관리자 → 세부 정보에서 명령줄에 `grok_worker_loop.cmd`가 있는 `cmd.exe`를 **프로세스 트리 끝내기**. `node.exe`만 끝내면 래퍼가 30초 뒤(종료 코드 3은 1시간, 4는 10분) 작업자를 다시 띄운다.
 - **PC가 꺼져 있으면** PR은 AI 리뷰를 기다린다(게이트가 열리지 않음 — 45분 뒤 규칙 봇이 "로컬 Grok 작업자 대기" 안내). 급하면 작성자 외 팀원이 코드를 읽고 Approve하면 머지된다.
-- **멈췄을 때:** `worker.log`에서 종료 코드 확인 — 3은 Grok 로그인·사용량(`grok login` 후 1시간 안에 자동 재시도), 4는 잠금·클론 상태(전용 클론에서 `git status`). 수동 1회: 전용 클론에서 `node tools/grok_review_worker.mjs --once`, 특정 PR: `--pr 번호 --force`.
+- **멈췄을 때:** `worker.log`에서 종료 코드 확인 — 3은 Grok 로그인·사용량(`grok login` 후 1시간 안에 자동 재시도), 4는 잠금·클론 상태(전용 클론에서 `git status`). 수동 1회는 **클론 밖에서** node 절대 경로로(클론 안에서는 팀원이 머지한 `node.cmd` 등이 먼저 실행될 수 있다): `cd /d C:\eottae-grok-review` → `"%ProgramFiles%\nodejs\node.exe" repo\tools\grok_review_worker.mjs --once`, 특정 PR은 `--pr 번호 --force`.
 - **안전장치:** 읽기 도구(read_file·grep)만·웹 없음·`--trust` 없음, 자식 환경변수 허용 목록(API 키가 없어 토큰당 과금으로 넘어가지 않음), 사용자 프로필(`C:\Users`)·메인 클론 읽기 금지, PR 트리의 링크·에이전트 설정 삭제, 인증 정보로 보이는 응답은 게시 거부. Grok 로그인 파일(`~/.grok/auth.json`)은 **절대 GitHub Secret에 넣지 않는다** — 팀원이 브랜치에서 워크플로를 고쳐 꺼낼 수 있다.
 - **Devin으로 되돌리기:** 저장소 변수 `AI_REVIEW_ENGINE`을 지우면 즉시 Devin 리뷰·이슈 진행·`@devin`이 다시 돈다(Devin 시크릿은 남겨 둠). Devin 쪽 자동화는 `UPDATE=1 node tools/devin_pr_watch.mjs` 또는 Devin Automations 화면에서 켠다.
 - 비용 참고(2026-10-28 실측): 리뷰 1건 9~18분, API 환산 $1~3 — 구독 사용량에서 차감, 추가 결제 0(대시보드 확인).

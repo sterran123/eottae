@@ -533,3 +533,5 @@
 - [검증] 작업자 세 큐 한 바퀴(가짜 grok, DRY) 오류 없음, 첫 실행에 mentionsSince 기록
 - [보안] PR #51 Devin 리뷰 반영: Windows cmd·Node는 현재 폴더의 실행 파일(node.cmd·gh.cmd 등)을 PATH보다 먼저 찾아, 팀원이 머지한 루트 파일이 작업자 PC에서 실행될 수 있었음 → 래퍼·작업자가 `NoDefaultCurrentDirectoryInExePath=1`, 작업 폴더를 클론 밖(`C:\eottae-grok-review`)으로, node·timeout 절대 경로. 대조 시험: 설정 없이 `call gh`는 현재 폴더의 가짜 gh.cmd 실행, 설정 후 실제 gh. 규칙 봇은 Windows 실행 파일·스크립트(.cmd·.bat·.exe·.ps1 등, 루트 .js)를 위치와 상관없이 보호 영역으로
 - [변경] @grok 댓글 조회 페이지 넘김(최대 1000개)·조회 시작점 이동, 이슈 진행은 가장 최근 대기 표시 기준·재판정(force) 전달 — PR #51 Devin 리뷰
+- [문서] HANDOFF §11-1: 로그인 자동 시작은 김민기가 직접 등록(시작프로그램 vbs — 자동 등록은 Claude Code 권한 검사가 지속 실행 등록으로 막아 하지 않음), 처음 설정 순서(클론 → vbs → 실행 확인), 끄기(래퍼 cmd를 프로세스 트리로 종료), 수동 1회 실행은 클론 밖에서 절대 경로 — PR #52 Grok 리뷰 지적 반영
+- [미실행] build — 문서만 변경
