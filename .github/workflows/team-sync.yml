@@ -88,8 +88,11 @@ jobs:
             OLD_PR=$(gh pr list --head auto/team-sync --author app/github-actions --json number -q '.[0].number' || true)
             if [ -n "$OLD_PR" ]; then
               git checkout -q main # 체크아웃 중인 브랜치는 지울 수 없다
+              # 코멘트와 닫기를 나눈다 — 코멘트가 권한 등으로 실패해도 닫기·브랜치 삭제는 진행
+              gh pr comment "$OLD_PR" \
+                --body "최신 main 기준으로 다시 만든 리포트·매니페스트가 main과 같아 이 PR은 필요 없어졌습니다 — team-sync가 자동으로 닫습니다." \
+                || echo "::warning::낡은 봇 PR #$OLD_PR 코멘트 실패"
               gh pr close "$OLD_PR" --delete-branch \
-                --comment "최신 main 기준으로 다시 만든 리포트·매니페스트가 main과 같아 이 PR은 필요 없어졌습니다 — team-sync가 자동으로 닫습니다." \
                 || echo "::warning::낡은 봇 PR #$OLD_PR 닫기 실패 — 직접 닫아 주세요"
             fi
             exit 0

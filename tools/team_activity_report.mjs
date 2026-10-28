@@ -74,7 +74,10 @@ const mainHead = commits[0];
 const mainChecks = await api(`repos/${REPO}/commits/main/check-runs?per_page=20`).catch(() => null);
 const mainCi = mainChecks?.check_runs?.find((r) => r.name === "check") || mainChecks?.check_runs?.[0];
 
-const mergedPrs = prs.filter((p) => p.merged_at && new Date(p.merged_at) >= since);
+// 머지 시각 순으로 — 조회는 updated 순이라 본문·댓글만 바뀌어도 순서가 달라져 리포트를 다시 쓰게 된다
+const mergedPrs = prs
+  .filter((p) => p.merged_at && new Date(p.merged_at) >= since)
+  .sort((a, b) => new Date(b.merged_at) - new Date(a.merged_at));
 const recentPrs = prs.filter((p) => new Date(p.updated_at) >= since);
 
 // 열린 PR의 헤드 커밋 CI 상태 (최대 10건까지만 조회 — rate limit 보호)
