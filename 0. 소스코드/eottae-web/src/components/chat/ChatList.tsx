@@ -45,9 +45,12 @@ export default function ChatList({ rooms, previews, activeId, onOpen }: ChatList
                 <span className="mt-chatlist-bottom">
                   <span className="mt-chatlist-last">{p.lastMessage}</span>
                   {p.unread > 0 && (
-                    <span className="mt-chatlist-badge" aria-label={`안 읽은 메시지 ${p.unread}개`}>
-                      {p.unread > 99 ? '99+' : p.unread}
-                    </span>
+                    <>
+                      <span className="mt-chatlist-badge" aria-hidden="true">
+                        {p.unread > 99 ? '99+' : p.unread}
+                      </span>
+                      <span className="mt-chat-sr">{`안 읽은 메시지 ${p.unread}개`}</span>
+                    </>
                   )}
                 </span>
               </span>

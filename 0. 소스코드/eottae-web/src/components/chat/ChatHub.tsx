@@ -30,8 +30,12 @@ const INITIAL_PREVIEWS: Record<string, ChatRoomPreview> = Object.fromEntries(
 
 export default function ChatHub() {
   const searchParams = useSearchParams();
+  const initialPartnerId = searchParams.get('partner');
   const initialQuestion = searchParams.get('q');
-  const questionRoomId = DEMO_ROOMS[0].id;
+  // 추천 카드(?partner=&q=) 진입 시 일치하는 partner/room id가 있으면 해당 방을 열고, 없으면 첫 데모 방으로 폴백
+  const questionRoomId =
+    DEMO_ROOMS.find((r) => r.partner.id === initialPartnerId || r.id === initialPartnerId)?.id ??
+    DEMO_ROOMS[0].id;
 
   const [activeId, setActiveId] = useState<string | null>(null);
   // 한 번이라도 연 방 — 닫아도 마운트를 유지해 상태를 보존한다.
@@ -141,11 +145,11 @@ export default function ChatHub() {
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [activeId]);
 
-  // Esc로 닫기 — 활성 패널 내의 더보기 메뉴·차단/신고 모달이 열려 있으면 그쪽 Esc가 먼저 처리되게 양보한다.
+  // Esc로 닫기 — 한글 IME 조합 중이거나 활성 패널 내의 더보기 메뉴·차단/신고 모달이 열려 있으면 양보한다.
   useEffect(() => {
     if (!activeId) return;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape' || e.defaultPrevented) return;
+      if (e.key !== 'Escape' || e.defaultPrevented || e.isComposing) return;
       const activePanel = document.getElementById(`mt-chat-panel-${activeId}`);
       if (activePanel?.querySelector('dialog[open], .mt-chat-menu-list')) return;
       closeRoom();

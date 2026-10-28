@@ -311,8 +311,8 @@ export default function ChatRoom({
 
       <MessageComposer
         onSend={sendMessage}
-        disabled={blocked}
-        disabledReason="차단한 상대와는 대화할 수 없어요"
+        disabled={blocked || !active}
+        disabledReason={blocked ? '차단한 상대와는 대화할 수 없어요' : undefined}
       />
 
       <BlockConfirmModal

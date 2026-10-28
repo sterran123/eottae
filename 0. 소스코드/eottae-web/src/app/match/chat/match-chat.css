@@ -450,6 +450,13 @@ body:has(.mt-chat-page) .footer::before {
 
 @media (prefers-reduced-motion: reduce) {
   .mt-chat-typing span { animation: none; opacity: 0.7; }
+  .mt-chat-media-btn.is-recording,
+  .mt-chat-rec-bar,
+  .mt-chat-rec-dot,
+  .mt-chat-rec-waves-live span,
+  .mt-chat-voice-waves.is-playing span {
+    animation: none;
+  }
 }
 
 /* ============================================================
