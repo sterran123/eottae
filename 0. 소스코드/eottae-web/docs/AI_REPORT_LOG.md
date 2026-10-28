@@ -555,4 +555,6 @@
 - [변경] tools/grok_mention.mjs | 답 머리에 요청한 팀원을 멘션(알림), 프롬프트에 요청자 표시. 본문의 멘션은 그대로 끊음
 - [버그수정] tools/grok_mention.mjs | fetch 직후 `process.exit()`가 Windows에서 libuv assertion(`UV_HANDLE_CLOSING`)으로 죽던 것 → 본문을 `main()`으로 감싸 `process.exitCode`로 종료(계정 문제 종료 코드 3이 사라지지 않게)
 - [검증] 권한 API: sterran123 admin, 팀원 3명 write, 외부 계정 2개 read. 가짜 grok·DRY(쓰기 없음): 소유자 댓글 → 답 머리 `@sterran123 요청`·exit 0, 봇 댓글 → 건너뜀·exit 0(3회 반복 assertion 없음, 수정 전에는 assertion), 사용량 한도 → exit 3
+- [버그수정] PR #55 Grok 리뷰(5c50d2e, 819초, API 환산 $0.88) **수정 필요** 반영: 권한 조회 실패가 "팀원 아님"과 같아져 조회 시작점이 요청 뒤로 옮겨지면 그 요청이 영영 빠지던 것 → 작업자는 404만 팀원 아님·그 밖은 예외로 이번 주기 조회를 멈춤(시작점 저장 전), 응답 스크립트는 답·👀 없이 exit 1(다음 주기 재시도). 권장 반영: maintain 역할 허용(role_name도 확인), 포크 PR 프롬프트에 "main 체크아웃", 댓글 100개 넘는 스레드는 마지막 두 페이지에서 최신 맥락
+- [검증] 권한 API 응답을 가로채(가짜 응답) 응답 스크립트 시험: 502 → 실패 exit 1·답 없음, 404 → 건너뜀 exit 0, maintain → 답, triage → 건너뜀. 작업자 쪽은 실행 시험 없음(큐 조회 예외가 시작점 저장 전 catch로 가는 것을 코드로 확인)
 - [미실행] 팀원 계정의 실제 `@grok` 댓글 — 팀원이 처음 쓸 때 확인

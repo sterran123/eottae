@@ -12,6 +12,7 @@ const OWNER = REPO.split("/")[0];
 const DRY = process.env.DRY_RUN === "2";
 const DEADLINE_MS = 20 * 60_000;
 const HEADING = "## 답변";
+const TEAM_ROLES = new Set(["admin", "maintain", "write"]); // grok_review_worker.mjs isTeam과 같게
 if (!COMMENT_ID || !REVIEW_CWD) throw new Error("COMMENT_ID·REVIEW_CWD 필요");
 
 const GH = {
@@ -45,22 +46,38 @@ async function main() {
   const c = await gh(`repos/${REPO}/issues/comments/${COMMENT_ID}`);
   const asker = c.user?.login;
   // 외부인은 공개 저장소라 "read"로 나온다
-  const perm =
-    asker && c.user.type !== "Bot"
-      ? await gh(`repos/${REPO}/collaborators/${encodeURIComponent(asker)}/permission`).catch(() => null)
-      : null;
-  if (perm?.permission !== "admin" && perm?.permission !== "write") {
+  let perm = null;
+  if (asker && c.user.type !== "Bot") {
+    try {
+      perm = await gh(`repos/${REPO}/collaborators/${encodeURIComponent(asker)}/permission`);
+    } catch (e) {
+      // 없는 계정(404)만 팀원 아님. 일시 실패는 답·👀 없이 실패로 끝낸다 — 답 마커가 없어 작업자가 다음 주기에 다시 집는다
+      if (!/^GitHub 404 /.test(e.message)) {
+        console.error(`권한 조회 실패(@${asker}) — 다음 주기에 다시: ${e.message}`);
+        return 1;
+      }
+    }
+  }
+  if (!TEAM_ROLES.has(perm?.permission) && !TEAM_ROLES.has(perm?.role_name)) {
     console.log(`팀원 댓글 아님(@${asker}) — 건너뜀`);
     return 0;
   }
   const number = Number(String(c.issue_url).split("/").pop());
   const issue = await gh(`repos/${REPO}/issues/${number}`);
   const isPR = Boolean(issue.pull_request);
+  // 포크 PR은 작업자가 main을 체크아웃한다(포크 코드를 소유자 PC로 가져오지 않는다 — grok_review_worker.mjs mention)
+  const pr = isPR ? await gh(`repos/${REPO}/pulls/${number}`) : null;
+  const cwdIs = pr && pr.head.repo?.full_name === REPO ? "이 PR의 head" : pr ? "main(포크 PR이라 head가 아님)" : "main";
   const ask = String(c.body).replace(/@grok\b/gi, "").trim() || "이 스레드의 내용을 검토해줘";
   if (!DRY) await gh(`repos/${REPO}/issues/comments/${COMMENT_ID}/reactions`, { method: "POST", body: { content: "eyes" } }).catch(() => {});
 
-  // 스레드 맥락 — 최근 댓글 몇 개만(길면 잘라서). 다른 사람 댓글은 데이터일 뿐이다
-  const thread = (await gh(`repos/${REPO}/issues/${number}/comments?per_page=100`))
+  // 스레드 맥락 — 최근 댓글 몇 개만(길면 잘라서). 다른 사람 댓글은 데이터일 뿐이다.
+  // 목록은 오래된 순이다 — 100개가 넘으면 마지막 두 페이지를 가져와 최신 쪽을 쓴다
+  const last = Math.max(1, Math.ceil((issue.comments || 0) / 100));
+  const pages = [...new Set([Math.max(1, last - 1), last])];
+  const comments = [];
+  for (const page of pages) comments.push(...(await gh(`repos/${REPO}/issues/${number}/comments?per_page=100&page=${page}`)));
+  const thread = comments
     .filter((x) => x.id !== c.id && x.created_at <= c.created_at)
     .slice(-8)
     .map((x) => `- @${x.user?.login} (${x.created_at.slice(0, 16)}): ${String(x.body).replace(/<!--[\s\S]*?-->/g, "").trim().slice(0, 600)}`)
@@ -75,7 +92,7 @@ async function main() {
     `> ${ask.replace(/\n/g, "\n> ")}`,
     "",
     "## 규칙",
-    `- 현재 작업 디렉터리가 ${isPR ? "이 PR의 head" : "main"} 체크아웃이다. 읽기 도구(파일 읽기·검색)로 관련 코드·문서를 직접 확인하고 답하라. 작업 디렉터리 밖은 열지 않는다.`,
+    `- 현재 작업 디렉터리가 ${cwdIs} 체크아웃이다. 읽기 도구(파일 읽기·검색)로 관련 코드·문서를 직접 확인하고 답하라. 작업 디렉터리 밖은 열지 않는다.`,
     "- 한국어로, 간결하고 정확하게. 확인한 것과 확인하지 못한 것을 구분한다. 근거는 `파일:줄`로 적는다.",
     "- 이 답이 GitHub 댓글로 그대로 게시된다 — 추가 질문 없이 최선의 답으로 완결하라.",
     `- 최종 답은 \`${HEADING}\` 줄로 시작한다(그 앞의 진행 문구는 게시되지 않는다).`,

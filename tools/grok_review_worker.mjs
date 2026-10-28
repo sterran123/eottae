@@ -159,10 +159,19 @@ async function waitingProgress() {
 // 팀원 = 저장소 write 권한 이상 협력자(소유자 포함) — 공개 저장소라 아무나 댓글을 달 수 있어 그 밖은 무시한다.
 // 권한은 GitHub에 묻는다(팀원이 바뀌어도 코드 수정 없음). 외부인은 공개 저장소라 "read"로 나온다.
 // grok_mention.mjs도 같은 검사를 한 번 더 한다(이 파일은 import하면 작업자가 돌기 시작해 함수를 나누지 않는다)
+const TEAM_ROLES = new Set(["admin", "maintain", "write"]);
 async function isTeam(user) {
   if (!user?.login || user.type === "Bot") return false;
-  const p = await gh(`repos/${REPO}/collaborators/${encodeURIComponent(user.login)}/permission`).catch(() => null);
-  return p?.permission === "admin" || p?.permission === "write";
+  let p;
+  try {
+    p = await gh(`repos/${REPO}/collaborators/${encodeURIComponent(user.login)}/permission`);
+  } catch (e) {
+    // 없는 계정(404)만 팀원 아님. 그 밖의 실패는 던져 이번 주기 조회를 멈춘다 — "팀원 아님"으로 넘기면
+    // 조회 시작점이 그 요청 뒤로 옮겨져 다시 집히지 않는다(던지면 시작점을 저장하기 전에 끝난다)
+    if (/^GitHub 404 /.test(e.message)) return false;
+    throw e;
+  }
+  return TEAM_ROLES.has(p?.permission) || TEAM_ROLES.has(p?.role_name);
 }
 const STATE = join(REVIEW_ROOT, "state.json");
 const loadState = () => {
