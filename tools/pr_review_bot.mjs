@@ -42,7 +42,7 @@
 //      (머지는 막지 않음). 머지 후 issue-progress가 끝낸 항목을 검증해 체크하고 다 되면 닫는다
 // 모든 목록 조회(files/comments/reviews/check-runs)는 전 페이지를 따라간다 —
 // 첫 페이지만 보면 100개 이후 위치에 민감 파일을 숨겨 검사를 우회할 수 있다.
-// 머지가 한 건이라도 성공하면 deploy-pages·team-sync를 dispatch해 사이트/매니페스트를 갱신하고,
+// 머지가 한 건이라도 성공하면 deploy-pages를 dispatch해 사이트를 갱신하고(team-sync는 주 1회·수동 실행만),
 // 사람 PR마다 issue-progress를 dispatch해 이슈 체크 항목을 갱신한다.
 // (GITHUB_TOKEN 머지는 push 이벤트를 트리거하지 못하므로 dispatch가 필요)
 import { execFileSync } from "node:child_process";
@@ -370,7 +370,6 @@ async function main() {
   let approved = 0;
   let merged = 0;
   let commented = 0;
-  let mergedHuman = 0; // 봇 PR(리포트)만 머지됐으면 team-sync를 다시 부르지 않는다 — 무한 반복 방지
   const mergedHumanPrs = []; // 이슈 진행 판정(issue-progress) 대상
 
   for (const pr of prs) {
@@ -614,7 +613,7 @@ async function main() {
             "conflict",
             `**자동 생성 PR이 최신 main과 충돌합니다 — 그대로 두면 됩니다.**\n\n` +
               statusTable(st) +
-              `\n\n이 PR이 만들어진 뒤 main이 바뀌어 리포트·매니페스트가 낡았습니다. 다음 \`team-sync\` 실행(머지 직후 자동 실행 또는 매주 월요일)이 같은 브랜치를 최신 내용으로 덮어쓰면 자동으로 다시 판정합니다. 급하면 Actions → \`team-sync\` → Run workflow.`,
+              `\n\n이 PR이 만들어진 뒤 main이 바뀌어 리포트·매니페스트가 낡았습니다. 다음 \`team-sync\` 실행(매주 월요일)이 같은 브랜치를 최신 내용으로 덮어쓰면 자동으로 다시 판정합니다. 급하면 Actions → \`team-sync\` → Run workflow.`,
           );
           continue;
         }
@@ -845,7 +844,6 @@ async function main() {
         if (DRY) {
           console.log(`- ${title}: [DRY] squash 머지 예정`);
           merged++;
-          if (!isBot) mergedHuman++;
           continue;
         }
         await api(`repos/${REPO}/pulls/${n}/merge`, {
@@ -857,10 +855,7 @@ async function main() {
           },
         });
         merged++;
-        if (!isBot) {
-          mergedHuman++;
-          mergedHumanPrs.push(n);
-        }
+        if (!isBot) mergedHumanPrs.push(n);
         console.log(`- ${title}: 머지 완료`);
       } catch (e) {
         st.merge += ` · 자동 머지 ❌ API 거부 (${e.status || "오류"})`;
@@ -881,16 +876,15 @@ async function main() {
     }
   }
 
-  // 머지된 PR이 있으면 배포·리포트 파이프라인을 수동 트리거
+  // 머지된 PR이 있으면 배포 파이프라인을 수동 트리거
   // (GITHUB_TOKEN으로 한 머지는 push 이벤트를 발생시키지 않는다)
+  // team-sync는 부르지 않는다 — 머지마다 봇 PR이 생겼다. 주 1회 스케줄·수동 실행으로 충분
   if (merged > 0 && !DRY) {
-    for (const wf of mergedHuman > 0 ? ["deploy-pages.yml", "team-sync.yml"] : ["deploy-pages.yml"]) {
-      await api(`repos/${REPO}/actions/workflows/${wf}/dispatches`, {
-        method: "POST",
-        fields: { ref: "main" },
-      }).catch((e) => console.log(`! ${wf} dispatch 실패: ${e.message}`));
-    }
-    console.log("deploy-pages·team-sync dispatch 완료");
+    await api(`repos/${REPO}/actions/workflows/deploy-pages.yml/dispatches`, {
+      method: "POST",
+      fields: { ref: "main" },
+    }).catch((e) => console.log(`! deploy-pages.yml dispatch 실패: ${e.message}`));
+    console.log("deploy-pages dispatch 완료");
     // 봇 머지는 pull_request closed 이벤트를 만들지 않는다 — PR마다 이슈 진행 판정을 직접 부른다
     for (const n of mergedHumanPrs) {
       await api(`repos/${REPO}/actions/workflows/issue-progress.yml/dispatches`, {

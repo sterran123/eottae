@@ -122,7 +122,8 @@ git config --global user.email "본인 GitHub 이메일 또는 noreply"
 ## 9. 주기적 자동 점검 (team-sync 스케줄러)
 
 - `.github/workflows/team-sync.yml`이 **매주 월요일 09:00 KST** 자동 실행된다 (매일로 바꾸려면 cron을 `0 0 * * *`로).
-- Actions 탭 → `team-sync` → **Run workflow**로 수동 실행 가능 (`days` 입력으로 집계 기간 조절).
+- Actions 탭 → `team-sync` → **Run workflow**로 수동 실행 가능 (`days` 입력으로 집계 기간 조절). **제출 직전에 한 번 실행**해 `FILE_INDEX.csv`/`MANIFEST.sha256`을 최신으로 만든다.
+- 머지마다 돌지 않는다(2026-10-29부터) — 머지마다 봇 PR이 생겨 승인할 일만 늘었다(4일에 10건). 시각·진행 상태만 바뀐 리포트는 다시 쓰지 않으므로 바뀐 게 없으면 PR도 생기지 않는다.
 - 하는 일: main 건강검사(npm ci→typecheck→build) → `docs/TEAM_ACTIVITY.md` 갱신(팀원별 커밋·PR·요구사항 ID·CI 상태·비활동 팀원) → `FILE_INDEX.csv`/`MANIFEST.sha256` 재생성 → `auto/team-sync` 브랜치로 **PR 자동 생성**.
 - 봇이 올린 PR도 **리뷰 승인 후 사람이 머지**한다 (main 보호 규칙 그대로).
 - 로컬에서 같은 리포트를 만들려면: `node tools/team_activity_report.mjs` (gh 로그인 또는 `GH_TOKEN` 필요 — 없으면 public 비인증 조회).
@@ -142,7 +143,7 @@ git config --global user.email "본인 GitHub 이메일 또는 noreply"
   - CODEOWNERS 등 보호 규칙에 막히면 "승인 완료·사람 머지 필요" 코멘트로 넘긴다
 - 파일·코멘트·리뷰·check-run 목록은 전 페이지를 조회한다 (첫 페이지만 보면 100개 이후에 민감 파일을 숨겨 우회 가능). 이름이 바뀐 파일은 옛 경로(`previous_filename`)도 함께 검사한다 — `.github/` 파일을 무해한 이름으로 rename해 스캔을 우회하는 경로를 막기 위해서다.
 - 같은 커밋에는 같은 코멘트를 반복하지 않는다(마커 태그 dedupe — Actions에선 `github-actions[bot]`, 로컬 실행에선 토큰 사용자 자신의 코멘트까지 인정). 새 push가 올라오면 다시 판정.
-- 머지가 한 건이라도 되면 `deploy-pages`·`team-sync`를 자동 dispatch해 사이트·리포트·매니페스트를 갱신한다 (GITHUB_TOKEN 머지는 push 이벤트를 못 일으키므로).
+- 머지가 한 건이라도 되면 `deploy-pages`를 자동 dispatch해 사이트를 갱신한다 (GITHUB_TOKEN 머지는 push 이벤트를 못 일으키므로). 리포트·매니페스트(`team-sync`)는 주 1회·수동 실행만.
 - 로컬 점검: `DRY_RUN=1 node tools/pr_review_bot.mjs` (조회·판정만), 실제 동작은 `GH_TOKEN` 필요.
 
 - **2026-10-27 판정 강화 (요청: 김민기)** — 모든 판정 코멘트는 같은 검사 표(작성자·보호 영역·보안 스캔·머지 가능성·빌드 CI·AI 코드 리뷰·연결 이슈)와 다시 시도하는 방법을 담는다.
