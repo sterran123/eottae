@@ -109,7 +109,7 @@ export async function runGrok(prompt, { cwd, timeoutMs }) {
   // 작업 폴더가 막힌 위치 안에 있으면 리뷰할 코드도 못 읽는다 — 실행 전에 거절
   const lower = slash(cwd).toLowerCase();
   if (DENY_ROOTS.some((root) => lower === root.toLowerCase() || lower.startsWith(`${root.toLowerCase()}/`))) {
-    return { ok: false, kind: "account", reason: "작업 폴더가 홈 안에 있음 — REVIEW_ROOT를 홈 밖으로", info: "실행 안 함" };
+    return { ok: false, kind: "run", reason: "작업 폴더가 읽기 금지 위치 안에 있음 — REVIEW_ROOT 확인", info: "실행 안 함" };
   }
   // 프롬프트는 파일로 넘긴다 — Windows 명령줄 길이 제한(약 32k자)보다 diff가 길 수 있다
   const dir = mkdtempSync(join(tmpdir(), "eottae-grok-"));

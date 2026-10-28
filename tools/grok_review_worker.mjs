@@ -179,6 +179,19 @@ async function review({ pr, force }) {
   });
 }
 
+// 리뷰 스크립트는 이 클론의 것을 소유자 쓰기 토큰으로 실행한다 — 리뷰를 거쳐 머지된 main 코드일 때만 돈다
+git("fetch", "--quiet", "origin", "main");
+const here = git("rev-parse", "HEAD").trim();
+const main = git("rev-parse", "origin/main").trim();
+const dirty = git("status", "--porcelain", "--", "tools").trim();
+if ((here !== main || dirty) && process.env.DRY_RUN !== "2") {
+  console.error(
+    `작업자 클론이 origin/main(${main.slice(0, 7)})과 다름(현재 ${here.slice(0, 7)}${dirty ? ", tools/ 수정됨" : ""}) — ` +
+      "`git switch main && git pull` 후 다시 실행하세요. (시험은 DRY_RUN=2)",
+  );
+  process.exit(4);
+}
+
 mkdirSync(REVIEW_ROOT, { recursive: true });
 // 작업자는 하나만 — 둘이 같은 대기 PR을 집으면 Grok이 두 번 돈다
 const LOCK = join(REVIEW_ROOT, "worker.lock");
@@ -186,8 +199,8 @@ const alive = (pid) => {
   try {
     process.kill(pid, 0); // 신호 0 — 프로세스가 있는지만 본다
     return true;
-  } catch {
-    return false;
+  } catch (e) {
+    return e.code === "EPERM"; // 권한이 없을 뿐 프로세스는 있다
   }
 };
 // "wx"(없을 때만 생성)로 잡는다 — 읽고 나서 쓰면 동시에 띄운 두 작업자가 모두 통과한다.
