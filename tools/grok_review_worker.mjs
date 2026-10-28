@@ -1,22 +1,24 @@
-// 「어때?」 로컬 Grok 리뷰 작업자 — 김민기 PC에서 돌며, Actions가 "로컬 Grok 리뷰 대기"로 남긴 PR을
-// Grok CLI(구독 로그인)로 리뷰해 기존과 같은 `ai-review` 상태·코멘트를 남긴다.
+// 「어때?」 로컬 Grok 작업자 — 김민기 PC에서 돌며, Devin이 하던 AI 작업을 Grok CLI(구독 로그인)로 처리한다.
+// 저장소 변수 AI_REVIEW_ENGINE=grok-local일 때 Actions는 Devin을 부르지 않고 대기 표시만 남긴다. 이 작업자가 찾는 것:
+//   1. AI 리뷰 — head sha의 pending "로컬 Grok 리뷰 대기"(ai-review.yml) → PR head 체크아웃 → tools/ai_code_review.mjs
+//      → 통과/수정 필요/오류 상태 + 코멘트. 머지 판단은 지금처럼 규칙 봇(pr_review_bot.mjs)이 한다.
+//   2. 이슈 진행 — 머지된 PR의 대기 표시 코멘트(issue-progress.yml) → 머지 커밋 체크아웃 → tools/issue_progress.mjs
+//   3. @grok — 소유자가 이슈·PR 댓글에 쓴 `@grok 요청` → tools/grok_mention.mjs가 답 댓글 (Devin 멘션 대체)
+// PC가 꺼져 있으면 기다린다 — AI 리뷰 게이트는 열리지 않는다(fail-closed).
 //
-// 흐름: ai-review.yml(저장소 변수 AI_REVIEW_ENGINE=grok-local) → head sha에 pending "로컬 Grok 리뷰 대기"
-//   → 이 작업자가 주기적으로 찾아 PR head를 별도 worktree에 체크아웃 → tools/ai_code_review.mjs(AI_ENGINE=grok)
-//   → 통과/수정 필요/오류 상태 + 코멘트. 머지 판단은 지금처럼 규칙 봇(pr_review_bot.mjs)이 한다.
-// PC가 꺼져 있으면 PR은 pending으로 기다린다(게이트가 열리지 않는다 — fail-closed).
-//
-// 사용 (저장소 루트, main 최신 상태에서 — 리뷰 스크립트는 이 체크아웃의 것을 쓴다):
-//   node tools/grok_review_worker.mjs            5분마다 대기 PR 처리 (Ctrl+C로 종료)
+// 사용 (전용 클론의 main에서 — 실행 스크립트는 이 클론의 것을 쓰고, 주기마다 origin/main으로 빨리감기한다):
+//   tools\grok_worker_loop.cmd                   상시 실행(종료되면 다시 띄움 — 로그인 때 자동 시작에 등록)
+//   node tools/grok_review_worker.mjs            5분마다 대기 작업 처리 (Ctrl+C로 종료)
 //   node tools/grok_review_worker.mjs --once     한 번만 처리
 //   node tools/grok_review_worker.mjs --pr 46    그 PR을 지금 리뷰 (대기 표시 없어도) · --force 같은 sha 재리뷰
 //   DRY_RUN=2를 주면 Grok까지 실행하고 GitHub에는 쓰지 않는다.
 // 필요: grok 로그인(grok login), GitHub 토큰(GITHUB_TOKEN 없으면 `gh auth token`).
 // 선택: INTERVAL_MIN(기본 5), MAX_PER_CYCLE(기본 3), REVIEW_ROOT(worktree·기록 위치), GROK_MODEL
+// 종료 코드: 3 로그인·사용량 문제, 4 잠금·클론 상태 문제, 0 작업자 코드 갱신(다시 띄우면 됨)
 //
-// 사용량 절약: 대기 표시가 있는 PR만 본다(같은 sha는 리뷰 후 상태가 바뀌어 다시 잡히지 않는다),
-// 한 번에 한 PR, 주기당 최대 MAX_PER_CYCLE건, 로그인·사용량 문제면 즉시 멈춘다(재시도 반복 없음).
-// 실행 기록: REVIEW_ROOT/runs.jsonl (시각·PR·sha·결과·소요·토큰)
+// 사용량 절약: 대기 표시가 있는 작업만 본다(처리하면 표시가 바뀌어 다시 잡히지 않는다),
+// 한 번에 하나, 주기당 큐별 최대 MAX_PER_CYCLE건, 로그인·사용량 문제면 즉시 멈춘다(재시도 반복 없음).
+// 실행 기록: REVIEW_ROOT/runs.jsonl (시각·작업·sha·결과·소요·토큰)
 import { execFileSync, spawn } from "node:child_process";
 import { appendFileSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -31,6 +33,12 @@ const MAX_PER_CYCLE = Number(process.env.MAX_PER_CYCLE || 3);
 // 홈 밖에 둔다 — 엔진이 홈 디렉터리 전체를 읽기 금지로 막기 때문(grok_review_engine.mjs)
 const REVIEW_ROOT =
   process.env.REVIEW_ROOT || (process.platform === "win32" ? "C:\\eottae-grok-review" : "/var/tmp/eottae-grok-review");
+// 어떤 프로세스(gh·git·grok)를 띄우기 전에: Windows의 cmd·Node는 실행 파일을 현재 폴더에서 PATH보다 먼저 찾는다.
+// 클론에는 팀원이 머지한 파일(node.cmd·git.bat 등)이 들어오므로, 현재 폴더 검색을 끄고 클론 밖으로 옮긴다.
+// (스크립트·저장소 경로는 import.meta.url·git -C로 정하므로 현재 폴더와 무관하다)
+process.env.NoDefaultCurrentDirectoryInExePath = "1";
+mkdirSync(REVIEW_ROOT, { recursive: true });
+process.chdir(REVIEW_ROOT);
 // PR이 들고 온 에이전트 설정 — 신뢰 전이라 실행되지 않지만, 읽히지도 않게 지운다
 // 이름 비교는 소문자로 — Windows에서는 .Grok·agents.md도 같은 파일로 열린다
 const AGENT_CONFIG = new Set([".grok", ".claude", ".cursor", ".mcp.json"]);
@@ -91,7 +99,7 @@ const sanitize = (dir) => {
 //   - 우리 워크플로(github-actions[bot])가 남긴 "로컬 Grok 리뷰 대기" — 협력자가 직접 단 대기 표시로 소유자 구독을 쓰지 못하게
 //   - 또는 이 작업자가 남긴 "리뷰하는 중"이 STALE_MS 넘게 그대로인 것(작업자가 도중에 죽은 경우)
 const OWNER = REPO.split("/")[0];
-async function waiting() {
+async function waitingReviews() {
   if (ONLY) {
     // 수동 실행 — draft도 리뷰한다. 포크 PR은 소유자 구독·PC로 돌리지 않는다
     const pr = await gh(`repos/${REPO}/pulls/${ONLY}`);
@@ -120,6 +128,81 @@ async function waiting() {
   return out.slice(0, MAX_PER_CYCLE);
 }
 
+// 이슈 진행 판정 대기: 최근 머지된 PR 중, 봇이 남긴 대기 표시(issue_progress.mjs의 WAIT) 뒤에
+// 봇·소유자의 판정(MARK)이나 안내(NOTE) 코멘트가 아직 없는 것 — 실패 안내가 달리면 다시 집지 않는다(재시도 반복 없음)
+async function waitingProgress() {
+  if (ONLY) return [];
+  const out = [];
+  const recent = Date.now() - 7 * 24 * 3600_000;
+  for (const pr of await gh(`repos/${REPO}/pulls?state=closed&base=main&sort=updated&direction=desc&per_page=30`)) {
+    if (!pr.merged_at || Date.parse(pr.merged_at) < recent) continue;
+    const comments = await gh(`repos/${REPO}/issues/${pr.number}/comments?per_page=100`);
+    const trusted = (c) => c.user?.login === BOT || c.user?.login === OWNER;
+    // 가장 최근 대기 표시 기준 — 재판정(Run workflow force)은 새 표시를 남기고, " force"가 붙어 있으면 FORCE로 넘긴다
+    const waitRe = new RegExp(`<!-- issue-progress-wait:pr${pr.number}( force)? -->`);
+    const wait = comments.filter((c) => c.user?.login === BOT && waitRe.test(String(c.body))).at(-1);
+    if (!wait) continue;
+    const done = comments.some(
+      (c) =>
+        trusted(c) &&
+        c.created_at >= wait.created_at &&
+        (String(c.body).includes(`<!-- issue-progress:pr${pr.number} -->`) ||
+          String(c.body).includes(`<!-- issue-progress-note:pr${pr.number} -->`)),
+    );
+    if (!done) out.push({ pr, force: String(wait.body).match(waitRe)?.[1] === " force" });
+  }
+  return out.slice(0, MAX_PER_CYCLE);
+}
+
+// @grok 요청: 처음 실행한 뒤 소유자가 단 이슈·PR 댓글 중 `@grok`이 들어 있고 아직 답(<!-- grok-answer:id -->)이 없는 것.
+// 처음 실행 전의 옛 댓글에는 답하지 않는다(state.json의 mentionsSince).
+const STATE = join(REVIEW_ROOT, "state.json");
+const loadState = () => {
+  try {
+    return JSON.parse(readFileSync(STATE, "utf8"));
+  } catch {
+    return {};
+  }
+};
+async function waitingMentions() {
+  if (ONLY) return [];
+  const state = loadState();
+  if (!state.mentionsSince) {
+    state.mentionsSince = new Date().toISOString();
+    writeFileSync(STATE, JSON.stringify(state));
+    return [];
+  }
+  // 봇 댓글이 많아 한 페이지(100개)로는 모자란다 — 끝까지 넘기고(최대 1000개), 조회 시작점은 아래에서 앞으로 옮긴다.
+  // 7일보다 오래된 요청은 보지 않는다(작업자가 오래 꺼져 있었을 때 옛 요청에 몰아서 답하지 않게)
+  const since = new Date(Math.max(Date.parse(state.mentionsSince), Date.now() - 7 * 24 * 3600_000)).toISOString();
+  const recentComments = [];
+  for (let page = 1; page <= 10; page++) {
+    const items = await gh(
+      `repos/${REPO}/issues/comments?since=${encodeURIComponent(since)}&sort=created&direction=asc&per_page=100&page=${page}`,
+    );
+    recentComments.push(...items);
+    if (items.length < 100) break;
+  }
+  const answered = new Set(
+    recentComments.flatMap((c) => [...String(c.body).matchAll(/<!-- grok-answer:(\d+) -->/g)].map((m) => m[1])),
+  );
+  const pending = recentComments.filter(
+    (c) =>
+      c.user?.login === OWNER &&
+      c.author_association === "OWNER" &&
+      /(^|\s)@grok\b/i.test(String(c.body)) &&
+      !String(c.body).includes("<!-- grok-answer:") && // 작업자 자신의 답 댓글
+      !answered.has(String(c.id)),
+  );
+  // 시작점 이동: 남은 요청이 있으면 가장 오래된 요청 시각(그 답도 범위 안에 들어온다), 없으면 마지막으로 본 댓글 시각
+  const last = recentComments.at(-1)?.created_at;
+  const next = pending[0]?.created_at ?? last;
+  if (next && next > state.mentionsSince) writeFileSync(STATE, JSON.stringify({ ...state, mentionsSince: next }));
+  return pending
+    .slice(0, MAX_PER_CYCLE)
+    .map((c) => ({ comment: c, number: Number(String(c.issue_url).split("/").pop()) }));
+}
+
 const removeWorktree = (wt) => {
   try {
     git("worktree", "remove", "--force", wt);
@@ -128,36 +211,29 @@ const removeWorktree = (wt) => {
   }
 };
 
-async function review({ pr, force }) {
-  const sha = pr.head.sha;
-  const wt = join(REVIEW_ROOT, `pr-${pr.number}-${sha.slice(0, 7)}`);
-  // 준비 단계 실패(fetch·체크아웃·정리)는 이 PR만 건너뛴다 — 작업자 전체가 같은 PR에서 반복해 죽지 않게
+// 공통 실행: 대상 커밋을 홈 밖 worktree에 체크아웃·정리 → 스크립트 실행 → worktree 삭제·기록
+async function runIn({ label, fetchRef, sha, script, env }) {
+  const wt = join(REVIEW_ROOT, `${label}-${sha.slice(0, 7)}`);
+  // 준비 단계 실패(fetch·체크아웃·정리)는 이 작업만 건너뛴다 — 작업자 전체가 같은 작업에서 반복해 죽지 않게
   try {
-    git("fetch", "--quiet", "origin", `pull/${pr.number}/head`);
+    git("fetch", "--quiet", "origin", fetchRef);
     rmSync(wt, { recursive: true, force: true });
     git("worktree", "prune");
     git("worktree", "add", "--quiet", "--detach", wt, sha);
     sanitize(wt);
   } catch (e) {
-    console.error(`PR #${pr.number} 준비 실패 — 건너뜀: ${e.message.split("\n")[0]}`);
+    console.error(`${label} 준비 실패 — 건너뜀: ${e.message.split("\n")[0]}`);
     removeWorktree(wt);
     return 1;
   }
   const started = Date.now();
   return new Promise((resolve) => {
-    const child = spawn(process.execPath, [join(ROOT, "tools", "ai_code_review.mjs")], {
-      env: {
-        ...process.env,
-        AI_ENGINE: "grok",
-        GITHUB_REPOSITORY: REPO,
-        GITHUB_TOKEN: token,
-        PR_NUMBER: String(pr.number),
-        REVIEW_CWD: wt,
-        FORCE: force ? "1" : "",
-      },
+    const child = spawn(process.execPath, [join(ROOT, "tools", script)], {
+      env: { ...process.env, AI_ENGINE: "grok", GITHUB_REPOSITORY: REPO, GITHUB_TOKEN: token, REVIEW_CWD: wt, ...env },
       stdio: ["ignore", "pipe", "inherit"],
     });
     let out = "";
+    child.stdout.setEncoding("utf8");
     child.stdout.on("data", (d) => {
       out += d;
       process.stdout.write(d);
@@ -166,7 +242,7 @@ async function review({ pr, force }) {
       removeWorktree(wt);
       const rec = {
         at: new Date().toISOString(),
-        pr: pr.number,
+        job: label,
         sha: sha.slice(0, 10),
         exit: code,
         sec: Math.round((Date.now() - started) / 1000),
@@ -179,18 +255,69 @@ async function review({ pr, force }) {
   });
 }
 
-// 리뷰 스크립트는 이 클론의 것을 소유자 쓰기 토큰으로 실행한다 — 리뷰를 거쳐 머지된 main 코드일 때만 돈다
-git("fetch", "--quiet", "origin", "main");
-const here = git("rev-parse", "HEAD").trim();
-const main = git("rev-parse", "origin/main").trim();
-const dirty = git("status", "--porcelain", "--", "tools").trim();
-if ((here !== main || dirty) && process.env.DRY_RUN !== "2") {
-  console.error(
-    `작업자 클론이 origin/main(${main.slice(0, 7)})과 다름(현재 ${here.slice(0, 7)}${dirty ? ", tools/ 수정됨" : ""}) — ` +
-      "`git switch main && git pull` 후 다시 실행하세요. (시험은 DRY_RUN=2)",
-  );
-  process.exit(4);
+const review = ({ pr, force }) =>
+  runIn({
+    label: `pr-${pr.number}`,
+    fetchRef: `pull/${pr.number}/head`,
+    sha: pr.head.sha,
+    script: "ai_code_review.mjs",
+    env: { PR_NUMBER: String(pr.number), FORCE: force ? "1" : "" },
+  });
+const progress = ({ pr, force }) =>
+  runIn({
+    label: `progress-${pr.number}`,
+    fetchRef: "main",
+    sha: pr.merge_commit_sha,
+    script: "issue_progress.mjs",
+    env: { PR_NUMBER: String(pr.number), FORCE: force ? "1" : "" },
+  });
+const mention = async ({ comment, number }) => {
+  const issue = await gh(`repos/${REPO}/issues/${number}`);
+  const pr = issue.pull_request ? await gh(`repos/${REPO}/pulls/${number}`) : null;
+  // 포크 PR 스레드는 main 기준으로 답한다(포크 코드를 소유자 PC로 가져오지 않는다)
+  const own = pr && pr.head.repo?.full_name === REPO;
+  return runIn({
+    label: `mention-${comment.id}`,
+    fetchRef: own ? `pull/${number}/head` : "main",
+    sha: own ? pr.head.sha : git("rev-parse", "origin/main").trim(),
+    script: "grok_mention.mjs",
+    env: { COMMENT_ID: String(comment.id) },
+  });
+};
+
+// 리뷰 스크립트는 이 클론의 것을 소유자 쓰기 토큰으로 실행한다 — 리뷰를 거쳐 머지된 main 코드일 때만 돈다.
+// 전용 클론(main, 깨끗한 상태)이면 origin/main으로 빨리감기해 최신을 따른다. 작업자 파일이 바뀌면 끝내서
+// 감싸는 스크립트(tools/grok_worker_loop.cmd)가 새 코드로 다시 띄우게 한다.
+const SELF = "tools/grok_review_worker.mjs";
+function followMain() {
+  git("fetch", "--quiet", "origin", "main");
+  const here = git("rev-parse", "HEAD").trim();
+  const main = git("rev-parse", "origin/main").trim();
+  if (here === main) return;
+  const branch = git("rev-parse", "--abbrev-ref", "HEAD").trim();
+  const dirty = git("status", "--porcelain", "--untracked-files=no").trim();
+  let ancestor = true;
+  try {
+    git("merge-base", "--is-ancestor", here, main);
+  } catch {
+    ancestor = false;
+  }
+  if (branch !== "main" || dirty || !ancestor) {
+    console.error(
+      `작업자 클론이 origin/main(${main.slice(0, 7)})을 따라갈 수 없음(브랜치 ${branch}, 현재 ${here.slice(0, 7)}` +
+        `${dirty ? ", 수정 있음" : ""}${ancestor ? "" : ", 갈라짐"}) — 전용 클론(main)에서 실행하세요. (시험은 DRY_RUN=2)`,
+    );
+    process.exit(4);
+  }
+  const selfChanged = git("diff", "--name-only", here, main, "--", SELF).trim();
+  git("merge", "--quiet", "--ff-only", "origin/main");
+  console.log(`origin/main(${main.slice(0, 7)})으로 갱신`);
+  if (selfChanged) {
+    console.log("작업자 코드가 바뀜 — 다시 시작합니다");
+    process.exit(0);
+  }
 }
+if (process.env.DRY_RUN !== "2") followMain();
 
 mkdirSync(REVIEW_ROOT, { recursive: true });
 // 작업자는 하나만 — 둘이 같은 대기 PR을 집으면 Grok이 두 번 돈다
@@ -232,21 +359,36 @@ if (!takeLock()) {
 const unlock = () => rmSync(LOCK, { force: true });
 process.on("exit", unlock);
 process.on("SIGINT", () => process.exit(130));
+
+const QUEUES = [
+  { name: "AI 리뷰", find: waitingReviews, run: review, show: (j) => `PR #${j.pr.number} @ ${j.pr.head.sha.slice(0, 7)}${j.force ? " (재리뷰)" : ""}` },
+  { name: "이슈 진행", find: waitingProgress, run: progress, show: (j) => `PR #${j.pr.number} 머지 ${j.pr.merge_commit_sha.slice(0, 7)}` },
+  { name: "@grok", find: waitingMentions, run: mention, show: (j) => `#${j.number} 댓글 ${j.comment.id}` },
+];
 for (;;) {
-  let jobs = [];
-  try {
-    jobs = await waiting();
-  } catch (e) {
-    console.error(`PR 조회 실패 — 다음 주기에 다시: ${e.message}`);
-  }
-  for (const job of jobs) {
-    console.log(`▶ PR #${job.pr.number} @ ${job.pr.head.sha.slice(0, 7)}${job.force ? " (재리뷰)" : ""}`);
-    const code = await review(job);
-    if (code === 3) {
-      console.error("Grok 로그인·사용량 문제 — 작업자를 멈춥니다. `grok login` 또는 사용량을 확인한 뒤 다시 실행하세요.");
-      process.exit(3);
+  for (const q of QUEUES) {
+    let jobs = [];
+    try {
+      jobs = await q.find();
+    } catch (e) {
+      console.error(`${q.name} 대기 조회 실패 — 다음 주기에 다시: ${e.message}`);
+    }
+    for (const job of jobs) {
+      console.log(`▶ ${q.name}: ${q.show(job)}`);
+      const code = await q.run(job);
+      if (code === 3) {
+        console.error("Grok 로그인·사용량 문제 — 작업자를 멈춥니다. `grok login` 또는 사용량을 확인한 뒤 다시 실행하세요.");
+        process.exit(3);
+      }
     }
   }
   if (ONCE || ONLY) break;
   await new Promise((r) => setTimeout(r, INTERVAL_MIN * 60_000));
+  if (process.env.DRY_RUN !== "2") {
+    try {
+      followMain();
+    } catch (e) {
+      console.error(`main 갱신 실패 — 다음 주기에 다시: ${e.message.split("\n")[0]}`);
+    }
+  }
 }

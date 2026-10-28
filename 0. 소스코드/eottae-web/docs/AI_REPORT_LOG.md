@@ -521,3 +521,15 @@
 - [미실행] 구독 사용량 차감·추가 결제 여부(김민기 대시보드 확인 필요), Grok Bot(데스크톱 앱 Cursor 로그인·GitHub 연결 필요 — CLI로는 불가). 다른 드라이브 등 사용자 프로필 밖 절대 경로는 읽기 금지로 막지 못함(Windows sandbox 없음 — 작업자 PC에 비밀 파일을 그런 곳에 두지 않기)
 - [운영] 2026-10-28 PR #48 머지(e88df6e) 후 Devin 쪽 자동화 `eottae-pr-watch`(2시간 주기 + PR 이벤트, 최근 3.3일 세션의 41%)를 API로 끔(`enabled=false` 확인). ai-review(Actions)와 같은 일을 한 번 더 하던 것. `eottae-pr-mentions`(소유자 `@devin` 응답)는 유지. 되살리려면 `UPDATE=1 node tools/devin_pr_watch.mjs` 또는 Devin Automations 화면에서 켜기
 - [미실행] 저장소 변수 `AI_REVIEW_ENGINE=grok-local` 전환은 하지 않음 — 구독 사용량 차감 확인·작업자 상시 실행 여부를 김민기가 정한 뒤
+
+## 2026-10-28 Devin → 로컬 Grok 완전 전환 — 이슈 진행·@grok·상시 작업자 (김민기 작업)
+- [요청] 구독 차감·추가 결제 0 확인(김민기 대시보드) 후 "Devin이 하던 AI 리뷰·PR 확인을 전부 Grok으로"
+- [변경] tools/issue_progress.mjs | `AI_ENGINE=grok` 경로(머지 커밋 체크아웃에서 판정), `grok-local` 모드면 Actions가 Devin 대신 PR에 대기 표시 코멘트만 남김, 판정 코멘트 중복 검사는 봇·소유자만. Devin 프롬프트는 동일(PR #37·#47 DRY 비교)
+- [신규] tools/grok_mention.mjs | 소유자가 쓴 `@grok 요청`에 읽기 전용 답 댓글(👀 반응, 진행 문구 제거, @멘션 끊기) — Devin 멘션 대체. 다른 사람의 `@grok`은 무시
+- [변경] tools/grok_review_worker.mjs | AI 리뷰·이슈 진행·@grok 세 큐 처리, 주기마다 origin/main 빨리감기(작업자 코드가 바뀌면 재시작), 첫 실행 전 옛 댓글에는 답하지 않음(state.json)
+- [신규] tools/grok_worker_loop.cmd | 작업자 상시 실행(종료 코드별 재시작 대기), `.gitattributes`에 `*.cmd` CRLF
+- [변경] devin-mention.yml(grok-local이면 꺼짐)·issue-progress.yml(변수 전달)·pr_review_bot.mjs(로컬 Grok 대기 안내 문구, 새 스크립트 보호 영역)·HANDOFF §11-1 운영 절
+- [검증] 실제 Grok(DRY, 쓰기 없음): PR #47 → #22·#21 이슈 진행 판정 193초(API 환산 $0.76) — 첫 실행에서 Devin 전용 변수(`url`) 참조 오류를 찾아 고침. #37의 소유자 댓글에 대한 @grok 답 117초($0.86) — 코드·요구사항·TC 기록을 `파일:줄`로 대조해 "#22는 닫지 않음" 근거 제시
+- [검증] 작업자 세 큐 한 바퀴(가짜 grok, DRY) 오류 없음, 첫 실행에 mentionsSince 기록
+- [보안] PR #51 Devin 리뷰 반영: Windows cmd·Node는 현재 폴더의 실행 파일(node.cmd·gh.cmd 등)을 PATH보다 먼저 찾아, 팀원이 머지한 루트 파일이 작업자 PC에서 실행될 수 있었음 → 래퍼·작업자가 `NoDefaultCurrentDirectoryInExePath=1`, 작업 폴더를 클론 밖(`C:\eottae-grok-review`)으로, node·timeout 절대 경로. 대조 시험: 설정 없이 `call gh`는 현재 폴더의 가짜 gh.cmd 실행, 설정 후 실제 gh. 규칙 봇은 Windows 실행 파일·스크립트(.cmd·.bat·.exe·.ps1 등, 루트 .js)를 위치와 상관없이 보호 영역으로
+- [변경] @grok 댓글 조회 페이지 넘김(최대 1000개)·조회 시작점 이동, 이슈 진행은 가장 최근 대기 표시 기준·재판정(force) 전달 — PR #51 Devin 리뷰

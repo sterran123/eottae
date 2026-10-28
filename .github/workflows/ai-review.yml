@@ -2,6 +2,7 @@
 #   결과: PR 코멘트 + 커밋 상태 `ai-review`(success/failure/error) → 규칙 봇(pr-review)의 머지 게이트
 #   트리거: PR 생성·push·reopen·ready_for_review (draft 포함) / 협력자의 `/ai-review` 댓글(재실행)
 #   비용: 실행마다 Devin 세션 1개(조직 ACU) — 같은 head sha는 다시 리뷰하지 않는다
+#         저장소 변수 AI_REVIEW_ENGINE=grok-local이면 Devin 대신 로컬 Grok 작업자(김민기 PC, 구독 사용량)
 # 상세는 tools/ai_code_review.mjs 상단 주석 참조.
 name: ai-review
 

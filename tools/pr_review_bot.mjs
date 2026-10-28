@@ -83,6 +83,10 @@ const SENSITIVE =
 // 진입점 스크립트만 막으면 postinstall 한 줄로 쓰기 토큰 작업에 코드를 심을 수 있다.
 const BUILD_CONTROL =
   /(^|\/)(package\.json|package-lock\.json|npm-shrinkwrap\.json|yarn\.lock|pnpm-lock\.yaml|bun\.lockb?|\.npmrc|\.yarnrc(\.yml)?|\.pnpmfile\.cjs|next\.config\.[cm]?[jt]s|tsconfig[^/]*\.json|jsconfig[^/]*\.json|babel\.config\.[cm]?[jt]s|\.babelrc(\..*)?$|postcss\.config\.[cm]?[jt]s|tailwind\.config\.[cm]?[jt]s)$/i;
+// Windows 실행 파일·스크립트 — 로컬 Grok 작업자 PC(김민기, 소유자 토큰·Grok 로그인)는 이 저장소를 빨리감기하고,
+// cmd·node는 현재 폴더의 node.cmd·timeout.bat 등을 PATH보다 먼저 찾는다. 위치와 상관없이 사람 리뷰
+// (.js·.jse도 PATHEXT에 있어 `node` 호출이 루트의 node.js를 집을 수 있다 — 일반 소스와 구분해 루트만)
+const WIN_EXEC = /\.(cmd|bat|exe|com|ps1|psm1|vbs|vbe|wsf|wsh|msi|msc|scr|lnk|hta|cpl|reg)$|^[^/]+\.jse?$/i;
 // 스케줄 워크플로가 write 권한 토큰으로 실행하는 자동화 진입점 —
 // 워크플로 YAML을 막아도 이 스크립트들이 열려 있으면 같은 우회가 된다
 const PIPELINE_TOOLS = new Set([
@@ -93,6 +97,8 @@ const PIPELINE_TOOLS = new Set([
   "tools/ai_code_review.mjs", // DEVIN 시크릿으로 실행 — 판정 로직 자체가 머지 게이트
   "tools/grok_review_engine.mjs", // 로컬 Grok 리뷰 — 같은 머지 게이트, 김민기 PC의 쓰기 토큰으로 실행
   "tools/grok_review_worker.mjs",
+  "tools/grok_mention.mjs", // @grok 답 — 소유자 토큰으로 게시
+  "tools/grok_worker_loop.cmd",
   "tools/devin_mention_bridge.mjs",
   "tools/issue_progress.mjs", // 이슈 체크·닫기 판정
 ]);
@@ -155,6 +161,7 @@ const whyBlocked = (f) => {
   if (BUILD_CONTROL.test(f)) return "패키지·빌드 설정 — npm/next가 정의한 코드를 실행";
   if (SECURITY_CODE.test(f)) return "인증·DB·RLS 보안 코드 — 담당자·김민기 리뷰 필요 (ADR-005)";
   if (SENSITIVE.test(f)) return "환경설정·키류 — 공개 저장소라 즉시 공개됨";
+  if (WIN_EXEC.test(f)) return "Windows 실행 파일·스크립트 — 로컬 작업자 PC에서 실행될 수 있음";
   return "보호 영역";
 };
 
@@ -550,6 +557,7 @@ async function main() {
               CODEOWNERS.test(f) ||
               BUILD_CONTROL.test(f) ||
               SECURITY_CODE.test(f) ||
+              WIN_EXEC.test(f) ||
               PIPELINE_TOOLS.has(f),
           ),
         ),
@@ -744,12 +752,16 @@ async function main() {
           if (humanOk) {
             st.ai = `⏭️ ${ai ? "진행 중" : "기록 없음"} — 사람 승인(${humanApprovers.join(" ")})으로 대체`;
           } else if (Date.now() - pushedAt > AI_GRACE_MS) {
-            st.ai = `❌ ${ai ? "진행 중에서 멈춤" : "기록 없음"} (커밋 후 ${minutes}분)`;
+            // 로컬 Grok 대기(ai_code_review.mjs의 grok-local 모드)는 작업자 PC가 꺼져 있으면 오래 기다릴 수 있다
+            const local = String(ai?.description || "").startsWith("로컬 Grok");
+            st.ai = `❌ ${local ? "로컬 Grok 작업자 대기" : ai ? "진행 중에서 멈춤" : "기록 없음"} (커밋 후 ${minutes}분)`;
             await say(
               "ai-missing",
               `**자동 승인 불가 — AI 코드 리뷰 결과가 없습니다.**\n\n` +
                 statusTable(st) +
-                `\n\n**처리:** 이 PR에 \`/ai-review\` 댓글을 달면 다시 리뷰합니다. 계속 실패하면 담당자가 직접 코드를 읽고 Approve해 주세요 — 사람 승인이 있으면 머지됩니다.`,
+                (local
+                  ? `\n\n**처리:** AI 리뷰는 김민기 PC의 로컬 Grok 작업자가 합니다 — PC가 켜지면 자동으로 이어집니다. 급하면 담당자가 직접 코드를 읽고 Approve해 주세요 — 사람 승인이 있으면 머지됩니다.`
+                  : `\n\n**처리:** 이 PR에 \`/ai-review\` 댓글을 달면 다시 리뷰합니다. 계속 실패하면 담당자가 직접 코드를 읽고 Approve해 주세요 — 사람 승인이 있으면 머지됩니다.`),
             );
             continue;
           } else {

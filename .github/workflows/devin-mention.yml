@@ -17,8 +17,10 @@ concurrency:
 
 jobs:
   bridge:
-    # Devin 세션은 호출마다 크레딧을 쓴다 — 저장소 소유자만 부를 수 있다
+    # Devin 세션은 호출마다 크레딧을 쓴다 — 저장소 소유자만 부를 수 있다.
+    # 저장소 변수 AI_REVIEW_ENGINE=grok-local이면 꺼진다 — 대신 `@grok`(tools/grok_mention.mjs, 로컬 작업자)
     if: >-
+      vars.AI_REVIEW_ENGINE != 'grok-local' &&
       contains(github.event.comment.body, '@devin') &&
       github.event.comment.author_association == 'OWNER' &&
       github.event.comment.user.type != 'Bot'
