@@ -468,25 +468,47 @@ body:has(.mt-chat-page) .footer::before {
    MATCH-008 신고/차단 — 더보기 메뉴·시스템 알림·차단 바·모달
    ============================================================ */
 
-/* 헤더 더보기 메뉴 (터치 영역 44px 확보) */
-.mt-chat-menu {
-  position: relative;
+/* 헤더 우측 컨트롤 액션 영역 */
+.mt-chat-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-left: auto;
 }
-.mt-chat-menu-btn {
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
+
+/* 헤더 더보기 메뉴 */
+.mt-chat-menu {
+  position: relative;
+}
+.mt-chat-menu-btn,
+.mt-chat-close {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
   border: 1px solid var(--match-line);
   border-radius: 50%;
   background: var(--match-paper);
   color: var(--match-ink);
-  font-size: 1.2rem;
-  line-height: 1;
   cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.15s ease;
+}
+.mt-chat-menu-btn:hover,
+.mt-chat-close:hover {
+  background: var(--match-soft);
+  border-color: var(--match-line-soft);
+}
+.mt-chat-menu-btn:active,
+.mt-chat-close:active {
+  transform: scale(0.96);
 }
 .mt-chat-menu-btn:focus-visible,
+.mt-chat-close:focus-visible,
 .mt-chat-menu-list button:focus-visible,
 .mt-chat-blocked-bar button:focus-visible,
 .mt-safety-btn:focus-visible {
@@ -498,7 +520,7 @@ body:has(.mt-chat-page) .footer::before {
   top: calc(100% + 6px);
   right: 0;
   z-index: 5;
-  min-width: 160px;
+  min-width: 136px;
   margin: 0;
   padding: 6px;
   list-style: none;
@@ -509,19 +531,29 @@ body:has(.mt-chat-page) .footer::before {
 }
 .mt-chat-menu-list button {
   width: 100%;
-  min-height: 44px;
-  padding: 9px 12px;
+  min-height: 40px;
+  padding: 8px 12px;
   text-align: left;
   font: inherit;
   font-size: 0.88rem;
+  font-weight: 500;
   color: var(--match-ink);
   background: transparent;
   border: 0;
   border-radius: 8px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.15s ease;
+}
+.mt-chat-menu-list button svg {
+  flex-shrink: 0;
+  color: var(--match-sub);
 }
 .mt-chat-menu-list button:hover { background: var(--match-soft); }
 .mt-chat-menu-list button.is-danger { color: var(--match-err-ink); }
+.mt-chat-menu-list button.is-danger svg { color: var(--match-err-ink); }
 
 /* 시스템 안내 (차단/해제) */
 .mt-chat-system {
@@ -752,21 +784,7 @@ body:has(.mt-chat-page) .footer::before {
   to { transform: translateX(0); opacity: 1; }
 }
 
-.mt-chat-close {
-  width: 44px;
-  height: 44px;
-  flex-shrink: 0;
-  display: grid;
-  place-items: center;
-  font-size: 1.05rem;
-  color: var(--match-ink);
-  background: transparent;
-  border: 0;
-  border-radius: 50%;
-  cursor: pointer;
-}
-.mt-chat-close:hover { background: var(--match-line-soft); }
-.mt-chat-close:focus-visible { outline: 2px solid var(--match-focus); outline-offset: 2px; }
+
 
 @media (prefers-reduced-motion: reduce) {
   .mt-chat-panel { animation: none; }

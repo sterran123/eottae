@@ -208,54 +208,124 @@ export default function ChatRoom({
           </span>
         </div>
 
-        <div className="mt-chat-menu" ref={menuRef}>
+        <div className="mt-chat-head-actions">
+          <div className="mt-chat-menu" ref={menuRef}>
+            <button
+              ref={menuBtnRef}
+              type="button"
+              className="mt-chat-menu-btn"
+              aria-label="더보기 메뉴"
+              aria-expanded={menuOpen}
+              aria-controls={menuId}
+              onClick={() => setMenuOpen((o) => !o)}
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="5" r="2" />
+                <circle cx="12" cy="12" r="2" />
+                <circle cx="12" cy="19" r="2" />
+              </svg>
+            </button>
+            {menuOpen && (
+              <ul id={menuId} className="mt-chat-menu-list">
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      openBlockConfirm();
+                    }}
+                  >
+                    {blocked ? (
+                      <svg
+                        width="15"
+                        height="15"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M8 12h8" />
+                      </svg>
+                    ) : (
+                      <svg
+                        width="15"
+                        height="15"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                      </svg>
+                    )}
+                    <span>{blocked ? '차단 해제하기' : '차단하기'}</span>
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    className="is-danger"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setReportOpen(true);
+                    }}
+                  >
+                    <svg
+                      width="15"
+                      height="15"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                      <line x1="4" y1="22" x2="4" y2="15" />
+                    </svg>
+                    <span>신고하기</span>
+                  </button>
+                </li>
+              </ul>
+            )}
+          </div>
           <button
-            ref={menuBtnRef}
             type="button"
-            className="mt-chat-menu-btn"
-            aria-label="더보기 메뉴"
-            aria-expanded={menuOpen}
-            aria-controls={menuId}
-            onClick={() => setMenuOpen((o) => !o)}
+            className="mt-chat-close"
+            aria-label="채팅방 닫기"
+            onClick={onClose}
           >
-            <span aria-hidden="true">⋯</span>
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
           </button>
-          {menuOpen && (
-            <ul id={menuId} className="mt-chat-menu-list">
-              <li>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    openBlockConfirm();
-                  }}
-                >
-                  {blocked ? '차단 해제하기' : '상대방 차단하기'}
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  className="is-danger"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    setReportOpen(true);
-                  }}
-                >
-                  상대방 신고하기
-                </button>
-              </li>
-            </ul>
-          )}
         </div>
-        <button
-          type="button"
-          className="mt-chat-close"
-          aria-label="채팅방 닫기"
-          onClick={onClose}
-        >
-          <span aria-hidden="true">✕</span>
-        </button>
       </header>
 
       <div className="mt-chat-notice" role="note">
