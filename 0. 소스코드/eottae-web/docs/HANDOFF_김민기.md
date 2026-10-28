@@ -170,7 +170,14 @@ git config --global user.email "본인 GitHub 이메일 또는 noreply"
   - **AI 리뷰** — `ai-review` 상태 "로컬 Grok 리뷰 대기" → PR head를 홈 밖 worktree(`C:\eottae-grok-review\`)에 체크아웃해 리뷰 → 상태·코멘트(작성자 sterran123). 머지는 지금처럼 규칙 봇(§10)
   - **이슈 진행** — 머지된 PR의 "로컬 Grok 이슈 진행 판정 대기" 코멘트 → 머지 커밋으로 판정 → 이슈 체크·닫기
   - **@grok** — 소유자가 이슈·PR 댓글에 `@grok 요청`을 쓰면 읽기 전용으로 답 댓글(👀 반응 후). 다른 사람의 `@grok`은 무시
-- **상시 실행:** 전용 클론 `C:\eottae-grok-review\repo`(main)에서 `tools\grok_worker_loop.cmd`가 작업자를 띄우고 끝나면 다시 띄운다. Windows 로그인 때 시작프로그램(`eottae-grok-worker.vbs`, 창 없이)으로 자동 시작. 주기마다 origin/main으로 빨리감기하고, 작업자 코드가 바뀌면 스스로 다시 시작한다. 로그 `C:\eottae-grok-review\worker.log`, 실행 기록 `runs.jsonl`(소요·토큰·API 환산 비용).
+- **상시 실행:** 전용 클론 `C:\eottae-grok-review\repo`(main)에서 `tools\grok_worker_loop.cmd`가 작업자를 띄우고 끝나면 다시 띄운다. 주기마다 origin/main으로 빨리감기하고, 작업자 코드가 바뀌면 스스로 다시 시작한다. 로그 `C:\eottae-grok-review\worker.log`, 실행 기록 `runs.jsonl`(소요·토큰·API 환산 비용).
+  - **로그인 때 자동 시작(김민기가 직접 등록):** `Win+R` → `shell:startup` → 그 폴더에 `eottae-grok-worker.vbs`를 만들고 아래 세 줄을 넣는다(창 없이 실행). 끄려면 이 파일을 지우고 작업 관리자에서 `node.exe`(작업자) 종료.
+    ```vb
+    Set sh = CreateObject("WScript.Shell")
+    sh.Environment("Process")("GROK_BIN") = sh.ExpandEnvironmentStrings("%USERPROFILE%") & "\.grok\bin\grok.exe"
+    sh.Run """C:\eottae-grok-review\repo\tools\grok_worker_loop.cmd""", 0, False
+    ```
+  - 처음 한 번 전용 클론 만들기: `git clone https://github.com/sterran123/eottae.git C:\eottae-grok-review\repo` (비밀 파일 `.env`를 이 클론에 두지 않는다)
 - **PC가 꺼져 있으면** PR은 AI 리뷰를 기다린다(게이트가 열리지 않음 — 45분 뒤 규칙 봇이 "로컬 Grok 작업자 대기" 안내). 급하면 작성자 외 팀원이 코드를 읽고 Approve하면 머지된다.
 - **멈췄을 때:** `worker.log`에서 종료 코드 확인 — 3은 Grok 로그인·사용량(`grok login` 후 1시간 안에 자동 재시도), 4는 잠금·클론 상태(전용 클론에서 `git status`). 수동 1회: 전용 클론에서 `node tools/grok_review_worker.mjs --once`, 특정 PR: `--pr 번호 --force`.
 - **안전장치:** 읽기 도구(read_file·grep)만·웹 없음·`--trust` 없음, 자식 환경변수 허용 목록(API 키가 없어 토큰당 과금으로 넘어가지 않음), 사용자 프로필(`C:\Users`)·메인 클론 읽기 금지, PR 트리의 링크·에이전트 설정 삭제, 인증 정보로 보이는 응답은 게시 거부. Grok 로그인 파일(`~/.grok/auth.json`)은 **절대 GitHub Secret에 넣지 않는다** — 팀원이 브랜치에서 워크플로를 고쳐 꺼낼 수 있다.
