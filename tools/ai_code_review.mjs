@@ -107,8 +107,11 @@ const comment = async (verdict, body) => {
 };
 
 // 같은 head sha를 이미 판정했으면 반복하지 않는다 (재실행은 /ai-review 댓글이 FORCE로 요청)
-const prior = (await ghAll(`repos/${REPO}/issues/${PR_NUMBER}/comments`)).find((c) =>
-  String(c.body).includes(`<!-- ai-review:${sha.slice(0, 10)}:`),
+// 이전 판정은 Actions 봇·저장소 소유자(로컬 Grok 작업자) 코멘트만 인정한다 — 공개 저장소라 아무나 숨은 마커를
+// 단 댓글로 리뷰를 건너뛰게 하고, 대기 표시가 남은 PR을 작업자가 끝없이 다시 집게 만들 수 있다
+const PRIOR_AUTHORS = new Set(["github-actions[bot]", REPO.split("/")[0]]);
+const prior = (await ghAll(`repos/${REPO}/issues/${PR_NUMBER}/comments`)).find(
+  (c) => PRIOR_AUTHORS.has(c.user?.login) && String(c.body).includes(`<!-- ai-review:${sha.slice(0, 10)}:`),
 );
 if (prior && process.env.FORCE !== "1") {
   console.log(`이미 판정한 sha(${sha.slice(0, 7)}) — 생략`);
