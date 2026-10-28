@@ -193,10 +193,12 @@ const prComment = async (body, mark = MARK) => {
 // 사람 승인은 규칙 봇과 같은 기준: 머지된 head sha에 남은, 협력자(작성자·봇 제외)의 Approve.
 // 공개 저장소라 아무 GitHub 계정이나 Approve를 남길 수 있고, 옛 커밋 승인은 지금 코드를 본 게 아니다.
 const statuses = await ghAll(`repos/${REPO}/commits/${pr.head.sha}/statuses`).catch(() => []);
-// ai-review 상태는 우리 워크플로(github-actions[bot])가 남긴 것만 인정 — 상태 쓰기 권한만 있으면 누구나 success를 남길 수 있다.
+// ai-review 상태는 우리 워크플로(github-actions[bot])와 저장소 소유자(로컬 Grok 작업자)가 남긴 것만 인정 —
+// 상태 쓰기 권한만 있으면 누구나 success를 남길 수 있다. 규칙 봇의 머지 게이트(AI_TRUSTED)와 같은 기준.
 // (협력자 브랜치의 다른 워크플로도 같은 봇 이름으로 쓸 수 있다 — 협력자는 신뢰 범위로 보고, 규칙 봇의 머지 게이트와 같은 수준)
+const AI_TRUSTED = new Set([BOT, REPO.split("/")[0]]);
 const aiOk =
-  statuses.find((s) => s.context === "ai-review" && s.creator?.login === BOT)?.state === "success"; // 최신순
+  statuses.find((s) => s.context === "ai-review" && AI_TRUSTED.has(s.creator?.login))?.state === "success"; // 최신순
 const reviews = await ghAll(`repos/${REPO}/pulls/${PR_NUMBER}/reviews`);
 const humanOk = reviews.some(
   (r) =>

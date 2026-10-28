@@ -500,3 +500,22 @@
 - [변경] src/components/chat/ChatRoom.tsx | 인라인 `setTimeout`·타이머 배열을 제거하고 `createDemoChatDataSource`를 통해 전송·자동응답·차단 시 `dispose()` 정리를 수행하도록 리팩터링
 - [검증] `npm run typecheck` PASS / `npm run build` PASS (정적 17개 라우트 정상 생성)
 - [미구현/보류] `0004_chat_safety.sql` 마이그레이션(`messages`·`reports`·Storage RLS) 및 프런트 Supabase Realtime 실제 연결 — 주한태 PR(#21 `0003_match_core.sql`) 머지 후 진행 예정
+
+## 2026-10-28 AI 코드 리뷰 — 로컬 Grok 엔진 추가·Devin 크레딧 절약 (김민기 작업)
+- [요청] Devin 크레딧 대신 이미 결제한 Grok 구독(X Subscription Ultra)으로 PR 자동 리뷰를 대체할 수 있는지 공식 문서로 검증하고, 가능한 부분은 구현
+- [조사] Devin 사용 현황(API 조회, 2026-10-25~28 세션 100개): Devin 쪽 자동화 `eottae-pr-watch`(2시간 주기 + PR 이벤트) 41개, API(ai-review·issue-progress·@devin 브릿지) 59개 — ai-review와 같은 일을 자동화가 한 번 더 함. API의 `acus_consumed`는 모두 0이라 실제 금액은 대시보드에서만 확인 가능
+- [조사] Grok CLI 1.0.70(공식 배포, X Corp. 서명 확인): `grok -p`·`--prompt-file`·`--output-format json`·`--cwd`·`--tools`·`--disable-web-search`·`--max-turns`·`--deny` 지원 확인. 로그인 없이 실행하면 JSON 오류 후 종료. 공식 문서는 CI에 `XAI_API_KEY`를 권하고 `auth.json`을 공유 위치에 복사하지 말라고 함. sandbox는 Linux·macOS만
+- [신규] tools/grok_review_engine.mjs | Grok CLI 헤드리스 실행 — 읽기 도구만, 웹 없음, `--trust` 없음, 자식 환경에서 XAI_API_KEY·GitHub·Devin 토큰 제거(API 과금 차단), 로그인·사용량 오류는 작업자 정지, 응답에 인증 정보로 보이는 값이 있으면 게시 거부
+- [신규] tools/grok_review_worker.mjs | PC에서 "로컬 Grok 리뷰 대기" PR을 찾아 별도 worktree에서 리뷰, PR이 들고 온 에이전트 설정(.grok·.claude·.cursor·.mcp.json) 제거, 실행 기록 runs.jsonl
+- [변경] tools/ai_code_review.mjs | `AI_ENGINE=grok` 경로·공통 마무리 분리. 저장소 변수 `AI_REVIEW_ENGINE=grok-local`이면 Actions가 Devin을 부르지 않고 대기 표시만(변수 미설정이면 기존과 같음). 문서·이미지만 바뀐 PR은 AI 리뷰 생략(에이전트 지시 파일·자동화 경로 제외)
+- [변경] .github/workflows/ai-review.yml(변수 전달), devin-mention.yml(OWNER만), tools/pr_review_bot.mjs(새 스크립트 보호 영역)
+- [검증] Devin 경로 회귀: PR #37·#45·#46 DRY 프롬프트가 수정 전 스크립트와 동일. 가짜 grok으로 9경로(통과·수정 필요·판정 줄 없음·본문 중간 VERDICT·로그인 없음·사용량 한도·JSON 깨짐·비정상 종료·인증 정보 유출) + 시간 초과 — 모두 의도대로(로그인·한도는 작업자 exit 3). 전달 인자·환경 기록상 XAI_API_KEY·GITHUB_TOKEN 0회 전달, worktree 정리 확인. 실제 grok 1.0.70이 같은 인자 조합을 받아들이고 가짜 XAI_API_KEY가 있어도 "로그인 필요"로 끝남
+- [검증] 문서 전용 판별: PR #46 생략, #37·#42·#43·#45 리뷰. `.devin/`·AGENTS.md·CLAUDE.md·tools/·src/ 아래 md는 리뷰
+- [검증] 실제 Grok(김민기 구독 로그인, API 키 없음) — PR #43 head `00bd86e`(Devin 통과 커밋)를 GitHub 쓰기 없이 리뷰: grok-4.7, 868초, 입력 32.9만·출력 6.3만 토큰, 수정 필요. 캐시 키와 **응답 url에 쿼리가 남는 문제**(Devin은 #45 2차 리뷰에서야 찾음)·activate 전체 캐시 삭제·PR 설명 불일치를 찾음
+- [검증] PR #48에 실제 게시: grok-4.7-build-fast, 526초, API 환산 $1.60, 상태·코멘트 정상 기록(작성자 sterran123). 이 PR 코드에서 링크 따라가기 삭제·문서 생략 범위·Windows 홈 읽기·상태 작성자 검사 누락을 찾아 반영
+- [보안] Windows에는 sandbox가 없음 → 홈 디렉터리 전체 `--deny Read/Grep`, 작업 폴더는 홈 밖(`C:\eottae-grok-review`). 실제 Grok으로 확인: 작업 폴더 안 읽기 허용, 홈의 미끼 파일 read_file·grep 차단("Denied by permission policy"). list_dir은 deny 규칙을 못 붙여(unknown tool prefix) 허용 도구에서 제외
+- [보안] 작업자: PR 트리의 링크를 따라가지 않음, AGENTS.md·CLAUDE.md 등 자동 로드 규칙 파일은 `.pr-content`로 이름 변경(하위 폴더 포함), 포크 PR·봇이 아닌 계정의 대기 표시 무시, 40분 넘게 멈춘 리뷰는 다시 집음, 공개 문구는 고정 문장(CLI 오류 원문은 콘솔만)
+- [변경] pr_review_bot.mjs·issue_progress.mjs | `ai-review` 상태는 Actions 봇과 저장소 소유자가 남긴 것만 인정(기존 규칙 봇은 작성자를 보지 않아 협력자가 success를 직접 남길 수 있었음). 문서 생략은 허용 목록(캡처 폴더·AI_REPORT_LOG·테스트_케이스_마스터)으로 좁힘
+- [검증] PR #48 2차 Grok 리뷰(9cc854e, 695초, API 환산 $2.19, 수정 필요) 반영: PR 트리 링크는 링크만 삭제, `devin-mention.yml` checkout을 main으로 고정(PR 리뷰 코멘트 이벤트에서 PR이 바꾼 브릿지가 Devin 키로 실행되던 **기존** 문제), 변경 파일 3000건(API 한도) 잘림이면 생략·자동 승인 안 함
+- [검증] PR #48 3차 Grok 리뷰(a44549f, 903초, 입력 119만·출력 10만 토큰, API 환산 $2.84) **통과**. 권장 사항 반영: 자식 환경변수 허용 목록(가짜 XAI_API_KEY·DATABASE_URL·npm 토큰이 넘어가지 않음 확인), 읽기 금지를 `C:/Users` 전체·메인 클론으로, 생성 파일 생략도 옛 경로 검사, 작업자 잠금 `wx`(동시 시작 시 하나만 실행 확인), fetch·git 시간 제한, stdout UTF-8, 브릿지 스크립트도 OWNER만. 줄인 환경으로 실제 Grok 정상 동작(5초)
+- [미실행] 구독 사용량 차감·추가 결제 여부(김민기 대시보드 확인 필요), Grok Bot(데스크톱 앱 Cursor 로그인·GitHub 연결 필요 — CLI로는 불가). 다른 드라이브 등 사용자 프로필 밖 절대 경로는 읽기 금지로 막지 못함(Windows sandbox 없음 — 작업자 PC에 비밀 파일을 그런 곳에 두지 않기)

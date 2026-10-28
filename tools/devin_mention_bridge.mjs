@@ -9,6 +9,12 @@ const target = ev.issue ?? ev.pull_request;
 const comment = ev.comment;
 const isPR = Boolean(ev.issue?.pull_request) || isReview;
 
+// Devin 세션은 호출마다 크레딧을 쓴다 — 워크플로 조건과 별개로 스크립트에서도 저장소 소유자만 받는다
+if (ev.comment.author_association !== "OWNER") {
+  console.log(`소유자가 아닌 호출(${ev.comment.author_association}) — 건너뜀`);
+  process.exit(0);
+}
+
 // PR 스레드에서 저장소 소유자가 쓴 @devin은 Devin 네이티브/자동화가 처리 — 중복 방지로 브릿지는 건너뜀
 if (isPR && ev.comment.author_association === "OWNER") {
   console.log("owner on PR — Devin 자체 처리에 맡김");

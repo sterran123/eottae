@@ -45,4 +45,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
           FORCE: ${{ github.event_name == 'issue_comment' && '1' || '' }}
+          # 저장소 변수 — 'grok-local'이면 Devin을 부르지 않고 로컬 Grok 작업자(tools/grok_review_worker.mjs) 대기로 표시.
+          # 비어 있으면 지금처럼 Devin 리뷰.
+          AI_REVIEW_ENGINE: ${{ vars.AI_REVIEW_ENGINE }}
         run: node tools/ai_code_review.mjs
