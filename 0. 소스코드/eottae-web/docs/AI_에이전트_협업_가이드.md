@@ -90,6 +90,7 @@
 - **확인**: 팀원별 main 커밋·열린/머지된 PR·다룬 요구사항 ID·CI 상태를 집계하고, 활동이 없는 팀원을 표시한다.
 - **갱신**: 결과를 `docs/TEAM_ACTIVITY.md`에 기록하고 `FILE_INDEX.csv`·`MANIFEST.sha256`을 재생성한다.
 - **반영**: 변경분을 `auto/team-sync` 브랜치로 push하고 PR을 자동 생성한다 — 봇 PR이라도 **리뷰 승인 후 사람이 머지**한다.
-- **수동 실행**: GitHub → Actions → `team-sync` → Run workflow (`days`로 집계 기간 조절). 로컬에서는 `node tools/team_activity_report.mjs`.
+- **수동 실행**: GitHub → Actions → `team-sync` → Run workflow (`days`로 집계 기간 조절). 로컬에서는 `node tools/team_activity_report.mjs`. 제출 직전에 한 번 실행한다.
+- 머지마다 돌지 않고, 시각(제목 날짜·집계 기간·열린 PR 최근 갱신 등)과 main CI 상태 줄만 바뀐 리포트는 다시 쓰지 않는다 — 바뀐 게 없으면 PR도 생기지 않고, 열려 있던 봇 PR은 닫힌다.
 
 주의: 리포트가 "팀원의 작업 자체"를 대신 검증해주지는 않는다. 실제 코드 리뷰·실행 검증은 PR 리뷰어가 해야 한다.

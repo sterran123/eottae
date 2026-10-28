@@ -4,7 +4,7 @@
 #   괜찮은 PR(보안 스캔·빌드 CI·AI 코드 리뷰 통과, 충돌 없음) → 자동 승인 + 머지 시도
 #   draft·team-sync 봇 PR도 판정 / 보호 영역 PR은 나머지 검사 후 사람 승인 시 머지
 #   문제 있는 PR(충돌/CI 실패/AI 수정 요청/보안 스캔/외부 작성자) → 위반 사유와 다시 시도하는 방법 코멘트
-#   머지가 발생하면 deploy-pages·team-sync를 dispatch해 사이트/리포트를 갱신한다.
+#   머지가 발생하면 deploy-pages를 dispatch해 사이트를 갱신한다(team-sync는 주 1회·수동 실행만).
 # 판정 규칙 상세는 tools/pr_review_bot.mjs 상단 주석 참조.
 # 주의: GitHub은 저장소 활동이 60일 없으면 스케줄 워크플로를 자동 비활성화한다 —
 # 봇이 안 도는 것 같으면 Actions 탭에서 워크플로를 재활성화하거나 수동 실행한다.
@@ -29,7 +29,7 @@ permissions:
   issues: write          # PR 코멘트 (issues comments API 사용)
   checks: read           # CI check-run 조회
   statuses: read         # ai-review 커밋 상태 조회
-  actions: write         # 머지 후 deploy-pages·team-sync dispatch
+  actions: write         # 머지 후 deploy-pages·issue-progress dispatch
 
 concurrency:
   group: pr-review
