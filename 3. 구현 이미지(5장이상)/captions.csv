@@ -6,14 +6,14 @@
 05_준비중_모듈_데이트소모임_모바일.png,2026-10-27,Windows + 헤드리스 Chrome(CDP) 390 모바일 2x 전체 높이 · npm run build 정적 산출물,CORE-001,/activities 2차 준비중 — 서브히어로·테이프 카드
 06_준비중_모듈_청첩장_모바일.png,2026-10-27,Windows + 헤드리스 Chrome(CDP) 390 모바일 2x 전체 높이 · npm run build 정적 산출물,CORE-001,/invitations 3차 준비중 — 서브히어로·테이프 카드
 07_오프라인_폴백_모바일.png,2026-10-27,Windows + 헤드리스 Chrome(CDP) 390 모바일 2x 전체 높이 · npm run build 정적 산출물,CORE-003,/offline PWA 폴백 화면 (서비스워커 오프라인 동작은 미검증)
-08_매칭_온보딩_모바일.png,2026-10-24,Windows + Chrome 390x844 모바일 서빙,/match/onboarding (MATCH-001),1차 매칭 취향 온보딩 모바일 라이트 · 카테고리별 아코디언 선택 폼
-09_매칭_온보딩_데스크톱.png,2026-10-24,Windows + Chrome 1440x900 데스크톱 서빙,/match/onboarding (MATCH-001),1차 매칭 취향 온보딩 데스크톱 라이트 · 반응형 와이드 레이아웃
-10_매칭_추천_모바일.png,2026-10-24,Windows + Chrome 390x844 모바일 서빙,/match/recommend (MATCH-002),오늘의 추천 카드 리스트 모바일 라이트 · 문답 궁합(통했어요) 및 취향 일치 태그
-11_매칭_추천_데스크톱.png,2026-10-24,Windows + Chrome 1440x900 데스크톱 서빙,/match/recommend (MATCH-002),오늘의 추천 카드 리스트 데스크톱 라이트 · 2열 그리드 배치
-12_매칭_문답_모바일_라이트.png,2026-10-24,Windows + Chrome 390x844 모바일 라이트 서빙,/match/qna (MATCH-009),프로필 문답 40문항 목록 모바일 라이트 · 카테고리 칩 및 질문 카드
-13_매칭_문답_모바일_다크.png,2026-10-24,Windows + Chrome 390x844 모바일 다크 서빙,/match/qna (MATCH-009),프로필 문답 40문항 목록 모바일 다크 · 피치 악센트 다크 테마
-14_매칭_공통질문_모바일_라이트.png,2026-10-24,Windows + Chrome 390x844 모바일 라이트 서빙,/match/common (MATCH-009),공통 질문 블라인드 비교 모바일 라이트 · 상단 궁합 토스트 알림
-15_매칭_공통질문_모바일_다크.png,2026-10-24,Windows + Chrome 390x844 모바일 다크 서빙,/match/common (MATCH-009),공통 질문 블라인드 비교 모바일 다크 · 블라인드 잠금 및 답변 비교
+08_매칭_온보딩_모바일.png,2026-10-29,Windows + Chrome 393 모바일 3x(1179 전체 높이) 서빙,/match/onboarding (MATCH-001),1차 매칭 취향 온보딩 모바일 라이트 · 사진 공개범위 설정(PhotoVisibility) 및 카테고리별 아코디언 선택 폼 전체 높이
+09_매칭_온보딩_데스크톱.png,2026-10-29,Windows + Chrome 1500 데스크톱 서빙,/match/onboarding (MATCH-001),1차 매칭 취향 온보딩 데스크톱 라이트 · 반응형 와이드 레이아웃 및 사진 공개범위 설정 폼 전체 높이
+10_매칭_추천_모바일.png,2026-10-29,Windows + Chrome 393 모바일 3x(1179 전체 높이) 서빙,/match/recommend (MATCH-002),오늘의 추천 카드 리스트 모바일 라이트 · 터치 영역 44px 최적화(320~360px 오버플로우 방지) 및 문답 궁합 태그 전체 높이
+11_매칭_추천_데스크톱.png,2026-10-29,Windows + Chrome 1500 데스크톱 서빙,/match/recommend (MATCH-002),오늘의 추천 카드 리스트 데스크톱 라이트 · 추천 캐러셀 데스크톱 호버 네비게이션(<>) 및 2열 그리드 배치 전체 높이
+12_매칭_문답_모바일_라이트.png,2026-10-29,Windows + Chrome 393 모바일 3x(1179 전체 높이) 서빙,/match/qna (MATCH-009),프로필 문답 40문항 목록 모바일 라이트 · 540px 모달 너비 확장·카테고리 칩 및 질문 카드 전체 높이
+13_매칭_문답_모바일_다크.png,2026-10-29,Windows + Chrome 393 모바일 3x(1179 전체 높이) 서빙,/match/qna (MATCH-009),프로필 문답 40문항 목록 모바일 다크 · 피치 악센트 다크 테마 및 질문 카드 전체 높이
+14_매칭_공통질문_모바일_라이트.png,2026-10-29,Windows + Chrome 393 모바일 3x(1179 전체 높이) 서빙,/match/common (MATCH-009),공통 질문 블라인드 비교 모바일 라이트 · 거절/건너뛰기 및 다시 답변하기 추가·상단 궁합 토스트 알림 전체 높이
+15_매칭_공통질문_모바일_다크.png,2026-10-29,Windows + Chrome 393 모바일 3x(1179 전체 높이) 서빙,/match/common (MATCH-009),공통 질문 블라인드 비교 모바일 다크 · 블라인드 잠금 및 답변 비교 전체 높이
 16_공통_홈_6테마_비교.png,2026-10-27,Windows + 헤드리스 Chrome(CDP) 1440 전체 높이 · npm run build 정적 산출물 · tools/serve_pages_preview.mjs,CORE-002,통합 홈 light·cupcake·cyberpunk·disney·dark 비교 (system은 OS 설정에 따라 light/dark와 동일)
 17_매칭_추천_7모드_테마추적.png,2026-10-27,Windows + 헤드리스 Chrome(CDP) 390 모바일 1x 전체 높이 · npm run build 정적 산출물,CORE-002 / MATCH-002,/match/recommend 7모드 — match-tokens 테마 추적 복원(cyberpunk·system 다크)
 18_매칭_채팅_목록_및_패널.png,2026-10-28,Windows + 헤드리스 Chrome(CDP) 960x760 데스크톱 라이트 · npm run build 정적 산출물 · tools/serve_pages_preview.mjs,/match/chat (MATCH-007),1:1 채팅 목록 뷰 및 카카오톡 스타일 우측 슬라이드 패널 · 대화 송수신 및 음성 메모 UI
