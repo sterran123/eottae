@@ -9,7 +9,8 @@ import os
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SKIP_DIRS = {".git", "node_modules", ".next", "out", ".vercel"}
+# .temp·.branches: Supabase CLI 로컬 상태(link 정보·버전 캐시, gitignore) — 사람마다 달라 깨끗한 클론에서 검증이 깨진다
+SKIP_DIRS = {".git", "node_modules", ".next", "out", ".vercel", ".temp", ".branches"}
 SKIP_FILES = {"FILE_INDEX.csv", "MANIFEST.sha256", "Thumbs.db", ".DS_Store"}
 # gitignore와 동일 규칙: .env, .env.* (단 .env.example은 허용), *.tsbuildinfo, *.log
 SKIP_SUFFIXES = (".tsbuildinfo", ".log")
