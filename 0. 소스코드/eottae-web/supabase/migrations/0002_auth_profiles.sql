@@ -16,8 +16,8 @@
 -- 가입 흐름
 --   - 이메일: signUp({ options: { data: { signup: {...} } } })
 --       → BEFORE 트리거: 검증 + metadata에서 birth_date 제거
---       → AFTER 트리거: users 행 생성 + ACTIVE 전환 + 동의 기록
---       (메일 인증 전에는 Supabase Auth가 로그인을 막는다)
+--       → AFTER INSERT 트리거: users 행 생성(account_status='PENDING')
+--       → AFTER UPDATE 트리거: email_confirmed_at 채워진 후 activate_user 호출(ACTIVE 전환 + 동의 기록)
 --   - 소셜(Google): AFTER 트리거가 PENDING 행만 생성 → /auth/complete에서 rpc('complete_signup')
 --
 -- ⚠ 0001 객체를 DROP 후 재정의한다. 실데이터가 없다는 전제(2026-10-29 기준 실사용자 없음).
@@ -102,6 +102,7 @@ create unique index uq_consents_active on public.consents (user_id, kind, versio
 create or replace function private.set_updated_at()
 returns trigger
 language plpgsql
+security definer
 set search_path = ''
 as $$
 begin
@@ -230,16 +231,14 @@ begin
     return new;
   end if;
 
-  -- 가입 후 auth.updateUser 등으로 raw_user_meta_data.signup에 생년월일을 다시 넣을 수 있으므로
-  -- UPDATE 시에도 birth_date 키를 항상 제거한다 (ADR-002).
+  -- 가입 후 auth.updateUser 등으로 raw_user_meta_data.signup에 생년월일을 다시 넣거나
+  -- validated 값을 임의 조작하는 시도를 차단한다 (ADR-002).
   if TG_OP = 'UPDATE' then
-    if v_signup ? 'birth_date' then
-      new.raw_user_meta_data := jsonb_set(
-        new.raw_user_meta_data,
-        '{signup}',
-        v_signup - 'birth_date'
-      );
-    end if;
+    new.raw_user_meta_data := jsonb_set(
+      new.raw_user_meta_data,
+      '{signup}',
+      coalesce(old.raw_user_meta_data -> 'signup', '{}'::jsonb) - 'birth_date'
+    );
     return new;
   end if;
 
@@ -398,7 +397,7 @@ revoke all on public.users    from public, anon, authenticated;
 revoke all on public.consents from public, anon, authenticated;
 
 grant select on public.users to authenticated;
-grant update (nickname) on public.users to authenticated;   -- 그 외 열은 UPDATE 권한 자체가 없음
+grant update (nickname, updated_at) on public.users to authenticated;   -- 그 외 열은 UPDATE 권한 자체가 없음 (ADR-002)
 grant select on public.consents to authenticated;            -- INSERT는 activate_user만
 
 alter table public.users    enable row level security;

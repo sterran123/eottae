@@ -1,9 +1,7 @@
 'use client';
 
 // src/lib/auth/use-auth.ts
-// MATCH-003: 로그인·세션 상태 React 훅
-// - 정적 배포(GitHub Pages)에서는 clientAuth('eottae-auth-change' 이벤트) 및 requireActiveUser를 구독한다.
-// - Supabase 연결 시에는 onAuthStateChange를 구독한다.
+// MATCH-003: 로그인·세션 상태 React 훅 (ADR-005 Supabase Auth 실시간 연동)
 
 import { useCallback, useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
@@ -16,7 +14,7 @@ export type AuthStatus = 'loading' | 'signed-out' | 'signed-in';
 export interface AuthState {
   status: AuthStatus;
   user: User | null;
-  /** 정적 배포(GitHub Pages) 세션 객체 (src/lib/server/session.ts 검증 완료) */
+  /** 호환용 세션 객체 */
   session: UserSession | null;
   /** 내 계정 DTO */
   account: MyAccount | null;
@@ -48,7 +46,10 @@ export function useAuth(): AuthState {
       return null;
     }
 
+    const { data: authData } = await supabase.auth.getUser();
+    setUser(authData.user ?? null);
     setAccount(check.data);
+    setStatus('signed-in');
     return check.data;
   }, []);
 

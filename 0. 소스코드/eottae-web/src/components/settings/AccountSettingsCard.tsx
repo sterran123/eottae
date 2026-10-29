@@ -36,7 +36,7 @@ export default function AccountSettingsCard() {
           </div>
         </>
       )}
-      <div className="settings-actions" style={{ marginTop: '12px' }}>
+      <div className="settings-actions">
         <button
           type="button"
           className="btn outline"

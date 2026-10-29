@@ -6,7 +6,7 @@
 // - 로그인 성공 후 public.users의 account_status (ACTIVE) 확인
 
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useId, useState } from 'react';
 import { authService, consumeNextPath, peekNextPath, rememberNextPath } from '@/lib/auth/auth-service';
 import { isSupabaseConfigured } from '@/lib/supabase/client';
@@ -17,6 +17,7 @@ import SocialLoginButtons from './SocialLoginButtons';
 
 export default function LoginForm() {
   const id = useId();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const auth = useAuth();
   const isConfigured = isSupabaseConfigured;
@@ -63,7 +64,13 @@ export default function LoginForm() {
     }
 
     await auth.refresh();
+    const myAcc = await authService.getMyAccount();
+    if (myAcc?.accountStatus === 'PENDING') {
+      router.replace('/auth/complete');
+      return;
+    }
     setInfo('로그인되었습니다.');
+    router.replace(consumeNextPath());
   };
 
   const resendAndOpenVerify = async () => {
@@ -82,7 +89,7 @@ export default function LoginForm() {
   return (
     <>
       {!isConfigured && (
-        <div className="auth-form-error" role="alert" style={{ marginBottom: 16 }}>
+        <div className="auth-form-error auth-form-error--spaced" role="alert">
           인증 환경변수가 설정되지 않아 로그인 및 회원가입이 비활성화되어 있습니다 (ADR-005 fail-closed).
         </div>
       )}
@@ -90,7 +97,7 @@ export default function LoginForm() {
       {auth.status === 'signed-in' && auth.account && (
         <div className="auth-session-box" role="status">
           <div className="auth-session-head">
-            <span className="auth-session-badge">로그인됨 (ACTIVE)</span>
+            <span className="auth-session-badge">로그인됨 ({auth.account.accountStatus})</span>
             <strong>{auth.account.nickname || auth.account.fullName}</strong>
           </div>
           <dl className="auth-session-dl">

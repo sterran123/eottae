@@ -3,7 +3,7 @@
 // src/components/auth/AuthCallback.tsx
 // MATCH-003: 이메일 인증 링크 / PKCE OAuth 복귀 콜백 (ADR-005)
 // - Supabase 미설정 시: NOT_CONFIGURED 로 즉시 에러 표시 (ADR-005 fail-closed)
-// - PKCE code가 있는 경우 exchangeCodeForSession 호출 및 실패 시 상세 에러 표시
+// - detectSessionInUrl: true 기반 세션 확인 및 token_hash 검증 후 계정 상태 통합 판정
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -47,31 +47,23 @@ export default function AuthCallback() {
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
     const providerError = params.get('error_description') ?? hash.get('error_description');
     const tokenHash = params.get('token_hash');
-    const code = params.get('code');
     const otpType = parseOtpType(params.get('type'));
 
     let cancelled = false;
 
     (async () => {
       if (providerError) {
-        setDetail(/expired|invalid/i.test(providerError) ? '인증 링크가 만료되었거나 이미 사용되었어요.' : providerError);
+        setDetail('인증 링크가 만료되었거나 이미 사용되었어요.');
         setPhase('error');
         return;
       }
 
-      // 1) PKCE 인증 코드 교환 처리
-      if (code) {
-        const { error: exchangeErr } = await supabase.auth.exchangeCodeForSession(code);
-        if (cancelled) return;
-        if (exchangeErr) {
-          setDetail(`인증 코드 교환에 실패했습니다: ${exchangeErr.message}`);
-          setPhase('error');
-          return;
-        }
-      }
+      // 1) 세션 확인 (detectSessionInUrl: true 에 의해 클라이언트 초기화 시 ?code= 가 자동 교환됨)
+      const { data: { session } } = await supabase.auth.getSession();
+      if (cancelled) return;
 
-      // 2) 이메일 링크 token_hash 검증
-      if (tokenHash) {
+      // 2) 세션이 없고 이메일 링크 token_hash가 있는 경우 수동 검증
+      if (!session && tokenHash) {
         const verified = await authService.verifyTokenHash(tokenHash, otpType);
         if (cancelled) return;
         if (!verified.ok) {

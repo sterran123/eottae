@@ -81,7 +81,7 @@ export default function SignupForm() {
   return (
     <>
       {!isConfigured && (
-        <div className="auth-form-error" role="alert" style={{ marginBottom: 16 }}>
+        <div className="auth-form-error auth-form-error--spaced" role="alert">
           인증 환경변수가 설정되지 않아 회원가입 및 로그인이 비활성화되어 있습니다 (ADR-005 fail-closed).
         </div>
       )}

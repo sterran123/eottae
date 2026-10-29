@@ -336,11 +336,7 @@ export const authService = {
     const check = await this.assertAccountAccess();
     if (!check.ok) return { ok: false, error: check.error };
 
-    if (check.data.accountStatus === 'PENDING') {
-      await supabase.auth.signOut();
-      return fail('EMAIL_NOT_CONFIRMED');
-    }
-
+    // PENDING(가입 추가정보 미입력) 또는 ACTIVE(정상) 세션 반환 (PENDING은 화면에서 /auth/complete 로 이동)
     return { ok: true, data: data.session };
   },
 

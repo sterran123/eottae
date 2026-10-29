@@ -1,6 +1,5 @@
 // src/lib/auth/types.ts
-// MATCH-003: 인증, 세션, 계정 상태 관련 DTO 및 타입 정의
-// 정적 배포(GitHub Pages) 세션 검증(src/lib/server/auth.ts, session.ts, client-auth.ts) 및 Supabase Auth 겸용
+// MATCH-003: 인증, 세션, 계정 상태 관련 DTO 및 타입 정의 (ADR-005 Supabase Auth 기반)
 
 export type AccountStatus = 'ACTIVE' | 'SUSPENDED' | 'DELETED' | 'PENDING';
 

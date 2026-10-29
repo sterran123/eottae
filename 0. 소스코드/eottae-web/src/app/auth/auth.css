@@ -118,6 +118,10 @@
   border: 1px solid var(--warn-line);
 }
 
+.auth-form-error--spaced {
+  margin-bottom: 16px;
+}
+
 /* ---------- 약관 동의 ---------- */
 
 .auth-consents {
@@ -358,63 +362,6 @@
   text-align: center;
 }
 
-.auth-preset-box {
-  margin-top: 20px;
-  padding: 14px;
-  border-radius: 16px;
-  background: var(--soft);
-  border: 1px dashed var(--brand-soft);
-}
-
-.auth-preset-title {
-  margin: 0 0 10px;
-  font-size: 12px;
-  color: var(--ink);
-}
-
-.auth-preset-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.auth-preset-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  min-height: 44px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: var(--paper);
-  color: var(--ink);
-  font-family: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: border-color 0.15s ease, transform 0.15s ease;
-}
-
-.auth-preset-btn:hover {
-  border-color: var(--brand);
-  transform: translateY(-1px);
-}
-
-.auth-preset-btn strong {
-  font-size: 12px;
-  color: var(--brand-dark);
-}
-
-.auth-preset-btn span {
-  font-size: 11px;
-  color: var(--ink);
-}
-
-.auth-preset-btn small {
-  font-size: 10px;
-  color: var(--muted);
-}
-
 /* ---------- 하단 전환 & 완료/OTP 패널 ---------- */
 
 .auth-switch {
@@ -479,28 +426,6 @@
   border: 1px solid var(--warn-line);
 }
 
-.auth-demo-otp {
-  width: 100%;
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: var(--chip-bg);
-  border: 1px dashed var(--brand);
-  color: var(--ink);
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.auth-demo-otp code {
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--brand-dark);
-  letter-spacing: 0.08em;
-}
-
 .auth-otp-fill {
   min-height: 44px;
   padding: 8px 14px;
@@ -557,20 +482,11 @@
     padding: 24px 18px;
     border-radius: 18px;
   }
-
-  .auth-preset-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .auth-field input,
-  .auth-social-btn,
-  .auth-preset-btn {
+  .auth-social-btn {
     transition: none;
-  }
-
-  .auth-preset-btn:hover {
-    transform: none;
   }
 }
