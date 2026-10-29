@@ -587,30 +587,15 @@
 - [변경] 1. 프로젝트 계획서/실행_결정대기_로그.md | BRAND-004 상태를 CSS 필터 1차 적용(원본 무변경), 실화면 확인 필요로 갱신
 - [미실행] 빌드·브라우저 확인은 Claude Code 파이프라인이 실행
 
-## 2026-10-29 MATCH-003 정적 배포(GitHub Pages) 세션 검증 연동 회원가입·이메일 확인·로그인 구현 (주한태 작업)
-- [보존] supabase/migrations/0001_create_auth_and_users.sql, src/lib/server/auth.ts, src/lib/server/session.ts, src/lib/auth/client-auth.ts | PR #24의 RLS 정책 및 정적 배포 호환 세션 서명·검증(`requireActiveUser`, `verifySessionToken`, `clientAuth`) 모듈 그대로 유지
-- [신규] supabase/migrations/0002_auth_profiles.sql, supabase/tests/0002_auth_profiles_test.sql | `public.users` 열 단위 권한(`nickname`만 클라이언트 UPDATE 허용, `adult_verified`·`account_status` 수정 차단), 생년월일 원본을 만 19세 판정 후 `birth_year`로만 치환 저장하는 트리거(ADR-002), Google 소셜 가입 완료 RPC(`complete_signup`), 20개 항목 pgTAP 테스트 스크립트
-- [신규] src/lib/supabase/client.ts | `@supabase/supabase-js` 브라우저 클라이언트, 환경변수 미설정 시 `null`을 반환해 정적 배포 세션 검증 모드로 자동 전환
-- [변경] src/lib/auth/types.ts | 기존 `UserSession`·`AuthResponse` 호환 유지 및 `MyAccount`, `SignupInput`, `OAuthProvider = 'google'` 추가(카카오는 일일 로그인 횟수 제한 이슈로 제외)
-- [신규] src/lib/auth/config.ts, src/lib/auth/validation.ts | 약관 버전, 만 19세 이상 나이 검증(`fullAge`), 이메일·비밀번호·이름·생년월일·내부 복귀 경로 검증 유틸
-- [신규] src/lib/auth/auth-service.ts | 정적 배포(GitHub Pages) 세션 검증(`src/lib/server/auth.ts` · `session.ts` · `client-auth.ts`)과 Supabase Auth를 모두 지원하는 통합 서비스 — 이메일 회원가입(PENDING 등록 및 6자리 인증번호 발급, 출생연도만 보관), 6자리 인증번호 확인(`ACTIVE` 전환 및 세션 토큰 발급), 이메일 로그인(`requireActiveUser`로 ACTIVE 200 / SUSPENDED·DELETED·PENDING 403 판정), 실시간 세션 검증(`verifyStaticSession`)
-- [신규] src/lib/auth/use-auth.ts | 정적 세션(`eottae-auth-change` 이벤트) 및 Supabase `onAuthStateChange` 구독 훅
-- [신규] src/components/auth/{AuthCard,ConsentFields,SocialLoginButtons,SignupForm,LoginForm,AuthCallback,CompleteSignupForm,AuthNavSlot}.tsx | 회원가입 → 6자리 이메일 인증번호 확인(DEMO 인증번호 안내 및 자동 입력 포함) → 로그인 및 `src/lib/server/auth.ts` 계정 상태(200/403) 즉시 검증 UI
-- [신규] src/app/auth/{auth.css,signup/page.tsx,login/page.tsx,callback/page.tsx,complete/page.tsx} | 정적 export 호환 인증 라우트 4종 및 6테마 대응 스타일(`globals.css` 무변경)
-- [검증] `node tools/test_auth_match_003.mjs` ALL PASS (정상 세션 발급·만료 401 차단·위변조 차단·SUSPENDED 403 차단·DELETED 403 차단 5개 단위 테스트 통과)
-- [검증] `npm run typecheck` PASS / `npm run build` PASS (정적 21개 라우트 프리렌더 완료: `/auth/signup`, `/auth/login`, `/auth/callback`, `/auth/complete` 포함)
+## 2026-10-29 MATCH-003 Supabase Auth 연동 및 리뷰 피드백 반영 (주한태 작업)
+- [보존] supabase/migrations/0001_create_auth_and_users.sql, src/lib/server/auth.ts, src/lib/server/session.ts, src/lib/auth/client-auth.ts | PR #24의 RLS 정책 및 세션 모듈 보존
+- [신규] supabase/migrations/0002_auth_profiles.sql, supabase/tests/0002_auth_profiles_test.sql | `public.users.id = auth.users.id`, `grant update (nickname)` 열 단위 권한, `adult_verified` 기본값 false, `complete_signup` auth.uid() 활성화, 동의 3종 검증
+  - [보완] `auth.users` BEFORE INSERT 및 UPDATE 트리거(`sanitize_new_auth_user`)에서 `birth_date` 키를 완전 제거하여 메타데이터에 생년월일 원본이 남지 않도록 보장 (ADR-002)
+  - [보완] `public.is_active_adult()`에서 `adult_verification_expires_at is not null and adult_verification_expires_at > now()`로 null 만료 거부 (fail-closed)
+- [보완] src/lib/auth/validation.ts | `sanitizeNextPath`에서 `//`, `/\`, `\` 포함 경로를 `/`로 차단하여 오픈 리다이렉트 방지
+- [보완] src/lib/auth/auth-service.ts | if (!supabase) 데모 분기를 제거하고 미설정 시 `NOT_CONFIGURED`로 즉시 중단(fail-closed). `rememberNextPath`를 모듈 변수에서 `sessionStorage`로 전환. 로그인 시 `public.users`의 `account_status`(PENDING/SUSPENDED/DELETED)를 검증하여 차단
+- [보완] src/components/auth/{LoginForm,SignupForm,AuthCallback}.tsx | DEMO UI 및 테스트 계정 프리셋 제거. Supabase 환경변수 미설정 시 가입/로그인 버튼 비활성화 안내 표시. `peekNextPath` / `consumeNextPath` 렌더 중 소비 방지
+- [연결] src/components/shared/site-nav.tsx | 헤더 내비게이션의 준비 중 라벨을 `AuthNavSlot`으로 교체 연결
+- [정리] 0003 매칭·채팅 RLS 파일 커밋에서 제외 (0002/MATCH-003 단위로 PR 범위 분리)
+- [검증] `npm run typecheck` PASS / `npm run build` PASS (정적 22개 라우트 프리렌더 완료, 환경변수 미설정 빌드에서 가입/로그인 버튼 비활성화 확인)
 - [미실행] 로컬 Supabase(`npx supabase start`) 마이그레이션 적용 및 `supabase/tests/0002_auth_profiles_test.sql` pgTAP 실행 — 작업 PC에 Docker 미설치로 미실행
-- [미구현/보류] 외부 SMTP 실서버 연결, Google OAuth 콘솔 키 등록, MATCH-004 정식 성인 인증(주민등록증/PASS 등) — 후순위로 보류(현재는 정적 배포 세션 검증 모드로 동작)
-
-## 2026-10-29 PR #57 보안 스캔 수정 및 MATCH-004~008 매칭·채팅·안전 RLS 정책 구현 (주한태 작업)
-- [버그수정] src/lib/supabase/client.ts | PR #57 보안 스캔 지적(`client.ts:9 — 비밀값 기본값(fail-open)`) 반영 — `process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''` 기본값 연산자를 제거하고 `isValidAnonKey()`로 유효성 검사 후 미설정 시 `null`(정적 배포 세션 검증 모드)을 반환하도록 수정
-- [신규] supabase/migrations/0003_match_safety_rls.sql | 매칭·추천·채팅·차단·신고 핵심 테이블(`profiles`, `interests`, `profile_interests`, `blocks`, `reports`, `likes`, `matches`, `match_members`, `conversations`, `messages`) 및 Default-Deny RLS 정책 구현
-  - MATCH-004 (TC-004): `private.is_active_adult()` 조건을 모든 매칭·추천·채팅 RLS 정책에 강제하여 `adult_verified = false` 계정의 접근 차단
-  - MATCH-005 (TC-006): `matches` 테이블에 정규화된 `UNIQUE (user_low_id, user_high_id)` 제약과 `private.handle_mutual_like()` 트리거(`ON CONFLICT DO NOTHING`)를 두어 동시 쌍방 좋아요 경쟁 조건에서도 매치·대화방이 정확히 1건만 생성되도록 보장
-  - MATCH-006 (TC-007): `public.get_recommendations(p_limit, p_cursor)` RPC 및 `profiles_select_active_adult` RLS로 본인·미성년/미검증·정지/탈퇴·양방향 차단(`public.is_blocked_between`) 대상을 추천 결과에서 제외
-  - MATCH-007·008 (TC-008, TC-009, TC-010): `public.can_access_conversation()`으로 비구성원(C)의 대화방·메시지 접근 차단 및 차단 즉시(`private.handle_new_block`) 대화방 접근·전송 권한 회수, `reports` 테이블은 `authenticated`에 `INSERT`만 부여하고 `SELECT` 정책을 두지 않아 일반 계정의 신고 큐 조회 차단
-- [신규] src/lib/server/rls-guard.ts | 정적 배포 및 서버 환경에서 동일하게 검증 가능한 RLS·성인 인증 가드 모듈 (`requireAdultVerifiedUser`, `isBlockedBetween`, `filterRecommendationsWithRls`, `recordLikeWithMutualMatch`, `requireConversationAccessWithRls`, `queryReportQueueWithRls`)
-- [신규] supabase/tests/0003_match_safety_rls_test.sql, supabase/tests/verify_rls_policies.mjs | pgTAP SQL 테스트(16개 항목) 및 Node.js 기반 RLS 정책 실행 검증 스크립트(TC-004, TC-006, TC-007, TC-008, TC-009, TC-010)
-- [검증] `node "0. 소스코드/eottae-web/supabase/tests/verify_rls_policies.mjs"` ALL PASS (TC-004·TC-006·TC-007·TC-008·TC-009·TC-010 6개 시나리오 통과)
-- [검증] `node tools/test_auth_match_003.mjs` ALL PASS / `npm run typecheck` PASS / `npm run build` PASS (정적 21개 라우트 프리렌더 완료)
-- [미실행] 로컬 Supabase(`npx supabase start`) 마이그레이션 적용 및 `supabase/tests/0003_match_safety_rls_test.sql` pgTAP 실행 — 작업 PC에 Docker 미설치로 미실행

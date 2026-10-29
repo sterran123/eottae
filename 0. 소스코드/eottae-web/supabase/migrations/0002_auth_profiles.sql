@@ -221,7 +221,25 @@ declare
   v_signup     jsonb := new.raw_user_meta_data -> 'signup';
   v_birth_date date;
 begin
+  -- raw_user_meta_data 최상위에 birth_date를 직접 넣는 시도 차단 (ADR-002)
+  if new.raw_user_meta_data ? 'birth_date' then
+    new.raw_user_meta_data := new.raw_user_meta_data - 'birth_date';
+  end if;
+
   if v_signup is null then
+    return new;
+  end if;
+
+  -- 가입 후 auth.updateUser 등으로 raw_user_meta_data.signup에 생년월일을 다시 넣을 수 있으므로
+  -- UPDATE 시에도 birth_date 키를 항상 제거한다 (ADR-002).
+  if TG_OP = 'UPDATE' then
+    if v_signup ? 'birth_date' then
+      new.raw_user_meta_data := jsonb_set(
+        new.raw_user_meta_data,
+        '{signup}',
+        v_signup - 'birth_date'
+      );
+    end if;
     return new;
   end if;
 
@@ -292,7 +310,7 @@ revoke all on function public.handle_new_auth_user() from public, anon, authenti
 
 drop trigger if exists on_auth_user_before_insert on auth.users;
 create trigger on_auth_user_before_insert
-  before insert on auth.users
+  before insert or update on auth.users
   for each row execute function public.sanitize_new_auth_user();
 
 drop trigger if exists on_auth_user_created on auth.users;
@@ -352,7 +370,8 @@ as $$
   select coalesce((
     select u.account_status = 'ACTIVE'
        and u.adult_verified
-       and (u.adult_verification_expires_at is null or u.adult_verification_expires_at > now())
+       and u.adult_verification_expires_at is not null
+       and u.adult_verification_expires_at > now()
       from public.users u
      where u.id = auth.uid()
   ), false);

@@ -8,7 +8,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { getSupabase } from '../supabase/client';
-import { clientAuth } from './client-auth';
 import { authService } from './auth-service';
 import type { MyAccount, UserSession } from './types';
 
@@ -35,36 +34,21 @@ export function useAuth(): AuthState {
   const loadAccount = useCallback(async () => {
     const supabase = getSupabase();
     if (!supabase) {
-      const current = clientAuth.getSession();
-      setSession(current);
-      if (!current) {
-        setAccount(null);
-        setStatus('signed-out');
-        return;
-      }
-      const res = await authService.getMyAccount();
-      setAccount(res.ok ? res.data : null);
-      setStatus('signed-in');
+      setAccount(null);
+      setSession(null);
+      setStatus('signed-out');
       return;
     }
 
-    const res = await authService.getMyAccount();
-    setAccount(res.ok ? res.data : null);
+    const acc = await authService.getMyAccount();
+    setAccount(acc);
   }, []);
 
   useEffect(() => {
     const supabase = getSupabase();
     if (!supabase) {
-      const syncStaticSession = () => {
-        void loadAccount();
-      };
-      syncStaticSession();
-      window.addEventListener('eottae-auth-change', syncStaticSession);
-      window.addEventListener('storage', syncStaticSession);
-      return () => {
-        window.removeEventListener('eottae-auth-change', syncStaticSession);
-        window.removeEventListener('storage', syncStaticSession);
-      };
+      setStatus('signed-out');
+      return;
     }
 
     let active = true;

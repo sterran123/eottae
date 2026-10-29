@@ -69,9 +69,9 @@ export function validateBirthDate(birthDate: string): string | null {
   return null;
 }
 
-/** 로그인 후 이동 경로 — 같은 사이트 내부 경로만 허용 (오픈 리다이렉트 방지) */
+/** 로그인 후 이동 경로 — 같은 사이트 내부 경로만 허용 (오픈 리다이렉트 방지, //, /\, 역슬래시 차단) */
 export function sanitizeNextPath(next: string | null | undefined): string {
-  if (!next || !next.startsWith('/') || next.startsWith('//') || next.includes('\\')) return '/';
+  if (!next || !next.startsWith('/') || next.startsWith('//') || next.startsWith('/\\') || next.includes('\\')) return '/';
   if (next.startsWith('/auth/')) return '/';
   return next;
 }

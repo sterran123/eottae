@@ -88,7 +88,7 @@ export default function AuthCallback() {
       const me = await authService.getMyAccount();
       if (cancelled) return;
 
-      if (me.ok && me.data?.accountStatus === 'PENDING') {
+      if (me?.accountStatus === 'PENDING') {
         router.replace('/auth/complete');
       } else {
         router.replace(consumeNextPath());

@@ -1,13 +1,15 @@
 'use client';
 
 // src/components/auth/SignupForm.tsx
-// MATCH-003: 이메일 회원가입 → 이메일 인증번호 확인 → 세션 활성화
-// 정적 배포(GitHub Pages)에서는 발급된 6자리 DEMO 인증번호를 화면에서 확인·입력하여 즉시 세션 검증까지 마칠 수 있다.
+// MATCH-003: 이메일 회원가입 → 이메일 확인 → 계정 활성화 (ADR-005)
+// - Supabase 미설정 시: NOT_CONFIGURED 로 가입 비활성화 (ADR-005 fail-closed)
+// - 가입 시 생년월일 원본은 만 19세 판정에만 사용하고 저장하지 않음 (ADR-002)
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useState } from 'react';
 import { authService } from '@/lib/auth/auth-service';
+import { getSupabase } from '@/lib/supabase/client';
 import { validateEmail, validatePassword, validatePasswordConfirm, PASSWORD_MIN_LENGTH } from '@/lib/auth/validation';
 import ConsentFields, {
   EMPTY_PROFILE_CONSENT,
@@ -23,6 +25,8 @@ const RESEND_COOLDOWN_SEC = 30;
 
 export default function SignupForm() {
   const id = useId();
+  const isConfigured = Boolean(getSupabase());
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
@@ -33,13 +37,17 @@ export default function SignupForm() {
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
-  const [demoOtp, setDemoOtp] = useState<string | undefined>(undefined);
 
-  const disabled = submitting;
+  const disabled = submitting || !isConfigured;
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
+
+    if (!isConfigured) {
+      setFormError('인증 환경변수가 설정되지 않아 회원가입이 비활성화되어 있습니다.');
+      return;
+    }
 
     const aErr: AccountErrors = {};
     const em = validateEmail(email);
@@ -65,14 +73,19 @@ export default function SignupForm() {
       setFormError(res.error.message);
       return;
     }
-    setDemoOtp(res.data.demoOtpCode);
     setSentTo(email.trim());
   };
 
-  if (sentTo) return <EmailSentPanel email={sentTo} initialDemoOtp={demoOtp} />;
+  if (sentTo) return <EmailSentPanel email={sentTo} />;
 
   return (
     <>
+      {!isConfigured && (
+        <div className="auth-form-error" role="alert" style={{ marginBottom: 16 }}>
+          인증 환경변수가 설정되지 않아 회원가입 및 로그인이 비활성화되어 있습니다 (ADR-005 fail-closed).
+        </div>
+      )}
+
       <SocialLoginButtons disabled={disabled} />
       <div className="auth-divider" role="separator">
         <span>또는 이메일로 가입</span>
@@ -93,7 +106,7 @@ export default function SignupForm() {
             onChange={(e) => setEmail(e.target.value)}
           />
           <p id={`${id}-email-help`} className="auth-field-help">
-            가입 후 이메일 인증(링크 또는 6자리 인증번호)을 완료하면 계정이 활성화(`ACTIVE`)돼요.
+            가입 후 이메일 인증을 완료하면 계정이 활성화(<code>ACTIVE</code>)돼요.
           </p>
           {accountErrors.email && (
             <p id={`${id}-email-err`} className="auth-field-error" role="alert">
@@ -157,22 +170,20 @@ export default function SignupForm() {
         )}
 
         <button type="submit" className="btn primary auth-submit" disabled={disabled}>
-          {submitting ? '인증 준비 중…' : '이메일 확인하고 가입하기'}
+          {submitting ? '인증 준비 중…' : isConfigured ? '이메일 확인하고 가입하기' : '회원가입 준비 중 (비활성화)'}
         </button>
       </form>
 
       <p className="auth-switch">
-        이미 계정이 있나요? <Link href="/auth/login">로그인 · 세션 검증</Link>
+        이미 계정이 있나요? <Link href="/auth/login">로그인하기</Link>
       </p>
     </>
   );
 }
 
-export function EmailSentPanel({ email, initialDemoOtp }: { email: string; initialDemoOtp?: string }) {
-  const id = useId();
+export function EmailSentPanel({ email }: { email: string }) {
   const router = useRouter();
   const [otp, setOtp] = useState('');
-  const [demoOtp, setDemoOtp] = useState<string | undefined>(initialDemoOtp);
   const [verifying, setVerifying] = useState(false);
   const [otpError, setOtpError] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(RESEND_COOLDOWN_SEC);
@@ -203,7 +214,7 @@ export function EmailSentPanel({ email, initialDemoOtp }: { email: string; initi
       return;
     }
 
-    // 인증 완료 후 로그인/세션 검증 화면으로 이동하여 활성 세션을 확인
+    // 인증 완료 후 로그인 화면으로 이동
     router.replace('/auth/login');
   };
 
@@ -212,8 +223,7 @@ export function EmailSentPanel({ email, initialDemoOtp }: { email: string; initi
     setOtpError(null);
     const res = await authService.resendConfirmation(email);
     if (res.ok) {
-      if (res.data.demoOtpCode) setDemoOtp(res.data.demoOtpCode);
-      setMessage('인증번호를 새로 발급했어요.');
+      setMessage('인증 메일을 새로 발송했어요.');
     } else {
       setMessage(res.error.message);
     }
@@ -225,68 +235,58 @@ export function EmailSentPanel({ email, initialDemoOtp }: { email: string; initi
       <div className="auth-done-icon" aria-hidden="true">✉</div>
       <h2>이메일 인증을 완료해 주세요</h2>
       <p>
-        <b>{email}</b> 계정의 이메일 확인 단계예요.
+        <b>{email}</b>(으)로 인증 안내를 발송했어요.
         <br />
-        아래에 <b>6자리 인증번호</b>를 입력하면 계정이 <code>ACTIVE</code>로 전환되고 세션이 발급돼요.
+        메일에 포함된 링크를 누르거나, 아래에 <b>6자리 인증번호</b>를 입력하면 계정이 활성화(<code>ACTIVE</code>)돼요.
       </p>
 
-      {demoOtp && (
-        <div className="auth-demo-otp">
-          <span>
-            <b>[DEMO · 정적 배포 인증번호]</b> 발급 코드: <code>{demoOtp}</code>
-          </span>
-          <button
-            type="button"
-            className="btn outline auth-otp-fill"
-            onClick={() => {
-              setOtp(demoOtp);
-              setOtpError(null);
-            }}
-          >
-            인증번호 자동 입력
-          </button>
-        </div>
-      )}
-
-      <form className="auth-otp-form" noValidate onSubmit={onVerifyOtp}>
-        <label htmlFor={`${id}-otp`} className="auth-otp-label">
-          6자리 인증번호 입력
-        </label>
-        <div className="auth-otp-row">
+      <form className="auth-form auth-otp-form" noValidate onSubmit={onVerifyOtp}>
+        <div className="auth-field">
+          <label htmlFor="auth-otp-input">6자리 인증번호</label>
           <input
-            id={`${id}-otp`}
+            id="auth-otp-input"
             type="text"
             inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={6}
             autoComplete="one-time-code"
-            placeholder="6자리 숫자"
-            maxLength={10}
+            placeholder="예: 123456"
             value={otp}
             disabled={verifying}
-            aria-invalid={Boolean(otpError)}
             onChange={(e) => setOtp(e.target.value)}
           />
-          <button type="submit" className="btn primary" disabled={verifying || !otp.trim()}>
-            {verifying ? '확인 중…' : '인증 완료'}
-          </button>
         </div>
+
         {otpError && (
           <p className="auth-field-error" role="alert">
             {otpError}
           </p>
         )}
+
+        <button type="submit" className="btn primary auth-submit" disabled={verifying}>
+          {verifying ? '인증번호 확인 중…' : '인증번호 확인'}
+        </button>
       </form>
 
-      <button type="button" className="btn outline" disabled={cooldown > 0} onClick={() => void resend()}>
-        {cooldown > 0 ? `인증번호 재발급 (${cooldown}초)` : '인증번호 재발급'}
-      </button>
+      <div className="auth-done-actions">
+        <button
+          type="button"
+          className="btn outline"
+          disabled={cooldown > 0}
+          onClick={() => void resend()}
+        >
+          {cooldown > 0 ? `재발송 대기 (${cooldown}초)` : '인증 메일 다시 보내기'}
+        </button>
+        <Link className="btn outline" href="/auth/login">
+          로그인 화면으로
+        </Link>
+      </div>
+
       {message && (
         <p className="auth-field-help" role="status">
           {message}
         </p>
       )}
-      <p className="auth-switch">
-        <Link href="/auth/login">로그인 화면으로</Link>
-      </p>
     </div>
   );
 }

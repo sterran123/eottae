@@ -1,15 +1,11 @@
 // src/lib/auth/auth-service.ts
-// MATCH-003: 회원가입·이메일 확인·로그인·세션 검증 통합 서비스
-// - 정적 배포(GitHub Pages) 환경에서는 src/lib/server/auth.ts(requireActiveUser, authenticateUser),
-//   src/lib/server/session.ts(verifySessionToken, createSessionToken), src/lib/auth/client-auth.ts(clientAuth)를
-//   통해 브라우저 세션 기반으로 회원가입 → 이메일 인증번호 확인 → 로그인 → 세션 검증까지 모두 동작한다.
-// - Supabase 환경변수가 주입된 경우 Supabase Auth + RLS(0001/0002 마이그레이션)와 연동된다.
+// MATCH-003: Supabase Auth 기반 회원가입·이메일 확인·로그인 서비스 (ADR-005)
+// - 환경변수가 설정되지 않은 경우 NOT_CONFIGURED 로 즉시 중단 (Fail-closed)
+// - 로그인 시 public.users의 account_status (ACTIVE / PENDING / SUSPENDED / DELETED)를 검증
+// - 가입 및 완료 시 생년월일 원본은 만 19세 판정에만 사용하고 저장하지 않음 (ADR-002)
 
 import type { EmailOtpType, Session } from '@supabase/supabase-js';
 import { getSupabase } from '../supabase/client';
-import { AuthException, MOCK_USERS, requireActiveUser } from '../server/auth';
-import { verifySessionToken } from '../server/session';
-import { clientAuth } from './client-auth';
 import {
   BASE_PATH,
   OAUTH_PROVIDERS_ENABLED,
@@ -26,13 +22,12 @@ import type {
   MyAccount,
   OAuthProvider,
   SignupInput,
-  UserSession,
 } from './types';
 
 const MESSAGES: Record<AuthErrorCode, string> = {
-  NOT_CONFIGURED: '인증 설정을 확인할 수 없어요.',
+  NOT_CONFIGURED: '인증 서비스가 준비되지 않았습니다. 관리자에게 문의해 주세요.',
   INVALID_CREDENTIALS: '이메일 또는 비밀번호가 올바르지 않아요.',
-  EMAIL_NOT_CONFIRMED: '이메일 인증이 아직 완료되지 않았어요. 인증번호를 입력해 확인을 완료해 주세요.',
+  EMAIL_NOT_CONFIRMED: '이메일 인증이 아직 완료되지 않았어요. 메일함의 인증 링크 또는 인증번호를 확인해 주세요.',
   INVALID_OTP: '인증번호가 올바르지 않거나 만료되었어요. 다시 확인해 주세요.',
   WEAK_PASSWORD: '더 안전한 비밀번호를 사용해 주세요.',
   RATE_LIMITED: '요청이 너무 많아요. 잠시 후 다시 시도해 주세요.',
@@ -55,36 +50,61 @@ function fail<T>(code: AuthErrorCode, message = MESSAGES[code]): AuthResult<T> {
   return { ok: false, error: { code, message } };
 }
 
-/** 정적 배포(GitHub Pages) 데모 세션 모드용 가입 대기/완료 메모리 저장소 (ADR-002: 생년월일 원본·비밀번호 미보관, birthYear만 보관) */
-interface StaticAccountRecord {
-  userId: string;
-  email: string;
-  fullName: string;
-  birthYear: number;
-  otpCode: string;
-  emailConfirmed: boolean;
-  signupCompletedAt: string | null;
+const NEXT_PATH_STORAGE_KEY = 'eottae-auth-next-path';
+
+function getSessionStorage(): Storage | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.sessionStorage;
+  } catch {
+    return null;
+  }
 }
 
-const staticAccounts = new Map<string, StaticAccountRecord>();
-let pendingReturnPath = '/';
+/** 로그인 후 이동할 경로 기억 (OAuth 등 리다이렉트에도 유지되도록 sessionStorage 활용) */
+export function rememberNextPath(next: string | null | undefined): void {
+  const sanitized = sanitizeNextPath(next);
+  const storage = getSessionStorage();
+  if (storage) {
+    try {
+      storage.setItem(NEXT_PATH_STORAGE_KEY, sanitized);
+      return;
+    } catch {
+      // sessionStorage 사용 불가능한 환경에서는 무시
+    }
+  }
+}
 
-function generateSixDigitOtp(email: string): string {
-  const seed = Math.abs(
-    email.split('').reduce((acc, ch, idx) => acc + ch.charCodeAt(0) * (idx + 17), 240003),
-  );
-  return String(100000 + (seed % 900000));
+/** 로그인 후 이동할 경로 조회 (제거하지 않음 — 렌더 시 사용) */
+export function peekNextPath(): string {
+  const storage = getSessionStorage();
+  if (storage) {
+    try {
+      const val = storage.getItem(NEXT_PATH_STORAGE_KEY);
+      return sanitizeNextPath(val);
+    } catch {
+      return '/';
+    }
+  }
+  return '/';
+}
+
+/** 로그인 후 이동할 경로 조회 및 1회성 소비 */
+export function consumeNextPath(): string {
+  const target = peekNextPath();
+  const storage = getSessionStorage();
+  if (storage) {
+    try {
+      storage.removeItem(NEXT_PATH_STORAGE_KEY);
+    } catch {
+      // ignore
+    }
+  }
+  return target;
 }
 
 /** Supabase Auth / PostgREST / AuthException 오류를 화면용 코드로 변환 */
 export function toAuthError(err: unknown): AuthError {
-  if (err instanceof AuthException) {
-    return {
-      code: err.code,
-      message: MESSAGES[err.code] ?? err.message,
-    };
-  }
-
   const e = (err ?? {}) as { code?: string; message?: string; status?: number; name?: string };
   const code = e.code ?? '';
   const msg = e.message ?? '';
@@ -135,6 +155,7 @@ export function toAuthError(err: unknown): AuthError {
 }
 
 function callbackUrl(): string {
+  if (typeof window === 'undefined') return '';
   return `${window.location.origin}${BASE_PATH}/auth/callback/`;
 }
 
@@ -152,42 +173,15 @@ function mapAccount(row: Record<string, unknown>): MyAccount {
   };
 }
 
-function sessionToMyAccount(session: UserSession): MyAccount {
-  const normalized = session.email.trim().toLowerCase();
-  const extra = staticAccounts.get(normalized);
-  return {
-    id: session.userId,
-    email: session.email,
-    nickname: session.nickname,
-    fullName: extra?.fullName ?? session.nickname,
-    birthYear: extra?.birthYear ?? null,
-    accountStatus: session.accountStatus,
-    signupCompletedAt: extra?.signupCompletedAt ?? new Date(session.issuedAt).toISOString(),
-    adultVerified: session.adultVerified,
-    adultVerificationExpiresAt: null,
-  };
-}
-
-/** 로그인 후 이동할 경로 기억/소비 */
-export function rememberNextPath(next: string | null | undefined): void {
-  pendingReturnPath = sanitizeNextPath(next);
-}
-
-export function consumeNextPath(): string {
-  const target = pendingReturnPath;
-  pendingReturnPath = '/';
-  return sanitizeNextPath(target);
-}
-
 export const authService = {
   /**
    * 이메일 회원가입
-   * - Supabase 연결 시: Custom SMTP로 인증 메일 발송
-   * - 정적 배포(GitHub Pages) 세션 모드: 만 19세 검증 후 출생연도만 보관(ADR-002), PENDING 등록 및 6자리 인증번호 발급
+   * - Supabase 미설정 시: NOT_CONFIGURED 로 즉시 중단 (fail-closed)
+   * - Supabase 연결 시: Auth signUp 호출 (0002 마이그레이션 BEFORE INSERT 트리거가 만 19세 검증 후 birth_date 제거)
    */
   async signUpWithEmail(
     input: SignupInput,
-  ): Promise<AuthResult<{ needsEmailConfirmation: boolean; demoOtpCode?: string }>> {
+  ): Promise<AuthResult<{ needsEmailConfirmation: boolean }>> {
     const age = fullAge(input.birthDate);
     if (age === null) return fail('INVALID_INPUT');
     if (age < 19) return fail('UNDERAGE');
@@ -196,48 +190,7 @@ export const authService = {
     }
 
     const supabase = getSupabase();
-    if (!supabase) {
-      const normalized = input.email.trim().toLowerCase();
-      const existingMock = MOCK_USERS[normalized];
-      if (existingMock && existingMock.accountStatus === 'SUSPENDED') {
-        return fail('ACCOUNT_SUSPENDED');
-      }
-      if (existingMock && existingMock.accountStatus === 'DELETED') {
-        return fail('ACCOUNT_DELETED');
-      }
-
-      const otpCode = generateSixDigitOtp(normalized);
-      const birthYear = Number(input.birthDate.slice(0, 4));
-      const userId = existingMock?.userId ?? `user-${Date.now()}`;
-
-      staticAccounts.set(normalized, {
-        userId,
-        email: normalized,
-        fullName: input.fullName.trim(),
-        birthYear,
-        otpCode,
-        emailConfirmed: false,
-        signupCompletedAt: null,
-      });
-
-      // 이메일 인증 전까지는 PENDING 상태로 등록 (requireActiveUser 호출 시 403 ACCOUNT_PENDING 차단)
-      MOCK_USERS[normalized] = {
-        userId,
-        authId: `auth-${Date.now()}`,
-        email: normalized,
-        nickname: input.fullName.trim(),
-        accountStatus: 'PENDING',
-        adultVerified: false,
-      };
-
-      return {
-        ok: true,
-        data: {
-          needsEmailConfirmation: true,
-          demoOtpCode: otpCode,
-        },
-      };
-    }
+    if (!supabase) return fail('NOT_CONFIGURED');
 
     const { data, error } = await supabase.auth.signUp({
       email: input.email.trim(),
@@ -260,40 +213,13 @@ export const authService = {
     return { ok: true, data: { needsEmailConfirmation: !data.session } };
   },
 
-  /** 이메일 인증번호(OTP) 확인 → 계정 ACTIVE 전환 및 세션 발급 */
-  async verifyEmailOtp(email: string, token: string): Promise<AuthResult<Session | UserSession | null>> {
+  /** 이메일 인증번호(OTP) 확인 */
+  async verifyEmailOtp(email: string, token: string): Promise<AuthResult<Session | null>> {
     const cleanedToken = token.replace(/\s+/g, '');
     if (!cleanedToken) return fail('INVALID_OTP');
 
     const supabase = getSupabase();
-    if (!supabase) {
-      const normalized = email.trim().toLowerCase();
-      const record = staticAccounts.get(normalized);
-      if (!record || record.otpCode !== cleanedToken) {
-        return fail('INVALID_OTP');
-      }
-
-      record.emailConfirmed = true;
-      record.signupCompletedAt = new Date().toISOString();
-
-      MOCK_USERS[normalized] = {
-        userId: record.userId,
-        authId: `auth-${record.userId}`,
-        email: normalized,
-        nickname: record.fullName,
-        accountStatus: 'ACTIVE',
-        adultVerified: false,
-      };
-
-      const loginRes = clientAuth.login(normalized);
-      if (!loginRes.success || !loginRes.session) {
-        return fail('UNAUTHORIZED', loginRes.error?.message);
-      }
-
-      // 서버 세션 가드(src/lib/server/auth.ts)로 발급된 토큰 즉시 검증
-      const verified = requireActiveUser(clientAuth.getToken());
-      return { ok: true, data: verified };
-    }
+    if (!supabase) return fail('NOT_CONFIGURED');
 
     const { data, error } = await supabase.auth.verifyOtp({
       email: email.trim(),
@@ -308,10 +234,7 @@ export const authService = {
   /** 이메일 링크의 token_hash 검증 (/auth/callback?token_hash=...&type=signup) */
   async verifyTokenHash(tokenHash: string, type: EmailOtpType = 'signup'): Promise<AuthResult<Session | null>> {
     const supabase = getSupabase();
-    if (!supabase) {
-      const session = clientAuth.getSession();
-      return session ? { ok: true, data: null } : fail('SESSION_EXPIRED');
-    }
+    if (!supabase) return fail('NOT_CONFIGURED');
 
     const { data, error } = await supabase.auth.verifyOtp({
       token_hash: tokenHash,
@@ -322,28 +245,10 @@ export const authService = {
     return { ok: true, data: data.session };
   },
 
-  /** 인증 메일 재발송 (정적 세션 모드에서는 새 6자리 인증번호 재발급) */
-  async resendConfirmation(email: string): Promise<AuthResult<{ demoOtpCode?: string }>> {
+  /** 인증 메일 재발송 */
+  async resendConfirmation(email: string): Promise<AuthResult<void>> {
     const supabase = getSupabase();
-    if (!supabase) {
-      const normalized = email.trim().toLowerCase();
-      const otpCode = generateSixDigitOtp(normalized);
-      const record = staticAccounts.get(normalized);
-      if (record) {
-        record.otpCode = otpCode;
-      } else {
-        staticAccounts.set(normalized, {
-          userId: `user-${Date.now()}`,
-          email: normalized,
-          fullName: normalized.split('@')[0] || '사용자',
-          birthYear: 2000,
-          otpCode,
-          emailConfirmed: false,
-          signupCompletedAt: null,
-        });
-      }
-      return { ok: true, data: { demoOtpCode: otpCode } };
-    }
+    if (!supabase) return fail('NOT_CONFIGURED');
 
     const { error } = await supabase.auth.resend({
       type: 'signup',
@@ -351,56 +256,62 @@ export const authService = {
       options: { emailRedirectTo: callbackUrl() },
     });
     if (error) return { ok: false, error: toAuthError(error) };
-    return { ok: true, data: {} };
+    return { ok: true, data: undefined };
   },
 
   /**
    * 이메일 + 비밀번호 로그인
-   * - 정적 배포(GitHub Pages)에서는 src/lib/server/auth.ts의 authenticateUser & requireActiveUser로
-   *   계정 상태(ACTIVE / SUSPENDED 403 / DELETED 403 / PENDING 403)와 세션 서명을 검증한다.
+   * - Supabase signInWithPassword 성공 후 public.users 테이블의 account_status를 확인한다.
+   * - PENDING(이메일 미인증), SUSPENDED(정지 403), DELETED(탈퇴 403) 시 즉시 세션을 종료하고 에러를 반환한다.
    */
-  async signInWithEmail(email: string, password: string): Promise<AuthResult<Session | UserSession>> {
+  async signInWithEmail(email: string, password: string): Promise<AuthResult<Session>> {
     const supabase = getSupabase();
-    if (!supabase) {
-      const normalized = email.trim().toLowerCase();
-      const record = staticAccounts.get(normalized);
+    if (!supabase) return fail('NOT_CONFIGURED');
 
-      if (record && !record.emailConfirmed) {
-        return fail('EMAIL_NOT_CONFIRMED');
-      }
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
 
-      const mock = MOCK_USERS[normalized];
-      if (mock?.accountStatus === 'PENDING') {
-        return fail('EMAIL_NOT_CONFIRMED');
-      }
-
-      try {
-        // 1) clientAuth.login(authenticateUser) 호출 — SUSPENDED/DELETED 계정은 403 AuthException 발생
-        const res = clientAuth.login(normalized);
-        if (!res.success || !res.session) {
-          if (mock?.accountStatus === 'SUSPENDED') return fail('ACCOUNT_SUSPENDED');
-          if (mock?.accountStatus === 'DELETED') return fail('ACCOUNT_DELETED');
-          return fail('UNAUTHORIZED', res.error?.message);
-        }
-
-        // 2) 발급된 토큰을 src/lib/server/auth.ts 의 requireActiveUser로 최종 검증
-        const verifiedSession = requireActiveUser(clientAuth.getToken());
-        return { ok: true, data: verifiedSession };
-      } catch (err: unknown) {
-        return { ok: false, error: toAuthError(err) };
-      }
+    if (error || !data.user || !data.session) {
+      return { ok: false, error: toAuthError(error) };
     }
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-    if (error || !data.session) return { ok: false, error: toAuthError(error) };
+    // 로그인 직후 public.users 에서 계정 상태 조회 (ADR-002, ADR-005)
+    const { data: profile, error: profileError } = await supabase
+      .from('users')
+      .select('account_status')
+      .eq('id', data.user.id)
+      .maybeSingle();
+
+    if (profileError || !profile) {
+      await supabase.auth.signOut();
+      return fail('UNKNOWN', '계정 정보를 확인할 수 없습니다.');
+    }
+
+    if (profile.account_status === 'PENDING') {
+      await supabase.auth.signOut();
+      return fail('EMAIL_NOT_CONFIRMED');
+    }
+
+    if (profile.account_status === 'SUSPENDED') {
+      await supabase.auth.signOut();
+      return fail('ACCOUNT_SUSPENDED');
+    }
+
+    if (profile.account_status === 'DELETED') {
+      await supabase.auth.signOut();
+      return fail('ACCOUNT_DELETED');
+    }
+
     return { ok: true, data: data.session };
   },
 
   /** Google OAuth 로그인 — 현재 준비 중(후순위) */
-  async signInWithOAuth(provider: OAuthProvider): Promise<AuthResult> {
+  async signInWithOAuth(provider: OAuthProvider): Promise<AuthResult<void>> {
     if (!OAUTH_PROVIDERS_ENABLED[provider]) return fail('PROVIDER_DISABLED');
     const supabase = getSupabase();
-    if (!supabase) return fail('PROVIDER_DISABLED');
+    if (!supabase) return fail('NOT_CONFIGURED');
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
@@ -410,86 +321,61 @@ export const authService = {
     return { ok: true, data: undefined };
   },
 
-  async signOut(): Promise<AuthResult> {
+  /** 로그아웃 */
+  async signOut(): Promise<AuthResult<void>> {
     const supabase = getSupabase();
-    if (!supabase) {
-      clientAuth.logout();
-      return { ok: true, data: undefined };
-    }
+    if (!supabase) return { ok: true, data: undefined };
 
     const { error } = await supabase.auth.signOut();
     if (error) return { ok: false, error: toAuthError(error) };
     return { ok: true, data: undefined };
   },
 
-  /**
-   * 현재 브라우저 세션에 대해 src/lib/server/session.ts (verifySessionToken) 및
-   * src/lib/server/auth.ts (requireActiveUser) 검증 결과를 반환
-   */
-  verifyStaticSession(): {
-    rawToken: string | null;
-    session: UserSession | null;
-    guardStatus: 'PASS_200' | 'BLOCKED_401' | 'BLOCKED_403';
-    guardMessage: string;
-  } {
-    const rawToken = clientAuth.getToken();
-    try {
-      const active = requireActiveUser(rawToken);
-      const verified = verifySessionToken(rawToken);
-      return {
-        rawToken,
-        session: verified ?? active,
-        guardStatus: 'PASS_200',
-        guardMessage: `requireActiveUser 통과 (상태: ${active.accountStatus}, 성인인증: ${active.adultVerified ? '완료' : '미인증'})`,
-      };
-    } catch (err: unknown) {
-      if (err instanceof AuthException) {
-        return {
-          rawToken,
-          session: null,
-          guardStatus: err.status === 403 ? 'BLOCKED_403' : 'BLOCKED_401',
-          guardMessage: `[${err.status} ${err.code}] ${err.message}`,
-        };
-      }
-      return {
-        rawToken,
-        session: null,
-        guardStatus: 'BLOCKED_401',
-        guardMessage: '[401 UNAUTHORIZED] 활성 세션이 없습니다.',
-      };
-    }
-  },
-
-  /** 내 계정 조회 — 논리 계약 GET /users/me */
-  async getMyAccount(): Promise<AuthResult<MyAccount | null>> {
+  /** 현재 로그인 사용자의 public.users 정보 조회 */
+  async getMyAccount(): Promise<MyAccount | null> {
     const supabase = getSupabase();
-    if (!supabase) {
-      try {
-        const session = requireActiveUser(clientAuth.getToken());
-        return { ok: true, data: sessionToMyAccount(session) };
-      } catch (err: unknown) {
-        return { ok: false, error: toAuthError(err) };
-      }
-    }
+    if (!supabase) return null;
 
-    const { data: userData } = await supabase.auth.getUser();
-    const user = userData.user;
-    if (!user) return fail('UNAUTHORIZED');
+    const { data: authData } = await supabase.auth.getUser();
+    if (!authData.user) return null;
 
     const { data, error } = await supabase
       .from('users')
-      .select(
-        'id, nickname, full_name, birth_year, account_status, signup_completed_at, adult_verified, adult_verification_expires_at',
-      )
-      .eq('id', user.id)
+      .select('id, nickname, full_name, birth_year, account_status, signup_completed_at, adult_verified, adult_verification_expires_at')
+      .eq('id', authData.user.id)
       .maybeSingle();
 
-    if (error) return { ok: false, error: toAuthError(error) };
-    return { ok: true, data: data ? mapAccount(data) : null };
+    if (error || !data) return null;
+    return mapAccount({ ...data, email: authData.user.email });
   },
 
-  /** 추가 정보 입력 완료 (소셜 로그인 또는 PENDING 계정 활성화) */
-  async completeSignup(input: CompleteSignupInput): Promise<AuthResult> {
+  /** 닉네임 수정 (public.users에서 유일하게 클라이언트 UPDATE 허용된 열) */
+  async updateNickname(nickname: string): Promise<AuthResult<void>> {
+    const supabase = getSupabase();
+    if (!supabase) return fail('NOT_CONFIGURED');
+
+    const trimmed = nickname.trim();
+    if (trimmed.length < 2 || trimmed.length > 20) {
+      return fail('INVALID_INPUT', '닉네임은 2자 이상 20자 이하로 입력해 주세요.');
+    }
+
+    const { data: authData } = await supabase.auth.getUser();
+    if (!authData.user) return fail('UNAUTHORIZED');
+
+    const { error } = await supabase
+      .from('users')
+      .update({ nickname: trimmed })
+      .eq('id', authData.user.id);
+
+    if (error) return { ok: false, error: toAuthError(error) };
+    return { ok: true, data: undefined };
+  },
+
+  /** 소셜 로그인 사용자의 첫 가입 완료 RPC (/auth/complete) */
+  async completeSignup(input: CompleteSignupInput): Promise<AuthResult<void>> {
+    const supabase = getSupabase();
+    if (!supabase) return fail('NOT_CONFIGURED');
+
     const age = fullAge(input.birthDate);
     if (age === null) return fail('INVALID_INPUT');
     if (age < 19) return fail('UNDERAGE');
@@ -497,30 +383,14 @@ export const authService = {
       return fail('CONSENT_REQUIRED');
     }
 
-    const supabase = getSupabase();
-    if (!supabase) {
-      const session = clientAuth.getSession();
-      if (!session) return fail('UNAUTHORIZED');
-      const normalized = session.email.trim().toLowerCase();
-      MOCK_USERS[normalized] = {
-        userId: session.userId,
-        authId: session.authId,
-        email: normalized,
-        nickname: input.fullName.trim(),
-        accountStatus: 'ACTIVE',
-        adultVerified: session.adultVerified,
-      };
-      clientAuth.login(normalized);
-      return { ok: true, data: undefined };
-    }
-
     const { error } = await supabase.rpc('complete_signup', {
       p_full_name: input.fullName.trim(),
       p_birth_date: input.birthDate,
-      p_terms_version: input.agreeTerms ? TERMS_VERSION : null,
-      p_privacy_version: input.agreePrivacy ? PRIVACY_VERSION : null,
+      p_terms_version: TERMS_VERSION,
+      p_privacy_version: PRIVACY_VERSION,
       p_adult_self_check: input.adultSelfCheck,
     });
+
     if (error) return { ok: false, error: toAuthError(error) };
     return { ok: true, data: undefined };
   },
