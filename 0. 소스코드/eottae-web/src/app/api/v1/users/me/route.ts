@@ -1,24 +1,29 @@
 // src/app/api/v1/users/me/route.ts
-// MATCH-003: 내 프로필 및 세션 검증 API (API 계약 초안 준수)
-// 정적 export(GitHub Pages) 호환을 위해 force-static 선언
+// MATCH-003: 내 프로필 및 세션 검증 API 논리 계약 (ADR-005 준수)
+// 정적 export(GitHub Pages) 호환을 위해 force-static 선언.
+// 실제 런타임에서는 브라우저가 src/lib/auth/auth-service.ts (authService.getMyAccount)를 통해
+// Supabase Auth + public.users RLS(id = auth.uid())를 직접 호출한다.
 
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-static';
 
 export function GET() {
-  // 정적 빌드 시점의 기본 계약 DTO 응답 (실제 런타임 클라이언트에서는 src/lib/auth/client-auth 및 lib/server/auth.ts 검증 로직 사용)
   return NextResponse.json({
     status: 'ok',
     api: '/api/v1/users/me',
     authRequired: true,
     contract: {
-      description: '내 세션 및 인증 상태 조회 (미인증/만료/차단 시 401/403 Fail-closed)',
+      description: '내 세션 및 계정 상태 조회 (Supabase Auth + public.users RLS, 미인증 시 UNAUTHORIZED)',
       sampleResponse: {
-        userId: '11111111-1111-4111-8111-111111111111',
+        id: '11111111-1111-4111-8111-111111111111',
         nickname: '어때데모',
+        fullName: '홍길동',
+        birthYear: 1995,
         accountStatus: 'ACTIVE',
-        adultVerified: true,
+        signupCompletedAt: '2026-10-29T00:00:00Z',
+        adultVerified: false,
+        adultVerificationExpiresAt: null,
       },
     },
   });

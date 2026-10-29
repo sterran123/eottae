@@ -559,3 +559,19 @@
 - [검증] 권한 API 응답을 가로채(가짜 응답) 응답 스크립트 시험: 502 → 실패 exit 1·답 없음, 404 → 건너뜀 exit 0, maintain → 답, triage → 건너뜀. 작업자 쪽은 실행 시험 없음(큐 조회 예외가 시작점 저장 전 catch로 가는 것을 코드로 확인)
 - [변경] PR #55 2차 Grok 리뷰(72ece6b, 1016초, API 환산 $1.12) 통과 후 권장 반영: 권한은 `permission`(기반 역할)만 봄(`role_name`은 조직 커스텀 역할 이름일 수 있음), @grok 조회 시작점 1초 당김(재시도할 요청이 경계에서 빠지지 않게). 줄 단위 리뷰 댓글의 @grok·판정 공통 모듈은 보류
 - [미실행] 팀원 계정의 실제 `@grok` 댓글 — 팀원이 처음 쓸 때 확인
+
+
+## 2026-10-29 MATCH-003 정적 배포(GitHub Pages) 세션 검증 연동 회원가입·이메일 확인·로그인 구현 (주한태 작업)
+- [보존] supabase/migrations/0001_create_auth_and_users.sql, src/lib/server/auth.ts, src/lib/server/session.ts, src/lib/auth/client-auth.ts | PR #24의 RLS 정책 및 정적 배포 호환 세션 서명·검증(`requireActiveUser`, `verifySessionToken`, `clientAuth`) 모듈 그대로 유지
+- [신규] supabase/migrations/0002_auth_profiles.sql, supabase/tests/0002_auth_profiles_test.sql | `public.users` 열 단위 권한(`nickname`만 클라이언트 UPDATE 허용, `adult_verified`·`account_status` 수정 차단), 생년월일 원본을 만 19세 판정 후 `birth_year`로만 치환 저장하는 트리거(ADR-002), Google 소셜 가입 완료 RPC(`complete_signup`), 20개 항목 pgTAP 테스트 스크립트
+- [신규] src/lib/supabase/client.ts | `@supabase/supabase-js` 브라우저 클라이언트, 환경변수 미설정 시 `null`을 반환해 정적 배포 세션 검증 모드로 자동 전환
+- [변경] src/lib/auth/types.ts | 기존 `UserSession`·`AuthResponse` 호환 유지 및 `MyAccount`, `SignupInput`, `OAuthProvider = 'google'` 추가(카카오는 일일 로그인 횟수 제한 이슈로 제외)
+- [신규] src/lib/auth/config.ts, src/lib/auth/validation.ts | 약관 버전, 만 19세 이상 나이 검증(`fullAge`), 이메일·비밀번호·이름·생년월일·내부 복귀 경로 검증 유틸
+- [신규] src/lib/auth/auth-service.ts | 정적 배포(GitHub Pages) 세션 검증(`src/lib/server/auth.ts` · `session.ts` · `client-auth.ts`)과 Supabase Auth를 모두 지원하는 통합 서비스 — 이메일 회원가입(PENDING 등록 및 6자리 인증번호 발급, 출생연도만 보관), 6자리 인증번호 확인(`ACTIVE` 전환 및 세션 토큰 발급), 이메일 로그인(`requireActiveUser`로 ACTIVE 200 / SUSPENDED·DELETED·PENDING 403 판정), 실시간 세션 검증(`verifyStaticSession`)
+- [신규] src/lib/auth/use-auth.ts | 정적 세션(`eottae-auth-change` 이벤트) 및 Supabase `onAuthStateChange` 구독 훅
+- [신규] src/components/auth/{AuthCard,ConsentFields,SocialLoginButtons,SignupForm,LoginForm,AuthCallback,CompleteSignupForm,AuthNavSlot}.tsx | 회원가입 → 6자리 이메일 인증번호 확인(DEMO 인증번호 안내 및 자동 입력 포함) → 로그인 및 `src/lib/server/auth.ts` 계정 상태(200/403) 즉시 검증 UI
+- [신규] src/app/auth/{auth.css,signup/page.tsx,login/page.tsx,callback/page.tsx,complete/page.tsx} | 정적 export 호환 인증 라우트 4종 및 6테마 대응 스타일(`globals.css` 무변경)
+- [검증] `node tools/test_auth_match_003.mjs` ALL PASS (정상 세션 발급·만료 401 차단·위변조 차단·SUSPENDED 403 차단·DELETED 403 차단 5개 단위 테스트 통과)
+- [검증] `npm run typecheck` PASS / `npm run build` PASS (정적 21개 라우트 프리렌더 완료: `/auth/signup`, `/auth/login`, `/auth/callback`, `/auth/complete` 포함)
+- [미실행] 로컬 Supabase(`npx supabase start`) 마이그레이션 적용 및 `supabase/tests/0002_auth_profiles_test.sql` pgTAP 실행 — 작업 PC에 Docker 미설치로 미실행
+- [미구현/보류] 외부 SMTP 실서버 연결, Google OAuth 콘솔 키 등록, MATCH-004 정식 성인 인증(주민등록증/PASS 등) — 후순위로 보류(현재는 정적 배포 세션 검증 모드로 동작)
