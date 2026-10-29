@@ -17,7 +17,7 @@ f215d3e323380b4e75764c6bfbcab5b4c7b59b4009ed7102f4b9075fc1301a69  .github/workfl
 7710d28a140451e45493d1fd6f52508a4a51133d7fd72b236349d001bde77fb9  0. 소스코드/eottae-web/.gitignore
 dfd62088d1b52c3eeb6f9ccb87a62858bb9766b328ae93cd85994f2bb3262587  0. 소스코드/eottae-web/AGENTS.md
 29f34850035187210d9a8cd2de1c25308a0d09a152f720ce82f3a185268d10c0  0. 소스코드/eottae-web/README.md
-eaa1f2df04322924affa2c56d8052ed1f2fc89f6f8b682508216675edc81e357  0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md
+3c3a0ad221aceba3530a571a9cd707080c0bdfbc2298b7b06a9de5e35c386eb2  0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md
 6ef5f1ba972e9f1d07e1dbddd282ed9c16c3fd132a5301db0a8e0e9cffc2bb2f  0. 소스코드/eottae-web/docs/AI_도구_MCP_권장.md
 180d9a55d70be22c9ffa04a4acc113c484a2a19fc71e2410ec6dff1a33487a01  0. 소스코드/eottae-web/docs/AI_에이전트_협업_가이드.md
 7d34723629b67d6fc6c107846671146dfa18b35250001621174b73afb4da8511  0. 소스코드/eottae-web/docs/DESIGN_개선_지시서.md
@@ -51,7 +51,7 @@ af9927e4830631b4a13fb003bab6dcea4f72a4ddf8a7aac912c35034d55fce93  0. 소스코�
 4e96a2cd84b3865cad08426167ef0f83ba2670c0c73171c3e6212d83b7cce107  0. 소스코드/eottae-web/public/icons/maskable-512.png
 356ea5e3863b86125d371e50db7cc5f0f600c5b91a8bc094f5f2580bf97c8071  0. 소스코드/eottae-web/public/manifest.webmanifest
 774cdb78ed22a10371182650aebc05dba2d9df3e9258594c31f2b1689c6e3513  0. 소스코드/eottae-web/public/metadata.json
-fabdd7802fce666b97e025dd292458d2c7aebbe95ef698aea8b3c2d3ddfddd50  0. 소스코드/eottae-web/public/sw.js
+b01632b18da848b769a28b0f1944c7666d9ab95984a182658413a1c8b112199a  0. 소스코드/eottae-web/public/sw.js
 9d571f7f9dcca3872ecb40de2ce8f4910eea41cb10dc8cfb7c6652d6c1537573  0. 소스코드/eottae-web/src/app/activities/page.tsx
 bc084e902c152bf47adc6ebf838975ce0423f15c4fd763de6b0bef71d783b23f  0. 소스코드/eottae-web/src/app/api/health/route.ts
 cf6634cd0ed304118279598440cb2f28a65b5fc9b0b50da6961efa5280b10900  0. 소스코드/eottae-web/src/app/api/v1/users/me/route.ts
@@ -183,7 +183,7 @@ e2409bed35f5d16ec6db472c7c8ca21ebc236c07952c2a93ccf76ae9d75351fa  2. 프로젝�
 f1702c11b60670d47f27a71d3e733e321abed4a5e80002e59df2614f043f1646  2. 프로젝트 설계서/요구사항_초안.md
 fe2481a7ad43dd535f9925346ae0d553eabc674552cb714a24e95a90ddc83e31  2. 프로젝트 설계서/유스케이스_시나리오.md
 fe2481a7ad43dd535f9925346ae0d553eabc674552cb714a24e95a90ddc83e31  2. 프로젝트 설계서/테스트_체크리스트.md
-1126f17159e667764d2f97f2538da956394ccfdee87da34cbb98a13eca81a50c  2. 프로젝트 설계서/테스트_케이스_마스터.md
+04d44deb61bc5796a688354fb2fe2a01e9499e1af7cae891e57ed40ab5d0d653  2. 프로젝트 설계서/테스트_케이스_마스터.md
 50a59fac77a7c111acc7fbbae783a2d4927fd84d846e11066eda96822ba02f51  3. 구현 이미지(5장이상)/01_공통_홈_데스크톱.png
 0afbb4156c5d65d35ed595e2091ceaeac32e57c2091a927dede167dedc58ad19  3. 구현 이미지(5장이상)/02_공통_홈_모바일.png
 97dd0efa4c601b3bcef24d2370783fbd0ef442831df4f3463ca8004157608c1e  3. 구현 이미지(5장이상)/03_공통_홈_데스크톱_다크.png

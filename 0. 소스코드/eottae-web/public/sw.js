@@ -73,11 +73,8 @@ async function shellKeepPaths(cache) {
   return keep;
 }
 
-// keys()는 넣은 순서라 앞쪽을 오래된 것으로 본다. 같은 키를 다시 put해도 맨 뒤로 간다고 보지 않는다.
-async function trimCache() {
-  const cache = await caches.open(CACHE);
-  const requests = await cache.keys();
-  const keep = await shellKeepPaths(cache);
+// 상한에서 빼는 청크·방문 페이지. keys() 순서를 유지한 채 보호 경로만 건너뛴다.
+function trimGroups(requests, keep) {
   const chunks = [];
   const pages = [];
   for (const request of requests) {
@@ -86,15 +83,32 @@ async function trimCache() {
     if (isChunkPath(pathname)) chunks.push(request);
     else if (!STATIC_ASSET.test(relFromBase(pathname))) pages.push(request);
   }
+  return { chunks, pages };
+}
+
+// keys()는 넣은 순서라 앞쪽을 오래된 것으로 본다. 같은 키를 다시 put하면 명세상 기존 항목을 지우고
+// 뒤에 붙인다(Chrome에서 확인) — 다시 연 페이지·다시 받은 청크는 뒤쪽, 해시가 바뀐 옛 청크는 앞쪽에 남는다.
+async function trimCache() {
+  const cache = await caches.open(CACHE);
+  const first = trimGroups(await cache.keys(), await shellKeepPaths(cache));
   const stale = [
-    ...chunks.slice(0, Math.max(0, chunks.length - MAX_CHUNKS)),
-    ...pages.slice(0, Math.max(0, pages.length - MAX_PAGES)),
+    ...first.chunks.slice(0, Math.max(0, first.chunks.length - MAX_CHUNKS)),
+    ...first.pages.slice(0, Math.max(0, first.pages.length - MAX_PAGES)),
   ];
-  // 목록을 만든 뒤 셸 HTML이 바뀌었으면 그 자산은 빼 둔다
+  // 목록을 만든 뒤 셸이 바뀌었거나, 그 사이 다시 저장돼 맨 뒤로 간 키는 지우지 않는다.
   const keepNow = await shellKeepPaths(cache);
+  const latest = trimGroups(await cache.keys(), keepNow);
+  const chunkCut = Math.max(0, latest.chunks.length - MAX_CHUNKS);
+  const pageCut = Math.max(0, latest.pages.length - MAX_PAGES);
   await Promise.all(
     stale
-      .filter((request) => !keepNow.has(new URL(request.url).pathname))
+      .filter((request) => {
+        if (keepNow.has(new URL(request.url).pathname)) return false;
+        const chunkAt = latest.chunks.findIndex((item) => item.url === request.url);
+        if (chunkAt >= 0) return chunkAt < chunkCut;
+        const pageAt = latest.pages.findIndex((item) => item.url === request.url);
+        return pageAt >= 0 && pageAt < pageCut;
+      })
       .map((request) => cache.delete(request)),
   );
 }
@@ -121,6 +135,16 @@ function scheduleTrim() {
   return trimming;
 }
 
+// fetch 응답을 그대로 put하면 응답 url이 CacheStorage에 남는다.
+// 본문·status·statusText·headers만 담으면 url이 빈 문자열로 저장된다.
+function bareResponse(response) {
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+  });
+}
+
 // 홈·오프라인 문서 이동으로 셸 HTML을 저장한 뒤, 그 HTML이 참조하는데 캐시에 없는 청크만 받아 둔다.
 // 바뀌지 않았어도 이전 받기가 실패한 구멍은 채운다. 클라이언트 라우팅(RSC)은 셸 HTML을 갈아끼우지 않는다.
 async function warmShellAssets(cache, page, html) {
@@ -129,7 +153,7 @@ async function warmShellAssets(cache, page, html) {
       try {
         if (await cache.match(asset)) return;
         const res = await fetch(asset, { cache: 'no-cache' });
-        if (res.ok && !res.redirected) await cache.put(asset, res);
+        if (res.ok && !res.redirected) await cache.put(asset, bareResponse(res));
       } catch {
         // 자산 하나 실패가 나머지 정리를 막지 않는다
       }
@@ -190,7 +214,7 @@ function remember(event, request, response) {
   return response;
 }
 
-// 페이지 이동 응답은 본문·헤더만으로 다시 만들어 저장한다 — fetch 응답을 그대로 넣으면
+// 페이지 이동 응답은 bareResponse로 본문·헤더만 다시 만들어 저장한다 — fetch 응답을 그대로 넣으면
 // 키를 경로로 줘도 응답 객체의 url(쿼리 포함)이 CacheStorage에 함께 남는다.
 // 새로 만든 Response는 url이 빈 문자열로 저장되고, 페이지 이동 응답으로 돌려줘도 문제없다.
 function rememberPage(event, path, response) {
@@ -202,12 +226,11 @@ function rememberPage(event, path, response) {
       (async () => {
         try {
           const cache = await caches.open(CACHE);
-          const clean = new Response(copy.body, {
-            status: copy.status,
-            statusText: copy.statusText,
-            headers: copy.headers,
-          });
-          await cache.put(path, clean);
+          // 다시 연 페이지가 저장 직후 정리에서 지워지지 않게 맨 뒤로 보낸다. put도 명세상 그렇게 하지만
+          // 구현마다 다를 수 있어 지운 다음 넣는다. 셸은 늘 보호돼 순서가 상관없다 — 지운 틈에 정리가
+          // 돌면 셸 참조 청크를 놓치므로 건너뛴다.
+          if (!shellCopy) await cache.delete(path);
+          await cache.put(path, bareResponse(copy));
           if (shellCopy) {
             try {
               await warmShellAssets(cache, path, await shellCopy.text());
