@@ -33,10 +33,14 @@ function syncChrome() {
   if (meta) meta.setAttribute('content', color);
 }
 
+// 헤더 피커와 설정 화면이 같은 탭에서 서로를 따라가게 — storage 이벤트는 다른 탭만 울린다.
+const THEME_EVENT = 'eottae-theme-change';
+
 function apply(theme: Theme) {
   document.documentElement.dataset.theme = theme;
   localStorage.setItem('eottae-theme', theme);
   syncChrome();
+  window.dispatchEvent(new CustomEvent<Theme>(THEME_EVENT, { detail: theme }));
 }
 
 // 현재 테마 팔레트 미리보기 — 점 3개가 globals.css 토큰(브랜드·CTA·카드)을 그대로 칠한다.
@@ -51,7 +55,8 @@ function Swatch() {
   );
 }
 
-export default function ThemeToggle() {
+// variant: 헤더는 좁은 select, 설정은 같은 목록을 라디오로. 저장 키·apply는 하나다.
+export default function ThemeToggle({ variant = 'picker' }: { variant?: 'picker' | 'choices' }) {
   const [theme, setTheme] = useState<Theme>('light');
   const [mounted, setMounted] = useState(false);
 
@@ -64,14 +69,49 @@ export default function ThemeToggle() {
     else syncChrome();
     setMounted(true);
 
+    const onTheme = (event: Event) => {
+      const next = (event as CustomEvent<Theme>).detail;
+      if (THEME_IDS.includes(next)) setTheme(next);
+    };
+    window.addEventListener(THEME_EVENT, onTheme);
+
     // 'system' 선택 중 OS 다크/라이트가 바뀌면 크롬 색상만 따라간다 (화면 색상은 CSS 미디어쿼리가 처리)
     const mql = window.matchMedia('(prefers-color-scheme: dark)');
     const onOsChange = () => {
       if (document.documentElement.dataset.theme === 'system') syncChrome();
     };
     mql.addEventListener('change', onOsChange);
-    return () => mql.removeEventListener('change', onOsChange);
+    return () => {
+      window.removeEventListener(THEME_EVENT, onTheme);
+      mql.removeEventListener('change', onOsChange);
+    };
   }, []);
+
+  const choose = (next: Theme) => {
+    setTheme(next);
+    apply(next);
+  };
+
+  if (variant === 'choices') {
+    return (
+      <fieldset className="theme-choices">
+        <legend>테마 선택</legend>
+        {THEMES.map((t) => (
+          <label className="theme-choice" key={t.id}>
+            <input
+              type="radio"
+              name="eottae-theme-choice"
+              value={t.id}
+              checked={theme === t.id}
+              disabled={!mounted}
+              onChange={() => choose(t.id)}
+            />
+            {t.label}
+          </label>
+        ))}
+      </fieldset>
+    );
+  }
 
   return (
     <label className="theme-picker">
@@ -80,11 +120,7 @@ export default function ThemeToggle() {
         aria-label="테마 선택"
         value={theme}
         disabled={!mounted}
-        onChange={(e) => {
-          const next = e.target.value as Theme;
-          setTheme(next);
-          apply(next);
-        }}
+        onChange={(e) => choose(e.target.value as Theme)}
       >
         {THEMES.map((t) => (
           <option key={t.id} value={t.id}>

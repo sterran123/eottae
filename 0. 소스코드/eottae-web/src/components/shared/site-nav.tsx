@@ -9,6 +9,7 @@ const NAV_ITEMS: { href: string; label: string; motif: MotifName; safety?: boole
   { href: '/activities', label: '데이트·소모임', motif: 'spark' },
   { href: '/invitations', label: '모바일 청첩장', motif: 'mail' },
   { href: '/safety', label: '안전센터', motif: 'shield', safety: true },
+  { href: '/settings', label: '설정', motif: 'gear' },
 ];
 
 export default function SiteNav() {
