@@ -569,6 +569,24 @@
 - [버그수정] PR #56 2차 Grok 리뷰(8e739cb, 616초, API 환산 $0.82) **수정 필요** 반영: ① `tools/sync_repo.cmd`가 작성자 작업 트리에서 LF(198바이트)라 매니페스트 해시가 깨끗한 클론(`.gitattributes`의 `*.cmd eol=crlf` → 202바이트)과 어긋남 — 규칙이 생기기(PR #51) 전에 받은 파일이 다시 변환되지 않았던 것. 파일을 지우고 다시 받아 CRLF로 맞춘 뒤 재생성(이전 해시 `b8202619…`로 돌아옴), `git ls-files --eol`로 다른 불일치 없음 확인 ② 완성 기준이 공개 배포에서 테스트 인증을 켜는 길을 열어 ADR-002·DEC-01(공개 배포 fail-closed)과 어긋남 → 두 계정 실데이터 흐름은 로컬 시연, 공개 배포는 테스트 인증 끈 채 성인 확인 전 거부 확인으로 나눔, 남은 결정에서 공개 배포 선택지 삭제. HANDOFF·grok_mention·grok_review_worker 해시 변경은 PR #55 뒤 매니페스트가 낡았던 것(깨끗한 클론 해시와 같음 확인). 파일 목록을 `git ls-files` 기준으로 바꾸는 권장은 보류
 - [미실행] build — 문서·매니페스트 생성 스크립트만 변경
 
+## 2026-10-29 서비스워커 캐시 상한 정리 — #26 후속 (김민기 작업, 구현은 로컬 Grok)
+- [요청] "#26 해결 작업은 Grok으로" — #26의 「(후속) 서비스워커 캐시 정리」(배포가 반복되면 옛 해시 `_next/static` 청크·방문 페이지가 `eottae-shell-v6`에 쌓임)
+- [AI] 구현: 로컬 Grok(grok-4.7-build) — 비밀 파일 없는 별도 클론(`C:\eottae-grok-review\dev`)에서 파일 읽기·수정 도구만 허용(명령 실행·웹 검색 없음, 사용자 프로필 읽기·쓰기 거부). 첫 실행은 추론 중 응답이 멈춰 30분 제한에 걸렸고, 같은 세션 재개 → 헤드리스라 쓰기 승인 불가 → 작업 폴더 쓰기 허용 규칙을 붙여 3회째에 완료(구독 사용량 — API 환산 2·3회차 $0.32, 멈춘 1회차는 집계 안 됨)
+- [변경] 0. 소스코드/eottae-web/public/sw.js | 런타임 `_next/static` 청크 80개·방문 페이지 30개 상한(넣은 순서로 오래된 것부터 삭제). PRECACHE·홈/오프라인 셸·캐시된 셸 HTML이 참조하는 자산은 세지 않고 지우지 않음. activate 때와 저장할 때마다 정리(sw.js가 안 바뀌는 배포에서도 동작), 겹치면 하나로 합침, 실패는 삼켜 화면을 막지 않음. 홈·오프라인 문서 이동이 성공하면 셸이 참조하는데 캐시에 없는 청크를 받아 둠. 캐시 이름 v6 유지(올리면 받아 둔 오프라인 셸이 통째로 지워짐)
+- [판단] Claude가 작업 지시·diff 검토·시험, 반영 여부는 김민기 결정
+- [검증] 로컬 Pages 미리보기 + 헤드리스 Chrome e2e 13개 PASS — 테스트_케이스_마스터 TC-012 2026-10-29 행. 처음엔 Chrome 프로필을 8.3 짧은 경로(`DEFAUL~2`) 아래 둬서 CacheStorage가 「Unexpected internal error」로 실패(10-27 헤드리스 「판정 불가」와 같은 증상) → 프로필을 일반 경로로 옮기니 정상
+- [미실행] 실기기 재확인(배포 후), iPhone Safari(#26 팀원 도움 요청)
+
+## 2026-10-29 설정 화면·다크 로고 톤 — CORE-002·BRAND-004 (김민기 작업, 구현은 로컬 Grok)
+- [요청] `/settings` 공통 설정 틀(테마 재사용, 로그인 전 계정·삭제 비활성, 안전·개인정보 링크, 앱 정보)과 헤더·푸터 설정 링크. 다크 로고 PNG 원본은 수정하지 않고 CSS 필터로 차분한 파스텔. sw.js·패키지·매니페스트는 수정하지 않음
+- [AI] 로컬 Grok이 기존 서브페이지·`theme-toggle`·토큰만 읽고 구현. 명령 실행 없음
+- [변경] src/app/settings/page.tsx | 설정 라우트 — subpage-hero·metadata, 화면/계정/안전·개인정보/앱 정보 카드. 삭제는 disabled·aria-disabled·설명 연결만, 동작 없음
+- [변경] src/components/shared/theme-toggle.tsx | `choices` 변형이 기존 6테마·`eottae-theme`·apply를 라디오로 재사용. 같은 탭 헤더와 맞추는 이벤트
+- [변경] src/components/shared/site-nav.tsx · site-footer.tsx · motif-icon.tsx | 설정 링크(모바일 내비 포함), 톱니 모티프
+- [변경] src/app/globals.css | 설정 카드·44px 테마 선택, 비활성 버튼은 투명도 없이 토큰 색. `.logo-dark`에 `--logo-dark-filter`(dark·system 다크 saturate 0.7 brightness 0.9, cyberpunk 0.62·0.94). 라이트 로고는 그대로
+- [변경] 1. 프로젝트 계획서/실행_결정대기_로그.md | BRAND-004 상태를 CSS 필터 1차 적용(원본 무변경), 실화면 확인 필요로 갱신
+- [미실행] 빌드·브라우저 확인은 Claude Code 파이프라인이 실행
+
 ## 2026-10-29 MATCH-003 정적 배포(GitHub Pages) 세션 검증 연동 회원가입·이메일 확인·로그인 구현 (주한태 작업)
 - [보존] supabase/migrations/0001_create_auth_and_users.sql, src/lib/server/auth.ts, src/lib/server/session.ts, src/lib/auth/client-auth.ts | PR #24의 RLS 정책 및 정적 배포 호환 세션 서명·검증(`requireActiveUser`, `verifySessionToken`, `clientAuth`) 모듈 그대로 유지
 - [신규] supabase/migrations/0002_auth_profiles.sql, supabase/tests/0002_auth_profiles_test.sql | `public.users` 열 단위 권한(`nickname`만 클라이언트 UPDATE 허용, `adult_verified`·`account_status` 수정 차단), 생년월일 원본을 만 19세 판정 후 `birth_year`로만 치환 저장하는 트리거(ADR-002), Google 소셜 가입 완료 RPC(`complete_signup`), 20개 항목 pgTAP 테스트 스크립트
