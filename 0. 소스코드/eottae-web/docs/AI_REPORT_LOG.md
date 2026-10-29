@@ -583,3 +583,16 @@
 - [검증] `npm run typecheck` PASS / `npm run build` PASS (정적 21개 라우트 프리렌더 완료: `/auth/signup`, `/auth/login`, `/auth/callback`, `/auth/complete` 포함)
 - [미실행] 로컬 Supabase(`npx supabase start`) 마이그레이션 적용 및 `supabase/tests/0002_auth_profiles_test.sql` pgTAP 실행 — 작업 PC에 Docker 미설치로 미실행
 - [미구현/보류] 외부 SMTP 실서버 연결, Google OAuth 콘솔 키 등록, MATCH-004 정식 성인 인증(주민등록증/PASS 등) — 후순위로 보류(현재는 정적 배포 세션 검증 모드로 동작)
+
+## 2026-10-29 PR #57 보안 스캔 수정 및 MATCH-004~008 매칭·채팅·안전 RLS 정책 구현 (주한태 작업)
+- [버그수정] src/lib/supabase/client.ts | PR #57 보안 스캔 지적(`client.ts:9 — 비밀값 기본값(fail-open)`) 반영 — `process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''` 기본값 연산자를 제거하고 `isValidAnonKey()`로 유효성 검사 후 미설정 시 `null`(정적 배포 세션 검증 모드)을 반환하도록 수정
+- [신규] supabase/migrations/0003_match_safety_rls.sql | 매칭·추천·채팅·차단·신고 핵심 테이블(`profiles`, `interests`, `profile_interests`, `blocks`, `reports`, `likes`, `matches`, `match_members`, `conversations`, `messages`) 및 Default-Deny RLS 정책 구현
+  - MATCH-004 (TC-004): `private.is_active_adult()` 조건을 모든 매칭·추천·채팅 RLS 정책에 강제하여 `adult_verified = false` 계정의 접근 차단
+  - MATCH-005 (TC-006): `matches` 테이블에 정규화된 `UNIQUE (user_low_id, user_high_id)` 제약과 `private.handle_mutual_like()` 트리거(`ON CONFLICT DO NOTHING`)를 두어 동시 쌍방 좋아요 경쟁 조건에서도 매치·대화방이 정확히 1건만 생성되도록 보장
+  - MATCH-006 (TC-007): `public.get_recommendations(p_limit, p_cursor)` RPC 및 `profiles_select_active_adult` RLS로 본인·미성년/미검증·정지/탈퇴·양방향 차단(`public.is_blocked_between`) 대상을 추천 결과에서 제외
+  - MATCH-007·008 (TC-008, TC-009, TC-010): `public.can_access_conversation()`으로 비구성원(C)의 대화방·메시지 접근 차단 및 차단 즉시(`private.handle_new_block`) 대화방 접근·전송 권한 회수, `reports` 테이블은 `authenticated`에 `INSERT`만 부여하고 `SELECT` 정책을 두지 않아 일반 계정의 신고 큐 조회 차단
+- [신규] src/lib/server/rls-guard.ts | 정적 배포 및 서버 환경에서 동일하게 검증 가능한 RLS·성인 인증 가드 모듈 (`requireAdultVerifiedUser`, `isBlockedBetween`, `filterRecommendationsWithRls`, `recordLikeWithMutualMatch`, `requireConversationAccessWithRls`, `queryReportQueueWithRls`)
+- [신규] supabase/tests/0003_match_safety_rls_test.sql, supabase/tests/verify_rls_policies.mjs | pgTAP SQL 테스트(16개 항목) 및 Node.js 기반 RLS 정책 실행 검증 스크립트(TC-004, TC-006, TC-007, TC-008, TC-009, TC-010)
+- [검증] `node "0. 소스코드/eottae-web/supabase/tests/verify_rls_policies.mjs"` ALL PASS (TC-004·TC-006·TC-007·TC-008·TC-009·TC-010 6개 시나리오 통과)
+- [검증] `node tools/test_auth_match_003.mjs` ALL PASS / `npm run typecheck` PASS / `npm run build` PASS (정적 21개 라우트 프리렌더 완료)
+- [미실행] 로컬 Supabase(`npx supabase start`) 마이그레이션 적용 및 `supabase/tests/0003_match_safety_rls_test.sql` pgTAP 실행 — 작업 PC에 Docker 미설치로 미실행
