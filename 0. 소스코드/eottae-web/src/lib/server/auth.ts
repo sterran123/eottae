@@ -101,19 +101,7 @@ export function authenticateUser(email: string): { session: UserSession; token: 
   const mockUser = MOCK_USERS[normalizedEmail];
 
   if (!mockUser) {
-    // 목업에 없는 새 이메일인 경우 자동 활성 유저로 가상 생성 (개발 편의)
-    const newSession = buildUserSession({
-      userId: `user-${Date.now()}`,
-      authId: `auth-${Date.now()}`,
-      email: normalizedEmail,
-      nickname: normalizedEmail.split('@')[0] || '사용자',
-      accountStatus: 'ACTIVE',
-      adultVerified: false,
-    });
-    return {
-      session: newSession,
-      token: createSessionToken(newSession),
-    };
+    throw new AuthException('UNAUTHORIZED', '계정을 찾을 수 없습니다.', 401);
   }
 
   // 계정 상태 검사

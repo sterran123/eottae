@@ -18,4 +18,10 @@ export const OAUTH_PROVIDERS_ENABLED: Record<OAuthProvider, boolean> = {
   google: false,
 };
 
-export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
+export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? '/eottae';
+
+/** Supabase Redirect allow list (ADR-005) — 끝에 슬래시(trailingSlash: true) 포함 */
+export const ALLOWED_REDIRECT_URLS = [
+  'https://sterran123.github.io/eottae/auth/callback/',
+  'http://localhost:3000/eottae/auth/callback/',
+] as const;

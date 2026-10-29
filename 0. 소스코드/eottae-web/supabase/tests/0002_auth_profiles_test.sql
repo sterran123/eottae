@@ -6,7 +6,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(20);
+select plan(21);
 
 -- 테스트용 헬퍼: 특정 사용자로 요청하는 것처럼 role/JWT claim 설정
 create or replace function pg_temp.login_as(p_uid uuid)
@@ -36,7 +36,15 @@ values (
 
 select is(
   (select account_status::text from public.users where id = 'aaaaaaaa-0000-4000-8000-000000000001'),
-  'ACTIVE', '이메일 가입: 검증 통과 시 ACTIVE');
+  'PENDING', '이메일 가입 직후: 이메일 확인 전에는 PENDING 유지');
+
+update auth.users
+   set email_confirmed_at = now()
+ where id = 'aaaaaaaa-0000-4000-8000-000000000001';
+
+select is(
+  (select account_status::text from public.users where id = 'aaaaaaaa-0000-4000-8000-000000000001'),
+  'ACTIVE', '이메일 확인 완료 시: ACTIVE로 전환');
 
 select is(
   (select birth_year from public.users where id = 'aaaaaaaa-0000-4000-8000-000000000001'),

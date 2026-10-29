@@ -7,8 +7,8 @@ import type { UserSession, AccountStatus } from '../auth/types';
 export const DEFAULT_SESSION_DURATION_MS = 24 * 60 * 60 * 1000;
 export const SESSION_COOKIE_NAME = 'eottae_session';
 
-// HMAC-SHA256 간이 서명용 비밀키 (개발/로컬용 기본값, 운영환경에서는 환경변수 주입)
-const SESSION_SECRET = process.env.SESSION_SECRET || 'eottae-dev-secret-key-change-in-prod';
+// HMAC-SHA256 간이 서명용 비밀키 (ADR-002: fail-closed, 기본 비밀키 하드코딩 금지)
+const SESSION_SECRET = process.env.SESSION_SECRET;
 
 /**
  * 안전한 Base64URL 인코딩
@@ -41,6 +41,7 @@ function fromBase64Url(base64Url: string): string {
  * 간단한 문자열 해시 서명 (의존성 없이 가볍고 안전한 서명 생성)
  */
 function createSignature(payloadBase64: string): string {
+  if (!SESSION_SECRET) return '';
   let hash = 0;
   const combined = `${payloadBase64}.${SESSION_SECRET}`;
   for (let i = 0; i < combined.length; i++) {
@@ -68,6 +69,9 @@ export function createSessionToken(session: UserSession): string {
  * - 형식이 잘못된 경우 null 반환
  */
 export function verifySessionToken(token: string | null | undefined): UserSession | null {
+  if (!SESSION_SECRET) {
+    return null;
+  }
   if (!token || typeof token !== 'string') {
     return null;
   }

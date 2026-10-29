@@ -278,7 +278,9 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- 7. auth.users AFTER INSERT — users 행 생성 (+ 검증된 이메일 가입이면 즉시 ACTIVE)
+-- 7. auth.users AFTER INSERT OR UPDATE — users 행 생성 및 이메일 확인 후 ACTIVE 활성화
+--    INSERT 시에는 항상 PENDING 상태로 생성한다.
+--    이메일 확인(email_confirmed_at 채워짐)이 완료된 후에만 activate_user를 호출하여 ACTIVE로 전환한다.
 -- ---------------------------------------------------------------------------
 create or replace function public.handle_new_auth_user()
 returns trigger
@@ -289,9 +291,15 @@ as $$
 declare
   v_signup jsonb := new.raw_user_meta_data -> 'signup';
 begin
-  insert into public.users (id) values (new.id);
+  if TG_OP = 'INSERT' then
+    insert into public.users (id, account_status) values (new.id, 'PENDING')
+    on conflict (id) do nothing;
+  end if;
 
-  if v_signup is not null and (v_signup ->> 'validated')::boolean is true then
+  -- email_confirmed_at 이 설정된 시점에 검증된 가입 정보가 있으면 계정 활성화
+  if new.email_confirmed_at is not null
+     and v_signup is not null
+     and (v_signup ->> 'validated')::boolean is true then
     perform private.activate_user(
       new.id,
       v_signup ->> 'full_name',
@@ -315,7 +323,7 @@ create trigger on_auth_user_before_insert
 
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
-  after insert on auth.users
+  after insert or update on auth.users
   for each row execute function public.handle_new_auth_user();
 
 -- ---------------------------------------------------------------------------

@@ -1,17 +1,18 @@
 'use client';
 
 // src/components/auth/AuthCallback.tsx
-// MATCH-003: 이메일 인증 링크 / OAuth 복귀 및 정적 배포 세션 검증 콜백
+// MATCH-003: 이메일 인증 링크 / PKCE OAuth 복귀 콜백 (ADR-005)
+// - Supabase 미설정 시: NOT_CONFIGURED 로 즉시 에러 표시 (ADR-005 fail-closed)
+// - PKCE code가 있는 경우 exchangeCodeForSession 호출 및 실패 시 상세 에러 표시
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { EmailOtpType } from '@supabase/supabase-js';
 import { getSupabase } from '@/lib/supabase/client';
-import { clientAuth } from '@/lib/auth/client-auth';
 import { authService, consumeNextPath } from '@/lib/auth/auth-service';
 
-type Phase = 'working' | 'confirmed-other-device' | 'static-verified' | 'error';
+type Phase = 'working' | 'confirmed-other-device' | 'error';
 
 const VALID_OTP_TYPES: readonly EmailOtpType[] = [
   'signup',
@@ -37,13 +38,8 @@ export default function AuthCallback() {
   useEffect(() => {
     const supabase = getSupabase();
     if (!supabase) {
-      const session = clientAuth.getSession();
-      if (session) {
-        setPhase('static-verified');
-      } else {
-        setDetail('활성 세션이 없습니다. 로그인 또는 회원가입을 진행해 주세요.');
-        setPhase('error');
-      }
+      setDetail('인증 환경변수가 설정되지 않아 콜백 처리를 진행할 수 없습니다 (ADR-005 fail-closed).');
+      setPhase('error');
       return;
     }
 
@@ -51,18 +47,30 @@ export default function AuthCallback() {
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
     const providerError = params.get('error_description') ?? hash.get('error_description');
     const tokenHash = params.get('token_hash');
+    const code = params.get('code');
     const otpType = parseOtpType(params.get('type'));
-    const hadCode = params.has('code');
 
     let cancelled = false;
 
     (async () => {
       if (providerError) {
-        setDetail(/expired|invalid/i.test(providerError) ? '인증 링크가 만료되었거나 이미 사용되었어요.' : null);
+        setDetail(/expired|invalid/i.test(providerError) ? '인증 링크가 만료되었거나 이미 사용되었어요.' : providerError);
         setPhase('error');
         return;
       }
 
+      // 1) PKCE 인증 코드 교환 처리
+      if (code) {
+        const { error: exchangeErr } = await supabase.auth.exchangeCodeForSession(code);
+        if (cancelled) return;
+        if (exchangeErr) {
+          setDetail(`인증 코드 교환에 실패했습니다: ${exchangeErr.message}`);
+          setPhase('error');
+          return;
+        }
+      }
+
+      // 2) 이메일 링크 token_hash 검증
       if (tokenHash) {
         const verified = await authService.verifyTokenHash(tokenHash, otpType);
         if (cancelled) return;
@@ -77,11 +85,12 @@ export default function AuthCallback() {
         }
       }
 
+      // 3) 세션 및 계정 상태 확인
       const { data } = await supabase.auth.getSession();
       if (cancelled) return;
 
       if (!data.session) {
-        setPhase(hadCode ? 'confirmed-other-device' : 'error');
+        setPhase(code ? 'confirmed-other-device' : 'error');
         return;
       }
 
@@ -108,14 +117,14 @@ export default function AuthCallback() {
     );
   }
 
-  if (phase === 'confirmed-other-device' || phase === 'static-verified') {
+  if (phase === 'confirmed-other-device') {
     return (
       <div className="auth-done" role="status">
         <div className="auth-done-icon" aria-hidden="true">✓</div>
-        <h2>세션 및 이메일 확인이 완료됐어요</h2>
-        <p>로그인 화면에서 세션 검증 상태를 확인하거나 서비스를 이용해 보세요.</p>
+        <h2>이메일 확인이 완료됐어요</h2>
+        <p>인증이 완료되었습니다. 로그인 화면에서 로그인해 주세요.</p>
         <Link className="btn primary" href="/auth/login">
-          로그인 · 세션 검증 확인
+          로그인 화면으로
         </Link>
       </div>
     );

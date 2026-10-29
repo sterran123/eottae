@@ -3,15 +3,13 @@
 
 import { isSupabaseConfigured } from '@/lib/supabase/client';
 
-export function DemoModeNotice() {
+export function NotConfiguredNotice() {
   if (isSupabaseConfigured) return null;
   return (
-    <aside className="warn auth-demo">
-      <strong>DEMO · 정적 배포 세션 검증 모드</strong>
+    <aside className="warn auth-demo" role="alert">
+      <strong>인증 서비스 안내</strong>
       <p>
-        현재 GitHub Pages 정적 환경이므로 브라우저 세션 서명·검증 모듈(
-        <code>src/lib/server/auth.ts</code> · <code>session.ts</code>)로 회원가입 → 이메일 인증번호 확인 →
-        로그인 및 계정 상태(ACTIVE / 403 차단) 검증이 동작합니다.
+        인증 환경변수(<code>NEXT_PUBLIC_SUPABASE_URL</code> / <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>)가 설정되지 않아 가입 및 로그인이 비활성화되어 있습니다 (ADR-005 fail-closed).
       </p>
     </aside>
   );
@@ -34,7 +32,7 @@ export default function AuthCard({
         <span className="auth-eyebrow">{eyebrow}</span>
         <h1>{title}</h1>
         {description && <p className="auth-desc">{description}</p>}
-        <DemoModeNotice />
+        <NotConfiguredNotice />
         {children}
       </div>
     </section>

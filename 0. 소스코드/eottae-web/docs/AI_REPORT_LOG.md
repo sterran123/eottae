@@ -587,15 +587,23 @@
 - [변경] 1. 프로젝트 계획서/실행_결정대기_로그.md | BRAND-004 상태를 CSS 필터 1차 적용(원본 무변경), 실화면 확인 필요로 갱신
 - [미실행] 빌드·브라우저 확인은 Claude Code 파이프라인이 실행
 
-## 2026-10-29 MATCH-003 Supabase Auth 연동 및 리뷰 피드백 반영 (주한태 작업)
-- [보존] supabase/migrations/0001_create_auth_and_users.sql, src/lib/server/auth.ts, src/lib/server/session.ts, src/lib/auth/client-auth.ts | PR #24의 RLS 정책 및 세션 모듈 보존
-- [신규] supabase/migrations/0002_auth_profiles.sql, supabase/tests/0002_auth_profiles_test.sql | `public.users.id = auth.users.id`, `grant update (nickname)` 열 단위 권한, `adult_verified` 기본값 false, `complete_signup` auth.uid() 활성화, 동의 3종 검증
+## 2026-10-29 MATCH-003 Supabase Auth 전면 전환 및 ADR-005 리뷰 피드백 반영 (주한태 작업)
+- [보완] supabase/migrations/0002_auth_profiles.sql, supabase/tests/0002_auth_profiles_test.sql | `public.users.id = auth.users.id`, `grant update (nickname)` 열 단위 권한, `adult_verified` 기본값 false, `complete_signup` auth.uid() 활성화, 동의 3종 검증
+  - [보완] `auth.users` AFTER INSERT 시에는 항상 `PENDING` 계정 행만 생성하고, `email_confirmed_at`이 채워진 이후에만 `activate_user`를 호출하여 `ACTIVE`로 전환하도록 트리거 수정
   - [보완] `auth.users` BEFORE INSERT 및 UPDATE 트리거(`sanitize_new_auth_user`)에서 `birth_date` 키를 완전 제거하여 메타데이터에 생년월일 원본이 남지 않도록 보장 (ADR-002)
   - [보완] `public.is_active_adult()`에서 `adult_verification_expires_at is not null and adult_verification_expires_at > now()`로 null 만료 거부 (fail-closed)
+- [제거] 자체 세션 화면 경로 완전 제거 (ADR-005 준수)
+  - `src/app/api/v1/users/me/route.ts` force-static 모의 라우트 삭제 (ADR-005: 클라이언트가 직접 Supabase Auth + public.users 조회)
+  - `tools/test_auth_match_003.mjs` 삭제
+  - `src/lib/server/session.ts`의 `SESSION_SECRET` 하드코딩 기본값 제거 (fail-closed)
+  - `src/lib/server/auth.ts`의 미등록 이메일 가상 계정 자동 생성 삭제 (인증되지 않은 계정 접근 401 차단)
+  - `src/lib/auth/client-auth.ts`의 자체 토큰 생성 및 `localStorage` 저장 로직 제거
+  - `src/components/auth/AuthCard.tsx`의 DEMO 안내를 미설정 비활성화 안내(`NotConfiguredNotice`)로 교체
 - [보완] src/lib/auth/validation.ts | `sanitizeNextPath`에서 `//`, `/\`, `\` 포함 경로를 `/`로 차단하여 오픈 리다이렉트 방지
 - [보완] src/lib/auth/auth-service.ts | if (!supabase) 데모 분기를 제거하고 미설정 시 `NOT_CONFIGURED`로 즉시 중단(fail-closed). `rememberNextPath`를 모듈 변수에서 `sessionStorage`로 전환. 로그인 시 `public.users`의 `account_status`(PENDING/SUSPENDED/DELETED)를 검증하여 차단
-- [보완] src/components/auth/{LoginForm,SignupForm,AuthCallback}.tsx | DEMO UI 및 테스트 계정 프리셋 제거. Supabase 환경변수 미설정 시 가입/로그인 버튼 비활성화 안내 표시. `peekNextPath` / `consumeNextPath` 렌더 중 소비 방지
-- [연결] src/components/shared/site-nav.tsx | 헤더 내비게이션의 준비 중 라벨을 `AuthNavSlot`으로 교체 연결
+- [보완] src/components/auth/{LoginForm,SignupForm,AuthCallback}.tsx | DEMO UI 및 테스트 계정 프리셋 제거. Supabase 환경변수 미설정 시 가입/로그인 버튼 비활성화 안내 표시. `peekNextPath` / `consumeNextPath` 렌더 중 소비 방지. PKCE `code` 교환 처리 및 실패 시 상세 에러 표시
+- [연결] src/components/shared/site-nav.tsx & globals.css | 헤더 내비게이션의 준비 중 라벨을 `AuthNavSlot`으로 교체 연결하고, `.nav .login-slot.is-ready`, `.nav .login-slot-out` 44px 터치 영역 스타일 추가
+- [연결] src/app/settings/page.tsx & src/components/settings/AccountSettingsCard.tsx | 설정 02번 계정 카드를 `useAuth` 실시간 세션 상태(로그인됨/로그인 필요)와 연동
 - [정리] 0003 매칭·채팅 RLS 파일 커밋에서 제외 (0002/MATCH-003 단위로 PR 범위 분리)
-- [검증] `npm run typecheck` PASS / `npm run build` PASS (정적 22개 라우트 프리렌더 완료, 환경변수 미설정 빌드에서 가입/로그인 버튼 비활성화 확인)
+- [검증] `npm run typecheck` PASS / `npm run build` PASS (정적 21개 라우트 프리렌더 완료, 환경변수 미설정 빌드에서 가입/로그인 버튼 비활성화 확인)
 - [미실행] 로컬 Supabase(`npx supabase start`) 마이그레이션 적용 및 `supabase/tests/0002_auth_profiles_test.sql` pgTAP 실행 — 작업 PC에 Docker 미설치로 미실행

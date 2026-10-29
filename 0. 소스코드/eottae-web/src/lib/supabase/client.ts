@@ -1,6 +1,6 @@
 // src/lib/supabase/client.ts
 // ADR-005: 브라우저에서 supabase-js로 직접 호출한다. 공개 키(Publishable/anon)만 사용.
-// 환경변수가 없으면 null을 돌려주고, 화면은 정적 세션 검증 모드(src/lib/server/auth.ts)로 동작한다.
+// 환경변수가 없으면 null을 돌려주고, 화면은 NOT_CONFIGURED(가입/로그인 비활성화 fail-closed) 상태로 동작한다.
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
