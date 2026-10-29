@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useId, useState } from 'react';
 import { authService, consumeNextPath, peekNextPath, rememberNextPath } from '@/lib/auth/auth-service';
-import { getSupabase } from '@/lib/supabase/client';
+import { isSupabaseConfigured } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/auth/use-auth';
 import { validateEmail } from '@/lib/auth/validation';
 import { EmailSentPanel } from './SignupForm';
@@ -19,7 +19,7 @@ export default function LoginForm() {
   const id = useId();
   const searchParams = useSearchParams();
   const auth = useAuth();
-  const isConfigured = Boolean(getSupabase());
+  const isConfigured = isSupabaseConfigured;
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

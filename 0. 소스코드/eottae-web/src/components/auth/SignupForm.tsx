@@ -8,8 +8,8 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useState } from 'react';
-import { authService } from '@/lib/auth/auth-service';
-import { getSupabase } from '@/lib/supabase/client';
+import { authService, consumeNextPath } from '@/lib/auth/auth-service';
+import { isSupabaseConfigured } from '@/lib/supabase/client';
 import { validateEmail, validatePassword, validatePasswordConfirm, PASSWORD_MIN_LENGTH } from '@/lib/auth/validation';
 import ConsentFields, {
   EMPTY_PROFILE_CONSENT,
@@ -25,7 +25,7 @@ const RESEND_COOLDOWN_SEC = 30;
 
 export default function SignupForm() {
   const id = useId();
-  const isConfigured = Boolean(getSupabase());
+  const isConfigured = isSupabaseConfigured;
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -214,8 +214,12 @@ export function EmailSentPanel({ email }: { email: string }) {
       return;
     }
 
-    // 인증 완료 후 로그인 화면으로 이동
-    router.replace('/auth/login');
+    // 계정 상태에 따라 분기: PENDING은 가입 완료 화면, ACTIVE는 앱(복귀 경로)으로 이동
+    if (res.data.accountStatus === 'PENDING') {
+      router.replace('/auth/complete');
+    } else {
+      router.replace(consumeNextPath());
+    }
   };
 
   const resend = async () => {

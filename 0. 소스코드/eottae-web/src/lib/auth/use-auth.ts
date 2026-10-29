@@ -31,17 +31,25 @@ export function useAuth(): AuthState {
   const [session, setSession] = useState<UserSession | null>(null);
   const [account, setAccount] = useState<MyAccount | null>(null);
 
-  const loadAccount = useCallback(async () => {
+  const loadAccount = useCallback(async (): Promise<MyAccount | null> => {
     const supabase = getSupabase();
     if (!supabase) {
       setAccount(null);
       setSession(null);
       setStatus('signed-out');
-      return;
+      return null;
     }
 
-    const acc = await authService.getMyAccount();
-    setAccount(acc);
+    const check = await authService.assertAccountAccess();
+    if (!check.ok) {
+      setAccount(null);
+      setUser(null);
+      setStatus('signed-out');
+      return null;
+    }
+
+    setAccount(check.data);
+    return check.data;
   }, []);
 
   useEffect(() => {
@@ -53,27 +61,34 @@ export function useAuth(): AuthState {
 
     let active = true;
 
-    const apply = (nextUser: User | null) => {
+    const apply = async (nextUser: User | null) => {
       if (!active) return;
-      setUser(nextUser);
       if (!nextUser) {
+        setUser(null);
         setAccount(null);
         setStatus('signed-out');
         return;
       }
-      setTimeout(() => {
-        void loadAccount().finally(() => {
-          if (active) setStatus('signed-in');
-        });
-      }, 0);
+
+      const acc = await loadAccount();
+      if (!active) return;
+
+      if (!acc) {
+        setUser(null);
+        setAccount(null);
+        setStatus('signed-out');
+      } else {
+        setUser(nextUser);
+        setStatus('signed-in');
+      }
     };
 
-    void supabase.auth.getSession().then(({ data }) => apply(data.session?.user ?? null));
+    void supabase.auth.getSession().then(({ data }) => void apply(data.session?.user ?? null));
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, supaSession) => {
       if (event === 'INITIAL_SESSION') return;
       if (event === 'TOKEN_REFRESHED') return;
-      apply(supaSession?.user ?? null);
+      void apply(supaSession?.user ?? null);
     });
 
     return () => {
@@ -88,6 +103,8 @@ export function useAuth(): AuthState {
     session,
     account,
     needsSignupCompletion: status === 'signed-in' && account?.accountStatus === 'PENDING',
-    refresh: loadAccount,
+    refresh: async () => {
+      await loadAccount();
+    },
   };
 }

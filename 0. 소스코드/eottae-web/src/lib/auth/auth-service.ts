@@ -213,8 +213,60 @@ export const authService = {
     return { ok: true, data: { needsEmailConfirmation: !data.session } };
   },
 
-  /** 이메일 인증번호(OTP) 확인 */
-  async verifyEmailOtp(email: string, token: string): Promise<AuthResult<Session | null>> {
+  /**
+   * 계정 상태 통합 판정 가드 (ADR-002, ADR-005)
+   * - 세션 유효성 및 email_confirmed_at 확인
+   * - public.users 조회 후 SUSPENDED·DELETED·조회 실패면 signOut() 후 에러 반환
+   * - PENDING 및 ACTIVE 상태의 MyAccount 반환
+   */
+  async assertAccountAccess(): Promise<AuthResult<MyAccount>> {
+    const supabase = getSupabase();
+    if (!supabase) return fail('NOT_CONFIGURED');
+
+    const { data: authData, error: userError } = await supabase.auth.getUser();
+    if (userError || !authData.user) {
+      await supabase.auth.signOut();
+      return fail('UNAUTHORIZED');
+    }
+
+    if (!authData.user.email_confirmed_at) {
+      await supabase.auth.signOut();
+      return fail('EMAIL_NOT_CONFIRMED');
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from('users')
+      .select('id, nickname, full_name, birth_year, account_status, signup_completed_at, adult_verified, adult_verification_expires_at')
+      .eq('id', authData.user.id)
+      .maybeSingle();
+
+    if (profileError || !profile) {
+      await supabase.auth.signOut();
+      return fail('UNKNOWN', '계정 정보를 확인할 수 없습니다.');
+    }
+
+    const account = mapAccount({ ...profile, email: authData.user.email });
+
+    if (account.accountStatus === 'SUSPENDED') {
+      await supabase.auth.signOut();
+      return fail('ACCOUNT_SUSPENDED');
+    }
+
+    if (account.accountStatus === 'DELETED') {
+      await supabase.auth.signOut();
+      return fail('ACCOUNT_DELETED');
+    }
+
+    if (account.accountStatus !== 'ACTIVE' && account.accountStatus !== 'PENDING') {
+      await supabase.auth.signOut();
+      return fail('UNKNOWN', '유효하지 않은 계정 상태입니다.');
+    }
+
+    return { ok: true, data: account };
+  },
+
+  /** 이메일 인증번호(OTP) 확인 및 계정 상태 판정 */
+  async verifyEmailOtp(email: string, token: string): Promise<AuthResult<MyAccount>> {
     const cleanedToken = token.replace(/\s+/g, '');
     if (!cleanedToken) return fail('INVALID_OTP');
 
@@ -227,8 +279,11 @@ export const authService = {
       type: 'signup',
     });
 
-    if (error) return { ok: false, error: toAuthError(error) };
-    return { ok: true, data: data.session };
+    if (error || !data.session) return { ok: false, error: toAuthError(error) };
+
+    const check = await this.assertAccountAccess();
+    if (!check.ok) return { ok: false, error: check.error };
+    return { ok: true, data: check.data };
   },
 
   /** 이메일 링크의 token_hash 검증 (/auth/callback?token_hash=...&type=signup) */
@@ -277,31 +332,13 @@ export const authService = {
       return { ok: false, error: toAuthError(error) };
     }
 
-    // 로그인 직후 public.users 에서 계정 상태 조회 (ADR-002, ADR-005)
-    const { data: profile, error: profileError } = await supabase
-      .from('users')
-      .select('account_status')
-      .eq('id', data.user.id)
-      .maybeSingle();
+    // 계정 상태 통합 판정 (이메일 확인 및 public.users 상태)
+    const check = await this.assertAccountAccess();
+    if (!check.ok) return { ok: false, error: check.error };
 
-    if (profileError || !profile) {
-      await supabase.auth.signOut();
-      return fail('UNKNOWN', '계정 정보를 확인할 수 없습니다.');
-    }
-
-    if (profile.account_status === 'PENDING') {
+    if (check.data.accountStatus === 'PENDING') {
       await supabase.auth.signOut();
       return fail('EMAIL_NOT_CONFIRMED');
-    }
-
-    if (profile.account_status === 'SUSPENDED') {
-      await supabase.auth.signOut();
-      return fail('ACCOUNT_SUSPENDED');
-    }
-
-    if (profile.account_status === 'DELETED') {
-      await supabase.auth.signOut();
-      return fail('ACCOUNT_DELETED');
     }
 
     return { ok: true, data: data.session };
@@ -331,22 +368,10 @@ export const authService = {
     return { ok: true, data: undefined };
   },
 
-  /** 현재 로그인 사용자의 public.users 정보 조회 */
+  /** 현재 로그인 사용자의 public.users 정보 조회 (계정 상태 통합 판정) */
   async getMyAccount(): Promise<MyAccount | null> {
-    const supabase = getSupabase();
-    if (!supabase) return null;
-
-    const { data: authData } = await supabase.auth.getUser();
-    if (!authData.user) return null;
-
-    const { data, error } = await supabase
-      .from('users')
-      .select('id, nickname, full_name, birth_year, account_status, signup_completed_at, adult_verified, adult_verification_expires_at')
-      .eq('id', authData.user.id)
-      .maybeSingle();
-
-    if (error || !data) return null;
-    return mapAccount({ ...data, email: authData.user.email });
+    const check = await this.assertAccountAccess();
+    return check.ok ? check.data : null;
   },
 
   /** 닉네임 수정 (public.users에서 유일하게 클라이언트 UPDATE 허용된 열) */

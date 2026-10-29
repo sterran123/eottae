@@ -85,22 +85,24 @@ export default function AuthCallback() {
         }
       }
 
-      // 3) 세션 및 계정 상태 확인
-      const { data } = await supabase.auth.getSession();
+      // 3) 계정 상태 통합 판정 (SUSPENDED·DELETED·조회 실패 시 signOut 후 에러)
+      const gateRes = await authService.assertAccountAccess();
       if (cancelled) return;
 
-      if (!data.session) {
-        setPhase(code ? 'confirmed-other-device' : 'error');
+      if (!gateRes.ok) {
+        setDetail(gateRes.error.message);
+        setPhase('error');
         return;
       }
 
-      const me = await authService.getMyAccount();
-      if (cancelled) return;
-
-      if (me?.accountStatus === 'PENDING') {
+      if (gateRes.data.accountStatus === 'PENDING') {
         router.replace('/auth/complete');
-      } else {
+      } else if (gateRes.data.accountStatus === 'ACTIVE') {
         router.replace(consumeNextPath());
+      } else {
+        await supabase.auth.signOut();
+        setDetail('이용할 수 없는 계정 상태입니다.');
+        setPhase('error');
       }
     })();
 

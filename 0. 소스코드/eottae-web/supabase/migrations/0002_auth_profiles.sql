@@ -296,8 +296,11 @@ begin
     on conflict (id) do nothing;
   end if;
 
-  -- email_confirmed_at 이 설정된 시점에 검증된 가입 정보가 있으면 계정 활성화
-  if new.email_confirmed_at is not null
+  -- email_confirmed_at 이 채워진 시점에 검증된 가입 정보가 있으면 계정 활성화
+  -- 1) INSERT 시 이미 확인된 경우
+  -- 2) UPDATE 시 email_confirmed_at 이 null에서 실제 값으로 변경된 경우
+  if ((TG_OP = 'INSERT' and new.email_confirmed_at is not null)
+      or (TG_OP = 'UPDATE' and old.email_confirmed_at is null and new.email_confirmed_at is not null))
      and v_signup is not null
      and (v_signup ->> 'validated')::boolean is true then
     perform private.activate_user(
