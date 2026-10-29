@@ -61,6 +61,8 @@
   --shadow-card-hover: 0 10px 28px rgba(40, 33, 58, 0.1);
   /* 통통 튀는 귀여운 곡선 — 호버·리빌·팝에 공통 사용 */
   --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* 다크 로고 필터 기본값(없음). 다크 계열만 덮어쓴다. 라이트 로고에는 적용하지 않는다. */
+  --logo-dark-filter: none;
   color-scheme: light;
 }
 
@@ -99,6 +101,8 @@
     --chip-ink: #d4bdf7;
     --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3);
     --shadow-card-hover: 0 10px 28px rgba(0, 0, 0, 0.42);
+    /* #10101b 위에서 묻히지 않게 밝기는 0.9까지만. 채도만 낮춰 차분한 파스텔. */
+    --logo-dark-filter: saturate(0.7) brightness(0.9);
     color-scheme: dark;
 }
 
@@ -142,6 +146,8 @@
     --chip-ink: #d4bdf7;
     --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3);
     --shadow-card-hover: 0 10px 28px rgba(0, 0, 0, 0.42);
+    /* 수동 다크와 같은 배경이라 필터도 같게 둔다. */
+    --logo-dark-filter: saturate(0.7) brightness(0.9);
     color-scheme: dark;
   }
 }
@@ -239,6 +245,8 @@
   --chip-ink: #8fecff;
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5);
   --shadow-card-hover: 0 10px 28px rgba(0, 224, 255, 0.1);
+  /* 배경(#0a0a14)이 더 어두워 밝기는 덜 낮추고, 네온과 겹치지 않게 채도만 더 뺀다. */
+  --logo-dark-filter: saturate(0.62) brightness(0.94);
   color-scheme: dark;
 }
 
@@ -498,9 +506,12 @@ img {
   color: var(--muted);
 }
 
-/* 테마별 로고 — 다크 크롬 테마(dark·cyberpunk)와 시스템 다크에서만 다크 로고 */
+/* 테마별 로고 — 다크 크롬 테마(dark·cyberpunk)와 시스템 다크에서만 다크 로고.
+   BRAND-004: PNG 원본은 그대로 두고 --logo-dark-filter로만 채도·밝기를 낮춘다.
+   brightness를 0.9 아래로 더 내리면 어두운 배경에서 로고가 사라진다. */
 .logo-dark {
   display: none;
+  filter: var(--logo-dark-filter);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -680,7 +691,8 @@ img {
   box-shadow: 0 8px 24px -2px color-mix(in srgb, var(--cta-bg) 65%, transparent);
 }
 
-.btn[aria-disabled='true']:hover {
+.btn[aria-disabled='true']:hover,
+.btn:disabled:hover {
   transform: none;
 }
 
@@ -702,7 +714,8 @@ img {
   color: var(--brand-dark);
 }
 
-.btn[aria-disabled='true'] {
+.btn[aria-disabled='true'],
+.btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
   border-style: dashed;
@@ -1417,6 +1430,148 @@ img {
 .feature p {
   color: var(--muted);
   margin: 0;
+}
+
+/* 설정 — 섹션은 한 열. 카드 호버로 라디오가 움직이지 않게 들림만 끈다. */
+.settings-list {
+  display: grid;
+  gap: 16px;
+  margin: 0 0 28px;
+}
+
+.settings-card h2 {
+  margin: 10px 0 6px;
+  font-size: 22px;
+  letter-spacing: -0.04em;
+}
+
+.settings-card.feature:hover {
+  transform: none;
+}
+
+.settings-card .settings-status {
+  color: var(--ink);
+}
+
+.settings-card .settings-note {
+  margin-top: 12px;
+}
+
+.settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.settings-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 전역 비활성 버튼은 opacity 0.55라 --muted 대비가 AA 밑으로 떨어진다. 설정에서는 색만으로 구분. */
+.settings-card .btn:disabled {
+  opacity: 1;
+  color: var(--muted);
+  border-color: var(--line);
+}
+
+.settings-facts {
+  margin: 12px 0 0;
+  display: grid;
+  gap: 10px;
+}
+
+.settings-facts div {
+  display: grid;
+  grid-template-columns: minmax(8.5em, 11em) minmax(0, 1fr);
+  gap: 4px 12px;
+  align-items: baseline;
+}
+
+.settings-facts dt {
+  margin: 0;
+  font-weight: 800;
+  color: var(--chip-ink);
+}
+
+.settings-facts dd {
+  margin: 0;
+  color: var(--ink);
+}
+
+@media (max-width: 520px) {
+  .settings-facts div {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 설정 테마 — 헤더 select와 같은 6개. 라벨 전체가 44px 터치 영역 */
+.theme-choices {
+  border: 0;
+  margin: 14px 0 0;
+  padding: 0;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.theme-choices legend {
+  grid-column: 1 / -1;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.theme-choice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.theme-choice input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: var(--brand);
+}
+
+.theme-choice:has(:checked) {
+  background: var(--chip-bg);
+  color: var(--chip-ink);
+  border-color: var(--brand-soft);
+}
+
+.theme-choice:has(:focus-visible) {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.theme-choice input:focus-visible {
+  outline: none;
+}
+
+.theme-choice:has(:disabled) {
+  cursor: default;
+}
+
+@media (min-width: 761px) {
+  .theme-choices {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 /* ---------- 강조 / 경고 ---------- */
@@ -2280,6 +2435,7 @@ img {
   .brand-logo,
   .motif,
   .theme-picker,
+  .theme-choice,
   .feature,
   .nav a .motif-icon,
   .faq summary::after,

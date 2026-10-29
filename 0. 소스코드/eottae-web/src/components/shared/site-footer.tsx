@@ -19,6 +19,7 @@ export default function SiteFooter() {
           <b>안내</b>
           <Link href="/safety">안전센터</Link>
           <Link href="/privacy">개인정보·계정 삭제 안내</Link>
+          <Link href="/settings">설정</Link>
         </nav>
       </div>
       <div className="shell footer-bottom">

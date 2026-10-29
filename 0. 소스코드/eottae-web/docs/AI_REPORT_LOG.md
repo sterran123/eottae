@@ -576,3 +576,13 @@
 - [판단] Claude가 작업 지시·diff 검토·시험, 반영 여부는 김민기 결정
 - [검증] 로컬 Pages 미리보기 + 헤드리스 Chrome e2e 13개 PASS — 테스트_케이스_마스터 TC-012 2026-10-29 행. 처음엔 Chrome 프로필을 8.3 짧은 경로(`DEFAUL~2`) 아래 둬서 CacheStorage가 「Unexpected internal error」로 실패(10-27 헤드리스 「판정 불가」와 같은 증상) → 프로필을 일반 경로로 옮기니 정상
 - [미실행] 실기기 재확인(배포 후), iPhone Safari(#26 팀원 도움 요청)
+
+## 2026-10-29 설정 화면·다크 로고 톤 — CORE-002·BRAND-004 (김민기 작업, 구현은 로컬 Grok)
+- [요청] `/settings` 공통 설정 틀(테마 재사용, 로그인 전 계정·삭제 비활성, 안전·개인정보 링크, 앱 정보)과 헤더·푸터 설정 링크. 다크 로고 PNG 원본은 수정하지 않고 CSS 필터로 차분한 파스텔. sw.js·패키지·매니페스트는 수정하지 않음
+- [AI] 로컬 Grok이 기존 서브페이지·`theme-toggle`·토큰만 읽고 구현. 명령 실행 없음
+- [변경] src/app/settings/page.tsx | 설정 라우트 — subpage-hero·metadata, 화면/계정/안전·개인정보/앱 정보 카드. 삭제는 disabled·aria-disabled·설명 연결만, 동작 없음
+- [변경] src/components/shared/theme-toggle.tsx | `choices` 변형이 기존 6테마·`eottae-theme`·apply를 라디오로 재사용. 같은 탭 헤더와 맞추는 이벤트
+- [변경] src/components/shared/site-nav.tsx · site-footer.tsx · motif-icon.tsx | 설정 링크(모바일 내비 포함), 톱니 모티프
+- [변경] src/app/globals.css | 설정 카드·44px 테마 선택, 비활성 버튼은 투명도 없이 토큰 색. `.logo-dark`에 `--logo-dark-filter`(dark·system 다크 saturate 0.7 brightness 0.9, cyberpunk 0.62·0.94). 라이트 로고는 그대로
+- [변경] 1. 프로젝트 계획서/실행_결정대기_로그.md | BRAND-004 상태를 CSS 필터 1차 적용(원본 무변경), 실화면 확인 필요로 갱신
+- [미실행] 빌드·브라우저 확인은 Claude Code 파이프라인이 실행

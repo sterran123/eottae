@@ -1,6 +1,6 @@
 // 브랜드 모티프 아이콘 — 시스템 폰트마다 모양·색이 달라지던 ♡ ✦ ✉ 글리프 대신 쓰는 인라인 SVG.
 // 색은 currentColor라 부모의 토큰 색을 그대로 따른다(면은 같은 색 18% 틴트).
-export type MotifName = 'heart' | 'spark' | 'mail' | 'shield' | 'lock';
+export type MotifName = 'heart' | 'spark' | 'mail' | 'shield' | 'lock' | 'gear';
 
 const PATHS: Record<MotifName, React.ReactNode> = {
   heart: <path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2Z" />,
@@ -22,6 +22,13 @@ const PATHS: Record<MotifName, React.ReactNode> = {
       <rect x="5" y="10.5" width="14" height="9.5" rx="3" />
       <path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" fill="none" />
     </>
+  ),
+  // 설정 내비·히어로용. 자물쇠(로그인 준비 중)와 구분한다.
+  gear: (
+    <path
+      fillRule="evenodd"
+      d="M19.4 15a7.8 7.8 0 0 0 .06-1.5 7.8 7.8 0 0 0-.06-1.5l1.55-1.2-1.5-2.6-1.9.74a7 7 0 0 0-2.6-1.5L14.6 4h-3.2l-.35 2.44a7 7 0 0 0-2.6 1.5l-1.9-.74-1.5 2.6L6.6 12a7.8 7.8 0 0 0 0 3l-1.55 1.2 1.5 2.6 1.9-.74a7 7 0 0 0 2.6 1.5L11.4 22h3.2l.35-2.44a7 7 0 0 0 2.6-1.5l1.9.74 1.5-2.6L19.4 15ZM12 15.4A3.4 3.4 0 1 1 12 8.6a3.4 3.4 0 0 1 0 6.8Z"
+    />
   ),
 };
 
