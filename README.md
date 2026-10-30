@@ -12,12 +12,15 @@
 ### [▶ 데모 사이트 열기 — sterran123.github.io/eottae](https://sterran123.github.io/eottae/)
 
 <img src="3.%20구현%20이미지(5장이상)/01_공통_홈_데스크톱.png" alt="어때? 통합 홈 화면 (라이트 테마)" width="820">
+<br>
+<sub>통합 홈 · 데스크톱 라이트</sub>
 
 </div>
 
-> **현재 단계: 1차 MVP 개발 중 (데모)**
-> 매칭 화면(온보딩·추천·문답·채팅)은 **데모 데이터로 체험**할 수 있습니다.
-> 로그인·만 19세 이상 성인 인증·서버 API는 아직 연결되지 않았으며, 실제 회원 데이터는 수집하지 않습니다.
+> **현재 단계: 중간 점검 1차 (데모)** — `plan_v2.md`
+> 통합 홈·6테마·설정(`/settings`)·PWA 오프라인 셸은 동작합니다. 서비스워커·오프라인은 TC-012 Android PASS.
+> 매칭 화면(온보딩·추천·문답·공통 질문·채팅·신고/차단)은 **데모 데이터로 체험**할 수 있습니다.
+> 로그인·만 19세 이상 성인 인증·DB 연동은 [#21](https://github.com/sterran123/eottae/issues/21) 진행 중이며, 실제 회원 데이터는 수집하지 않습니다.
 
 ---
 
@@ -42,21 +45,80 @@
 | 프로필 문답 | [`/match/qna`](https://sterran123.github.io/eottae/match/qna/) | 40문항 문답 |
 | 공통 질문 | [`/match/common`](https://sterran123.github.io/eottae/match/common/) | 둘 다 답하면 공개되는 블라인드 비교 |
 | 1:1 채팅 | [`/match/chat`](https://sterran123.github.io/eottae/match/chat/) | 대화 목업·미디어 첨부·신고/차단 메뉴 |
+| 설정 | [`/settings`](https://sterran123.github.io/eottae/settings/) | 테마 선택, 계정·삭제(로그인 연결 전 비활성), 안전·앱 정보 |
+| 오프라인 | [`/offline`](https://sterran123.github.io/eottae/offline/) | 네트워크 끊김 안내 (서비스워커 폴백) |
 | 안전센터 · 개인정보 | [`/safety`](https://sterran123.github.io/eottae/safety/) · [`/privacy`](https://sterran123.github.io/eottae/privacy/) | 안전 정책 초안, 계정·데이터 삭제 경로 |
 
 ## 스크린샷
 
+같은 종류의 캡처만 한 행에 두고, 행마다 이미지 `width`를 맞췄습니다. 위 히어로는 통합 홈 데스크톱(라이트)입니다.
+
 <table>
   <tr>
-    <td align="center"><img src="3.%20구현%20이미지(5장이상)/02_공통_홈_모바일.png" alt="통합 홈 모바일" width="220"><br><sub>통합 홈 · 모바일</sub></td>
-    <td align="center"><img src="3.%20구현%20이미지(5장이상)/10_매칭_추천_모바일.png" alt="매칭 추천 카드" width="220"><br><sub>오늘의 추천</sub></td>
-    <td align="center"><img src="3.%20구현%20이미지(5장이상)/12_매칭_문답_모바일_라이트.png" alt="프로필 문답" width="220"><br><sub>프로필 문답</sub></td>
+    <td align="center"><img src="3.%20구현%20이미지(5장이상)/03_공통_홈_데스크톱_다크.png" alt="통합 홈 다크" width="820"><br><sub>통합 홈 · 다크</sub></td>
   </tr>
 </table>
 
 **6가지 테마** — 라이트(기본) · 컵케잌 · 사이버펑크 · 디즈니 · 다크 · 시스템(OS 설정 추적). 헤더의 스와치 피커로 바꾸며, 매칭 화면까지 같은 테마를 따라갑니다.
 
-<img src="3.%20구현%20이미지(5장이상)/16_공통_홈_6테마_비교.png" alt="6가지 테마 비교" width="820">
+<table>
+  <tr>
+    <td align="center"><img src="3.%20구현%20이미지(5장이상)/16_공통_홈_6테마_비교.png" alt="6가지 테마 비교" width="820"><br><sub>6테마 비교</sub></td>
+  </tr>
+</table>
+
+매칭 데모 · 모바일
+
+<table>
+  <tr>
+    <td align="center" valign="top" width="50%"><img src="3.%20구현%20이미지(5장이상)/08_매칭_온보딩_모바일.png" alt="취향 온보딩" width="280"><br><sub>취향 온보딩</sub></td>
+    <td align="center" valign="top" width="50%"><img src="3.%20구현%20이미지(5장이상)/10_매칭_추천_모바일.png" alt="오늘의 추천" width="280"><br><sub>오늘의 추천</sub></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td align="center" valign="top" width="50%"><img src="3.%20구현%20이미지(5장이상)/12_매칭_문답_모바일_라이트.png" alt="프로필 문답" width="280"><br><sub>프로필 문답</sub></td>
+    <td align="center" valign="top" width="50%"><img src="3.%20구현%20이미지(5장이상)/14_매칭_공통질문_모바일_라이트.png" alt="공통 질문" width="280"><br><sub>공통 질문</sub></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td align="center"><img src="3.%20구현%20이미지(5장이상)/19_매칭_차단_신고_모달.png" alt="신고·차단" width="280"><br><sub>신고 · 차단</sub></td>
+  </tr>
+</table>
+
+채팅 · 데스크톱
+
+<table>
+  <tr>
+    <td align="center"><img src="3.%20구현%20이미지(5장이상)/18_매칭_채팅_목록_및_패널.png" alt="1:1 채팅" width="820"><br><sub>1:1 채팅 · 목록과 대화</sub></td>
+  </tr>
+</table>
+
+홈 · 오프라인 — 모바일 전체 높이
+
+<table>
+  <tr>
+    <td align="center"><img src="3.%20구현%20이미지(5장이상)/02_공통_홈_모바일.png" alt="통합 홈 모바일" width="280"><br><sub>통합 홈 · 모바일</sub></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td align="center"><img src="3.%20구현%20이미지(5장이상)/07_오프라인_폴백_모바일.png" alt="오프라인" width="280"><br><sub>오프라인</sub></td>
+  </tr>
+</table>
+
+준비중 모듈 — 모바일 전체 높이
+
+<table>
+  <tr>
+    <td align="center" valign="top" width="50%"><img src="3.%20구현%20이미지(5장이상)/05_준비중_모듈_데이트소모임_모바일.png" alt="데이트·소모임 준비중" width="280"><br><sub>데이트·소모임 · 준비중</sub></td>
+    <td align="center" valign="top" width="50%"><img src="3.%20구현%20이미지(5장이상)/06_준비중_모듈_청첩장_모바일.png" alt="모바일 청첩장 준비중" width="280"><br><sub>모바일 청첩장 · 준비중</sub></td>
+  </tr>
+</table>
 
 전체 캡처와 설명은 [`3. 구현 이미지(5장이상)/captions.csv`](3.%20구현%20이미지(5장이상)/captions.csv)에 있습니다.
 
@@ -118,12 +180,12 @@ tools/                     미리보기 서버·캡처·PR 리뷰 봇·매니페
    |---|---|---|
    | 빌드 CI | `npm ci` → `typecheck` → `build` | 실패 로그·재현 명령 안내 → 고쳐서 push |
    | 보안 스캔 | 추가된 줄의 키·토큰 하드코딩, 브라우저 코드의 `service_role`, 비밀값 기본값, `eval` 등 | 위치·고치는 법 안내 → 고쳐서 push |
-   | AI 코드 리뷰 | Devin이 diff를 읽고 정확성·보안(ADR-002·003·005)·저장소 규칙을 판정 | 「반드시 고칠 것」 안내 → 고쳐서 push (재실행은 `/ai-review` 댓글) |
+   | AI 코드 리뷰 | 로컬 Grok이 diff를 읽고 정확성·보안(ADR-002·003·005)·저장소 규칙을 판정 (`ai-review` 상태). 리뷰는 하나씩 순서대로, 보통 4~17분. 김민기 PC가 꺼져 있으면 다음 확인까지 기다림 | 「반드시 고칠 것」 안내 → 고쳐서 push (재실행은 `/ai-review` 댓글) |
    | 충돌 | main과 머지 가능한지 | 충돌 파일·해결 명령 안내 → 해결 후 push |
    | 보호 영역 | `.github/`·`package.json`·`.env*`·인증/DB/RLS 코드(`supabase/`, `src/lib/{server,auth,supabase}/`, `src/app/api/`) | 나머지 검사 통과 후 **담당자 Approve**하면 머지 |
 
    Draft PR도 판정 결과를 알려 주고, 「Ready for review」로 바꾸면 머지됩니다.
-4. 이슈나 PR 댓글에 `@devin 질문`을 쓰면 AI가 답글을 남깁니다 (collaborator 전용).
+4. 이슈나 PR의 **일반 댓글**에 `@grok 질문`을 쓰면 로컬 Grok이 코드를 읽고 답만 답니다(수정하지 않음). 줄 단위 리뷰 코멘트는 안 됩니다. **저장소 write 권한 팀원만** 호출할 수 있습니다. 👀 반응은 처리 중, 답은 김민기 계정 이름으로 달리며 요청자를 멘션합니다. 김민기 PC 작업자가 5분마다 확인하므로 PC가 꺼져 있으면 늦어집니다. (2026-10-28부터 Devin은 쓰지 않습니다.)
 5. 작업을 마치면 `0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md`에 **실행한 검증과 실행하지 못한 항목을 구분해** 기록합니다.
 
 규칙 원문: [`AGENTS.md`](0.%20소스코드/eottae-web/AGENTS.md) · [`AI 협업 가이드`](0.%20소스코드/eottae-web/docs/AI_에이전트_협업_가이드.md) · [`요구사항 마스터`](2.%20프로젝트%20설계서/요구사항_마스터.md) · [`처음 읽기`](README_처음읽기.md)
