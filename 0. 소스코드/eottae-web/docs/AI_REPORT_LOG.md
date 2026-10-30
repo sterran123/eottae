@@ -586,3 +586,11 @@
 - [변경] src/app/globals.css | 설정 카드·44px 테마 선택, 비활성 버튼은 투명도 없이 토큰 색. `.logo-dark`에 `--logo-dark-filter`(dark·system 다크 saturate 0.7 brightness 0.9, cyberpunk 0.62·0.94). 라이트 로고는 그대로
 - [변경] 1. 프로젝트 계획서/실행_결정대기_로그.md | BRAND-004 상태를 CSS 필터 1차 적용(원본 무변경), 실화면 확인 필요로 갱신
 - [미실행] 빌드·브라우저 확인은 Claude Code 파이프라인이 실행
+
+## 2026-10-30 README 스크린샷 레이아웃·@grok 안내 갱신 (김민기 작업, 구현은 로컬 Grok)
+- [요청] 루트 README 스크린샷 표가 이미지 원본 크기 차로 칸 높이·정렬이 들쭉날쭉하고 빈 칸이 생김. GitHub README에서 같은 종류끼리 같은 행·같은 width·캡션·열 수 맞춤. `@devin` 안내를 `@grok` 현재 운영으로 바꾸고, 로그인·서비스워커 미구현 같은 낡은 상태 표기를 plan_v2 중간 점검 1차에 맞춤. 과거 기록·Devin 코드는 건드리지 않음
+- [AI] 로컬 Grok이 HANDOFF §9~§11-1, AI_에이전트_협업_가이드, grok_review_worker.mjs·grok_mention.mjs 머리 주석, plan_v2 「진행 단계」, captions.csv·실제 PNG를 읽고 문서만 수정. 명령 실행 없음
+- [변경] README.md | 스크린샷을 데스크톱 1열(다크·6테마·채팅)·모바일 2열(온보딩|추천, 문답|공통질문, 데이트|청첩장)·짧은 화면 1열(신고/차단, 홈 모바일, 오프라인)로 나눔. 행마다 같은 width, 캡션, 빈 td 없음. 경로 인코딩은 기존과 동일(`3.%20구현%20이미지(5장이상)/`). 현재 단계·화면 표에 `/settings`·오프라인·#21. `@devin` → `@grok`(일반 댓글, write 팀원, 👀, 김민기 계정 답·요청자 멘션, 읽기 전용, 5분 주기, 자동 `ai-review` 4~17분)
+- [변경] README_처음읽기.md | 단계를 중간 점검 1차로 갱신. AI 협업(@grok) 절 추가
+- [변경] 0. 소스코드/eottae-web/README.md | 서비스워커 미구현 문구 삭제, 라우트에 매칭 데모·`/settings`·`/offline`, PWA Android PASS, 팀 협업에 @grok
+- [미실행] GitHub 렌더링 확인은 PR 화면에서
