@@ -1,5 +1,5 @@
-# 어때? 단일 PWA 기본 골격 — 김민기 초기 담당
-**완성된 MVP가 아닌 실행 가능한 화면 기본 틀(소스 스캐폴드)**. 로그인, 19+ 본인/성인확인, 추천/좋아요, 실시간 채팅, PG 결제, PWA 푸시·서비스워커는 아직 구현하지 않았습니다.
+# 어때? 단일 PWA — 김민기 초기 담당
+**1차 MVP 개발 중(데모).** 완성된 출시 제품이 아닙니다. 통합 홈·6테마·설정(`/settings`)·PWA 오프라인 셸은 동작합니다(서비스워커·오프라인은 TC-012 Android PASS). 매칭(온보딩·추천·문답·공통 질문·채팅·신고/차단)은 데모 데이터 화면입니다. 로그인·성인 인증·DB 연동은 #21 진행 중. PG 결제·푸시는 미구현입니다.
 
 ## 시작
 Node.js 20+ 및 npm 필요.
@@ -17,7 +17,8 @@ npm run build
 - `npm run typecheck`: **PASS** (SW·오프라인·폰트 반영 후 재실행 동일).
 - `npm run build`: **PASS** (정적 8페이지 + `/offline` + 동적 `/api/health`).
 - 코드 대비 점검: 다크 `.btn.primary` 1.39:1 결함 발견 → CTA 전용 토큰(`--cta-bg`/`--cta-ink`)으로 **8.19:1** 수정. `.eyebrow.dark`·카드 라벨은 `--brand` 적용(라이트 4.6:1↑).
-- 브라우저 수동 테스트(360/390/768/1440px, 라이트·다크): 코드 기준으로 구성했으나 **실기기 시각 검증 미실행** — 시연 전 캡처 필요. Playwright MCP 도입 시 자동화 가능(`docs/AI_도구_MCP_권장.md`).
+- 브라우저 수동 테스트(360/390/768/1440px, 라이트·다크): 코드 기준으로 구성했으나 **당시 실기기 시각 검증 미실행**.
+- **이후 (plan_v2 중간 점검 1차):** PWA 오프라인 TC-012 Android PASS (2026-10-28). `/settings` 추가. 매칭 화면은 데모 데이터. 로그인·DB는 #21 진행 중.
 
 ## 협업 문서 (docs/)
 - `AI_REPORT_LOG.md` — 작업 이력 로그 (본인 이름 태그 필수)
@@ -27,7 +28,7 @@ npm run build
 - `README_테스트배포.md` — 실행·검증·배포 단계와 PWA 점검 표
 
 ## 라우트
-`/` 통합 허브 / `/match` 매칭 소개·구현 대기 / `/activities` 2차 소개·구현 대기 / `/invitations` 3차 소개·구현 대기 / `/safety` 미운영 안전 정책 / `/privacy` 개인정보·계정 삭제 안내 / `/api/health` 개발 헬스 체크. `not-found`·`error`·`loading` 공통 경계 포함.
+`/` 통합 허브 / `/match` 매칭 소개·데모 진입 / `/match/onboarding` `/match/recommend` `/match/qna` `/match/common` `/match/chat` 매칭 데모 / `/activities` 2차 준비중 / `/invitations` 3차 준비중 / `/settings` 설정(테마·계정 안내) / `/safety` 안전 정책 / `/privacy` 개인정보·계정 삭제 안내 / `/offline` PWA 오프라인 폴백 / `/api/health` 개발 헬스 체크. `not-found`·`error`·`loading` 공통 경계 포함.
 
 ## 구조
 - `src/app/layout.tsx` — 공통 shell, 메타데이터(manifest·theme-color·apple), 스킵 링크
@@ -49,7 +50,10 @@ npm run build
 - `public/sw.js`: 오프라인 셸 서비스워커 — 문서 network-first→`/offline`, 정적 자산 cache-first. `src/components/shared/sw-register.tsx`가 **프로덕션에서만** 등록.
 - `src/app/offline/page.tsx`: 네트워크 끊김 안내 페이지.
 - iOS: `apple-touch-icon` 180px + `appleWebApp` 메타 설정. iOS 설치는 Safari '공유 → 홈 화면에 추가' 경로이며 푸시는 별도 조건 필요.
-- **미구현/미검증**: 푸시·백그라운드 동기화, 실기기 설치·오프라인 시나리오, HTTPS 배포 환경 installability 검증.
+- **오프라인**: 서비스워커·오프라인 셸 동작. TC-012 Android 실기기 PASS (2026-10-28). iPhone Safari는 미실행.
+- **미구현/미검증**: 푸시·백그라운드 동기화, iOS 설치·오프라인, HTTPS 배포 환경 installability 검증.
 
 ## 팀 협업
 작업 브랜치 예: `feat/CORE-001-hub-shell`. `.env.example` 값은 PLACEHOLDER 전용. 운영 키나 사용자 데이터는 절대 Git에 올리지 말 것. 실제 기능 승인 조건은 상위 문서 참고.
+
+PR을 올리면 로컬 Grok이 자동 코드 리뷰합니다(`ai-review` 상태, 하나씩 순서대로, 보통 4~17분). 이슈·PR **일반 댓글**에 `@grok 질문`을 쓰면 코드를 읽고 답만 답니다(수정 안 함, 줄 단위 리뷰 코멘트는 안 됨). 저장소 write 권한 팀원만, 👀 = 처리 중, 답은 김민기 계정 이름·요청자 멘션. 김민기 PC 작업자가 5분마다 확인하므로 PC가 꺼져 있으면 늦어집니다. 2026-10-28부터 Devin은 쓰지 않습니다. 상세: `docs/HANDOFF_김민기.md` §9~§11-1.
