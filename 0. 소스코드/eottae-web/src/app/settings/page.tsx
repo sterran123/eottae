@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import SubpageHero from '@/components/shared/subpage-hero';
 import ThemeToggle from '@/components/shared/theme-toggle';
+import AccountSettingsCard from '@/components/settings/AccountSettingsCard';
 import { MotifIcon } from '@/components/shared/motif-icon';
 
 export const metadata: Metadata = {
@@ -13,7 +14,7 @@ export default function SettingsPage() {
   return (
     <>
       <SubpageHero eyebrow="SETTINGS" title="설정" motif={<MotifIcon name="gear" size={56} />}>
-        화면 테마와 계정·안전 안내를 한곳에서 볼 수 있어요. 로그인은 아직 연결되지 않았어요.
+        화면 테마와 계정·안전 안내를 한곳에서 볼 수 있어요.
       </SubpageHero>
       <section className="shell subpage">
         <div className="settings-list">
@@ -24,25 +25,7 @@ export default function SettingsPage() {
             <ThemeToggle variant="choices" />
           </article>
 
-          <article className="feature settings-card">
-            <span>02</span>
-            <h2>계정</h2>
-            <p className="settings-status">로그인은 준비 중이에요(Supabase 로그인 연결 후 사용)</p>
-            <div className="settings-actions">
-              <button
-                type="button"
-                className="btn outline"
-                disabled
-                aria-disabled="true"
-                aria-describedby="settings-delete-note"
-              >
-                회원 탈퇴·데이터 삭제
-              </button>
-            </div>
-            <p className="settings-note" id="settings-delete-note">
-              로그인 기능이 연결되면 여기서 계정과 데이터를 삭제할 수 있어요(CORE-004)
-            </p>
-          </article>
+          <AccountSettingsCard />
 
           <article className="feature settings-card">
             <span>03</span>

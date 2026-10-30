@@ -587,6 +587,36 @@
 - [변경] 1. 프로젝트 계획서/실행_결정대기_로그.md | BRAND-004 상태를 CSS 필터 1차 적용(원본 무변경), 실화면 확인 필요로 갱신
 - [미실행] 빌드·브라우저 확인은 Claude Code 파이프라인이 실행
 
+## 2026-10-29 MATCH-003 Supabase Auth 전면 전환 및 ADR-005 리뷰 피드백 반영 (주한태 작업)
+- [보완] supabase/migrations/0002_auth_profiles.sql, supabase/tests/0002_auth_profiles_test.sql | `public.users.id = auth.users.id`, `grant update (nickname)` 열 단위 권한, `adult_verified` 기본값 false, `complete_signup` auth.uid() 활성화, 동의 3종 검증
+  - [보완] `auth.users` AFTER INSERT 시에는 항상 `PENDING` 계정 행만 생성하고, UPDATE 시 `old.email_confirmed_at is null and new.email_confirmed_at is not null` 시점에만 `activate_user`를 호출하여 `ACTIVE`로 전환하도록 트리거 수정
+  - [보완] `auth.users` BEFORE INSERT 및 UPDATE 트리거(`sanitize_new_auth_user`)에서 `birth_date` 키를 완전 제거하여 메타데이터에 생년월일 원본이 남지 않도록 보장 (ADR-002)
+  - [보완] `public.is_active_adult()`에서 `adult_verification_expires_at is not null and adult_verification_expires_at > now()`로 null 만료 거부 (fail-closed)
+- [제거] 자체 세션 화면 경로 완전 제거 (ADR-005 준수)
+  - `src/app/api/v1/users/me/route.ts` force-static 모의 라우트 삭제 (ADR-005: 클라이언트가 직접 Supabase Auth + public.users 조회)
+  - `tools/test_auth_match_003.mjs` 삭제
+  - `src/lib/server/session.ts`의 `SESSION_SECRET` 하드코딩 기본값 제거 (fail-closed)
+  - `src/lib/server/auth.ts`의 미등록 이메일 가상 계정 자동 생성 삭제 (인증되지 않은 계정 접근 401 차단)
+  - `src/lib/auth/client-auth.ts`의 자체 토큰 생성 및 `localStorage` 저장 로직 제거
+  - `src/components/auth/AuthCard.tsx`의 DEMO 안내를 미설정 비활성화 안내(`NotConfiguredNotice`)로 교체
+- [보완] src/lib/auth/validation.ts | `sanitizeNextPath`에서 `//`, `/\`, `\` 포함 경로를 `/`로 차단하여 오픈 리다이렉트 방지
+- [보완] src/lib/auth/auth-service.ts & use-auth.ts & AuthCallback.tsx | 계정 상태 검증을 통합 함수 `assertAccountAccess()`로 일원화 (이메일 미확인/SUSPENDED/DELETED/조회실패 시 즉시 signOut 및 세션 차단, PENDING은 가입완료 화면으로 유도, ACTIVE만 정상 진입 허용). if (!supabase) 데모 분기를 제거하고 미설정 시 `NOT_CONFIGURED`로 즉시 중단(fail-closed). `rememberNextPath`를 모듈 변수에서 `sessionStorage`로 전환
+- [보완] src/components/auth/{LoginForm,SignupForm,AuthCallback}.tsx | DEMO UI 및 테스트 계정 프리셋 제거. 렌더 시점 `getSupabase()` 호출로 인한 SSG/하이드레이션 불일치 해소(`isSupabaseConfigured` 사용). `peekNextPath` / `consumeNextPath` 렌더 중 소비 방지. PKCE `code` 중복 교환 방지(`detectSessionInUrl: false` 및 단일 교환 캐시 적용) 및 고정 에러 문구 적용
+- [연결] src/components/shared/site-nav.tsx & globals.css | 헤더 내비게이션의 준비 중 라벨을 `AuthNavSlot`으로 교체 연결하고, `.nav .login-slot.is-ready`, `.nav .login-slot-out` 44px 터치 영역 스타일 추가
+- [연결] src/app/settings/page.tsx & src/components/settings/AccountSettingsCard.tsx | 설정 02번 계정 카드를 `useAuth` 실시간 세션 상태(로그인됨/로그인 필요)와 연동
+- [정리] src/lib/server/{session,auth}.ts 파일 완전 삭제 (ADR-005: 자체 세션 토큰 서명 및 목업 계정 모듈 완전 제거)
+- [보완] src/lib/auth/auth-service.ts & use-auth.ts | signInWithEmail 성공 시 PENDING 계정도 /auth/complete로 이동할 수 있도록 세션 유지, loadAccount 성공 시 status('signed-in') 및 user 즉시 동기화
+- [보완] supabase/migrations/0002_auth_profiles.sql | sanitize UPDATE 시 old signup 유지 및 birth_date 제거(메타데이터 조작 방지), private.set_updated_at에 security definer 부여 및 grant update (nickname, updated_at) 추가
+- [보완] supabase/migrations/0002_auth_profiles.sql & supabase/tests/0002_auth_profiles_test.sql | `private.jsonb_strip_key()` 재귀 제거 함수 구현으로 `auth.users.raw_user_meta_data` 내 임의 중첩 위치(`extra` 등)의 `birth_date`까지 INSERT/UPDATE 시 전역 제거 보장 (ADR-002 완전 준수), pgTAP 중첩 키 제거 검증 테스트 2종 추가(plan 23)
+- [보완] src/lib/supabase/client.ts & src/components/auth/AuthCallback.tsx | `detectSessionInUrl: false` 설정 및 `AuthCallback` 모듈 스코프 1회 전담 교환 캐시(`codeExchange ??= ...`) 적용, 기존 세션이 있는 상태에서 인증 링크 개방 시 `signOut()` 후 링크 검증 진행 (계정 오염 방지)
+- [보완] src/components/auth/CompleteSignupForm.tsx | 가입 완료 화면 상단에 현재 인증된 계정 이메일 안내 표시
+- [보완] src/components/auth/LoginForm.tsx & globals.css | `peekNextPath` 마운트 후 상태 동기화로 SSG 하이드레이션 불일치 방지, `.nav .login-slot-name` 44px 터치 영역 스타일 보완
+- [정리] auth.css & globals.css | 인라인 style 제거(.auth-form-error--spaced 클래스화), 미사용 .auth-preset-* 및 .auth-demo-otp 스타일 삭제, .nav .login-slot-out에 prefers-reduced-motion(transition: none) 적용
+- [정리] FILE_INDEX.csv, MANIFEST.sha256 | 삭제된 tools/test_auth_match_003.mjs 항목 정리
+- [정리] 0003 매칭·채팅 RLS 파일 커밋에서 제외 (0002/MATCH-003 단위로 PR 범위 분리)
+- [검증] `npm run typecheck` PASS / `npm run build` PASS (정적 21개 라우트 프리렌더 완료, 환경변수 미설정 빌드에서 가입/로그인 버튼 비활성화 확인)
+- [미실행] 로컬 Supabase(`npx supabase start`) 마이그레이션 적용 및 `supabase/tests/0002_auth_profiles_test.sql` pgTAP 실행 — 작업 PC에 Docker 미설치로 미실행
+
 ## 2026-10-30 README 스크린샷 레이아웃·@grok 안내 갱신 (김민기 작업, 구현은 로컬 Grok)
 - [요청] 루트 README 스크린샷 표가 이미지 원본 크기 차로 칸 높이·정렬이 들쭉날쭉하고 빈 칸이 생김. GitHub README에서 같은 종류끼리 같은 행·같은 width·캡션·열 수 맞춤. `@devin` 안내를 `@grok` 현재 운영으로 바꾸고, 로그인·서비스워커 미구현 같은 낡은 상태 표기를 plan_v2 중간 점검 1차에 맞춤. 과거 기록·Devin 코드는 건드리지 않음
 - [AI] 로컬 Grok이 HANDOFF §9~§11-1, AI_에이전트_협업_가이드, grok_review_worker.mjs·grok_mention.mjs 머리 주석, plan_v2 「진행 단계」, captions.csv·실제 PNG를 읽고 문서만 수정. 명령 실행 없음
@@ -595,17 +625,21 @@
 - [변경] 0. 소스코드/eottae-web/README.md | 서비스워커 미구현 문구 삭제, 라우트에 매칭 데모·`/settings`·`/offline`, PWA Android PASS, 팀 협업에 @grok
 - [미실행] GitHub 렌더링 확인은 PR 화면에서
 
-## 2026-10-29 매칭 1차 UI 최신 구현 캡처(08~15) 갱신 및 문서 동기화 (손준혁 작업)
-- [요청] 이슈 #22에 올라온 최신 캡처 이미지(08~15)를 `3. 구현 이미지(5장이상)/` 폴더에 반영하고 관련 문서(captions.csv, 캡처 체크리스트, 테스트 케이스 마스터, 보고서) 동기화
-- [변경] 3. 구현 이미지(5장이상)/captions.csv & README_캡처_체크리스트.md | 08~15번 매칭 캡처 정보 최신화(2026-10-29) — 모바일 393px 3x(가로 1179 장치 픽셀) 및 데스크톱 1500px(본문 최대 480px 한 열) 전체 페이지 규격 반영. 08·09 사진 공개범위 설정과 MBTI·상대 선택(관심사 아코디언 잠금 상태), 10·11 한 열 추천 카드 내 버튼 배치, 12·13 추천 질문 슬라이드 카드와 40문항 목록, 14·15 미답변 질문 거절/건너뛰기 버튼과 열린 답 비교 등 화면에 실제 보이는 범위만 기술하고 체크리스트의 추천(10·11)과 문답·공통질문(12~15) 줄을 분리 (UTF-8 BOM `\uFEFF` 유지)
-- [변경] 2. 프로젝트 설계서/테스트_케이스_마스터.md | TC-002 실행 기록 44행을 393px(3x)·1500px 캡처 확인 범위로 한정(**PASS** (393px·1500px 캡처) / 320·360px·포커스·44px·540px 모달 너비 **미실행**)
-- [검증] `npm run typecheck` PASS / `npm run build` PASS (정적 18개 라우트 생성 확인)
-- [미실행] 320·360px 폭에서의 추천/문답 가로 넘침 재측정, 포커스 링·44px 터치 영역 실측, 540px 이상 뷰포트에서의 문답 모달 너비 확인, 온보딩·추천 화면의 다크 모드 캡처
-
-## 2026-10-30 실제진행현황 기록부 현행화 및 테스트케이스 마스터 제목 정정 (손준혁 작업)
-- [요청] 이슈 #22 피드백에 따라 `4. 프로젝트 결과 보고서/실제진행현황_기록부.md`를 1차 데모 및 19장 캡처 실측에 맞게 현행화하고, `2. 프로젝트 설계서/테스트_케이스_마스터.md` 1행 제목 정정
-- [변경] 4. 프로젝트 결과 보고서/실제진행현황_기록부.md | 1차 MVP 클라이언트 데모 구현 및 19장 캡처 확보 사실 반영, 채팅·신고 화면의 데모 데이터 동작 명시, 실시간 송수신·신고 DB 저장·차단 서버 효력 미구현 상태에 대한 PASS 표기 금지 원칙 준수, Android 오프라인 TC-012(김민기 실기기) 인용 표기, 주한태 담당 범위(로그인·성인인증·실제매칭) 미완료 유지
-- [변경] 2. 프로젝트 설계서/테스트_케이스_마스터.md | 1행 제목을 `실행 기록은 아래 표, 서버 항목은 BLOCKED가 남아 있음`으로 정정 (기존 실행 기록 44행 전수 보존)
-- [검증] `npm run typecheck` PASS / `npm run build` PASS (정적 18개 라우트 생성 확인)
-
-
+## 2026-10-30 MATCH-003 Supabase Auth 추가 리뷰 피드백 반영 및 RLS·함수 방어 강화 (주한태 작업)
+- [보완] supabase/migrations/0002_auth_profiles.sql |
+  - `private.jsonb_strip_sensitive_birth_keys()` 재귀 제거 함수 추가: `birth_date`뿐만 아니라 `birthdate`, `date_of_birth`, `dob`, `birthday` 대소문자 무관 전역 제거
+  - `sanitize_new_auth_user`의 모든 경로(이메일 INSERT, 비-signup INSERT, UPDATE)를 전면 화이트리스트화: `private.jsonb_whitelist_oauth_metadata()` 함수를 통해 허용된 OAuth 프로필 키(`iss, sub, name, full_name, email, picture, avatar_url, provider, provider_id`)이자 string 타입인 값만 보존하고 기존 signup 객체만 유지함으로써 `dateOfBirth` 및 임의 중첩 객체 주입 원천 차단 (ADR-002)
+  - `private.validate_signup`에서 약관 버전(`terms_version`, `privacy_version`)을 지정된 초안 버전(`terms-2026-10-draft`, `terms-test`, `privacy-2026-10-draft`, `privacy-test`)으로 검증하여 임의 문자열 동의 방지
+  - `complete_signup` RPC에서 호출자의 `email_confirmed_at` 존재 여부를 검증하여 이메일 미확인 세션의 가입 완료 차단
+  - RLS `users_select_own` 수정: Supabase Auth 액세스 토큰에 `email_confirmed_at` 클레임이 없는 환경을 지원하기 위해 `public.email_is_confirmed()` security definer 헬퍼 함수를 추가하고, `account_status in ('ACTIVE', 'PENDING') and (account_status = 'ACTIVE' or (account_status = 'PENDING' and email_is_confirmed()))`로 소셜 확인된 PENDING 사용자(/auth/complete)의 본인 행 조회 허용 (ADR-005)
+  - RLS `consents_select_own` 수정: `ACTIVE` 또는 `PENDING` 사용자만 본인 동의 내역 조회 허용
+  - GoTrue(`supabase_auth_admin`) 역할에 트리거 함수(`sanitize_new_auth_user`, `handle_new_auth_user`) EXECUTE 권한 부여 (회원가입·이메일 확인 시 `permission denied for function` 롤백 결함 해소)
+- [보완] supabase/tests/0002_auth_profiles_test.sql |
+  - `pg_temp.login_as()` 헬퍼에서 위조된 `email_confirmed_at` 클레임을 넣지 않고 표준 토큰 클레임(sub, role)만 설정하도록 정리
+  - 테스트 추가: `supabase_auth_admin` 역할로 auth.users INSERT 성공 검증 (트리거 EXECUTE 권한 확인), 이메일 미확인 PENDING 사용자 users 조회 차단, `auth.users.email_confirmed_at` 채운 후 PENDING 사용자 users 1건 정상 조회, `dateOfBirth` 임의 키 주입(INSERT/UPDATE) 차단 검증 3종, 초안 외 약관 버전 거부(`INVALID_CONSENT_VERSION`), `is_active_adult()`의 `adult_verified = true`이나 만료일 null인 경우 거부(fail-closed), 유효 만료일 정상 통과, 이메일 미확인 사용자의 `complete_signup` 거부 (plan 33건으로 확장)
+- [보완] src/lib/supabase/client.ts & src/components/auth/AuthCallback.tsx | `detectSessionInUrl: false` 및 `AuthCallback` 모듈 스코프 1회 전담 교환 캐시(`codeExchange ??= ...`), 기존 세션 개방 시 `signOut()` 선행 후 링크 검증
+- [보완] src/components/auth/CompleteSignupForm.tsx | 가입 완료 화면 상단에 현재 인증된 계정 이메일 안내 표시
+- [보완] src/components/auth/LoginForm.tsx & globals.css | `peekNextPath` 마운트 후 상태 동기화로 SSG 하이드레이션 불일치 방지, `.nav .login-slot-name` 44px 터치 영역 스타일 보완
+- [정리] auth.css & globals.css | 인라인 style 제거, 미사용 .auth-preset-* 및 .auth-demo-otp 스타일 삭제, .nav .login-slot-out에 prefers-reduced-motion(transition: none) 적용
+- [검증] `npm run typecheck` PASS / `npm run build` PASS (정적 21개 라우트 프리렌더 완료) / 시크릿 스캔 PASS (0건)
+- [미실행] 로컬 Supabase(`npx supabase start`) 마이그레이션 적용 및 `supabase/tests/0002_auth_profiles_test.sql` pgTAP 실행 — 작업 PC에 Docker 미설치로 미실행

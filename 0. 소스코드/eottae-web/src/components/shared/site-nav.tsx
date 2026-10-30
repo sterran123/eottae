@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import AuthNavSlot from '@/components/auth/AuthNavSlot';
 import { MotifIcon, type MotifName } from './motif-icon';
 
 const NAV_ITEMS: { href: string; label: string; motif: MotifName; safety?: boolean }[] = [
@@ -31,10 +32,7 @@ export default function SiteNav() {
           </Link>
         );
       })}
-      <span className="login-slot" title="로그인 기능은 1차 MVP에서 구현 예정입니다">
-        <MotifIcon name="lock" size={14} />
-        로그인 · 준비 중
-      </span>
+      <AuthNavSlot />
     </nav>
   );
 }
