@@ -628,7 +628,7 @@
 ## 2026-10-30 MATCH-003 Supabase Auth 추가 리뷰 피드백 반영 및 RLS·함수 방어 강화 (주한태 작업)
 - [보완] supabase/migrations/0002_auth_profiles.sql |
   - `private.jsonb_strip_sensitive_birth_keys()` 재귀 제거 함수 추가: `birth_date`뿐만 아니라 `birthdate`, `date_of_birth`, `dob`, `birthday` 대소문자 무관 전역 제거
-  - `sanitize_new_auth_user`의 모든 경로(이메일 INSERT, 비-signup INSERT, UPDATE)를 전면 화이트리스트화: 공식 가입은 `{ signup: { full_name, birth_year, terms_version, privacy_version, validated: true } }`, 소셜 계정은 허용된 OAuth 프로필 키(`iss, sub, name, full_name, email, picture, avatar_url, provider, provider_id`)만 보존하여 `dateOfBirth` 등 임의 키 주입 원천 차단 (ADR-002)
+  - `sanitize_new_auth_user`의 모든 경로(이메일 INSERT, 비-signup INSERT, UPDATE)를 전면 화이트리스트화: `private.jsonb_whitelist_oauth_metadata()` 함수를 통해 허용된 OAuth 프로필 키(`iss, sub, name, full_name, email, picture, avatar_url, provider, provider_id`)이자 string 타입인 값만 보존하고 기존 signup 객체만 유지함으로써 `dateOfBirth` 및 임의 중첩 객체 주입 원천 차단 (ADR-002)
   - `private.validate_signup`에서 약관 버전(`terms_version`, `privacy_version`)을 지정된 초안 버전(`terms-2026-10-draft`, `terms-test`, `privacy-2026-10-draft`, `privacy-test`)으로 검증하여 임의 문자열 동의 방지
   - `complete_signup` RPC에서 호출자의 `email_confirmed_at` 존재 여부를 검증하여 이메일 미확인 세션의 가입 완료 차단
   - RLS `users_select_own` 수정: Supabase Auth 액세스 토큰에 `email_confirmed_at` 클레임이 없는 환경을 지원하기 위해 `public.email_is_confirmed()` security definer 헬퍼 함수를 추가하고, `account_status in ('ACTIVE', 'PENDING') and (account_status = 'ACTIVE' or (account_status = 'PENDING' and email_is_confirmed()))`로 소셜 확인된 PENDING 사용자(/auth/complete)의 본인 행 조회 허용 (ADR-005)

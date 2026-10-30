@@ -34,6 +34,8 @@
 --   drop function if exists private.validate_signup(text, date, text, text, boolean);
 --   drop function if exists private.activate_user(uuid, text, smallint, text, text);
 --   drop function if exists private.jsonb_strip_key(jsonb, text);
+--   drop function if exists private.jsonb_strip_sensitive_birth_keys(jsonb);
+--   drop function if exists private.jsonb_whitelist_oauth_metadata(jsonb);
 --   drop function if exists private.set_updated_at();
 --   drop table if exists public.consents;
 --   drop table if exists public.users;
@@ -246,7 +248,7 @@ as $$
     when 'object' then (
       select coalesce(jsonb_object_agg(e.key, private.jsonb_strip_sensitive_birth_keys(e.value)), '{}'::jsonb)
       from jsonb_each(coalesce(p_value, '{}'::jsonb)) as e
-      where lower(e.key) not in ('birth_date', 'birthdate', 'date_of_birth', 'dob', 'birthday')
+      where lower(e.key) not in ('birth_date', 'birthdate', 'date_of_birth', 'dob', 'birthday', 'dateofbirth')
     )
     when 'array' then (
       select coalesce(jsonb_agg(private.jsonb_strip_sensitive_birth_keys(e.value)), '[]'::jsonb)
@@ -256,8 +258,24 @@ as $$
   end;
 $$;
 
+create or replace function private.jsonb_whitelist_oauth_metadata(p_value jsonb)
+returns jsonb
+language sql
+immutable
+set search_path = ''
+as $$
+  select coalesce(jsonb_object_agg(e.key, e.value), '{}'::jsonb)
+  from jsonb_each(coalesce(p_value, '{}'::jsonb)) as e
+  where e.key in (
+    'iss', 'sub', 'name', 'full_name', 'email',
+    'picture', 'avatar_url', 'provider', 'provider_id'
+  )
+    and jsonb_typeof(e.value) = 'string';
+$$;
+
 revoke all on function private.jsonb_strip_key(jsonb, text) from public, anon, authenticated;
 revoke all on function private.jsonb_strip_sensitive_birth_keys(jsonb) from public, anon, authenticated;
+revoke all on function private.jsonb_whitelist_oauth_metadata(jsonb) from public, anon, authenticated;
 
 -- ---------------------------------------------------------------------------
 -- 6. auth.users BEFORE INSERT OR UPDATE — 이메일 가입 입력 검증 + 생년월일 전역 제거
@@ -279,7 +297,7 @@ begin
   -- 1) UPDATE: auth.updateUser 등으로 생년월일을 다시 넣거나 validated 값을 조작하는 시도 차단
   if TG_OP = 'UPDATE' then
     new.raw_user_meta_data :=
-      private.jsonb_strip_sensitive_birth_keys(coalesce(new.raw_user_meta_data, '{}'::jsonb));
+      private.jsonb_whitelist_oauth_metadata(coalesce(new.raw_user_meta_data, '{}'::jsonb));
 
     if old.raw_user_meta_data ? 'signup' then
       new.raw_user_meta_data := jsonb_set(
@@ -287,17 +305,15 @@ begin
         '{signup}',
         private.jsonb_strip_sensitive_birth_keys(old.raw_user_meta_data -> 'signup')
       );
-    elsif new.raw_user_meta_data ? 'signup' then
-      new.raw_user_meta_data := new.raw_user_meta_data - 'signup';
     end if;
 
     return new;
   end if;
 
-  -- 2) INSERT: signup 객체가 없으면 (소셜 가입 등) 전체 문서에서 생년월일 관련 키 재귀 제거 후 반환
+  -- 2) INSERT: signup 객체가 없으면 (소셜 가입 등) 허용된 OAuth 프로필 키(문자열)만 남긴다 (ADR-002)
   if v_signup is null then
     new.raw_user_meta_data :=
-      private.jsonb_strip_sensitive_birth_keys(coalesce(new.raw_user_meta_data, '{}'::jsonb));
+      private.jsonb_whitelist_oauth_metadata(coalesce(new.raw_user_meta_data, '{}'::jsonb));
     return new;
   end if;
 
