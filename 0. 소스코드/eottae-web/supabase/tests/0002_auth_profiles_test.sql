@@ -6,7 +6,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(21);
+select plan(23);
 
 -- 테스트용 헬퍼: 특정 사용자로 요청하는 것처럼 role/JWT claim 설정
 create or replace function pg_temp.login_as(p_uid uuid)
@@ -24,15 +24,33 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------------
--- 1) 이메일 가입 (정상, 만 19세 이상)
+-- 1) 이메일 가입 (정상, 만 19세 이상) — 중첩 birth_date 주입 시도 포함
 -- ---------------------------------------------------------------------------
 insert into auth.users (id, email, raw_user_meta_data)
 values (
   'aaaaaaaa-0000-4000-8000-000000000001', 'adult@test.local',
-  jsonb_build_object('signup', jsonb_build_object(
-    'full_name', '홍길동', 'birth_date', '1995-05-05',
-    'terms_version', 'terms-test', 'privacy_version', 'privacy-test', 'adult_self_check', true))
+  jsonb_build_object(
+    'signup', jsonb_build_object(
+      'full_name', '홍길동', 'birth_date', '1995-05-05',
+      'terms_version', 'terms-test', 'privacy_version', 'privacy-test', 'adult_self_check', true),
+    'extra', jsonb_build_object('birth_date', '1995-05-05')
+  )
 );
+
+select ok(
+  (select position('1995-05-05' in raw_user_meta_data::text) = 0
+     from auth.users where id = 'aaaaaaaa-0000-4000-8000-000000000001'),
+  '중첩 birth_date도 auth.users 메타데이터에 남지 않음 (INSERT 시 ADR-002)');
+
+-- updateUser({ data: { extra: { birth_date: '1990-01-01' } } }) 시도
+update auth.users
+   set raw_user_meta_data = jsonb_build_object('extra', jsonb_build_object('birth_date', '1990-01-01'))
+ where id = 'aaaaaaaa-0000-4000-8000-000000000001';
+
+select ok(
+  (select position('1990-01-01' in raw_user_meta_data::text) = 0
+     from auth.users where id = 'aaaaaaaa-0000-4000-8000-000000000001'),
+  'UPDATE 시에도 중첩 birth_date가 auth.users 메타데이터에 남지 않음 (ADR-002)');
 
 select is(
   (select account_status::text from public.users where id = 'aaaaaaaa-0000-4000-8000-000000000001'),

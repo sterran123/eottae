@@ -32,6 +32,7 @@
 --   drop function if exists public.is_active_adult(uuid);
 --   drop function if exists private.validate_signup(text, date, text, text, boolean);
 --   drop function if exists private.activate_user(uuid, text, smallint, text, text);
+--   drop function if exists private.jsonb_strip_key(jsonb, text);
 --   drop function if exists private.set_updated_at();
 --   drop table if exists public.consents;
 --   drop table if exists public.users;
@@ -206,11 +207,36 @@ revoke all on function private.validate_signup(text, date, text, text, boolean) 
 revoke all on function private.activate_user(uuid, text, smallint, text, text) from public, anon, authenticated;
 
 -- ---------------------------------------------------------------------------
--- 6. auth.users BEFORE INSERT — 이메일 가입 입력 검증 + 생년월일 제거
+-- 5.1. jsonb 내 특정 키 재귀적 제거 헬퍼 (ADR-002: 생년월일 원본 저장 절대 금지)
+-- ---------------------------------------------------------------------------
+create or replace function private.jsonb_strip_key(p_value jsonb, p_key text)
+returns jsonb
+language sql
+immutable
+set search_path = ''
+as $$
+  select case jsonb_typeof(p_value)
+    when 'object' then (
+      select coalesce(jsonb_object_agg(e.key, private.jsonb_strip_key(e.value, p_key)), '{}'::jsonb)
+      from jsonb_each(coalesce(p_value, '{}'::jsonb)) as e
+      where e.key <> p_key
+    )
+    when 'array' then (
+      select coalesce(jsonb_agg(private.jsonb_strip_key(e.value, p_key)), '[]'::jsonb)
+      from jsonb_array_elements(coalesce(p_value, '[]'::jsonb)) as e
+    )
+    else p_value
+  end;
+$$;
+
+revoke all on function private.jsonb_strip_key(jsonb, text) from public, anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- 6. auth.users BEFORE INSERT OR UPDATE — 이메일 가입 입력 검증 + 생년월일 전역 제거
 --    raw_user_meta_data.signup 이 있으면 검증하고, 저장 전에 아래 형태로 바꿔 쓴다.
 --      { full_name, birth_year, terms_version, privacy_version, validated: true }
 --    검증 실패 → 예외 → 가입 자체가 실패한다(fail-closed).
---    클라이언트가 validated/birth_year를 직접 넣어도 항상 이 함수가 원본 입력으로 다시 계산한다.
+--    생년월일(birth_date) 원본은 문서 전체에서 재귀적으로 완전 제거한다(ADR-002).
 -- ---------------------------------------------------------------------------
 create or replace function public.sanitize_new_auth_user()
 returns trigger
@@ -222,23 +248,28 @@ declare
   v_signup     jsonb := new.raw_user_meta_data -> 'signup';
   v_birth_date date;
 begin
-  -- raw_user_meta_data 최상위에 birth_date를 직접 넣는 시도 차단 (ADR-002)
-  if new.raw_user_meta_data ? 'birth_date' then
-    new.raw_user_meta_data := new.raw_user_meta_data - 'birth_date';
-  end if;
+  -- 1) UPDATE: auth.updateUser 등으로 생년월일을 다시 넣거나 validated 값을 조작하는 시도 차단
+  if TG_OP = 'UPDATE' then
+    new.raw_user_meta_data :=
+      private.jsonb_strip_key(coalesce(new.raw_user_meta_data, '{}'::jsonb), 'birth_date');
 
-  if v_signup is null then
+    if old.raw_user_meta_data ? 'signup' then
+      new.raw_user_meta_data := jsonb_set(
+        new.raw_user_meta_data,
+        '{signup}',
+        private.jsonb_strip_key(old.raw_user_meta_data -> 'signup', 'birth_date')
+      );
+    elsif new.raw_user_meta_data ? 'signup' then
+      new.raw_user_meta_data := new.raw_user_meta_data - 'signup';
+    end if;
+
     return new;
   end if;
 
-  -- 가입 후 auth.updateUser 등으로 raw_user_meta_data.signup에 생년월일을 다시 넣거나
-  -- validated 값을 임의 조작하는 시도를 차단한다 (ADR-002).
-  if TG_OP = 'UPDATE' then
-    new.raw_user_meta_data := jsonb_set(
-      new.raw_user_meta_data,
-      '{signup}',
-      coalesce(old.raw_user_meta_data -> 'signup', '{}'::jsonb) - 'birth_date'
-    );
+  -- 2) INSERT: signup 객체가 없으면 (소셜 가입 등) 전체 문서에서 birth_date만 재귀 제거 후 반환
+  if v_signup is null then
+    new.raw_user_meta_data :=
+      private.jsonb_strip_key(coalesce(new.raw_user_meta_data, '{}'::jsonb), 'birth_date');
     return new;
   end if;
 
@@ -260,6 +291,11 @@ begin
     (v_signup ->> 'adult_self_check')::boolean
   );
 
+  -- 검증용 값을 읽은 뒤 전체 raw_user_meta_data에서 birth_date를 재귀적으로 완전 제거 (ADR-002)
+  new.raw_user_meta_data :=
+    private.jsonb_strip_key(coalesce(new.raw_user_meta_data, '{}'::jsonb), 'birth_date');
+
+  -- 허용한 signup 객체만 정제된 필드(생년월일 대신 birth_year 포함)로 다시 작성
   new.raw_user_meta_data := jsonb_set(
     new.raw_user_meta_data,
     '{signup}',

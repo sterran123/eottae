@@ -607,6 +607,7 @@
 - [정리] src/lib/server/{session,auth}.ts 파일 완전 삭제 (ADR-005: 자체 세션 토큰 서명 및 목업 계정 모듈 완전 제거)
 - [보완] src/lib/auth/auth-service.ts & use-auth.ts | signInWithEmail 성공 시 PENDING 계정도 /auth/complete로 이동할 수 있도록 세션 유지, loadAccount 성공 시 status('signed-in') 및 user 즉시 동기화
 - [보완] supabase/migrations/0002_auth_profiles.sql | sanitize UPDATE 시 old signup 유지 및 birth_date 제거(메타데이터 조작 방지), private.set_updated_at에 security definer 부여 및 grant update (nickname, updated_at) 추가
+- [보완] supabase/migrations/0002_auth_profiles.sql & supabase/tests/0002_auth_profiles_test.sql | `private.jsonb_strip_key()` 재귀 제거 함수 구현으로 `auth.users.raw_user_meta_data` 내 임의 중첩 위치(`extra` 등)의 `birth_date`까지 INSERT/UPDATE 시 전역 제거 보장 (ADR-002 완전 준수), pgTAP 중첩 키 제거 검증 테스트 2종 추가(plan 23)
 - [정리] auth.css & globals.css | 인라인 style 제거(.auth-form-error--spaced 클래스화), 미사용 .auth-preset-* 및 .auth-demo-otp 스타일 삭제, .nav .login-slot-out에 prefers-reduced-motion(transition: none) 적용
 - [정리] FILE_INDEX.csv, MANIFEST.sha256 | 삭제된 tools/test_auth_match_003.mjs 항목 정리
 - [정리] 0003 매칭·채팅 RLS 파일 커밋에서 제외 (0002/MATCH-003 단위로 PR 범위 분리)
