@@ -3,7 +3,7 @@
 // src/components/auth/AuthCallback.tsx
 // MATCH-003: 이메일 인증 링크 / PKCE OAuth 복귀 콜백 (ADR-005)
 // - Supabase 미설정 시: NOT_CONFIGURED 로 즉시 에러 표시 (ADR-005 fail-closed)
-// - detectSessionInUrl: true 기반 세션 확인 및 token_hash 검증 후 계정 상태 통합 판정
+// - detectSessionInUrl: false 및 모듈 캐시 1회 PKCE 교환/token_hash 검증 후 계정 상태 통합 판정
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';

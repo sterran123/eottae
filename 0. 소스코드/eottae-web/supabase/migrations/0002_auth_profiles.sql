@@ -29,7 +29,8 @@
 --   drop function if exists public.handle_new_auth_user();
 --   drop function if exists public.sanitize_new_auth_user();
 --   drop function if exists public.complete_signup(text, date, text, text, boolean);
---   drop function if exists public.is_active_adult(uuid);
+--   drop function if exists public.is_active_adult();
+--   drop function if exists public.email_is_confirmed();
 --   drop function if exists private.validate_signup(text, date, text, text, boolean);
 --   drop function if exists private.activate_user(uuid, text, smallint, text, text);
 --   drop function if exists private.jsonb_strip_key(jsonb, text);
@@ -375,6 +376,9 @@ $$;
 
 revoke all on function public.sanitize_new_auth_user() from public, anon, authenticated;
 revoke all on function public.handle_new_auth_user() from public, anon, authenticated;
+-- anon/authenticated 에는 주지 않는다. security definer 로 auth.users 를 고친다.
+grant execute on function public.sanitize_new_auth_user() to supabase_auth_admin;
+grant execute on function public.handle_new_auth_user() to supabase_auth_admin;
 
 drop trigger if exists on_auth_user_before_insert on auth.users;
 create trigger on_auth_user_before_insert
@@ -460,6 +464,28 @@ revoke all on function public.is_active_adult() from public, anon;
 grant execute on function public.is_active_adult() to authenticated;
 
 -- ---------------------------------------------------------------------------
+-- 9.1. 이메일 확인 여부 판정 헬퍼 (ADR-005: RLS 경계에서 사용)
+--      Supabase Auth 기본 액세스 토큰에는 email_confirmed_at 클레임이 없으므로,
+--      auth.users 테이블의 실제 확인 시각 유무를 security definer 로 안전하게 조회한다.
+-- ---------------------------------------------------------------------------
+create or replace function public.email_is_confirmed()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from auth.users
+     where id = auth.uid()
+       and email_confirmed_at is not null
+  );
+$$;
+
+revoke all on function public.email_is_confirmed() from public, anon;
+grant execute on function public.email_is_confirmed() to authenticated;
+
+-- ---------------------------------------------------------------------------
 -- 10. 테이블 권한 (열 단위) + RLS default deny
 -- ---------------------------------------------------------------------------
 revoke all on public.users    from public, anon, authenticated;
@@ -481,7 +507,7 @@ create policy users_select_own on public.users
     and account_status in ('ACTIVE', 'PENDING')
     and (
       account_status = 'ACTIVE'
-      or (select auth.jwt() ->> 'email_confirmed_at') is not null
+      or (account_status = 'PENDING' and (select public.email_is_confirmed()))
     )
   );
 

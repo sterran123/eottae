@@ -601,7 +601,7 @@
   - `src/components/auth/AuthCard.tsx`의 DEMO 안내를 미설정 비활성화 안내(`NotConfiguredNotice`)로 교체
 - [보완] src/lib/auth/validation.ts | `sanitizeNextPath`에서 `//`, `/\`, `\` 포함 경로를 `/`로 차단하여 오픈 리다이렉트 방지
 - [보완] src/lib/auth/auth-service.ts & use-auth.ts & AuthCallback.tsx | 계정 상태 검증을 통합 함수 `assertAccountAccess()`로 일원화 (이메일 미확인/SUSPENDED/DELETED/조회실패 시 즉시 signOut 및 세션 차단, PENDING은 가입완료 화면으로 유도, ACTIVE만 정상 진입 허용). if (!supabase) 데모 분기를 제거하고 미설정 시 `NOT_CONFIGURED`로 즉시 중단(fail-closed). `rememberNextPath`를 모듈 변수에서 `sessionStorage`로 전환
-- [보완] src/components/auth/{LoginForm,SignupForm,AuthCallback}.tsx | DEMO UI 및 테스트 계정 프리셋 제거. 렌더 시점 `getSupabase()` 호출로 인한 SSG/하이드레이션 불일치 해소(`isSupabaseConfigured` 사용). `peekNextPath` / `consumeNextPath` 렌더 중 소비 방지. PKCE `code` 중복 교환 방지(detectSessionInUrl 자동 세션 확인 활용) 및 고정 에러 문구 적용
+- [보완] src/components/auth/{LoginForm,SignupForm,AuthCallback}.tsx | DEMO UI 및 테스트 계정 프리셋 제거. 렌더 시점 `getSupabase()` 호출로 인한 SSG/하이드레이션 불일치 해소(`isSupabaseConfigured` 사용). `peekNextPath` / `consumeNextPath` 렌더 중 소비 방지. PKCE `code` 중복 교환 방지(`detectSessionInUrl: false` 및 단일 교환 캐시 적용) 및 고정 에러 문구 적용
 - [연결] src/components/shared/site-nav.tsx & globals.css | 헤더 내비게이션의 준비 중 라벨을 `AuthNavSlot`으로 교체 연결하고, `.nav .login-slot.is-ready`, `.nav .login-slot-out` 44px 터치 영역 스타일 추가
 - [연결] src/app/settings/page.tsx & src/components/settings/AccountSettingsCard.tsx | 설정 02번 계정 카드를 `useAuth` 실시간 세션 상태(로그인됨/로그인 필요)와 연동
 - [정리] src/lib/server/{session,auth}.ts 파일 완전 삭제 (ADR-005: 자체 세션 토큰 서명 및 목업 계정 모듈 완전 제거)
@@ -628,14 +628,15 @@
 ## 2026-10-30 MATCH-003 Supabase Auth 추가 리뷰 피드백 반영 및 RLS·함수 방어 강화 (주한태 작업)
 - [보완] supabase/migrations/0002_auth_profiles.sql |
   - `private.jsonb_strip_sensitive_birth_keys()` 재귀 제거 함수 추가: `birth_date`뿐만 아니라 `birthdate`, `date_of_birth`, `dob`, `birthday` 대소문자 무관 전역 제거
-  - `sanitize_new_auth_user` INSERT 시 공식 이메일 가입 메타데이터를 `{ signup: { full_name, birth_year, terms_version, privacy_version, validated: true } }`로 엄격 화이트리스트화하여 임의 키 주입 원천 차단 (ADR-002)
+  - `sanitize_new_auth_user`의 모든 경로(이메일 INSERT, 비-signup INSERT, UPDATE)를 전면 화이트리스트화: 공식 가입은 `{ signup: { full_name, birth_year, terms_version, privacy_version, validated: true } }`, 소셜 계정은 허용된 OAuth 프로필 키(`iss, sub, name, full_name, email, picture, avatar_url, provider, provider_id`)만 보존하여 `dateOfBirth` 등 임의 키 주입 원천 차단 (ADR-002)
   - `private.validate_signup`에서 약관 버전(`terms_version`, `privacy_version`)을 지정된 초안 버전(`terms-2026-10-draft`, `terms-test`, `privacy-2026-10-draft`, `privacy-test`)으로 검증하여 임의 문자열 동의 방지
   - `complete_signup` RPC에서 호출자의 `email_confirmed_at` 존재 여부를 검증하여 이메일 미확인 세션의 가입 완료 차단
-  - RLS `users_select_own` 수정: `account_status in ('ACTIVE', 'PENDING')` 및 미확인 사용자는 `auth.jwt() ->> 'email_confirmed_at'` 존재 시에만 조회 허용 (ADR-005: RLS 경계에서 정지/탈퇴 계정 및 미확인 세션의 개인정보 조회 원천 차단)
+  - RLS `users_select_own` 수정: Supabase Auth 액세스 토큰에 `email_confirmed_at` 클레임이 없는 환경을 지원하기 위해 `public.email_is_confirmed()` security definer 헬퍼 함수를 추가하고, `account_status in ('ACTIVE', 'PENDING') and (account_status = 'ACTIVE' or (account_status = 'PENDING' and email_is_confirmed()))`로 소셜 확인된 PENDING 사용자(/auth/complete)의 본인 행 조회 허용 (ADR-005)
   - RLS `consents_select_own` 수정: `ACTIVE` 또는 `PENDING` 사용자만 본인 동의 내역 조회 허용
+  - GoTrue(`supabase_auth_admin`) 역할에 트리거 함수(`sanitize_new_auth_user`, `handle_new_auth_user`) EXECUTE 권한 부여 (회원가입·이메일 확인 시 `permission denied for function` 롤백 결함 해소)
 - [보완] supabase/tests/0002_auth_profiles_test.sql |
-  - `pg_temp.login_as()` 헬퍼에서 `request.jwt.claims` JSON뿐만 아니라 `request.jwt.claim.sub`, `request.jwt.claim.role`, `request.jwt.claim.email_confirmed_at` 개별 GUC 동시 설정 지원
-  - 테스트 추가: 초안 외 약관 버전 거부(`INVALID_CONSENT_VERSION`), 이메일 미확인 PENDING 사용자 RLS 차단, `is_active_adult()`의 `adult_verified = true`이나 만료일 null인 경우 거부(fail-closed), 유효 만료일 정상 통과, 이메일 미확인 사용자의 `complete_signup` 거부 (plan 28건으로 확장)
+  - `pg_temp.login_as()` 헬퍼에서 위조된 `email_confirmed_at` 클레임을 넣지 않고 표준 토큰 클레임(sub, role)만 설정하도록 정리
+  - 테스트 추가: `supabase_auth_admin` 역할로 auth.users INSERT 성공 검증 (트리거 EXECUTE 권한 확인), 이메일 미확인 PENDING 사용자 users 조회 차단, `auth.users.email_confirmed_at` 채운 후 PENDING 사용자 users 1건 정상 조회, `dateOfBirth` 임의 키 주입(INSERT/UPDATE) 차단 검증 3종, 초안 외 약관 버전 거부(`INVALID_CONSENT_VERSION`), `is_active_adult()`의 `adult_verified = true`이나 만료일 null인 경우 거부(fail-closed), 유효 만료일 정상 통과, 이메일 미확인 사용자의 `complete_signup` 거부 (plan 33건으로 확장)
 - [보완] src/lib/supabase/client.ts & src/components/auth/AuthCallback.tsx | `detectSessionInUrl: false` 및 `AuthCallback` 모듈 스코프 1회 전담 교환 캐시(`codeExchange ??= ...`), 기존 세션 개방 시 `signOut()` 선행 후 링크 검증
 - [보완] src/components/auth/CompleteSignupForm.tsx | 가입 완료 화면 상단에 현재 인증된 계정 이메일 안내 표시
 - [보완] src/components/auth/LoginForm.tsx & globals.css | `peekNextPath` 마운트 후 상태 동기화로 SSG 하이드레이션 불일치 방지, `.nav .login-slot-name` 44px 터치 영역 스타일 보완

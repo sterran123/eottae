@@ -6,28 +6,17 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(28);
+select plan(33);
 
 -- 테스트용 헬퍼: 특정 사용자로 요청하는 것처럼 role/JWT claims 및 claim.* GUC 설정
-create or replace function pg_temp.login_as(p_uid uuid, p_email_confirmed boolean default true)
+-- (표준 Supabase Auth 토큰과 동일하게 sub/role만 설정하며 위조된 email_confirmed_at 클레임은 넣지 않음)
+create or replace function pg_temp.login_as(p_uid uuid)
 returns void language plpgsql as $$
-declare
-  v_claims jsonb;
 begin
-  v_claims := jsonb_build_object(
-    'sub', p_uid,
-    'role', 'authenticated',
-    'email_confirmed_at', case when p_email_confirmed then now() else null end
-  );
   perform set_config('role', 'authenticated', true);
-  perform set_config('request.jwt.claims', v_claims::text, true);
+  perform set_config('request.jwt.claims', jsonb_build_object('sub', p_uid, 'role', 'authenticated')::text, true);
   perform set_config('request.jwt.claim.sub', p_uid::text, true);
   perform set_config('request.jwt.claim.role', 'authenticated', true);
-  if p_email_confirmed then
-    perform set_config('request.jwt.claim.email_confirmed_at', now()::text, true);
-  else
-    perform set_config('request.jwt.claim.email_confirmed_at', '', true);
-  end if;
 end $$;
 
 create or replace function pg_temp.logout()
@@ -37,7 +26,6 @@ begin
   perform set_config('request.jwt.claims', '', true);
   perform set_config('request.jwt.claim.sub', '', true);
   perform set_config('request.jwt.claim.role', '', true);
-  perform set_config('request.jwt.claim.email_confirmed_at', '', true);
 end $$;
 
 -- ---------------------------------------------------------------------------
@@ -59,6 +47,29 @@ select ok(
      from auth.users where id = 'aaaaaaaa-0000-4000-8000-000000000001'),
   '중첩 birth_date도 auth.users 메타데이터에 남지 않음 (INSERT 시 ADR-002)');
 
+-- supabase_auth_admin 역할로 INSERT 시 트리거 EXECUTE 권한 확인
+do $$
+begin
+  if not exists (select 1 from pg_roles where rolname = 'supabase_auth_admin') then
+    create role supabase_auth_admin;
+  end if;
+  grant insert, select, update on auth.users to supabase_auth_admin;
+  grant insert, select, update on public.users to supabase_auth_admin;
+end $$;
+
+select lives_ok(
+  $$
+    set local role supabase_auth_admin;
+    insert into auth.users (id, email, raw_user_meta_data)
+    values ('cccccccc-0000-4000-8000-000000000001', 'authadmin@test.local',
+      jsonb_build_object('signup', jsonb_build_object(
+        'full_name', '관리자트리거', 'birth_date', '1990-01-01',
+        'terms_version', 'terms-test', 'privacy_version', 'privacy-test', 'adult_self_check', true)));
+    reset role;
+  $$,
+  'supabase_auth_admin 역할로 auth.users INSERT 성공 (트리거 EXECUTE 권한 확인)'
+);
+
 -- updateUser({ data: { extra: { birth_date: '1990-01-01' } } }) 시도
 update auth.users
    set raw_user_meta_data = jsonb_build_object('extra', jsonb_build_object('birth_date', '1990-01-01'))
@@ -68,6 +79,16 @@ select ok(
   (select position('1990-01-01' in raw_user_meta_data::text) = 0
      from auth.users where id = 'aaaaaaaa-0000-4000-8000-000000000001'),
   'UPDATE 시에도 중첩 birth_date가 auth.users 메타데이터에 남지 않음 (ADR-002)');
+
+-- updateUser({ data: { dateOfBirth: '1990-05-05' } }) 임의 키 주입 시도
+update auth.users
+   set raw_user_meta_data = jsonb_build_object('dateOfBirth', '1990-05-05')
+ where id = 'aaaaaaaa-0000-4000-8000-000000000001';
+
+select ok(
+  (select position('1990-05-05' in raw_user_meta_data::text) = 0
+     from auth.users where id = 'aaaaaaaa-0000-4000-8000-000000000001'),
+  'UPDATE 시 dateOfBirth 등 임의 키 주입 차단 (ADR-002 화이트리스트)');
 
 select is(
   (select account_status::text from public.users where id = 'aaaaaaaa-0000-4000-8000-000000000001'),
@@ -141,10 +162,26 @@ select throws_like(
   '%INVALID_CONSENT_VERSION%', '초안 이외의 약관 버전 거부');
 
 -- ---------------------------------------------------------------------------
--- 3) 소셜(Google) 로그인 (signup metadata 없음) → PENDING
+-- 3) 소셜(Google) 로그인 (signup metadata 없음) → PENDING + 임의 키 dateOfBirth 차단
 -- ---------------------------------------------------------------------------
 insert into auth.users (id, email, raw_user_meta_data)
-values ('bbbbbbbb-0000-4000-8000-000000000001', 'googleuser@test.local', '{"provider":"google"}');
+values ('bbbbbbbb-0000-4000-8000-000000000001', 'googleuser@test.local',
+  jsonb_build_object('provider', 'google', 'dateOfBirth', '2012-01-01'));
+
+select ok(
+  (select position('2012-01-01' in raw_user_meta_data::text) = 0
+     from auth.users where id = 'bbbbbbbb-0000-4000-8000-000000000001'),
+  'signup 없는 INSERT: 허용 외 임의 키(dateOfBirth) 저장 차단 (ADR-002 화이트리스트)');
+
+-- 소셜 계정 updateUser({ data: { dateOfBirth: '1990-05-05' } }) 시도
+update auth.users
+   set raw_user_meta_data = jsonb_build_object('provider', 'google', 'dateOfBirth', '1990-05-05')
+ where id = 'bbbbbbbb-0000-4000-8000-000000000001';
+
+select ok(
+  (select position('1990-05-05' in raw_user_meta_data::text) = 0
+     from auth.users where id = 'bbbbbbbb-0000-4000-8000-000000000001'),
+  '소셜 계정 UPDATE 시에도 임의 키(dateOfBirth) 저장 차단 (ADR-002)');
 
 select is(
   (select account_status::text from public.users where id = 'bbbbbbbb-0000-4000-8000-000000000001'),
@@ -154,9 +191,19 @@ select is(
 -- 4) RLS / 열 권한 (authenticated 역할)
 -- ---------------------------------------------------------------------------
 -- 이메일 미확인 PENDING 사용자 RLS 차단 테스트 (bbbb... 계정은 아직 email_confirmed_at 없음)
-select pg_temp.login_as('bbbbbbbb-0000-4000-8000-000000000001', false);
+select pg_temp.login_as('bbbbbbbb-0000-4000-8000-000000000001');
 select is((select count(*)::int from public.users where id = 'bbbbbbbb-0000-4000-8000-000000000001'), 0,
   'RLS: 이메일 미확인 PENDING 사용자는 users 행 조회 불가 (ADR-005)');
+select throws_like(
+  $$ select public.complete_signup('구글유저', '1992-03-03', 'terms-test', 'privacy-test', true) $$,
+  '%EMAIL_NOT_CONFIRMED%', 'complete_signup: 이메일 미확인 상태 호출 거부');
+select pg_temp.logout();
+
+-- auth.users.email_confirmed_at 채운 뒤: PENDING인 채로 본인 select 1건 확인 (위조 클레임 없음)
+update auth.users set email_confirmed_at = now() where id = 'bbbbbbbb-0000-4000-8000-000000000001';
+select pg_temp.login_as('bbbbbbbb-0000-4000-8000-000000000001');
+select is((select count(*)::int from public.users where id = 'bbbbbbbb-0000-4000-8000-000000000001'), 1,
+  'RLS: 이메일 확인된 PENDING 사용자 본인 행 조회 가능 (소셜 가입 완료 경로)');
 select pg_temp.logout();
 
 select pg_temp.login_as('aaaaaaaa-0000-4000-8000-000000000001');
@@ -204,16 +251,7 @@ select is(
 -- ---------------------------------------------------------------------------
 -- 5) complete_signup RPC (Google 소셜 사용자)
 -- ---------------------------------------------------------------------------
--- 이메일 미확인 상태에서 complete_signup 호출 시 거부
-select pg_temp.login_as('bbbbbbbb-0000-4000-8000-000000000001', false);
-select throws_like(
-  $$ select public.complete_signup('구글유저', '1992-03-03', 'terms-test', 'privacy-test', true) $$,
-  '%EMAIL_NOT_CONFIRMED%', 'complete_signup: 이메일 미확인 상태 호출 거부');
-
--- 이메일 확인 처리 후 정상 진행
-select pg_temp.logout();
-update auth.users set email_confirmed_at = now() where id = 'bbbbbbbb-0000-4000-8000-000000000001';
-select pg_temp.login_as('bbbbbbbb-0000-4000-8000-000000000001', true);
+select pg_temp.login_as('bbbbbbbb-0000-4000-8000-000000000001');
 
 select throws_like(
   $$ select public.complete_signup('구글미성년', '2015-01-01', 'terms-test', 'privacy-test', true) $$,
