@@ -30,6 +30,9 @@ function parseOtpType(raw: string | null): EmailOtpType {
   return 'signup';
 }
 
+// React 18 Strict Mode 이중 마운트로 인한 PKCE code 중복 교환 방지용 모듈 캐시
+let codeExchange: Promise<{ error: { message: string } | null }> | null = null;
+
 export default function AuthCallback() {
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>('working');
@@ -47,6 +50,7 @@ export default function AuthCallback() {
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
     const providerError = params.get('error_description') ?? hash.get('error_description');
     const tokenHash = params.get('token_hash');
+    const code = params.get('code');
     const otpType = parseOtpType(params.get('type'));
 
     let cancelled = false;
@@ -58,12 +62,26 @@ export default function AuthCallback() {
         return;
       }
 
-      // 1) 세션 확인 (detectSessionInUrl: true 에 의해 클라이언트 초기화 시 ?code= 가 자동 교환됨)
       const { data: { session } } = await supabase.auth.getSession();
       if (cancelled) return;
 
-      // 2) 세션이 없고 이메일 링크 token_hash가 있는 경우 수동 검증
-      if (!session && tokenHash) {
+      // 1) PKCE 인증 코드 교환 처리 (모듈 스코프 1회 보장)
+      if (code) {
+        codeExchange ??= supabase.auth.exchangeCodeForSession(code).then(({ error }) => ({
+          error: error ? { message: error.message } : null,
+        }));
+        const exchanged = await codeExchange;
+        if (cancelled) return;
+        if (exchanged.error) {
+          setDetail('인증 링크가 만료되었거나 이미 사용되었어요.');
+          setPhase('error');
+          return;
+        }
+      } else if (tokenHash) {
+        // 기존 세션이 있는 상태에서 다른 이메일 인증 링크를 연 경우 세션 분리
+        if (session) {
+          await supabase.auth.signOut();
+        }
         const verified = await authService.verifyTokenHash(tokenHash, otpType);
         if (cancelled) return;
         if (!verified.ok) {
@@ -77,7 +95,7 @@ export default function AuthCallback() {
         }
       }
 
-      // 3) 계정 상태 통합 판정 (SUSPENDED·DELETED·조회 실패 시 signOut 후 에러)
+      // 2) 계정 상태 통합 판정 (SUSPENDED·DELETED·조회 실패 시 signOut 후 에러)
       const gateRes = await authService.assertAccountAccess();
       if (cancelled) return;
 

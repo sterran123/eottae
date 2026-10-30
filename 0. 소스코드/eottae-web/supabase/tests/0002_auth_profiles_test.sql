@@ -6,14 +6,28 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(23);
+select plan(28);
 
--- 테스트용 헬퍼: 특정 사용자로 요청하는 것처럼 role/JWT claim 설정
-create or replace function pg_temp.login_as(p_uid uuid)
+-- 테스트용 헬퍼: 특정 사용자로 요청하는 것처럼 role/JWT claims 및 claim.* GUC 설정
+create or replace function pg_temp.login_as(p_uid uuid, p_email_confirmed boolean default true)
 returns void language plpgsql as $$
+declare
+  v_claims jsonb;
 begin
+  v_claims := jsonb_build_object(
+    'sub', p_uid,
+    'role', 'authenticated',
+    'email_confirmed_at', case when p_email_confirmed then now() else null end
+  );
   perform set_config('role', 'authenticated', true);
-  perform set_config('request.jwt.claims', json_build_object('sub', p_uid, 'role', 'authenticated')::text, true);
+  perform set_config('request.jwt.claims', v_claims::text, true);
+  perform set_config('request.jwt.claim.sub', p_uid::text, true);
+  perform set_config('request.jwt.claim.role', 'authenticated', true);
+  if p_email_confirmed then
+    perform set_config('request.jwt.claim.email_confirmed_at', now()::text, true);
+  else
+    perform set_config('request.jwt.claim.email_confirmed_at', '', true);
+  end if;
 end $$;
 
 create or replace function pg_temp.logout()
@@ -21,6 +35,9 @@ returns void language plpgsql as $$
 begin
   perform set_config('role', 'postgres', true);
   perform set_config('request.jwt.claims', '', true);
+  perform set_config('request.jwt.claim.sub', '', true);
+  perform set_config('request.jwt.claim.role', '', true);
+  perform set_config('request.jwt.claim.email_confirmed_at', '', true);
 end $$;
 
 -- ---------------------------------------------------------------------------
@@ -89,7 +106,7 @@ select throws_like(
        'aaaaaaaa-0000-4000-8000-000000000002', 'minor@test.local',
        jsonb_build_object('signup', jsonb_build_object(
          'full_name', '미성년', 'birth_date', to_char((now() at time zone 'Asia/Seoul')::date - interval '18 years', 'YYYY-MM-DD'),
-         'terms_version', 't', 'privacy_version', 'p', 'adult_self_check', true))) $$,
+         'terms_version', 'terms-test', 'privacy_version', 'privacy-test', 'adult_self_check', true))) $$,
   '%UNDERAGE%', '만 19세 미만 가입 거부');
 
 select throws_like(
@@ -97,7 +114,7 @@ select throws_like(
        'aaaaaaaa-0000-4000-8000-000000000003', 'nocheck@test.local',
        jsonb_build_object('signup', jsonb_build_object(
          'full_name', '체크없음', 'birth_date', '1990-01-01',
-         'terms_version', 't', 'privacy_version', 'p', 'adult_self_check', false))) $$,
+         'terms_version', 'terms-test', 'privacy_version', 'privacy-test', 'adult_self_check', false))) $$,
   '%ADULT_SELF_CHECK_REQUIRED%', '만 19세 자기 확인 미체크 거부');
 
 select throws_like(
@@ -112,8 +129,16 @@ select throws_like(
        'aaaaaaaa-0000-4000-8000-000000000005', 'forged@test.local',
        jsonb_build_object('signup', jsonb_build_object(
          'full_name', '위조', 'birth_year', 1990, 'validated', true,
-         'terms_version', 't', 'privacy_version', 'p', 'adult_self_check', true))) $$,
+         'terms_version', 'terms-test', 'privacy_version', 'privacy-test', 'adult_self_check', true))) $$,
   '%INVALID_BIRTH_DATE%', 'validated/birth_year를 직접 넣어 우회 시도 → 거부');
+
+select throws_like(
+  $$ insert into auth.users (id, email, raw_user_meta_data) values (
+       'aaaaaaaa-0000-4000-8000-000000000006', 'badconsent@test.local',
+       jsonb_build_object('signup', jsonb_build_object(
+         'full_name', '버전오류', 'birth_date', '1990-01-01',
+         'terms_version', 'terms-invalid', 'privacy_version', 'privacy-invalid', 'adult_self_check', true))) $$,
+  '%INVALID_CONSENT_VERSION%', '초안 이외의 약관 버전 거부');
 
 -- ---------------------------------------------------------------------------
 -- 3) 소셜(Google) 로그인 (signup metadata 없음) → PENDING
@@ -128,6 +153,12 @@ select is(
 -- ---------------------------------------------------------------------------
 -- 4) RLS / 열 권한 (authenticated 역할)
 -- ---------------------------------------------------------------------------
+-- 이메일 미확인 PENDING 사용자 RLS 차단 테스트 (bbbb... 계정은 아직 email_confirmed_at 없음)
+select pg_temp.login_as('bbbbbbbb-0000-4000-8000-000000000001', false);
+select is((select count(*)::int from public.users where id = 'bbbbbbbb-0000-4000-8000-000000000001'), 0,
+  'RLS: 이메일 미확인 PENDING 사용자는 users 행 조회 불가 (ADR-005)');
+select pg_temp.logout();
+
 select pg_temp.login_as('aaaaaaaa-0000-4000-8000-000000000001');
 
 select is((select count(*)::int from public.users), 1, 'RLS: 본인 행만 보임');
@@ -151,6 +182,18 @@ select lives_ok(
 
 select is(public.is_active_adult(), false, 'is_active_adult: 미인증 성인 → false');
 
+-- adult_verified = true이나 adult_verification_expires_at is null 인 경우
+select pg_temp.logout();
+update public.users set adult_verified = true, adult_verification_expires_at = null where id = 'aaaaaaaa-0000-4000-8000-000000000001';
+select pg_temp.login_as('aaaaaaaa-0000-4000-8000-000000000001');
+select is(public.is_active_adult(), false, 'is_active_adult: adult_verified=true이나 만료일 null이면 false (fail-closed)');
+
+-- adult_verified = true이며 유효기간 남은 정상 케이스
+select pg_temp.logout();
+update public.users set adult_verified = true, adult_verification_expires_at = now() + interval '1 year' where id = 'aaaaaaaa-0000-4000-8000-000000000001';
+select pg_temp.login_as('aaaaaaaa-0000-4000-8000-000000000001');
+select is(public.is_active_adult(), true, 'is_active_adult: adult_verified=true 및 유효 만료일 → true');
+
 -- 다른 사용자 행 수정 시도 → RLS로 0행
 update public.users set nickname = '탈취시도' where id = 'bbbbbbbb-0000-4000-8000-000000000001';
 select pg_temp.logout();
@@ -161,22 +204,30 @@ select is(
 -- ---------------------------------------------------------------------------
 -- 5) complete_signup RPC (Google 소셜 사용자)
 -- ---------------------------------------------------------------------------
-select pg_temp.login_as('bbbbbbbb-0000-4000-8000-000000000001');
+-- 이메일 미확인 상태에서 complete_signup 호출 시 거부
+select pg_temp.login_as('bbbbbbbb-0000-4000-8000-000000000001', false);
+select throws_like(
+  $$ select public.complete_signup('구글유저', '1992-03-03', 'terms-test', 'privacy-test', true) $$,
+  '%EMAIL_NOT_CONFIRMED%', 'complete_signup: 이메일 미확인 상태 호출 거부');
+
+-- 이메일 확인 처리 후 정상 진행
+select pg_temp.logout();
+update auth.users set email_confirmed_at = now() where id = 'bbbbbbbb-0000-4000-8000-000000000001';
+select pg_temp.login_as('bbbbbbbb-0000-4000-8000-000000000001', true);
 
 select throws_like(
-  $$ select public.complete_signup('구글미성년', '2015-01-01', 't', 'p', true) $$,
+  $$ select public.complete_signup('구글미성년', '2015-01-01', 'terms-test', 'privacy-test', true) $$,
   '%UNDERAGE%', 'complete_signup: 미성년 거부');
 
 select lives_ok(
-  $$ select public.complete_signup('구글유저', '1992-03-03', 't', 'p', true) $$,
+  $$ select public.complete_signup('구글유저', '1992-03-03', 'terms-test', 'privacy-test', true) $$,
   'complete_signup: 정상 완료');
 
 select throws_like(
-  $$ select public.complete_signup('구글유저', '1992-03-03', 't', 'p', true) $$,
+  $$ select public.complete_signup('구글유저', '1992-03-03', 'terms-test', 'privacy-test', true) $$,
   '%SIGNUP_ALREADY_COMPLETED%', 'complete_signup: 중복 호출 거부');
 
 select pg_temp.logout();
 
 select * from finish();
 rollback;
-

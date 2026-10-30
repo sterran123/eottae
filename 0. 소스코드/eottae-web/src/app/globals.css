@@ -671,6 +671,9 @@ img {
 }
 
 .nav .login-slot-name {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   color: var(--ink);
   font-weight: 600;
   text-decoration: none;

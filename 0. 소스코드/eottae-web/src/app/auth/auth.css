@@ -44,6 +44,39 @@
   margin: 0 0 20px;
 }
 
+.auth-desc--spaced {
+  margin: 0 0 16px;
+}
+
+.auth-email-confirm-box {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.auth-email-confirm-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--brand);
+}
+
+.auth-email-confirm-addr {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.auth-email-confirm-desc {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
 .auth-demo {
   margin: 16px 0 22px;
 }

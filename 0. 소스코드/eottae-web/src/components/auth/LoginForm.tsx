@@ -29,9 +29,11 @@ export default function LoginForm() {
   const [showVerifyPanel, setShowVerifyPanel] = useState(false);
   const [info, setInfo] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [nextHref, setNextHref] = useState('/');
 
   useEffect(() => {
     rememberNextPath(searchParams.get('next'));
+    setNextHref(peekNextPath());
   }, [searchParams]);
 
   const disabled = submitting || !isConfigured;
@@ -123,7 +125,7 @@ export default function LoginForm() {
             )}
           </dl>
           <div className="auth-session-actions">
-            <Link className="btn primary" href={peekNextPath()} onClick={() => consumeNextPath()}>
+            <Link className="btn primary" href={nextHref} onClick={() => consumeNextPath()}>
               서비스로 이동
             </Link>
             <button

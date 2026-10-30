@@ -50,6 +50,10 @@ export default function CompleteSignupForm() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
+    if (!auth.account?.email) {
+      setFormError('인증된 계정 이메일을 확인할 수 없습니다. 다시 로그인해 주세요.');
+      return;
+    }
     const errs = validateProfileConsent(values);
     setErrors(errs);
     if (Object.keys(errs).length) {
@@ -76,12 +80,26 @@ export default function CompleteSignupForm() {
 
   return (
     <form className="auth-form" noValidate onSubmit={onSubmit}>
-      <ConsentFields
-        values={values}
-        errors={errors}
-        disabled={submitting}
-        onChange={(patch) => setValues((prev) => ({ ...prev, ...patch }))}
-      />
+      {auth.account?.email ? (
+        <div className="auth-email-confirm-box" role="status">
+          <span className="auth-email-confirm-label">현재 인증된 계정</span>
+          <strong className="auth-email-confirm-addr">{auth.account.email}</strong>
+          <p className="auth-email-confirm-desc">위 계정으로 추가 정보를 등록하고 가입을 완료합니다.</p>
+        </div>
+      ) : (
+        <p className="auth-form-error" role="alert">
+          계정 이메일 정보를 확인할 수 없습니다. 다시 로그인해 주세요.
+        </p>
+      )}
+
+      {auth.account?.email && (
+        <ConsentFields
+          values={values}
+          errors={errors}
+          disabled={submitting}
+          onChange={(patch) => setValues((prev) => ({ ...prev, ...patch }))}
+        />
+      )}
 
       {formError && (
         <p className="auth-form-error" role="alert">
@@ -89,16 +107,20 @@ export default function CompleteSignupForm() {
         </p>
       )}
 
-      <button type="submit" className="btn primary auth-submit" disabled={submitting}>
+      <button
+        type="submit"
+        className="btn primary auth-submit"
+        disabled={submitting || !auth.account?.email}
+      >
         {submitting ? '처리 중…' : '가입 완료'}
       </button>
 
       <button
         type="button"
         className="auth-text-btn"
-        onClick={() => void authService.signOut().then(() => router.replace('/'))}
+        onClick={() => void authService.signOut().then(() => router.replace('/auth/login'))}
       >
-        다음에 할게요 (로그아웃)
+        다른 계정으로 로그인 (로그아웃)
       </button>
     </form>
   );

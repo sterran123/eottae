@@ -40,8 +40,8 @@ export function getSupabase(): SupabaseClient | null {
         flowType: 'pkce',
         persistSession: true,
         autoRefreshToken: true,
-        // /auth/callback 의 ?code= 를 클라이언트 초기화 시 자동으로 세션으로 교환한다.
-        detectSessionInUrl: true,
+        // /auth/callback 의 ?code= 는 AuthCallback 에서 단 1회 전담 교환하므로 자동 교환은 끈다.
+        detectSessionInUrl: false,
       },
     });
   }

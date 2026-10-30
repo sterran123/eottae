@@ -156,6 +156,12 @@ begin
      or nullif(btrim(coalesce(p_privacy_version, '')), '') is null then
     raise exception 'CONSENT_REQUIRED';
   end if;
+
+  -- 허용된 초안 약관 버전만 허용 (임의 문자열 동의 방지)
+  if btrim(p_terms_version) not in ('terms-2026-10-draft', 'terms-test')
+     or btrim(p_privacy_version) not in ('privacy-2026-10-draft', 'privacy-test') then
+    raise exception 'INVALID_CONSENT_VERSION';
+  end if;
 end;
 $$;
 
@@ -207,7 +213,7 @@ revoke all on function private.validate_signup(text, date, text, text, boolean) 
 revoke all on function private.activate_user(uuid, text, smallint, text, text) from public, anon, authenticated;
 
 -- ---------------------------------------------------------------------------
--- 5.1. jsonb 내 특정 키 재귀적 제거 헬퍼 (ADR-002: 생년월일 원본 저장 절대 금지)
+-- 5.1. jsonb 내 특정 키 및 생년월일 변종 키 재귀적 제거 헬퍼 (ADR-002: 생년월일 원본 저장 절대 금지)
 -- ---------------------------------------------------------------------------
 create or replace function private.jsonb_strip_key(p_value jsonb, p_key text)
 returns jsonb
@@ -219,7 +225,7 @@ as $$
     when 'object' then (
       select coalesce(jsonb_object_agg(e.key, private.jsonb_strip_key(e.value, p_key)), '{}'::jsonb)
       from jsonb_each(coalesce(p_value, '{}'::jsonb)) as e
-      where e.key <> p_key
+      where lower(e.key) <> lower(p_key)
     )
     when 'array' then (
       select coalesce(jsonb_agg(private.jsonb_strip_key(e.value, p_key)), '[]'::jsonb)
@@ -229,14 +235,35 @@ as $$
   end;
 $$;
 
+create or replace function private.jsonb_strip_sensitive_birth_keys(p_value jsonb)
+returns jsonb
+language sql
+immutable
+set search_path = ''
+as $$
+  select case jsonb_typeof(p_value)
+    when 'object' then (
+      select coalesce(jsonb_object_agg(e.key, private.jsonb_strip_sensitive_birth_keys(e.value)), '{}'::jsonb)
+      from jsonb_each(coalesce(p_value, '{}'::jsonb)) as e
+      where lower(e.key) not in ('birth_date', 'birthdate', 'date_of_birth', 'dob', 'birthday')
+    )
+    when 'array' then (
+      select coalesce(jsonb_agg(private.jsonb_strip_sensitive_birth_keys(e.value)), '[]'::jsonb)
+      from jsonb_array_elements(coalesce(p_value, '[]'::jsonb)) as e
+    )
+    else p_value
+  end;
+$$;
+
 revoke all on function private.jsonb_strip_key(jsonb, text) from public, anon, authenticated;
+revoke all on function private.jsonb_strip_sensitive_birth_keys(jsonb) from public, anon, authenticated;
 
 -- ---------------------------------------------------------------------------
 -- 6. auth.users BEFORE INSERT OR UPDATE — 이메일 가입 입력 검증 + 생년월일 전역 제거
---    raw_user_meta_data.signup 이 있으면 검증하고, 저장 전에 아래 형태로 바꿔 쓴다.
---      { full_name, birth_year, terms_version, privacy_version, validated: true }
+--    raw_user_meta_data.signup 이 있으면 검증하고, 저장 전에 허용된 필드만 남긴다.
+--      { signup: { full_name, birth_year, terms_version, privacy_version, validated: true } }
 --    검증 실패 → 예외 → 가입 자체가 실패한다(fail-closed).
---    생년월일(birth_date) 원본은 문서 전체에서 재귀적으로 완전 제거한다(ADR-002).
+--    생년월일(birth_date 및 관련 변종) 원본은 문서 전체에서 재귀적으로 완전 제거한다(ADR-002).
 -- ---------------------------------------------------------------------------
 create or replace function public.sanitize_new_auth_user()
 returns trigger
@@ -251,13 +278,13 @@ begin
   -- 1) UPDATE: auth.updateUser 등으로 생년월일을 다시 넣거나 validated 값을 조작하는 시도 차단
   if TG_OP = 'UPDATE' then
     new.raw_user_meta_data :=
-      private.jsonb_strip_key(coalesce(new.raw_user_meta_data, '{}'::jsonb), 'birth_date');
+      private.jsonb_strip_sensitive_birth_keys(coalesce(new.raw_user_meta_data, '{}'::jsonb));
 
     if old.raw_user_meta_data ? 'signup' then
       new.raw_user_meta_data := jsonb_set(
         new.raw_user_meta_data,
         '{signup}',
-        private.jsonb_strip_key(old.raw_user_meta_data -> 'signup', 'birth_date')
+        private.jsonb_strip_sensitive_birth_keys(old.raw_user_meta_data -> 'signup')
       );
     elsif new.raw_user_meta_data ? 'signup' then
       new.raw_user_meta_data := new.raw_user_meta_data - 'signup';
@@ -266,10 +293,10 @@ begin
     return new;
   end if;
 
-  -- 2) INSERT: signup 객체가 없으면 (소셜 가입 등) 전체 문서에서 birth_date만 재귀 제거 후 반환
+  -- 2) INSERT: signup 객체가 없으면 (소셜 가입 등) 전체 문서에서 생년월일 관련 키 재귀 제거 후 반환
   if v_signup is null then
     new.raw_user_meta_data :=
-      private.jsonb_strip_key(coalesce(new.raw_user_meta_data, '{}'::jsonb), 'birth_date');
+      private.jsonb_strip_sensitive_birth_keys(coalesce(new.raw_user_meta_data, '{}'::jsonb));
     return new;
   end if;
 
@@ -291,14 +318,9 @@ begin
     (v_signup ->> 'adult_self_check')::boolean
   );
 
-  -- 검증용 값을 읽은 뒤 전체 raw_user_meta_data에서 birth_date를 재귀적으로 완전 제거 (ADR-002)
-  new.raw_user_meta_data :=
-    private.jsonb_strip_key(coalesce(new.raw_user_meta_data, '{}'::jsonb), 'birth_date');
-
-  -- 허용한 signup 객체만 정제된 필드(생년월일 대신 birth_year 포함)로 다시 작성
-  new.raw_user_meta_data := jsonb_set(
-    new.raw_user_meta_data,
-    '{signup}',
+  -- 공식 이메일 가입 경로: 허용 키(signup)만 남기고 생년월일 대신 birth_year만 안전하게 작성 (ADR-002 화이트리스트)
+  new.raw_user_meta_data := jsonb_build_object(
+    'signup',
     jsonb_build_object(
       'full_name',       btrim(v_signup ->> 'full_name'),
       'birth_year',      extract(year from v_birth_date)::int,
@@ -379,9 +401,20 @@ language plpgsql
 security definer
 set search_path = ''
 as $$
+declare
+  v_email_confirmed boolean;
 begin
   if auth.uid() is null then
     raise exception 'UNAUTHORIZED';
+  end if;
+
+  -- email_confirmed_at 확인 (이메일 미확인 세션은 가입 완료 불가)
+  select (email_confirmed_at is not null) into v_email_confirmed
+  from auth.users
+  where id = auth.uid();
+
+  if coalesce(v_email_confirmed, false) is false then
+    raise exception 'EMAIL_NOT_CONFIRMED';
   end if;
 
   perform private.validate_signup(
@@ -439,10 +472,18 @@ grant select on public.consents to authenticated;            -- INSERT는 activa
 alter table public.users    enable row level security;
 alter table public.consents enable row level security;
 
--- 본인 행은 상태와 관계없이 조회 가능 (PENDING이면 가입 완료 화면으로 보내기 위해 필요)
+-- 본인 행 조회: ACTIVE 사용자 또는 이메일 확인이 완료된 PENDING 사용자만 조회 가능 (ADR-005)
+-- 정지/탈퇴 사용자 및 이메일 미확인 세션의 개인정보(full_name, birth_year) 조회를 RLS 레벨에서 차단
 create policy users_select_own on public.users
   for select to authenticated
-  using (id = (select auth.uid()));
+  using (
+    id = (select auth.uid())
+    and account_status in ('ACTIVE', 'PENDING')
+    and (
+      account_status = 'ACTIVE'
+      or (select auth.jwt() ->> 'email_confirmed_at') is not null
+    )
+  );
 
 -- 본인 + ACTIVE만 수정 (열 권한으로 nickname만 가능)
 create policy users_update_own_active on public.users
@@ -450,6 +491,14 @@ create policy users_update_own_active on public.users
   using (id = (select auth.uid()) and account_status = 'ACTIVE')
   with check (id = (select auth.uid()) and account_status = 'ACTIVE');
 
+-- 본인 동의 내역 조회 (ACTIVE/PENDING 사용자만 조회 가능)
 create policy consents_select_own on public.consents
   for select to authenticated
-  using (user_id = (select auth.uid()));
+  using (
+    user_id = (select auth.uid())
+    and exists (
+      select 1 from public.users u
+      where u.id = (select auth.uid())
+        and u.account_status in ('ACTIVE', 'PENDING')
+    )
+  );
