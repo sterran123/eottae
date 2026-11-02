@@ -84,7 +84,9 @@ export function useAuth(): AuthState {
       }
     };
 
-    void supabase.auth.getSession().then(({ data }) => void apply(data.session?.user ?? null));
+    void supabase.auth.getSession().then((result) => {
+      void apply(result.data.session?.user ?? null);
+    });
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, supaSession) => {
       if (event === 'INITIAL_SESSION') return;
