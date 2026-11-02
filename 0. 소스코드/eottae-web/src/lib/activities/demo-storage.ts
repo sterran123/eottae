@@ -22,6 +22,20 @@ export type StoredReview = {
   mine: true;
 };
 
+export type InfoCheckStatus = 'pending' | 'confirmed' | 'planned';
+
+/** 영업·폐업 확인 승인 요청. 이 브라우저에만 남긴다. */
+export type InfoCheckRequest = {
+  id: string;
+  kind: 'course' | 'gathering';
+  targetId: string;
+  reason: '업데이트가 필요해요';
+  note: string;
+  atLabel: string;
+  atIso: string;
+  status: InfoCheckStatus;
+};
+
 export type ActivitiesDemoState = {
   requests: Record<string, true>;
   /** 내 참가 요청의 데모 진행. requested·accepted만 모집 인원에 포함한다. */
@@ -33,6 +47,12 @@ export type ActivitiesDemoState = {
   /** 내가 쓴 후기. 예시 후기는 여기 넣지 않는다. */
   reviews: Record<string, StoredReview[]>;
   hiddenReviewIds: string[];
+  /** `course:id` · `gathering:id` 내 좋아요 */
+  likes: Record<string, true>;
+  /** `course:id` · `gathering:id` 내 추천 */
+  recommends: Record<string, true>;
+  /** 업데이트가 필요해요 신고의 확인 요청 */
+  infoChecks: InfoCheckRequest[];
 };
 
 export const EMPTY_ACTIVITIES_DEMO: ActivitiesDemoState = {
@@ -43,6 +63,9 @@ export const EMPTY_ACTIVITIES_DEMO: ActivitiesDemoState = {
   ops: {},
   reviews: {},
   hiddenReviewIds: [],
+  likes: {},
+  recommends: {},
+  infoChecks: [],
 };
 
 function isPollOption(value: unknown): value is PollOption {
@@ -99,7 +122,17 @@ function sanitizeGathering(value: Gathering): Gathering {
   delete next.viewerIsHost;
   delete next.ended;
   delete next.demoAttended;
+  if (isCount(value.demoLikes)) next.demoLikes = value.demoLikes;
+  else delete next.demoLikes;
+  if (isCount(value.demoRecommends)) next.demoRecommends = value.demoRecommends;
+  else delete next.demoRecommends;
+  if (typeof value.listedAt === 'string' && LOCAL_DATE.test(value.listedAt)) next.listedAt = value.listedAt;
+  else delete next.listedAt;
   return next;
+}
+
+function isCount(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 9999;
 }
 
 function readJoins(value: unknown): Record<string, MyJoinStatus> {
@@ -206,6 +239,40 @@ function readReviews(value: unknown): Record<string, StoredReview[]> {
   return next;
 }
 
+function isInfoCheck(value: unknown): value is InfoCheckRequest {
+  if (!value || typeof value !== 'object') return false;
+  const row = value as InfoCheckRequest;
+  return (
+    typeof row.id === 'string' &&
+    row.id.length > 0 &&
+    row.id.length <= 80 &&
+    (row.kind === 'course' || row.kind === 'gathering') &&
+    typeof row.targetId === 'string' &&
+    row.targetId.length > 0 &&
+    row.targetId.length <= 80 &&
+    row.reason === '업데이트가 필요해요' &&
+    typeof row.note === 'string' &&
+    row.note.length <= 200 &&
+    typeof row.atLabel === 'string' &&
+    row.atLabel.length > 0 &&
+    row.atLabel.length <= 40 &&
+    typeof row.atIso === 'string' &&
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(row.atIso) &&
+    row.atIso.length <= 40 &&
+    (row.status === 'pending' || row.status === 'confirmed' || row.status === 'planned')
+  );
+}
+
+function readInfoChecks(value: unknown): InfoCheckRequest[] {
+  if (!Array.isArray(value)) return [];
+  const next: InfoCheckRequest[] = [];
+  for (const item of value) {
+    if (isInfoCheck(item) && !next.some((row) => row.id === item.id)) next.push(item);
+    if (next.length >= 40) break;
+  }
+  return next;
+}
+
 function readIdList(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   const next: string[] = [];
@@ -278,6 +345,9 @@ export function loadActivitiesDemo(): ActivitiesDemoState {
       ops: readOps(row.ops),
       reviews: readReviews(row.reviews),
       hiddenReviewIds: readIdList(row.hiddenReviewIds),
+      likes: readBoolMap(row.likes),
+      recommends: readBoolMap(row.recommends),
+      infoChecks: readInfoChecks(row.infoChecks),
     };
   } catch {
     return EMPTY_ACTIVITIES_DEMO;
@@ -300,6 +370,9 @@ export function saveActivitiesDemo(state: ActivitiesDemoState): boolean {
       ops: state.ops,
       reviews: state.reviews,
       hiddenReviewIds: state.hiddenReviewIds,
+      likes: state.likes,
+      recommends: state.recommends,
+      infoChecks: state.infoChecks.slice(0, 40),
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     return true;

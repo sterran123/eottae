@@ -680,3 +680,35 @@ export const DEMO_REVIEWS: readonly DemoReviewSeed[] = [
 export function findCourse(id: string): DateCourse | undefined {
   return DEMO_COURSES.find((course) => course.id === id);
 }
+
+/** 카드에 보이는 좋아요·추천의 데모 시작값. 내 반응은 localStorage에서만 더한다. */
+export type ReactionSeed = {
+  likes: number;
+  recommends: number;
+  /** 최신순. 앞쪽 코스·모임이 더 최근 */
+  listedAt: string;
+};
+
+export const DEMO_REACTION_SEED: Record<string, ReactionSeed> = {
+  'course-neoul-tea': { likes: 18, recommends: 11, listedAt: '2026-10-28T11:00' },
+  'course-dal-market': { likes: 9, recommends: 14, listedAt: '2026-10-26T19:30' },
+  'course-handle-picnic': { likes: 22, recommends: 6, listedAt: '2026-10-24T13:10' },
+  'course-byeol-night': { likes: 7, recommends: 19, listedAt: '2026-10-22T20:40' },
+  'course-ongi-craft': { likes: 15, recommends: 9, listedAt: '2026-10-20T15:20' },
+  'course-pado-film': { likes: 4, recommends: 8, listedAt: '2026-10-18T18:00' },
+  'course-neoul-morning': { likes: 11, recommends: 3, listedAt: '2026-10-16T09:10' },
+  'course-dal-rain': { likes: 13, recommends: 16, listedAt: '2026-10-14T16:45' },
+  'meet-sketch': { likes: 20, recommends: 12, listedAt: '2026-10-30T10:00' },
+  'meet-dosirak': { likes: 8, recommends: 5, listedAt: '2026-10-27T12:10' },
+  'meet-walk': { likes: 14, recommends: 10, listedAt: '2026-10-25T08:40' },
+  'meet-reading': { likes: 6, recommends: 9, listedAt: '2026-10-23T19:00' },
+  'meet-frame': { likes: 17, recommends: 7, listedAt: '2026-10-21T17:20' },
+  'meet-board': { likes: 5, recommends: 4, listedAt: '2026-10-19T15:00' },
+  'meet-brunch': { likes: 11, recommends: 13, listedAt: '2026-10-17T11:30' },
+  'meet-stretch': { likes: 3, recommends: 2, listedAt: '2026-10-15T07:10' },
+  'meet-words': { likes: 9, recommends: 6, listedAt: '2026-10-13T18:20' },
+  'meet-screen': { likes: 7, recommends: 8, listedAt: '2026-10-11T20:00' },
+  'meet-past-tea': { likes: 16, recommends: 11, listedAt: '2026-10-09T16:00' },
+  'meet-past-walk': { likes: 4, recommends: 3, listedAt: '2026-10-07T09:30' },
+  'meet-past-read': { likes: 10, recommends: 9, listedAt: '2026-10-05T19:40' },
+};

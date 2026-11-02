@@ -30,6 +30,12 @@ export type DateCourse = {
   steps: readonly CourseStep[];
   /** 사이트 경로(`/activities/covers/...`) 또는 이 브라우저 data URL. 없으면 분위기 기본 커버 */
   coverImage?: string;
+  /** 데모 초기 좋아요. 내 토글은 저장소에서만 더한다. */
+  demoLikes?: number;
+  /** 데모 초기 추천 */
+  demoRecommends?: number;
+  /** 최신순 정렬용 `YYYY-MM-DDTHH:mm` */
+  listedAt?: string;
 };
 
 export type PollOption = {
@@ -75,6 +81,12 @@ export type Gathering = {
   mine?: boolean;
   /** 사이트 경로(`/activities/covers/...`) 또는 이 브라우저 data URL. 없으면 카테고리 기본 커버 */
   coverImage?: string;
+  /** 데모 초기 좋아요. 내 토글은 저장소에서만 더한다. */
+  demoLikes?: number;
+  /** 데모 초기 추천 */
+  demoRecommends?: number;
+  /** 최신순 정렬용 `YYYY-MM-DDTHH:mm`. 만든 모임은 만든 시각 */
+  listedAt?: string;
 };
 
 export function isActivityRegion(value: string): value is ActivityRegion {

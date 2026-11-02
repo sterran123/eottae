@@ -741,4 +741,14 @@
 - [미실행] 브라우저에서 관리 탭 수락·거절·강퇴·모집 토글·뱃지 변화, 모임장 시점 전환, 종료 모임 후기 작성·수정·삭제·신고, 미확정 잠금, 360px·6테마 확인. 이 세션은 파일 읽기·검색·수정만이라 typecheck·build도 실행하지 않음
 - [변경] PR #72 Grok 리뷰(dd4c513) 반영: 모임장 모임(`viewerIsHost`·내가 만든 모임)은 참가 요청을 열지 않고 상세·목록 뱃지에 `requested`를 넘기지 않는다. `recruitmentView`도 그 요청을 인원에 더하지 않는다. 저장된 `joins`·`requests`는 읽을 때와 저장할 때 뺀다. `joinStatus`가 없으면 `hostLook`을 끄고, 관리 탭이면 안내로 돌린다. 권장 반영: 관리 문구는 수락·강퇴와 이미 인원에 들어간 내 요청의 거절에 맞추고, 수락됨 버튼은 「참가 취소」, 후기 탭은 `ended === true`만, 수락·강퇴 등 데모 저장은 직전 상태를 이어서 쓴다. 735행은 `FILE_INDEX.csv`·`MANIFEST.sha256`를 수정하지 않았다고 적지만, 현재 두 파일에는 GatheringManage·GatheringReviews·ActivityReportDialog·demo-roster·reviews 항목이 있다. 이 반영에서는 그 두 파일을 고치지 않음. 741행대로 typecheck·build는 미실행이고, 이 반영도 typecheck·build·sha256sum·브라우저는 실행하지 않음. 해시가 파일 바이트와 같은지는 미확인. PR 본문은 저장소에 없어 통과 문장은 빼지 못함.
 
+## 2026-11-02 데이트·소모임 더보기 메뉴·신고 사유 확장·추천/좋아요(데모) — 오하율 요청 (김민기 작업)
+- [요청] `/activities` 데모에 점 세 개 더보기(신고·내 글 수정/삭제·링크 복사), 신고 문구 「어떤 문제가 있나요?」, 기타 입력(16px·모달 100dvh 스크롤, 전역 확대 금지 없음), 「업데이트가 필요해요」 영업·폐업 확인 요청(localStorage·정보 확인 중·모임장/작성자 확인 완료·수정 예정), 코스·소모임 좋아요·추천과 추천순/좋아요순/최신순. 서버·Supabase·package.json·매칭·채팅·FILE_INDEX.csv·MANIFEST.sha256는 수정하지 않음. 명령 실행 없음
+- [AI] 로컬 Grok이 activities 화면·types·demo-data·demo-storage·기존 `ActivityReportDialog`·매칭 `ReportModal`(재사용하지 않음, 매칭 동작 유지)·activities.css 토큰을 읽고 브라우저 저장만 확장
+- [신규] src/components/activities/ActivityMoreMenu.tsx | 직접 그린 세로 점 세 개 SVG, aria-label 「더보기」, 44px. 메뉴는 Enter/Space·Esc·화살표, 바깥 클릭 닫기, 포커스 복귀
+- [신규] src/components/activities/ActivityReactions.tsx, InfoChecks.tsx, src/lib/activities/feedback.ts | ♡ 좋아요·엄지 추천, `aria-pressed`. 확인 요청 목록과 상태 문구
+- [변경] src/lib/activities/demo-data.ts, types.ts, demo-storage.ts | 코스 8·소모임 13의 데모 좋아요·추천·최신순 시각. 내 반응과 확인 요청은 기존 키 `eottae.activities.demo.v1`
+- [변경] src/components/activities/ActivityReportDialog.tsx, DemoDialog.tsx | 기존 사유 뒤에 「업데이트가 필요해요」「기타」. 제목 아래 「어떤 문제가 있나요?」. 기타만 사유 입력 활성(200자·필수). 신고 모달만 `max-height: 100dvh`·내부 스크롤·입력 16px. 매칭 `ReportModal`은 그대로
+- [변경] ActivitiesDemo.tsx, CourseDetail.tsx, GatheringDetail.tsx, GatheringManage.tsx, ActivitiesNewForm.tsx, activities.css, activities/page.tsx | 카드·상세 오른쪽 위 더보기. 내 데모 모임만 수정 안내·삭제 확인. 링크 복사는 데모 토스트(가능하면 이 기기 클립보드). 업데이트 신고 문구는 「관리자와 게시 작성자에게 영업·폐업 확인 승인 요청을 보냈어요(데모)」. 상세·카드에 정보 확인 중/확인 완료/수정 예정. 소모임은 관리 탭, 코스는 작성자 시점 토글에서 처리. 목록 정렬 추가. 커버·모집 뱃지·참가·후기·모임장 수락은 유지. 색은 기존 6테마 토큰
+- [미실행] 브라우저에서 360px·더보기 키보드·기타 입력 확대·확인 요청·좋아요 정렬, typecheck·build. 이 세션은 파일 읽기·검색·수정만
+
 

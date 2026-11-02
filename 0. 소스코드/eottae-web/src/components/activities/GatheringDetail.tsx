@@ -3,12 +3,16 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import ActivityCover from '@/components/activities/ActivityCover';
+import ActivityMoreMenu, { type MoreMenuItem } from '@/components/activities/ActivityMoreMenu';
+import ActivityReactions from '@/components/activities/ActivityReactions';
 import ActivityReportDialog from '@/components/activities/ActivityReportDialog';
 import GatheringManage from '@/components/activities/GatheringManage';
 import GatheringReviews from '@/components/activities/GatheringReviews';
+import InfoChecks from '@/components/activities/InfoChecks';
 import RecruitmentBadges from '@/components/activities/RecruitmentBadges';
-import type { MyJoinStatus } from '@/lib/activities/demo-storage';
+import type { InfoCheckRequest, InfoCheckStatus, MyJoinStatus } from '@/lib/activities/demo-storage';
 import { recruitmentToggleLabel, type VirtualPerson } from '@/lib/activities/demo-roster';
+import { infoStatusLabel } from '@/lib/activities/feedback';
 import { recruitmentView } from '@/lib/activities/recruitment';
 import { averageStars, canWriteReview, isEndedGathering, type ReviewRow } from '@/lib/activities/reviews';
 import type { Gathering } from '@/lib/activities/types';
@@ -30,6 +34,11 @@ type Props = {
   people: readonly VirtualPerson[];
   recruitmentOverride?: 'closed' | 'open';
   reviewRows: readonly ReviewRow[];
+  liked: boolean;
+  recommended: boolean;
+  likeCount: number;
+  recommendCount: number;
+  infoChecks: readonly InfoCheckRequest[];
   onBack: () => void;
   onToggleRequest: () => void;
   onVote: (optionId: string) => void;
@@ -39,6 +48,13 @@ type Props = {
   onSaveReview: (stars: number, body: string) => void;
   onDeleteReview: () => void;
   onToast: (message: string) => void;
+  onToggleLike: () => void;
+  onToggleRecommend: () => void;
+  onCopyLink: () => void;
+  onReportPlace: () => void;
+  onEdit: () => void;
+  onAskDelete: () => void;
+  onResolveInfo: (id: string, status: Exclude<InfoCheckStatus, 'pending'>) => void;
 };
 
 export default function GatheringDetail({
@@ -50,6 +66,11 @@ export default function GatheringDetail({
   people,
   recruitmentOverride,
   reviewRows,
+  liked,
+  recommended,
+  likeCount,
+  recommendCount,
+  infoChecks,
   onBack,
   onToggleRequest,
   onVote,
@@ -59,6 +80,13 @@ export default function GatheringDetail({
   onSaveReview,
   onDeleteReview,
   onToast,
+  onToggleLike,
+  onToggleRecommend,
+  onCopyLink,
+  onReportPlace,
+  onEdit,
+  onAskDelete,
+  onResolveInfo,
 }: Props) {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
@@ -240,14 +268,14 @@ export default function GatheringDetail({
         <ul>
           <li>첫 만남은 사람 있는 공개 장소에서 하세요. 집 주소와 실시간 위치는 주고받지 않아요.</li>
           <li>
-            신고 위치는 아래 버튼과 <Link href="/safety">안전센터</Link>입니다. 이 버튼은 데모라 접수되지 않아요.
+            신고는 오른쪽 위 더보기, 아래 버튼, <Link href="/safety">안전센터</Link>에 있어요. 이 버튼은 데모라 접수되지 않아요.
           </li>
           <li>
             차단은 이 데모에서 적용되지 않아요. 정책이 있는 곳은 <Link href="/safety">안전센터</Link>입니다.
           </li>
         </ul>
         <div className="act-actions">
-          <button type="button" className="btn outline" onClick={() => setReportSubject(gathering.title)}>
+          <button type="button" className="btn outline" onClick={onReportPlace}>
             신고
           </button>
           <span className="act-demo-mark">데모 · 확인만</span>
@@ -256,12 +284,21 @@ export default function GatheringDetail({
     </>
   );
 
+  const statusLabel = infoStatusLabel(infoChecks);
+  const menuItems: MoreMenuItem[] = [
+    { id: 'report', label: '신고하기', onSelect: onReportPlace },
+    ...(gathering.mine || gathering.viewerIsHost ? [{ id: 'edit', label: '수정', onSelect: onEdit }] : []),
+    ...(gathering.mine ? [{ id: 'delete', label: '삭제', onSelect: onAskDelete }] : []),
+    { id: 'copy', label: '링크 복사', onSelect: onCopyLink },
+  ];
+
   return (
     <article className="act-detail" aria-labelledby="act-meet-title">
-      <div className="act-actions">
+      <div className="act-detail-bar">
         <button type="button" className="btn outline" onClick={onBack}>
           ← 모임 목록
         </button>
+        <ActivityMoreMenu items={menuItems} />
       </div>
       <ActivityCover item={gathering} large />
       <p className="act-kicker">
@@ -284,9 +321,28 @@ export default function GatheringDetail({
             {flag}
           </span>
         ))}
+        {statusLabel && <span className="act-chip">{statusLabel}</span>}
         <span className="act-demo-mark">데모</span>
       </div>
+      <ActivityReactions
+        likes={likeCount}
+        recommends={recommendCount}
+        liked={liked}
+        recommended={recommended}
+        disabled={!ready}
+        onLike={onToggleLike}
+        onRecommend={onToggleRecommend}
+      />
       <p>{gathering.intro}</p>
+      {infoChecks.length > 0 && (
+        <section aria-labelledby="act-meet-check">
+          <h3 id="act-meet-check">정보 확인 요청</h3>
+          <p className="act-note">
+            <span className="act-demo-mark">데모</span> 영업·폐업 확인 요청입니다. 처리는 {host || joinStatus ? '관리 탭의 모임장 시점' : '참가 요청 뒤 모임장 시점'}에서 할 수 있어요.
+          </p>
+          <InfoChecks rows={infoChecks} canResolve={false} onResolve={onResolveInfo} />
+        </section>
+      )}
       <dl className="act-totals">
         <div>
           <dt>안내 일정</dt>
@@ -382,6 +438,8 @@ export default function GatheringDetail({
               canTakeSeat={roster.shownCount < gathering.capacity}
               onDecision={onDecision}
               onToggleRecruitment={onToggleRecruitment}
+              infoChecks={infoChecks}
+              onResolveInfo={onResolveInfo}
             />
           )}
           {active === 'reviews' && showReviews && (
@@ -411,9 +469,14 @@ export default function GatheringDetail({
         <ActivityReportDialog
           subject={reportSubject}
           onClose={() => setReportSubject(null)}
+          allowUpdate={false}
           onConfirm={(reason) => {
             setReportSubject(null);
-            onToast(`데모 · ‘${reason}’ 신고는 확인만 했어요. 저장하거나 전송하지 않았습니다.`);
+            onToast(
+              reason === '기타'
+                ? '데모 · ‘기타’ 신고는 확인만 했어요. 적은 내용은 저장하거나 전송하지 않았습니다.'
+                : `데모 · ‘${reason}’ 신고는 확인만 했어요. 저장하거나 전송하지 않았습니다.`
+            );
           }}
         />
       )}
