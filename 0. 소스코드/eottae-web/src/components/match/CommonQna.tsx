@@ -36,7 +36,7 @@ export default function CommonQna({
 }: CommonQnaProps) {
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [listReady, setListReady] = useState(false);
-  /** loadMyQnaAnswers가 끝낸 모드. 끝나기 전에는 답을 저장하지 않는다. */
+  /** 조회가 성공한 모드. 실패하거나 끝나기 전에는 null이라 답을 저장하지 않는다. */
   const [loadedMode, setLoadedMode] = useState<MatchOperatingMode | null>(null);
   const [loadKey, setLoadKey] = useState(0);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -58,8 +58,17 @@ export default function CommonQna({
       if (!active) return;
       const demo = context.mode === 'demo';
       demoStorageRef.current = demo;
-      setLoadedMode(context.mode);
       setIsDemoMode(context.isDemo && demo);
+      if (errorMessage) {
+        setLoadedMode(null);
+        setPartner({});
+        setDeclinedIds(new Set());
+        setMyAnswers({});
+        setActionError(errorMessage);
+        setListReady(true);
+        return;
+      }
+      setLoadedMode(context.mode);
       if (demo) {
         setPartner(DEMO_PARTNER_ANSWERS);
         setDeclinedIds(new Set(matchService.loadDeclinedCommonQuestions('demo')));

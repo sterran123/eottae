@@ -1,8 +1,9 @@
 // ============================================================
 //  저장 경로: src/lib/match/match-service.ts
 //  담당: 오하율 · MATCH-001/002/009 (매칭 데이터 소스 · Supabase 백엔드 연동)
-//  역할: 온보딩(`profiles`·`profile_interests`), 추천(`get_recommendations`),
-//        관심 표현(`likes`), 문답(`profile_qna_answers`)의
+//  역할: 온보딩(`save_onboarding`, 조회는 `profiles`·`user_interests`),
+//        추천(`get_recommendations`), 관심 표현(`record_like_decision`),
+//        문답(`save_answers`, 조회는 `profile_answers`)의
 //        Supabase 호출과 데모 폴백을 분리하는 데이터 서비스 계층.
 //        공통 질문 거절은 `common_question_answers`를 호출하지 않고,
 //        데모(키 없음 또는 세션 없음)에서만 localStorage에 둔다.
@@ -162,47 +163,73 @@ export function mapUiReasonToReportCategory(reason: string): ReportCategory {
 type MatchSupabase = NonNullable<ReturnType<typeof getSupabase>>;
 
 /**
- * 관심사를 비우지 않은 채로 교체한다.
- * 새 id를 먼저 넣고, 빠진 id만 지운다. 조회·삽입·삭제 중 하나라도 실패하면 사유 문자열을 반환한다.
+ * `save_answers`는 넘긴 문항만 덮어쓰고, 배열에 없는 기존 답은 지우지 않는다.
+ * 지울 문항만 `removed: true`로 보낸다.
+ * 조회가 일부만 성공한 뒤 한 문항을 저장하거나 지워도 나머지 답은 남는다.
+ * 서버 행이 0건인 첫 저장은 그 문항만 들어간다.
  */
-async function syncProfileInterests(
+async function replaceProfileAnswers(
   supabase: MatchSupabase,
-  userId: string,
-  interestIds: string[],
+  next: Record<string, QnaAnswer>,
+  failMessage: string,
+  removeQuestionIds: readonly string[] = [],
 ): Promise<string | null> {
-  const fail = '관심사 저장 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.';
-  const { data: existing, error: readErr } = await supabase
-    .from('profile_interests')
-    .select('interest_id')
-    .eq('user_id', userId);
-  if (readErr) return fail;
+  const remove = new Set(removeQuestionIds);
+  const payload: Array<{
+    questionId: string;
+    optionId: string | null;
+    customText: string | null;
+    declined: boolean;
+    removed?: boolean;
+  }> = [];
 
-  const existingIds = new Set(
-    (existing ?? []).map((row) => String((row as { interest_id: string }).interest_id)),
-  );
-  const desired = new Set(interestIds);
-  const toInsert = interestIds.filter((id) => !existingIds.has(id));
-  const toDelete = [...existingIds].filter((id) => !desired.has(id));
-
-  if (toInsert.length > 0) {
-    const rows: ProfileInterestRow[] = toInsert.map((interestId) => ({
-      user_id: userId,
-      interest_id: interestId,
-    }));
-    const { error: insErr } = await supabase.from('profile_interests').insert(rows);
-    if (insErr) return fail;
+  for (const answer of Object.values(next)) {
+    if (remove.has(answer.questionId)) continue;
+    payload.push({
+      questionId: answer.questionId,
+      optionId: answer.optionId,
+      customText: answer.customText ?? null,
+      declined: false,
+    });
+  }
+  for (const questionId of remove) {
+    payload.push({
+      questionId,
+      optionId: null,
+      customText: null,
+      declined: false,
+      removed: true,
+    });
   }
 
-  if (toDelete.length > 0) {
-    const { error: delErr } = await supabase
-      .from('profile_interests')
-      .delete()
-      .eq('user_id', userId)
-      .in('interest_id', toDelete);
-    if (delErr) return fail;
+  const { error: rpcError } = await supabase.rpc('save_answers', { p_answers: payload });
+  return rpcError ? failMessage : null;
+}
+
+function readRecommendationPage(data: unknown): {
+  items: RecommendationRow[];
+  nextCursor: string | null;
+} | null {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
+  const payload = data as { items?: unknown; next_cursor?: unknown };
+  if (!Array.isArray(payload.items)) return null;
+
+  const items: RecommendationRow[] = [];
+  for (const raw of payload.items) {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+    const record = raw as { user_id?: unknown; age?: unknown };
+    if (typeof record.user_id !== 'string' || record.user_id.length === 0) return null;
+    // 출생연도가 없으면 서버가 age: null을 준다. 그 행만 건너뛰고 페이지는 유지한다.
+    if (record.age === null) continue;
+    if (typeof record.age !== 'number' || !Number.isFinite(record.age)) return null;
+    items.push(raw as RecommendationRow);
   }
 
-  return null;
+  const nextCursor =
+    typeof payload.next_cursor === 'string' && payload.next_cursor.length > 0
+      ? payload.next_cursor
+      : null;
+  return { items, nextCursor };
 }
 
 export const matchService = {
@@ -284,7 +311,7 @@ export const matchService = {
   },
 
   /**
-   * 저장된 온보딩 설정(`profiles` + `profile_interests` 또는 데모 로컬 저장본)을 불러온다.
+   * 저장된 온보딩 설정(`profiles` + `user_interests` 또는 데모 로컬 저장본)을 불러온다.
    */
   async loadOnboarding(): Promise<{
     context: MatchAccessContext;
@@ -303,12 +330,12 @@ export const matchService = {
         supabase
           .from('profiles')
           .select(
-            'user_id, nickname, bio, mbti, avoid_mbti, target_preference, relation_goal, preferred_distance, photo_visibility, profile_status, updated_at',
+            'user_id, bio, mbti, avoid_mbti, target_preference, relation_goal, preferred_distance, photo_visibility, profile_status',
           )
           .eq('user_id', userId)
           .maybeSingle(),
         supabase
-          .from('profile_interests')
+          .from('user_interests')
           .select('user_id, interest_id')
           .eq('user_id', userId),
       ]);
@@ -346,7 +373,7 @@ export const matchService = {
   /**
    * 온보딩 취향·공개범위를 검증하고 저장한다 (MATCH-001, TC-005).
    * - 성인 미인증 로그인 상태(`unverified`)에서는 fail-closed로 거부한다.
-   * - `live` 모드에서는 `public.profiles` upsert 및 `public.profile_interests` 동기화를 수행한다.
+   * - `live` 모드에서는 RPC `save_onboarding`만 호출한다. profiles·user_interests 직접 쓰기는 없다.
    */
   async saveOnboarding(
     draft: OnboardingDraft,
@@ -385,21 +412,15 @@ export const matchService = {
 
     const supabase = getSupabase();
     if (context.mode === 'live' && context.account && supabase) {
-      const userId = context.account.id;
-      const { error: profileErr } = await supabase.from('profiles').upsert(
-        {
-          user_id: userId,
-          nickname: context.account.nickname,
-          mbti: req.myMbti,
-          avoid_mbti: req.avoidMbti,
-          target_preference: req.targetPreference,
-          relation_goal: req.relationGoal,
-          preferred_distance: req.preferredDistance,
-          photo_visibility: req.photoVisibility,
-          profile_status: 'ACTIVE',
-        },
-        { onConflict: 'user_id' },
-      );
+      const { error: profileErr } = await supabase.rpc('save_onboarding', {
+        p_my_mbti: req.myMbti,
+        p_avoid_mbti: req.avoidMbti,
+        p_target_preference: req.targetPreference,
+        p_relation_goal: req.relationGoal,
+        p_interest_ids: req.interestIds,
+        p_preferred_distance: req.preferredDistance,
+        p_photo_visibility: req.photoVisibility,
+      });
 
       if (profileErr) {
         return {
@@ -409,19 +430,6 @@ export const matchService = {
             code: 'NETWORK_ERROR',
             message: '프로필 저장 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.',
           },
-        };
-      }
-
-      const interestError = await syncProfileInterests(
-        supabase,
-        userId,
-        req.interestIds,
-      );
-      if (interestError) {
-        return {
-          ok: false,
-          mode: 'live',
-          error: { code: 'NETWORK_ERROR', message: interestError },
         };
       }
 
@@ -477,18 +485,17 @@ export const matchService = {
       const { data, error } = await supabase.rpc('get_recommendations', {
         p_cursor: cursor,
       });
+      const page = !error ? readRecommendationPage(data) : null;
 
-      if (!error && Array.isArray(data)) {
-        const items = (data as RecommendationRow[]).map((row) =>
-          toRecommendProfile(row),
-        );
+      if (page) {
+        const items = page.items.map((row) => toRecommendProfile(row));
         return {
           ok: true,
           mode: 'live',
           context,
           data: {
             items,
-            nextCursor: null,
+            nextCursor: page.nextCursor,
             acorn: { acorn: null },
           },
         };
@@ -633,9 +640,9 @@ export const matchService = {
       const { error } = await supabase.from('blocks').upsert(
         {
           blocker_id: context.account.id,
-          blocked_id: req.blockedUserId,
+          blocked_user_id: req.blockedUserId,
         },
-        { onConflict: 'blocker_id,blocked_id' },
+        { onConflict: 'blocker_id,blocked_user_id', ignoreDuplicates: true },
       );
       if (error) {
         return {
@@ -679,11 +686,12 @@ export const matchService = {
     const supabase = getSupabase();
 
     if (context.mode === 'live' && context.account && supabase) {
+      const detail = req.description.trim();
       const { error: reportErr } = await supabase.from('reports').insert({
         reporter_id: context.account.id,
         reported_user_id: req.reportedUserId,
         category: req.category,
-        description: req.description.slice(0, 200),
+        description: detail.length > 0 ? detail.slice(0, 200) : null,
       });
 
       if (reportErr) {
@@ -701,9 +709,9 @@ export const matchService = {
         const { error: blockErr } = await supabase.from('blocks').upsert(
           {
             blocker_id: context.account.id,
-            blocked_id: req.reportedUserId,
+            blocked_user_id: req.reportedUserId,
           },
-          { onConflict: 'blocker_id,blocked_id' },
+          { onConflict: 'blocker_id,blocked_user_id', ignoreDuplicates: true },
         );
         if (blockErr) {
           return {
@@ -745,8 +753,8 @@ export const matchService = {
         return { context, answers: {} };
       }
       const { data, error } = await supabase
-        .from('profile_qna_answers')
-        .select('user_id, question_id, option_id, custom_text, updated_at')
+        .from('profile_answers')
+        .select('user_id, question_id, option_id, custom_text, declined')
         .eq('user_id', context.account.id);
 
       if (error || !Array.isArray(data)) {
@@ -757,7 +765,8 @@ export const matchService = {
         };
       }
       const map: Record<string, QnaAnswer> = {};
-      for (const row of data as ProfileQnaAnswerRow[]) {
+      for (const row of data as (ProfileQnaAnswerRow & { declined?: boolean })[]) {
+        if (row.declined) continue;
         const parsed = toQnaAnswer(row);
         map[parsed.questionId] = parsed;
       }
@@ -801,23 +810,16 @@ export const matchService = {
 
     const supabase = getSupabase();
     if (context.mode === 'live' && context.account && supabase) {
-      const { error } = await supabase.from('profile_qna_answers').upsert(
-        {
-          user_id: context.account.id,
-          question_id: answer.questionId,
-          option_id: answer.optionId,
-          custom_text: answer.customText ?? null,
-        },
-        { onConflict: 'user_id,question_id' },
+      const saveError = await replaceProfileAnswers(
+        supabase,
+        next,
+        '문답 저장 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.',
       );
-      if (error) {
+      if (saveError) {
         return {
           ok: false,
           mode: 'live',
-          error: {
-            code: 'NETWORK_ERROR',
-            message: '문답 저장 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.',
-          },
+          error: { code: 'NETWORK_ERROR', message: saveError },
         };
       }
       return { ok: true, mode: 'live', data: next };
@@ -861,19 +863,17 @@ export const matchService = {
 
     const supabase = getSupabase();
     if (context.mode === 'live' && context.account && supabase) {
-      const { error } = await supabase
-        .from('profile_qna_answers')
-        .delete()
-        .eq('user_id', context.account.id)
-        .eq('question_id', questionId);
-      if (error) {
+      const deleteError = await replaceProfileAnswers(
+        supabase,
+        next,
+        '문답 삭제 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.',
+        [questionId],
+      );
+      if (deleteError) {
         return {
           ok: false,
           mode: 'live',
-          error: {
-            code: 'NETWORK_ERROR',
-            message: '문답 삭제 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.',
-          },
+          error: { code: 'NETWORK_ERROR', message: deleteError },
         };
       }
       return { ok: true, mode: 'live', data: next };
