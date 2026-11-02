@@ -15,7 +15,6 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  DEMO_MY_ANSWERS,
   DEMO_QUESTIONS,
   QNA_TABS,
   RELATION_TO_CATEGORIES,
@@ -45,16 +44,11 @@ export default function ProfileQna({
   const [resolvedRelationGoal, setResolvedRelationGoal] = useState<RelationGoal>(
     relationGoalProp ?? 'serious',
   );
-  const [isDemoMode, setIsDemoMode] = useState(true);
+  const [isDemoMode, setIsDemoMode] = useState(false);
+  const [qnaError, setQnaError] = useState<string | null>(null);
 
-  // 답변 상태. 초기엔 DEMO 답변으로 렌더링하고 마운트 후 저장된 답변 동기화.
-  const [answers, setAnswers] = useState<Record<string, QnaAnswer>>(() => {
-    const init: Record<string, QnaAnswer> = {};
-    for (const [qid, a] of Object.entries(DEMO_MY_ANSWERS)) {
-      init[qid] = { questionId: qid, optionId: a.optionId, customText: a.customText };
-    }
-    return init;
-  });
+  // 조회 전에는 빈 맵. 데모 답은 mode === 'demo' 응답 이후에만 채운다.
+  const [answers, setAnswers] = useState<Record<string, QnaAnswer>>({});
   const [activeTab, setActiveTab] = useState<'all' | QnaCategory>('all');
   const [openQid, setOpenQid] = useState<string | null>(null);
   // 추천 질문 id 목록. 마운트 후 셔플(hydration 안전).
@@ -72,8 +66,15 @@ export default function ProfileQna({
       matchService.loadOnboarding(),
     ]).then(([qnaRes, onbRes]) => {
       if (!active) return;
-      setIsDemoMode(qnaRes.context.isDemo);
+      setIsDemoMode(qnaRes.context.isDemo && qnaRes.context.mode === 'demo');
       setAnswers(qnaRes.answers);
+      if (qnaRes.context.mode !== 'demo' && qnaRes.context.gateMessage) {
+        setQnaError(qnaRes.context.gateMessage);
+      } else if (qnaRes.errorMessage) {
+        setQnaError(qnaRes.errorMessage);
+      } else {
+        setQnaError(null);
+      }
       if (!relationGoalProp && onbRes.draft?.relationGoal) {
         setResolvedRelationGoal(onbRes.draft.relationGoal);
       }
@@ -163,17 +164,31 @@ export default function ProfileQna({
   );
 
   function handleSave(a: QnaAnswer) {
-    const next = { ...answers, [a.questionId]: a };
+    const prev = answers;
+    const next = { ...prev, [a.questionId]: a };
     setAnswers(next);
     setOpenQid(null);
-    void matchService.saveMyQnaAnswer(a, answers);
+    setQnaError(null);
+    void matchService.saveMyQnaAnswer(a, prev).then((res) => {
+      if (!res.ok) {
+        setAnswers(prev);
+        setQnaError(res.error.message);
+      }
+    });
   }
   function handleDelete(qid: string) {
-    const next = { ...answers };
+    const prev = answers;
+    const next = { ...prev };
     delete next[qid];
     setAnswers(next);
     setOpenQid(null);
-    void matchService.deleteMyQnaAnswer(qid, answers);
+    setQnaError(null);
+    void matchService.deleteMyQnaAnswer(qid, prev).then((res) => {
+      if (!res.ok) {
+        setAnswers(prev);
+        setQnaError(res.error.message);
+      }
+    });
   }
 
   const openQuestion = openQid ? byId.get(openQid) ?? null : null;
@@ -186,6 +201,11 @@ export default function ProfileQna({
           {answeredCount} / {total}
         </div>
       </header>
+      {qnaError && (
+        <p className="mt-qna-card__err" role="alert">
+          {qnaError}
+        </p>
+      )}
 
       {/* 오늘의 추천 질문 (관계 맞춤 랜덤) */}
       <div className="mt-qna__rec">

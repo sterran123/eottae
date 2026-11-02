@@ -741,3 +741,11 @@
   from { opacity: 0; transform: translate(-50%, 12px); }
   to { opacity: 1; transform: translate(-50%, 0); }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .mt-report-modal-backdrop,
+  .mt-report-modal,
+  .mt-rec-floating-toast {
+    animation: none;
+  }
+}

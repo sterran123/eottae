@@ -18,7 +18,7 @@
 0. 소스코드/eottae-web/.gitignore,202,7710d28a140451e45493d1fd6f52508a4a51133d7fd72b236349d001bde77fb9
 0. 소스코드/eottae-web/AGENTS.md,1371,dfd62088d1b52c3eeb6f9ccb87a62858bb9766b328ae93cd85994f2bb3262587
 0. 소스코드/eottae-web/README.md,5589,65670c8378af81b45e27102daf1ed6152d06e15161f14b2614238250cd727a01
-0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md,131054,e02d5e3dc00788b7597543eeaa990fa9b63dd4c2c76709a2f161b32bf151dce1
+0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md,132411,627bfca66218d309eff77acb315cede11cf8667ee571f669bb3cd9d74c9003ab
 0. 소스코드/eottae-web/docs/AI_도구_MCP_권장.md,4206,6ef5f1ba972e9f1d07e1dbddd282ed9c16c3fd132a5301db0a8e0e9cffc2bb2f
 0. 소스코드/eottae-web/docs/AI_에이전트_협업_가이드.md,6263,180d9a55d70be22c9ffa04a4acc113c484a2a19fc71e2410ec6dff1a33487a01
 0. 소스코드/eottae-web/docs/DESIGN_개선_지시서.md,7364,7d34723629b67d6fc6c107846671146dfa18b35250001621174b73afb4da8511
@@ -75,7 +75,7 @@
 0. 소스코드/eottae-web/src/app/match/page.tsx,4360,f9fb12c3f50771b5470ecacdb2776012f84667097cd5c39c7d3fea5be23f468e
 0. 소스코드/eottae-web/src/app/match/qna/match-qna.css,11820,13604fdcb20c8ac45dd59a76ec0a5c0532ea60bc0868941cfdfaf599597688df
 0. 소스코드/eottae-web/src/app/match/qna/page.tsx,907,991c98705c393dabf7440e540a3c2d2fb21e838e264f809d704987e0d90aa05f
-0. 소스코드/eottae-web/src/app/match/recommend/match-recommend.css,15540,7f78febc72bd2804158c134aae4ce0f17fc184dc8646721873c810350dd28e6c
+0. 소스코드/eottae-web/src/app/match/recommend/match-recommend.css,15686,9eb3af7f8a8dcd5350e0673785d174b6dc8caddb19d12b2117907eff34e485ca
 0. 소스코드/eottae-web/src/app/match/recommend/page.tsx,900,53bb3dfa7815e16d457bbe5eb6ef1d293c149d614ff9838a0bc5f05bd9a1627b
 0. 소스코드/eottae-web/src/app/not-found.tsx,583,fd2b2c289c9bbbba76d31641b59dc00a283e005b8b19232d706fc838c6155085
 0. 소스코드/eottae-web/src/app/offline/page.tsx,875,f7715c4e5ee547bc8cef2dad96e725cb76ec55562d864245e0abf3aeaeb9917a
@@ -96,13 +96,13 @@
 0. 소스코드/eottae-web/src/components/chat/ChatRoom.tsx,11420,ddb50c23b545670e6c237286ebd09b3a0cf95d649c33f9eb153ac2e8d849fcc3
 0. 소스코드/eottae-web/src/components/chat/MessageBubble.tsx,2831,200c1a26653cb001a9a618eadc21e0b7c29f08f38751cf662ae81cd1ea9f4019
 0. 소스코드/eottae-web/src/components/chat/MessageComposer.tsx,10389,260d4a05dd8023b5f027e4175b0a2d7c8a0e6ba9dc3b504f7a6a8d4c7b64a34b
-0. 소스코드/eottae-web/src/components/match/CommonQna.tsx,9239,f70cfe3525033a2c9fda932fe91b0e3354e12c708d8eb305276599ae93b8beb9
+0. 소스코드/eottae-web/src/components/match/CommonQna.tsx,10423,c843e7b20f6f97fb8c3646af5524df46f9d401a5a05fb79d32b007fc512e6534
 0. 소스코드/eottae-web/src/components/match/CompatToast.tsx,2008,97c38cd0a45c6eb1be02e6bd4e5d8a0573561d16eca76cfd0d0c880bb86b19de
-0. 소스코드/eottae-web/src/components/match/OnboardingForm.tsx,27667,cf3fccd97ce7d230071dc0d3d45b6e6a511ab876e13b34f597627d6f667d865b
-0. 소스코드/eottae-web/src/components/match/ProfileQna.tsx,12809,1c05db5c74d56341ab22e3866c59c3cac99ccf2532d3938648ad6a1dd529b4b4
+0. 소스코드/eottae-web/src/components/match/OnboardingForm.tsx,28901,b619fde46d3f5b201577ec4c0f1fe335b3f0d9f9ca15753d931d691d9d016d6e
+0. 소스코드/eottae-web/src/components/match/ProfileQna.tsx,13342,f78420968f662ce306427f847f8acd0058f910bab831b20f2e459848ca933df0
 0. 소스코드/eottae-web/src/components/match/QnaQuestionCard.tsx,5311,8692baf1ea6cefc6f66647ec6db1c4c718fec58976af925eae527381783d1429
-0. 소스코드/eottae-web/src/components/match/RecommendCard.tsx,9799,7ba766536be377cf9cbc23c73a2a7ef5d84ee9f7de54d92f0898212b01b53294
-0. 소스코드/eottae-web/src/components/match/RecommendList.tsx,13703,355c657196800f97d241df70ef412c96f7d4951055595c8bd868b3fc5d10d20d
+0. 소스코드/eottae-web/src/components/match/RecommendCard.tsx,10009,5f9fa5a0d8066fe074f4894bf8c30be9469961af2d6b2d0566991afebc8502d4
+0. 소스코드/eottae-web/src/components/match/RecommendList.tsx,15933,71bd4b9d951689c804fc44f6127f6b7009a171d407d83b33ff700547a23970a2
 0. 소스코드/eottae-web/src/components/match/icons.tsx,7070,1d9d3b4fc984f4cfe228b01b6fa98f9860b34ce9f3b7f0c62910f240794e2e4d
 0. 소스코드/eottae-web/src/components/safety/BlockConfirmModal.tsx,2651,54d038e86178a1cb0535bad719a1229369918797b81f3ddabcf392e14abd9e6b
 0. 소스코드/eottae-web/src/components/safety/ReportModal.tsx,5416,f426538e4d018270570ac9dd38379c69c67eac446f5ebf37a6f62a7b2f50b842
@@ -130,8 +130,8 @@
 0. 소스코드/eottae-web/src/lib/match/demo-data.ts,6967,857d6f7b3b39266a738540eee8d0f3f14e80f2c8970df2ef54959c62b436a3fb
 0. 소스코드/eottae-web/src/lib/match/demo-qna.ts,15956,d118c6abaac2fc2a4f604bcaa16f1ef7305f8c4df22d2d45e2a191313a25e62a
 0. 소스코드/eottae-web/src/lib/match/demo-recommendations.ts,3118,1196f353baf0193860b0dfa313efbe64394270ed10c61c43aef6934cf75b5dcf
-0. 소스코드/eottae-web/src/lib/match/match-service.ts,20749,099e259ce6cca13b7ea5a61f8c80d52961656f2726b2ce310a0fcb1aa7f44773
-0. 소스코드/eottae-web/src/lib/match/types.ts,16599,fcfbc00bf7d121b0cbfec48fb899c29352feed395f99489e52914cdd4e59aa05
+0. 소스코드/eottae-web/src/lib/match/match-service.ts,26321,73fc13d5e28f21ed8ce82e9dfe1bd98777618396de835055ef0de324a1e2a545
+0. 소스코드/eottae-web/src/lib/match/types.ts,16907,9f586d97648c4a5b99f38fdab29091473b891f4be072556162ae12cfd493de15
 0. 소스코드/eottae-web/src/lib/safety/types.ts,1925,220a0d91e08591579f67d241958002b34511f5d9a57d29636b6e6a0ffb142fb5
 0. 소스코드/eottae-web/src/lib/supabase/client.ts,2073,b1ba1d3df7352b505817dcc2b656071a3fddaa3f9220c0c33c07d8a13fd2f96f
 0. 소스코드/eottae-web/src/types/assets.d.ts,414,47455c04822b378ef36ccd29e8f50f5bc11fdf8ab193afd2b1ffae6a366c28e0
@@ -250,7 +250,7 @@ tools/issue_progress.mjs,31961,0ab91a970908e5b4a33a87aec3b0e838f74e6c20690ff7a2d
 tools/pr_review_bot.mjs,51530,dd0da434d16428cfc37d8ae0c8d5f1f2ccc420f6b370d3d5dc51a2ab82cea27f
 tools/serve_pages_preview.mjs,3710,40ff84f3f4dc77c2dfebef73ac541e0fa39df2aec269128983dcaadf844f7fa5
 tools/site_health_check.mjs,4193,f5ad34388333f58abb65a916757a2192051ece51dd26d64531ade5aa6f13ac5a
-tools/sync_repo.cmd,198,66f0923b57b3a6d5cf0fa943d96d8f218b75ae956642067ff68f48be2fd6cd1e
+tools/sync_repo.cmd,202,b8202619b639b4c9d2d14e3efadb4c78017c88c605e31a4415b75e61447515dc
 tools/sync_repo.mjs,1844,36cec9e485812b73e23e47fbf298015da71d991a7e224844f455087c2f27ad4e
 tools/team_activity_report.mjs,10270,1063b3c79ab1c04880effa189396642b24a0e71f1a08a0f93dd6d12980ab7962
 tools/update_package_manifest.py,2227,4a2ae57791cfa5c17a9ce6ca16824e50ef9868bfddc67283702b4885c838f37c

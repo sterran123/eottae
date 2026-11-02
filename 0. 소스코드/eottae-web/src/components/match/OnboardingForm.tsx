@@ -12,11 +12,10 @@
 //  [유효성] 관심사 min 3 / max 7 (INTEREST_RULES) · TC-005 대응.
 // ============================================================
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ALL_MBTI,
-  DEMO_IDENTITY,
   DISTANCE_PREFERENCE_OPTIONS,
   INTEREST_CATEGORIES,
   INTEREST_LABELS,
@@ -112,7 +111,7 @@ const TARGET_OPTIONS: ReadonlyArray<{
   { value: 'any', label: '상관없음', Icon: IconFriends },
 ];
 
-const GENDER_LABEL: Record<VerifiedIdentity['gender'], string> = {
+const GENDER_LABEL: Record<'male' | 'female', string> = {
   male: '남성',
   female: '여성',
 };
@@ -123,9 +122,12 @@ export default function OnboardingForm({
   onCancel,
 }: OnboardingFormProps) {
   const [resolvedIdentity, setResolvedIdentity] = useState<VerifiedIdentity>(
-    identityProp ?? DEMO_IDENTITY,
+    identityProp ?? { verified: false, age: null },
   );
-  const [isDemoMode, setIsDemoMode] = useState(true);
+  const [isDemoMode, setIsDemoMode] = useState(false);
+  const [gateMessage, setGateMessage] = useState<string | null>(null);
+  const [loadBlocked, setLoadBlocked] = useState(false);
+  const userEditedRef = useRef(false);
   const [savedSnapshot, setSavedSnapshot] = useState<OnboardingDraft | null>(null);
 
   const [myMbti, setMyMbti] = useState<MyMbti | null>(null);
@@ -147,6 +149,11 @@ export default function OnboardingForm({
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+
+  function markEdited() {
+    userEditedRef.current = true;
+    if (!loadBlocked) setServerError(null);
+  }
 
   function applyDraftToState(draft: OnboardingDraft) {
     setMyMbti(draft.myMbti);
@@ -182,15 +189,23 @@ export default function OnboardingForm({
   // 마운트 시 세션·저장된 온보딩 설정(Supabase 또는 로컬 저장본) 불러오기
   useEffect(() => {
     let active = true;
-    void matchService.loadOnboarding().then(({ context, draft }) => {
+    void matchService.loadOnboarding().then(({ context, draft, loadError }) => {
       if (!active) return;
       if (!identityProp) {
         setResolvedIdentity(context.identity);
       }
       setIsDemoMode(context.isDemo);
+      setGateMessage(context.mode === 'demo' ? null : (context.gateMessage ?? null));
+      if (loadError) {
+        setServerError(loadError);
+        setLoadBlocked(true);
+        return;
+      }
       if (draft) {
         setSavedSnapshot(draft);
-        applyDraftToState(draft);
+        if (!userEditedRef.current) {
+          applyDraftToState(draft);
+        }
       }
     });
     return () => {
@@ -263,7 +278,7 @@ export default function OnboardingForm({
 
   // ---- 핸들러 ----
   function toggleInterest(id: string) {
-    setServerError(null);
+    markEdited();
     setInterests((prev) => {
       if (prev.includes(id)) return prev.filter((x) => x !== id);
       if (prev.length >= INTEREST_RULES.max) return prev; // 최대치 초과 무시
@@ -281,14 +296,14 @@ export default function OnboardingForm({
   }
 
   function toggleAvoid(mbti: MbtiType) {
-    setServerError(null);
+    markEdited();
     setAvoidMbti((prev) =>
       prev.includes(mbti) ? prev.filter((x) => x !== mbti) : [...prev, mbti],
     );
   }
 
   function handleSelectMbti(value: MyMbti) {
-    setServerError(null);
+    markEdited();
     setMyMbti(value);
     // 내 MBTI 로 고른 유형이 비선호에 있으면 제거(모순 방지)
     if (value !== 'unknown') {
@@ -309,6 +324,11 @@ export default function OnboardingForm({
 
     if (onSubmit) {
       onSubmit(currentDraft);
+      return;
+    }
+
+    if (loadBlocked) {
+      setServerError((prev) => prev ?? '프로필을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.');
       return;
     }
 
@@ -357,13 +377,20 @@ export default function OnboardingForm({
         <IconCircleCheck className="mt-ico" />
         <div className="mt-onb__verified-text">
           <strong>
-            {identity.age}세 · {GENDER_LABEL[identity.gender]} ·{' '}
-            {identity.verified ? '성인 인증 완료' : '성인 인증 필요'}
+            {[
+              typeof identity.age === 'number' ? `${identity.age}세` : null,
+              identity.gender ? GENDER_LABEL[identity.gender] : null,
+              identity.verified ? '성인 인증 완료' : '성인 인증 필요',
+            ]
+              .filter((part) => part != null)
+              .join(' · ')}
           </strong>
           <span>
-            {identity.verified
-              ? '인증된 정보예요. 수정하려면 다시 인증이 필요해요.'
-              : '성인 확인 완료 후 취향 설정을 실제 프로필에 저장할 수 있어요.'}
+            {gateMessage
+              ? gateMessage
+              : identity.verified
+                ? '인증된 정보예요. 수정하려면 다시 인증이 필요해요.'
+                : '성인 확인 완료 후 취향 설정을 실제 프로필에 저장할 수 있어요.'}
           </span>
         </div>
         {isDemoMode && <span className="mt-onb__demo-tag">DEMO</span>}
@@ -480,7 +507,7 @@ export default function OnboardingForm({
               aria-checked={target === opt.value}
               className={`mt-onb__target-opt${target === opt.value ? ' is-on' : ''}`}
               onClick={() => {
-                setServerError(null);
+                markEdited();
                 setTarget(opt.value);
               }}
             >
@@ -506,7 +533,7 @@ export default function OnboardingForm({
                   relationGoal === opt.value ? ' is-on' : ''
                 }`}
                 onClick={() => {
-                  setServerError(null);
+                  markEdited();
                   setRelationGoal(opt.value);
                 }}
               >
@@ -629,7 +656,10 @@ export default function OnboardingForm({
                     key={opt.value}
                     type="button"
                     className={`mt-dist-gauge__dot${isActive ? ' is-active' : ''}`}
-                    onClick={() => setPreferredDistance(opt.value)}
+                    onClick={() => {
+                      markEdited();
+                      setPreferredDistance(opt.value);
+                    }}
                     aria-label={`${opt.label} 선택`}
                   />
                 );
@@ -646,7 +676,9 @@ export default function OnboardingForm({
               onChange={(e) => {
                 const idx = Number(e.target.value);
                 const chosen = DISTANCE_PREFERENCE_OPTIONS[idx];
-                if (chosen) setPreferredDistance(chosen.value);
+                if (!chosen) return;
+                markEdited();
+                setPreferredDistance(chosen.value);
               }}
               className="mt-dist-gauge__input"
               aria-label="선호 거리 조절 슬라이더"
@@ -662,7 +694,10 @@ export default function OnboardingForm({
                   key={opt.value}
                   type="button"
                   className={`mt-dist-gauge__label-btn${isCurrent ? ' is-current' : ''}`}
-                  onClick={() => setPreferredDistance(opt.value)}
+                  onClick={() => {
+                    markEdited();
+                    setPreferredDistance(opt.value);
+                  }}
                 >
                   <span className="mt-dist-gauge__label-txt">{opt.label}</span>
                 </button>
@@ -702,7 +737,10 @@ export default function OnboardingForm({
             role="radio"
             aria-checked={photoVisibility === 'hidden'}
             className={`mt-onb__privacy-opt${photoVisibility === 'hidden' ? ' is-on' : ''}`}
-            onClick={() => setPhotoVisibility('hidden')}
+            onClick={() => {
+              markEdited();
+              setPhotoVisibility('hidden');
+            }}
           >
             <div className="mt-onb__privacy-head">
               <span className="mt-onb__privacy-title">실루엣 기본 (권장)</span>
@@ -718,7 +756,10 @@ export default function OnboardingForm({
             role="radio"
             aria-checked={photoVisibility === 'preview'}
             className={`mt-onb__privacy-opt${photoVisibility === 'preview' ? ' is-on' : ''}`}
-            onClick={() => setPhotoVisibility('preview')}
+            onClick={() => {
+              markEdited();
+              setPhotoVisibility('preview');
+            }}
           >
             <div className="mt-onb__privacy-head">
               <span className="mt-onb__privacy-title">사진 미리보기 허용</span>

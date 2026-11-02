@@ -8,10 +8,13 @@
 //  [ADR-002 / ADR-005 원칙]
 //  1. 환경변수(NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY)가 없을 때는
 //     알려진 기본 키로 폴백하지 않고 데모 데이터 모드로만 동작해 정적 배포를 보호한다.
-//  2. 로그인된 계정이라도 성인 인증(`adult_verified = true` 및 만료 전)이 확인되지 않으면
-//     실데이터 저장·추천·좋아요를 거부(fail-closed, AGE_VERIFICATION_REQUIRED)한다.
+//  2. 로그인된 계정이라도 `account_status = ACTIVE`와 성인 인증(`adult_verified = true`,
+//     만료 전)이 함께 확인되지 않으면 실데이터 저장·추천·좋아요를 거부한다
+//     (fail-closed, AGE_VERIFICATION_REQUIRED). 계정 조회 실패는 데모 샘플로 두지 않는다.
 //  3. 성인 인증이 완료된 로그인 세션에서는 화면의 DEMO 배지/문구를 숨기고
 //     실제 Supabase 테이블·RPC와 통신한다.
+//  4. 실계정(live/unverified)은 온보딩·문답·공통 질문 거절을 localStorage에 남기지 않는다.
+//     데모(키 미설정·세션 없음)만 로컬 초안을 쓴다. 로그인 세션이 있으면 기존 키를 지운다.
 // ============================================================
 
 import { authService } from '@/lib/auth/auth-service';
@@ -63,6 +66,8 @@ export type MatchServiceResult<T> =
   | { ok: false; mode: MatchOperatingMode; error: ApiError['error'] };
 
 function isAdultVerificationActive(account: MyAccount): boolean {
+  // 0002 is_active_adult(): ACTIVE가 아니면 성인으로 보지 않는다.
+  if (account.accountStatus !== 'ACTIVE') return false;
   if (!account.adultVerified) return false;
   if (!account.adultVerificationExpiresAt) return false;
   const expiresMs = Date.parse(account.adultVerificationExpiresAt);
@@ -70,10 +75,39 @@ function isAdultVerificationActive(account: MyAccount): boolean {
   return expiresMs > Date.now();
 }
 
-function computeVerifiedAge(birthYear: number | null): number {
-  if (!birthYear || birthYear < 1900) return DEMO_IDENTITY.age;
-  const currentYear = new Date().getFullYear();
-  return Math.max(19, currentYear - birthYear);
+function computeVerifiedAge(birthYear: number | null): number | null {
+  if (!birthYear || birthYear < 1900) return null;
+  return new Date().getFullYear() - birthYear;
+}
+
+const UNSIGNED_IDENTITY: VerifiedIdentity = {
+  verified: false,
+  age: null,
+};
+
+function clearSignedInMatchCache(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.removeItem(STORAGE_ONBOARDING_KEY);
+    window.localStorage.removeItem(STORAGE_QNA_KEY);
+    window.localStorage.removeItem(STORAGE_COMMON_DECLINED_KEY);
+  } catch {
+    // 저장소 접근이 막혀도 실계정 경로는 캐시를 읽지 않는다.
+  }
+}
+
+function gateError(context: MatchAccessContext): ApiError['error'] | null {
+  if (context.mode !== 'unverified') return null;
+  if (!context.account) {
+    return {
+      code: 'UNAUTHORIZED',
+      message: context.gateMessage ?? '계정 상태를 확인할 수 없어요.',
+    };
+  }
+  return {
+    code: 'AGE_VERIFICATION_REQUIRED',
+    message: context.gateMessage ?? '성인 확인 후 이용할 수 있어요.',
+  };
 }
 
 function readLocalJson<T>(key: string): T | null {
@@ -101,11 +135,57 @@ function writeLocalJson<T>(key: string, value: T): void {
  */
 export function mapUiReasonToReportCategory(reason: string): ReportCategory {
   if (reason.includes('성적')) return 'sexual';
-  if (reason.includes('광고') || reason.includes('스팸') || reason.includes('사기') || reason.includes('도용')) {
+  if (reason.includes('광고') || reason.includes('스팸') || reason.includes('사기')) {
     return 'scam';
   }
   if (reason.includes('기타')) return 'other';
   return 'abuse';
+}
+
+type MatchSupabase = NonNullable<ReturnType<typeof getSupabase>>;
+
+/**
+ * 관심사를 비우지 않은 채로 교체한다.
+ * 새 id를 먼저 넣고, 빠진 id만 지운다. 조회·삽입·삭제 중 하나라도 실패하면 사유 문자열을 반환한다.
+ */
+async function syncProfileInterests(
+  supabase: MatchSupabase,
+  userId: string,
+  interestIds: string[],
+): Promise<string | null> {
+  const fail = '관심사 저장 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.';
+  const { data: existing, error: readErr } = await supabase
+    .from('profile_interests')
+    .select('interest_id')
+    .eq('user_id', userId);
+  if (readErr) return fail;
+
+  const existingIds = new Set(
+    (existing ?? []).map((row) => String((row as { interest_id: string }).interest_id)),
+  );
+  const desired = new Set(interestIds);
+  const toInsert = interestIds.filter((id) => !existingIds.has(id));
+  const toDelete = [...existingIds].filter((id) => !desired.has(id));
+
+  if (toInsert.length > 0) {
+    const rows: ProfileInterestRow[] = toInsert.map((interestId) => ({
+      user_id: userId,
+      interest_id: interestId,
+    }));
+    const { error: insErr } = await supabase.from('profile_interests').insert(rows);
+    if (insErr) return fail;
+  }
+
+  if (toDelete.length > 0) {
+    const { error: delErr } = await supabase
+      .from('profile_interests')
+      .delete()
+      .eq('user_id', userId)
+      .in('interest_id', toDelete);
+    if (delErr) return fail;
+  }
+
+  return null;
 }
 
 export const matchService = {
@@ -133,12 +213,14 @@ export const matchService = {
       };
     }
 
+    clearSignedInMatchCache();
+
     const access = await authService.assertAccountAccess();
     if (!access.ok) {
       return {
-        mode: 'demo',
-        isDemo: true,
-        identity: DEMO_IDENTITY,
+        mode: 'unverified',
+        isDemo: false,
+        identity: UNSIGNED_IDENTITY,
         account: null,
         gateMessage: access.error.message,
       };
@@ -155,7 +237,6 @@ export const matchService = {
         identity: {
           verified: false,
           age,
-          gender: 'female',
           nickname: account.nickname,
         },
         account,
@@ -169,7 +250,6 @@ export const matchService = {
       identity: {
         verified: true,
         age,
-        gender: 'female',
         nickname: account.nickname,
       },
       account,
@@ -182,11 +262,15 @@ export const matchService = {
   async loadOnboarding(): Promise<{
     context: MatchAccessContext;
     draft: OnboardingDraft | null;
+    loadError?: string;
   }> {
     const context = await this.resolveAccessContext();
     const supabase = getSupabase();
 
-    if (context.mode === 'live' && context.account && supabase) {
+    if (context.mode !== 'demo') {
+      if (!(context.mode === 'live' && context.account && supabase)) {
+        return { context, draft: null };
+      }
       const userId = context.account.id;
       const [profileRes, interestsRes] = await Promise.all([
         supabase
@@ -202,14 +286,30 @@ export const matchService = {
           .eq('user_id', userId),
       ]);
 
-      if (!profileRes.error && profileRes.data) {
-        const draft = toOnboardingDraft(
+      if (profileRes.error) {
+        return {
+          context,
+          draft: null,
+          loadError: '프로필을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
+        };
+      }
+      if (!profileRes.data) {
+        return { context, draft: null };
+      }
+      if (interestsRes.error) {
+        return {
+          context,
+          draft: null,
+          loadError: '관심사를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
+        };
+      }
+      return {
+        context,
+        draft: toOnboardingDraft(
           profileRes.data as Partial<ProfileRow>,
           (interestsRes.data ?? []) as ProfileInterestRow[],
-        );
-        writeLocalJson(STORAGE_ONBOARDING_KEY, draft);
-        return { context, draft };
-      }
+        ),
+      };
     }
 
     const cached = readLocalJson<OnboardingDraft>(STORAGE_ONBOARDING_KEY);
@@ -245,15 +345,9 @@ export const matchService = {
     }
 
     const context = await this.resolveAccessContext();
-    if (context.mode === 'unverified') {
-      return {
-        ok: false,
-        mode: 'unverified',
-        error: {
-          code: 'AGE_VERIFICATION_REQUIRED',
-          message: '성인 확인 후 이용할 수 있어요.',
-        },
-      };
+    const blocked = gateError(context);
+    if (blocked) {
+      return { ok: false, mode: context.mode, error: blocked };
     }
 
     const supabase = getSupabase();
@@ -285,37 +379,35 @@ export const matchService = {
         };
       }
 
-      const { error: delErr } = await supabase
-        .from('profile_interests')
-        .delete()
-        .eq('user_id', userId);
-
-      if (!delErr && req.interestIds.length > 0) {
-        const rows: ProfileInterestRow[] = req.interestIds.map((interestId) => ({
-          user_id: userId,
-          interest_id: interestId,
-        }));
-        const { error: insErr } = await supabase
-          .from('profile_interests')
-          .insert(rows);
-        if (insErr) {
-          return {
-            ok: false,
-            mode: 'live',
-            error: {
-              code: 'NETWORK_ERROR',
-              message: '관심사 저장 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.',
-            },
-          };
-        }
+      const interestError = await syncProfileInterests(
+        supabase,
+        userId,
+        req.interestIds,
+      );
+      if (interestError) {
+        return {
+          ok: false,
+          mode: 'live',
+          error: { code: 'NETWORK_ERROR', message: interestError },
+        };
       }
 
-      writeLocalJson(STORAGE_ONBOARDING_KEY, req);
       return { ok: true, mode: 'live', data: req };
     }
 
-    writeLocalJson(STORAGE_ONBOARDING_KEY, req);
-    return { ok: true, mode: 'demo', data: req };
+    if (context.mode === 'demo') {
+      writeLocalJson(STORAGE_ONBOARDING_KEY, req);
+      return { ok: true, mode: 'demo', data: req };
+    }
+
+    return {
+      ok: false,
+      mode: context.mode,
+      error: {
+        code: 'NETWORK_ERROR',
+        message: '프로필 저장 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.',
+      },
+    };
   },
 
   /**
@@ -332,15 +424,18 @@ export const matchService = {
   > {
     const context = await this.resolveAccessContext();
 
-    if (context.mode === 'unverified') {
+    const blocked = gateError(context);
+    if (blocked) {
       return {
         ok: false,
-        mode: 'unverified',
+        mode: context.mode,
         context,
-        error: {
-          code: 'AGE_VERIFICATION_REQUIRED',
-          message: '성인 확인 후 추천을 이용할 수 있어요.',
-        },
+        error: context.account
+          ? {
+              code: 'AGE_VERIFICATION_REQUIRED',
+              message: '성인 확인 후 추천을 이용할 수 있어요.',
+            }
+          : blocked,
       };
     }
 
@@ -361,7 +456,7 @@ export const matchService = {
           data: {
             items,
             nextCursor: null,
-            acorn: DEMO_ACORN,
+            acorn: { acorn: null },
           },
         };
       }
@@ -369,6 +464,18 @@ export const matchService = {
       return {
         ok: false,
         mode: 'live',
+        context,
+        error: {
+          code: 'NETWORK_ERROR',
+          message: '추천 목록을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
+        },
+      };
+    }
+
+    if (context.mode !== 'demo') {
+      return {
+        ok: false,
+        mode: context.mode,
         context,
         error: {
           code: 'NETWORK_ERROR',
@@ -398,15 +505,9 @@ export const matchService = {
     decision: LikeDecision,
   ): Promise<MatchServiceResult<LikeResultDto>> {
     const context = await this.resolveAccessContext();
-    if (context.mode === 'unverified') {
-      return {
-        ok: false,
-        mode: 'unverified',
-        error: {
-          code: 'AGE_VERIFICATION_REQUIRED',
-          message: '성인 확인 후 이용할 수 있어요.',
-        },
-      };
+    const blocked = gateError(context);
+    if (blocked) {
+      return { ok: false, mode: context.mode, error: blocked };
     }
 
     const supabase = getSupabase();
@@ -419,35 +520,7 @@ export const matchService = {
         },
       );
 
-      if (!rpcError && rpcData && typeof rpcData === 'object') {
-        const row = rpcData as {
-          matched?: boolean;
-          match_id?: string | null;
-          conversation_id?: string | null;
-        };
-        return {
-          ok: true,
-          mode: 'live',
-          data: {
-            targetId,
-            decision,
-            matched: Boolean(row.matched),
-            matchId: row.match_id ?? null,
-            conversationId: row.conversation_id ?? null,
-          },
-        };
-      }
-
-      const { error: insertErr } = await supabase.from('likes').upsert(
-        {
-          actor_id: context.account.id,
-          target_id: targetId,
-          decision,
-        },
-        { onConflict: 'actor_id,target_id' },
-      );
-
-      if (insertErr) {
+      if (rpcError || rpcData == null || typeof rpcData !== 'object' || Array.isArray(rpcData)) {
         return {
           ok: false,
           mode: 'live',
@@ -458,9 +531,28 @@ export const matchService = {
         };
       }
 
+      const row = rpcData as {
+        matched?: boolean;
+        match_id?: string | null;
+        conversation_id?: string | null;
+      };
       return {
         ok: true,
         mode: 'live',
+        data: {
+          targetId,
+          decision,
+          matched: row.matched === true,
+          matchId: typeof row.match_id === 'string' ? row.match_id : null,
+          conversationId: typeof row.conversation_id === 'string' ? row.conversation_id : null,
+        },
+      };
+    }
+
+    if (context.mode === 'demo') {
+      return {
+        ok: true,
+        mode: 'demo',
         data: {
           targetId,
           decision,
@@ -472,14 +564,11 @@ export const matchService = {
     }
 
     return {
-      ok: true,
-      mode: 'demo',
-      data: {
-        targetId,
-        decision,
-        matched: false,
-        matchId: null,
-        conversationId: null,
+      ok: false,
+      mode: context.mode,
+      error: {
+        code: 'NETWORK_ERROR',
+        message: '관심 표현을 처리하지 못했어요. 잠시 후 다시 시도해 주세요.',
       },
     };
   },
@@ -489,6 +578,10 @@ export const matchService = {
    */
   async blockUser(req: BlockRequest): Promise<MatchServiceResult<void>> {
     const context = await this.resolveAccessContext();
+    const blocked = gateError(context);
+    if (blocked) {
+      return { ok: false, mode: context.mode, error: blocked };
+    }
     const supabase = getSupabase();
 
     if (context.mode === 'live' && context.account && supabase) {
@@ -512,7 +605,14 @@ export const matchService = {
       return { ok: true, mode: 'live', data: undefined };
     }
 
-    return { ok: true, mode: 'demo', data: undefined };
+    if (context.mode === 'demo') {
+      return { ok: true, mode: 'demo', data: undefined };
+    }
+    return {
+      ok: false,
+      mode: context.mode,
+      error: { code: 'NETWORK_ERROR', message: '차단 처리 중 오류가 발생했어요.' },
+    };
   },
 
   /**
@@ -520,6 +620,10 @@ export const matchService = {
    */
   async reportUser(req: ReportRequest): Promise<MatchServiceResult<void>> {
     const context = await this.resolveAccessContext();
+    const blocked = gateError(context);
+    if (blocked) {
+      return { ok: false, mode: context.mode, error: blocked };
+    }
     const supabase = getSupabase();
 
     if (context.mode === 'live' && context.account && supabase) {
@@ -529,16 +633,6 @@ export const matchService = {
         category: req.category,
         description: req.description.slice(0, 200),
       });
-
-      if (req.alsoBlock) {
-        await supabase.from('blocks').upsert(
-          {
-            blocker_id: context.account.id,
-            blocked_id: req.reportedUserId,
-          },
-          { onConflict: 'blocker_id,blocked_id' },
-        );
-      }
 
       if (reportErr) {
         return {
@@ -550,10 +644,37 @@ export const matchService = {
           },
         };
       }
+
+      if (req.alsoBlock) {
+        const { error: blockErr } = await supabase.from('blocks').upsert(
+          {
+            blocker_id: context.account.id,
+            blocked_id: req.reportedUserId,
+          },
+          { onConflict: 'blocker_id,blocked_id' },
+        );
+        if (blockErr) {
+          return {
+            ok: false,
+            mode: 'live',
+            error: {
+              code: 'NETWORK_ERROR',
+              message: '신고는 접수됐지만 차단 처리 중 오류가 발생했어요.',
+            },
+          };
+        }
+      }
       return { ok: true, mode: 'live', data: undefined };
     }
 
-    return { ok: true, mode: 'demo', data: undefined };
+    if (context.mode === 'demo') {
+      return { ok: true, mode: 'demo', data: undefined };
+    }
+    return {
+      ok: false,
+      mode: context.mode,
+      error: { code: 'NETWORK_ERROR', message: '신고 접수 중 오류가 발생했어요.' },
+    };
   },
 
   /**
@@ -562,25 +683,33 @@ export const matchService = {
   async loadMyQnaAnswers(): Promise<{
     context: MatchAccessContext;
     answers: Record<string, QnaAnswer>;
+    errorMessage?: string;
   }> {
     const context = await this.resolveAccessContext();
     const supabase = getSupabase();
 
-    if (context.mode === 'live' && context.account && supabase) {
+    if (context.mode !== 'demo') {
+      if (!(context.mode === 'live' && context.account && supabase)) {
+        return { context, answers: {} };
+      }
       const { data, error } = await supabase
         .from('profile_qna_answers')
         .select('user_id, question_id, option_id, custom_text, updated_at')
         .eq('user_id', context.account.id);
 
-      if (!error && Array.isArray(data)) {
-        const map: Record<string, QnaAnswer> = {};
-        for (const row of data as ProfileQnaAnswerRow[]) {
-          const parsed = toQnaAnswer(row);
-          map[parsed.questionId] = parsed;
-        }
-        writeLocalJson(STORAGE_QNA_KEY, map);
-        return { context, answers: map };
+      if (error || !Array.isArray(data)) {
+        return {
+          context,
+          answers: {},
+          errorMessage: '문답을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',
+        };
       }
+      const map: Record<string, QnaAnswer> = {};
+      for (const row of data as ProfileQnaAnswerRow[]) {
+        const parsed = toQnaAnswer(row);
+        map[parsed.questionId] = parsed;
+      }
+      return { context, answers: map };
     }
 
     const cached = readLocalJson<Record<string, QnaAnswer>>(STORAGE_QNA_KEY);
@@ -607,23 +736,15 @@ export const matchService = {
     currentAnswers: Record<string, QnaAnswer>,
   ): Promise<MatchServiceResult<Record<string, QnaAnswer>>> {
     const next = { ...currentAnswers, [answer.questionId]: answer };
-    writeLocalJson(STORAGE_QNA_KEY, next);
-
     const context = await this.resolveAccessContext();
-    if (context.mode === 'unverified') {
-      return {
-        ok: false,
-        mode: 'unverified',
-        error: {
-          code: 'AGE_VERIFICATION_REQUIRED',
-          message: '성인 확인 후 이용할 수 있어요.',
-        },
-      };
+    const blocked = gateError(context);
+    if (blocked) {
+      return { ok: false, mode: context.mode, error: blocked };
     }
 
     const supabase = getSupabase();
     if (context.mode === 'live' && context.account && supabase) {
-      await supabase.from('profile_qna_answers').upsert(
+      const { error } = await supabase.from('profile_qna_answers').upsert(
         {
           user_id: context.account.id,
           question_id: answer.questionId,
@@ -632,10 +753,32 @@ export const matchService = {
         },
         { onConflict: 'user_id,question_id' },
       );
+      if (error) {
+        return {
+          ok: false,
+          mode: 'live',
+          error: {
+            code: 'NETWORK_ERROR',
+            message: '문답 저장 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.',
+          },
+        };
+      }
       return { ok: true, mode: 'live', data: next };
     }
 
-    return { ok: true, mode: 'demo', data: next };
+    if (context.mode === 'demo') {
+      writeLocalJson(STORAGE_QNA_KEY, next);
+      return { ok: true, mode: 'demo', data: next };
+    }
+
+    return {
+      ok: false,
+      mode: context.mode,
+      error: {
+        code: 'NETWORK_ERROR',
+        message: '문답 저장 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.',
+      },
+    };
   },
 
   /**
@@ -647,33 +790,61 @@ export const matchService = {
   ): Promise<MatchServiceResult<Record<string, QnaAnswer>>> {
     const next = { ...currentAnswers };
     delete next[questionId];
-    writeLocalJson(STORAGE_QNA_KEY, next);
 
     const context = await this.resolveAccessContext();
+    const blocked = gateError(context);
+    if (blocked) {
+      return { ok: false, mode: context.mode, error: blocked };
+    }
+
     const supabase = getSupabase();
     if (context.mode === 'live' && context.account && supabase) {
-      await supabase
+      const { error } = await supabase
         .from('profile_qna_answers')
         .delete()
         .eq('user_id', context.account.id)
         .eq('question_id', questionId);
+      if (error) {
+        return {
+          ok: false,
+          mode: 'live',
+          error: {
+            code: 'NETWORK_ERROR',
+            message: '문답 삭제 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.',
+          },
+        };
+      }
       return { ok: true, mode: 'live', data: next };
     }
 
-    return { ok: true, mode: 'demo', data: next };
+    if (context.mode === 'demo') {
+      writeLocalJson(STORAGE_QNA_KEY, next);
+      return { ok: true, mode: 'demo', data: next };
+    }
+
+    return {
+      ok: false,
+      mode: context.mode,
+      error: {
+        code: 'NETWORK_ERROR',
+        message: '문답 삭제 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.',
+      },
+    };
   },
 
   /**
-   * 공통 질문 거절 목록을 불러온다 (MATCH-009).
+   * 공통 질문 거절 목록을 불러온다 (MATCH-009). 데모가 아니면 읽지 않는다.
    */
-  loadDeclinedCommonQuestions(): string[] {
+  loadDeclinedCommonQuestions(mode: MatchOperatingMode): string[] {
+    if (mode !== 'demo') return [];
     return readLocalJson<string[]>(STORAGE_COMMON_DECLINED_KEY) ?? [];
   },
 
   /**
-   * 공통 질문 거절 목록을 저장한다 (MATCH-009).
+   * 공통 질문 거절 목록을 저장한다 (MATCH-009). 데모가 아니면 쓰지 않는다.
    */
-  saveDeclinedCommonQuestions(questionIds: string[]): void {
+  saveDeclinedCommonQuestions(questionIds: string[], mode: MatchOperatingMode): void {
+    if (mode !== 'demo') return;
     writeLocalJson(STORAGE_COMMON_DECLINED_KEY, Array.from(new Set(questionIds)));
   },
 };

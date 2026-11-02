@@ -175,16 +175,22 @@ export default function RecommendCard({
             </div>
           </div>
 
-          <div className="mt-rec__meta">
-            <span className="mt-rec__meta-item">
-              <IconPin width={11} height={11} />
-              {DISTANCE_LABELS[profile.distance]}
-            </span>
-            <span className="mt-rec__meta-item">
-              <IconClock width={11} height={11} />
-              {RECENCY_LABELS[profile.recency]}
-            </span>
-          </div>
+          {(profile.distance || profile.recency) && (
+            <div className="mt-rec__meta">
+              {profile.distance && (
+                <span className="mt-rec__meta-item">
+                  <IconPin width={11} height={11} />
+                  {DISTANCE_LABELS[profile.distance]}
+                </span>
+              )}
+              {profile.recency && (
+                <span className="mt-rec__meta-item">
+                  <IconClock width={11} height={11} />
+                  {RECENCY_LABELS[profile.recency]}
+                </span>
+              )}
+            </div>
+          )}
 
           <p className="mt-rec__intro">{profile.intro}</p>
 

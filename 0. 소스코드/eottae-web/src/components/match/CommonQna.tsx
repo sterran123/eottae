@@ -11,9 +11,8 @@
 //               데모 폴백으로 동작한다 (ADR-005).
 // ============================================================
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  DEMO_MY_ANSWERS,
   DEMO_PARTNER_ANSWERS,
   DEMO_QUESTIONS,
   demoCompatibility,
@@ -35,23 +34,35 @@ export default function CommonQna({
   partnerName = '가을',
   questions = DEMO_QUESTIONS,
 }: CommonQnaProps) {
-  const [isDemoMode, setIsDemoMode] = useState(true);
-  // 내 답. 초기엔 DEMO 답변으로 렌더링하고 마운트 후 저장된 답변 동기화.
+  const [isDemoMode, setIsDemoMode] = useState(false);
+  const [listReady, setListReady] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const demoStorageRef = useRef(false);
+  // 조회 전에는 빈 맵. 데모 답·데모 상대는 mode === 'demo'일 때만 채운다.
   const [myAnswers, setMyAnswers] = useState<
     Record<string, { optionId: string | null; customText?: string }>
-  >(() => ({ ...DEMO_MY_ANSWERS }));
+  >({});
   const [declinedIds, setDeclinedIds] = useState<Set<string>>(() => new Set());
-  const partner = DEMO_PARTNER_ANSWERS;
+  // 데모가 아니면 비운다. 서버 행은 state === 'revealed'인 상대 답만 넣는다.
+  // 이 클라이언트에는 공통 질문 조회 RPC가 없어 실계정 상대 답은 비어 있다.
+  const [partner, setPartner] = useState<
+    Record<string, { optionId: string | null; customText?: string }>
+  >({});
 
   useEffect(() => {
     let active = true;
-    const declined = matchService.loadDeclinedCommonQuestions();
-    if (declined.length > 0) {
-      setDeclinedIds(new Set(declined));
-    }
-    void matchService.loadMyQnaAnswers().then(({ context, answers }) => {
+    void matchService.loadMyQnaAnswers().then(({ context, answers, errorMessage }) => {
       if (!active) return;
-      setIsDemoMode(context.isDemo);
+      const demo = context.mode === 'demo';
+      demoStorageRef.current = demo;
+      setIsDemoMode(context.isDemo && demo);
+      if (demo) {
+        setPartner(DEMO_PARTNER_ANSWERS);
+        setDeclinedIds(new Set(matchService.loadDeclinedCommonQuestions('demo')));
+      } else {
+        setPartner({});
+        setDeclinedIds(new Set());
+      }
       const mapped: Record<string, { optionId: string | null; customText?: string }> = {};
       for (const [qid, a] of Object.entries(answers)) {
         mapped[qid] = {
@@ -60,18 +71,29 @@ export default function CommonQna({
         };
       }
       setMyAnswers(mapped);
+      setActionError(
+        !demo && context.gateMessage ? context.gateMessage : (errorMessage ?? null),
+      );
+      setListReady(true);
     });
     return () => {
       active = false;
     };
   }, []);
 
-  // 공통 질문으로 다룰 문항: 나 또는 상대가 답했거나, 추천 대상.
-  const items = useMemo(
-    () =>
-      questions.filter((q) => myAnswers[q.id] || partner[q.id]),
-    [questions, myAnswers, partner],
-  );
+  function persistDeclined(ids: string[]) {
+    if (!demoStorageRef.current) return;
+    matchService.saveDeclinedCommonQuestions(ids, 'demo');
+  }
+
+  // 데모는 나 또는 샘플 상대가 답한 문항만. 실계정은 가짜 상대 답 없이 문항 목록을 보여 준다.
+  const items = useMemo(() => {
+    if (!listReady) return [];
+    if (isDemoMode) {
+      return questions.filter((q) => myAnswers[q.id] || partner[q.id]);
+    }
+    return questions;
+  }, [questions, myAnswers, partner, listReady, isDemoMode]);
 
   const summary = useMemo(
     () => demoCompatibility(myAnswers, partner),
@@ -103,24 +125,30 @@ export default function CommonQna({
     if (nextDeclined.has(q.id)) {
       nextDeclined.delete(q.id);
       setDeclinedIds(nextDeclined);
-      matchService.saveDeclinedCommonQuestions(Array.from(nextDeclined));
+      persistDeclined(Array.from(nextDeclined));
     }
 
     const qnaMap: Record<string, QnaAnswer> = {};
     for (const [qid, a] of Object.entries(nextMine)) {
       qnaMap[qid] = { questionId: qid, optionId: a.optionId, customText: a.customText };
     }
+    setActionError(null);
     void matchService.saveMyQnaAnswer(
       { questionId: q.id, optionId },
       qnaMap,
-    );
+    ).then((res) => {
+      if (!res.ok) {
+        setMyAnswers(myAnswers);
+        setActionError(res.error.message);
+      }
+    });
   }
 
   function declineQuestion(qId: string) {
     setDeclinedIds((prev) => {
       const next = new Set(prev);
       next.add(qId);
-      matchService.saveDeclinedCommonQuestions(Array.from(next));
+      persistDeclined(Array.from(next));
       return next;
     });
   }
@@ -129,7 +157,7 @@ export default function CommonQna({
     setDeclinedIds((prev) => {
       const next = new Set(prev);
       next.delete(qId);
-      matchService.saveDeclinedCommonQuestions(Array.from(next));
+      persistDeclined(Array.from(next));
       return next;
     });
   }
@@ -145,6 +173,10 @@ export default function CommonQna({
           <div className="mt-cq__sub">둘 다 답하면 서로 답이 공개돼요 · 원치 않는 질문은 거절 가능</div>
         </div>
       </header>
+
+      {actionError && (
+        <p role="alert">{actionError}</p>
+      )}
 
       <div className="mt-cq__body">
         {items.map((q) => {

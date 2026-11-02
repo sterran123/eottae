@@ -16,10 +16,10 @@ export type Gender = 'male' | 'female';
 export interface VerifiedIdentity {
   /** 성인 인증 통과 여부. false면 실데이터 매칭/온보딩 저장 차단(fail-closed, ADR-002). */
   verified: boolean;
-  /** 검증된 만 나이(출생연도 기준). 사용자가 수정 불가. */
-  age: number;
-  /** 검증된 성별. 사용자가 수정 불가. */
-  gender: Gender;
+  /** 검증된 만 나이(출생연도 기준). 출생연도가 없으면 null. 사용자가 수정 불가. */
+  age: number | null;
+  /** 검증된 성별. 계정에 성별 컬럼이 생기기 전에는 두지 않는다. */
+  gender?: Gender;
   /** 계정 표시 닉네임 (로그인 세션 연동 시 선택 표시) */
   nickname?: string | null;
 }
@@ -191,8 +191,10 @@ export interface RecommendProfile {
   /** 나와 겹치는 관심사 id 목록(근거). 수치가 아닌 실제 항목으로 표시. */
   sharedInterestIds: string[];
   photo: PhotoVisibility;
-  distance: DistanceBand;
-  recency: ActivityRecency;
+  /** 없으면 거리 문구를 그리지 않는다. */
+  distance?: DistanceBand;
+  /** 없으면 접속 문구를 그리지 않는다. */
+  recency?: ActivityRecency;
   relation: RecommendRelation;
   /**
    * 프로필 문답에서 겹친 답 개수(사실). 둘 다 문답에 답한 경우에만 존재.
@@ -260,7 +262,8 @@ export interface LikeResultDto {
  *        영문 식별자 acorn, 화면 표기 '도토리'.
  */
 export interface AcornBalance {
-  acorn: number;
+  /** null이면 잔액을 모른다. 화면은 숫자를 숨긴다. */
+  acorn: number | null;
 }
 
 // ============================================================
@@ -452,10 +455,10 @@ export function toRecommendProfile(row: RecommendationRow): RecommendProfile {
       ? row.shared_interest_ids
       : [],
     photo,
-    distance: row.distance_band ?? 'within_5km',
-    recency: row.activity_recency ?? 'today',
     relation: row.relation ?? 'none',
   };
+  if (row.distance_band) profile.distance = row.distance_band;
+  if (row.activity_recency) profile.recency = row.activity_recency;
 
   if (typeof row.qna_shared_count === 'number' && row.qna_shared_count > 0) {
     profile.qnaSharedCount = row.qna_shared_count;
