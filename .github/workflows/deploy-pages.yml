@@ -47,6 +47,8 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          # DEC-11(2026-11-03): 3차까지 목업으로 확인 — 시연용 성인 확인(만 19세)을 거치면 매칭·채팅 데모를 연다. 실데이터 단계에서 지운다(ADR-002 fail-closed 복귀).
+          NEXT_PUBLIC_DEMO_ADULT_BYPASS: '1'
 
       - uses: actions/upload-pages-artifact@v3
         with:

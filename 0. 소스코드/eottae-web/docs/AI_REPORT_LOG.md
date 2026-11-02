@@ -776,3 +776,8 @@
 - [변경] 없음 | `src/lib/match/types.ts`(DTO #65), `.env.example`, `supabase/migrations`(0003·#66), `src/lib/chat/**`, `src/lib/safety/**`, 채팅·신고·차단 컴포넌트, package.json, `FILE_INDEX.csv`, `MANIFEST.sha256`. 성인 확인 화면(#68)과 `/activities`·청첩장·설정 테마 동작은 바꾸지 않음
 - [미실행] 브라우저에서 로그아웃 안내, 직접 주소의 성인 잠금, 바다 관심의 매칭 1건·새로고침·두 탭, 제외 5명 표시, 360px·6테마·44px. typecheck·build·sha256sum도 실행하지 않음. 이 세션은 파일 읽기·검색·수정만
 
+## 2026-11-03 배포 사이트 매칭 데모 공개 — 목업 단계 예외 (김민기 작업)
+- [요청] 3차까지 목업으로 먼저 확인하기로 해서, 배포 사이트에서도 시연용 성인 확인 후 매칭·채팅 데모가 열리게
+- [AI] Claude Code가 배포 빌드에서 매칭이 잠기는 원인(`NEXT_PUBLIC_DEMO_ADULT_BYPASS` 미설정, ADR-002 fail-closed)을 찾아 설정 한 줄을 제안, 김민기 승인
+- [변경] .github/workflows/deploy-pages.yml(build env에 `NEXT_PUBLIC_DEMO_ADULT_BYPASS: '1'`), 아키텍처_결정기록_ADR.md(ADR-002 예외 한 줄), 실행_결정대기_로그.md(DEC-11)
+- [미실행] 배포 후 실제 화면에서 시연 확인 → 매칭 진입 확인은 배포가 끝난 뒤 사람 확인

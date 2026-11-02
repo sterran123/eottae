@@ -7,7 +7,7 @@
 .github/pull_request_template.md,1380,1bd859605e7d4bfdd6c0ba979f1cba66141e97e567b59f3dae8bb32828aab16c
 .github/workflows/ai-review.yml,2476,19caba3197a1e68746da241f2fae5456a2911d85094f94f534da18477bf7cdbb
 .github/workflows/ci.yml,656,a9a86fcb4f929c0dc21fcd5a54acf351c246941add41531004978d50e872c5ca
-.github/workflows/deploy-pages.yml,1877,9bc9e374d036f900c9b16edbb731be29c4cd4e9104e30f65728d84277512059d
+.github/workflows/deploy-pages.yml,2135,3d8f3cbf7d155fc18f6b4208b7b501b874021f2efaedc3c05c6cea8c996b41e6
 .github/workflows/devin-mention.yml,1569,2f9139a08f17747936d2879932856d6b55a219b85be9f98682122f6e63ef85f8
 .github/workflows/issue-progress.yml,3333,19d26b67fb93d03e1697c911d9b111ab9a146e83ebdc137acc909ad307bbee34
 .github/workflows/pr-review.yml,2821,f215d3e323380b4e75764c6bfbcab5b4c7b59b4009ed7102f4b9075fc1301a69
@@ -18,7 +18,7 @@
 0. 소스코드/eottae-web/.gitignore,202,7710d28a140451e45493d1fd6f52508a4a51133d7fd72b236349d001bde77fb9
 0. 소스코드/eottae-web/AGENTS.md,1371,dfd62088d1b52c3eeb6f9ccb87a62858bb9766b328ae93cd85994f2bb3262587
 0. 소스코드/eottae-web/README.md,6438,a21baa09a8553ed696d1231ce5fa7c57b0669f770eaf44d8517a82c47aaa1cb6
-0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md,172359,457b312a99952267aad19b9956d6d613499f499c36b893ba0f3bfa40a19e9a85
+0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md,173895,9a8f156b2b979716394a89d09d4bb1b13848528804a272bb451491cfd3dff2de
 0. 소스코드/eottae-web/docs/AI_도구_MCP_권장.md,4206,6ef5f1ba972e9f1d07e1dbddd282ed9c16c3fd132a5301db0a8e0e9cffc2bb2f
 0. 소스코드/eottae-web/docs/AI_에이전트_협업_가이드.md,6263,180d9a55d70be22c9ffa04a4acc113c484a2a19fc71e2410ec6dff1a33487a01
 0. 소스코드/eottae-web/docs/DESIGN_개선_지시서.md,7364,7d34723629b67d6fc6c107846671146dfa18b35250001621174b73afb4da8511
@@ -219,7 +219,7 @@
 1. 프로젝트 계획서/브랜드_가이드.md,2103,64ae173cf978157656cd7225bbc0eba1b3bab3203a66c885d2f70e00d04569f1
 1. 프로젝트 계획서/브랜드_에셋/어때_로고_다크_원본.png,1833742,219395acd431836dc4e9a2827be7c4a02218454bfe1b76f2ffaedd9a757c1e37
 1. 프로젝트 계획서/브랜드_에셋/어때_로고_라이트_원본.png,769833,4956d02f3cc4fa6f0c8ff61dadaa42d118672550ad835d9bf700448e10f6e52a
-1. 프로젝트 계획서/실행_결정대기_로그.md,3146,29a696fdb18841b22dc4aae56ec0d1c9b6804b43a6bdd129d4d7122c0fe6f4cf
+1. 프로젝트 계획서/실행_결정대기_로그.md,3649,9c4b6efcc6c91003c83f5e37d2ac7fd2320f9cde4455e26012b0ab1da005fcb6
 1. 프로젝트 계획서/안전_개인정보_연령정책.md,2587,d55d3b66a39ee300c3bdc876c534b53b21eae77da8fab14679ce1e57687cfec3
 1. 프로젝트 계획서/양식원본/00_제출물_통합본_타프로젝트_샘플.xlsx,22298,21a36db58a169f82912d59a35d2ac730d7da305e126f8e09e42b9e296f5dae30
 1. 프로젝트 계획서/양식원본/제출물 예시_샘플.xlsx,357595,9b5bbc6a7f1a0b0245387ace1e53c99b3a7b380047a903f49aa859587c21dbf4
@@ -240,7 +240,7 @@
 2. 프로젝트 설계서/DB_논리모델_전체3단계.md,2609,4787d9f3e5edad9e5138cd19ba30dabfa7c1189ce7a86dba6634607abdffa2c7
 2. 프로젝트 설계서/데이터베이스_ERD_테이블초안.md,304,fe2481a7ad43dd535f9925346ae0d553eabc674552cb714a24e95a90ddc83e31
 2. 프로젝트 설계서/시스템구성도_흐름.md,304,fe2481a7ad43dd535f9925346ae0d553eabc674552cb714a24e95a90ddc83e31
-2. 프로젝트 설계서/아키텍처_결정기록_ADR.md,11200,4b7fc9af9e63b2ca12ea4be68b9afff6751088ee5a895d1f200f9696a0cf501f
+2. 프로젝트 설계서/아키텍처_결정기록_ADR.md,11623,b7760a384fb9b95e3312774fc1b7027ae4652be007fa33558bb900fc7cd5a5da
 2. 프로젝트 설계서/양식원본/ER다이어그램.xlsx,57677,fbfce7c8b69477ad19d07cd2435e700ce0118c18468b0cbcf4d3ca9310299124
 2. 프로젝트 설계서/양식원본/시스템구성도.xlsx,59980,7065851f4fdee61f95ab213f1487f3a44393e7f737f07a3ebbaa4e1a21826122
 2. 프로젝트 설계서/양식원본/요구사항일람.xlsx,9151,328b16230ef7ba57b846bfdcf707bcbef61750914f484161a1639d043b10279d
