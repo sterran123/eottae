@@ -49,6 +49,8 @@ interface ChatRoomProps {
   active: boolean;
   /** 추천 카드의 "가볍게 물어보기"로 진입했을 때 즉시 보낼 질문 */
   initialQuestion?: string | null;
+  /** 질문을 처리한 뒤 호출한다. 주소의 q는 부모가 지운다. */
+  onQuestionConsumed?: () => void;
   onClose: () => void;
   /** 새 메시지가 붙을 때마다 목록 미리보기 갱신용으로 알린다 */
   onLastMessage?: (roomId: string, message: ChatMessage) => void;
@@ -59,6 +61,7 @@ export default function ChatRoom({
   actorId,
   active,
   initialQuestion,
+  onQuestionConsumed,
   onClose,
   onLastMessage,
 }: ChatRoomProps) {
@@ -286,8 +289,12 @@ export default function ChatRoom({
     const token = `${room.id}|${actorId}|${initialQuestion}`;
     if (questionToken.current === token) return;
     questionToken.current = token;
-    sendMessage(initialQuestion);
-  }, [hydrated, initialQuestion, room.id, actorId, sendMessage]);
+    const already = loadVisibleMessages(room.id, actorId).some(
+      (message) => message.senderId === actorId && message.body === initialQuestion,
+    );
+    if (!already) sendMessage(initialQuestion);
+    onQuestionConsumed?.();
+  }, [hydrated, initialQuestion, room.id, actorId, sendMessage, onQuestionConsumed]);
 
   return (
     <section className="mt-chat" aria-label={`${partner.nickname}님과의 1:1 채팅`}>

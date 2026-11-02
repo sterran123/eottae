@@ -777,4 +777,5 @@
 - [변경] src/lib/match/match-service.ts | 데모 모드의 추천 카드 신고·차단만 같은 기기 기록에 남김(`demo_me`). live의 reports·blocks 호출은 그대로
 - [유지] 보내기 잠금·신고 사유 검증·`/safety` 정책·추천 목록 문구·성인 확인 게이트. 서버 호출·마이그레이션·package.json·FILE_INDEX.csv·MANIFEST.sha256·supabase/·activities·청첩장·설정 테마는 수정하지 않음
 - [미실행] typecheck·build·브라우저. 이 세션은 파일 읽기·검색·수정만. 360px·6테마·두 탭 송수신·TC-008·TC-009·TC-010은 화면에서 확인하지 않음
+- [변경] PR #77 Grok 리뷰(8fdd980) 반영: `?q=` 질문은 처리한 뒤 주소에서 지우고, 이 탭 사용자가 같은 본문을 이미 저장했으면 다시 보내지 않는다. 데모 사용자를 바꾸면 `q`를 지우고, 그 계정이 구성원이 아닌 `room`·`partner`는 뺀다. `q`만 빠진 주소 갱신은 닫아 둔 방을 다시 열지 않는다. 목록 안 읽음은 마지막으로 본 메시지 다음의 상대 말만 센다. 관리자 시점은 데모 사용자가 바뀌면 끈다. 「이 대화 열기」는 열린 방이 있으면 그 방의 상대 계정이다. 남김: 두 탭 `commit`을 id로 합치기(동시 전송 미확인, 차단 해제가 되살아날 수 있음), `toChatMessage`의 `soft_delete_state`(호출 없음), `match-service.ts`·`demo-sync.ts` 소유 경계. 778행은 `FILE_INDEX.csv`·`MANIFEST.sha256`를 수정하지 않았다고 적지만 현재 두 파일에 채팅 데모 경로가 있다. 779행의 typecheck·build·브라우저 미실행은 그 기록이다. 이 반영에서는 기존 로그 줄과 그 두 파일을 고치지 않았고 해시는 다시 계산하지 않음. typecheck·build·sha256sum·브라우저는 실행하지 않음. PR 본문은 이 작업 트리에서 찾지 못해 통과 문장은 빼지 못함.
 

@@ -33,6 +33,10 @@ export default function SafetyDemoPanels({ actorId }: { actorId: string }) {
   const admin = adminActor === actorId;
 
   useEffect(() => {
+    setAdminActor(null);
+  }, [actorId]);
+
+  useEffect(() => {
     const load = () => setReports(listDemoReports());
     load();
     setReady(true);

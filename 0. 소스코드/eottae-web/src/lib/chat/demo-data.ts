@@ -160,13 +160,21 @@ export function nicknameForDemoId(id: string): string {
   return found?.nickname ?? '상대';
 }
 
-/** 다른 탭에서 열 상대 계정과 그 사람이 들어가는 방. */
-export function counterpartDemoLink(actorId: string): { actorId: string; nickname: string; roomId: string } {
+/** 다른 탭에서 열 상대 계정과 그 사람이 들어가는 방. 열린 방이 있으면 그 방의 상대다. */
+export function counterpartDemoLink(
+  actorId: string,
+  openRoomId?: string | null,
+): { actorId: string; nickname: string; roomId: string } {
+  const opened = openRoomId
+    ? DEMO_ROOMS.find(
+        (item) => item.id === openRoomId && item.members.some((member) => member.id === actorId),
+      )
+    : undefined;
   if (actorId === DEMO_SELF.id) {
-    const room = DEMO_ROOMS[0];
+    const room = opened ?? DEMO_ROOMS[0];
     return { actorId: room.partner.id, nickname: room.partner.nickname, roomId: room.id };
   }
-  const room = DEMO_ROOMS.find((item) => item.members.some((member) => member.id === actorId));
+  const room = opened ?? DEMO_ROOMS.find((item) => item.members.some((member) => member.id === actorId));
   return {
     actorId: DEMO_SELF.id,
     nickname: DEMO_SELF.nickname,

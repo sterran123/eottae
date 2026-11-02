@@ -17,7 +17,7 @@ f215d3e323380b4e75764c6bfbcab5b4c7b59b4009ed7102f4b9075fc1301a69  .github/workfl
 7710d28a140451e45493d1fd6f52508a4a51133d7fd72b236349d001bde77fb9  0. 소스코드/eottae-web/.gitignore
 dfd62088d1b52c3eeb6f9ccb87a62858bb9766b328ae93cd85994f2bb3262587  0. 소스코드/eottae-web/AGENTS.md
 a21baa09a8553ed696d1231ce5fa7c57b0669f770eaf44d8517a82c47aaa1cb6  0. 소스코드/eottae-web/README.md
-cfb1ea5263b4c9aba8fa1d98118e328536f30ed7acb4d0d020891e84f543135a  0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md
+2c156f3fa2f8a1fef3fcc9ed6c6956107f0532449ade72f7df6ec22ecbbaf684  0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md
 6ef5f1ba972e9f1d07e1dbddd282ed9c16c3fd132a5301db0a8e0e9cffc2bb2f  0. 소스코드/eottae-web/docs/AI_도구_MCP_권장.md
 180d9a55d70be22c9ffa04a4acc113c484a2a19fc71e2410ec6dff1a33487a01  0. 소스코드/eottae-web/docs/AI_에이전트_협업_가이드.md
 7d34723629b67d6fc6c107846671146dfa18b35250001621174b73afb4da8511  0. 소스코드/eottae-web/docs/DESIGN_개선_지시서.md
@@ -116,9 +116,9 @@ a2dcc9b43350ec7521c08e757062f4b8315c2851ae1507eaba4134d41210929d  0. 소스코�
 537ccfe12bc6f529380cc76b8f4894170999fb2461e61edf79b26494d1b1240c  0. 소스코드/eottae-web/src/components/auth/LoginForm.tsx
 81dfa2642b91ba40a83567e54f99697c82c753e4b2ea636f98e12e4d23daab1d  0. 소스코드/eottae-web/src/components/auth/SignupForm.tsx
 c3782e517dab8b8f5bab8b7bdd3c553b23863ef577e6017d6c7c9e6c4e9f8761  0. 소스코드/eottae-web/src/components/auth/SocialLoginButtons.tsx
-876bea8e9363562ec0d5228a731f02c82fab9a52143fb75bd21764415ffb2334  0. 소스코드/eottae-web/src/components/chat/ChatHub.tsx
+705e4161595828cbafafc4acc09be88767fa08e9840a43481d4689f67cf3b443  0. 소스코드/eottae-web/src/components/chat/ChatHub.tsx
 692d993350f1e521be8e192cd47bfcf7e813bf93aa17c73f4a263845fce6fc2f  0. 소스코드/eottae-web/src/components/chat/ChatList.tsx
-707c3a35cedb553008602800e168250b6e9ef18a6d1ec716ffee94db429486c0  0. 소스코드/eottae-web/src/components/chat/ChatRoom.tsx
+09f884ab515accf3d62fe1d4bfc959a383e3a2704b0d8c710c8ec5b1fcf53d6d  0. 소스코드/eottae-web/src/components/chat/ChatRoom.tsx
 200c1a26653cb001a9a618eadc21e0b7c29f08f38751cf662ae81cd1ea9f4019  0. 소스코드/eottae-web/src/components/chat/MessageBubble.tsx
 260d4a05dd8023b5f027e4175b0a2d7c8a0e6ba9dc3b504f7a6a8d4c7b64a34b  0. 소스코드/eottae-web/src/components/chat/MessageComposer.tsx
 d3f303775ce3ba8cd17c70b0c6e296b996e33a081bf9cd1bc6e9c657bc20ed7a  0. 소스코드/eottae-web/src/components/demo/DemoAdultStep.tsx
@@ -137,7 +137,7 @@ ae0db8e7f25fc0fd7c3f05ff8554921b640ab01c6598a8a4be6da54a894bd3cd  0. 소스코�
 1d9d3b4fc984f4cfe228b01b6fa98f9860b34ce9f3b7f0c62910f240794e2e4d  0. 소스코드/eottae-web/src/components/match/icons.tsx
 31afa3f8c16d3d5c4751d1d1f5dc1a9aac4b6e18ce0c8514de9de7620e204747  0. 소스코드/eottae-web/src/components/safety/BlockConfirmModal.tsx
 c59cef880f9340cfb17716fd50f589a225079a3be70c26586f6cb936cdfa1cb9  0. 소스코드/eottae-web/src/components/safety/ReportModal.tsx
-a862e05882df5743b0c28d3aa2fe8d424b84f4f40e7c906cd07f84228c45afd8  0. 소스코드/eottae-web/src/components/safety/SafetyDemoPanels.tsx
+99b13e526d6b331168006c7c0e42b74701fcc60f330741eae99f4f7c0dcc4fb8  0. 소스코드/eottae-web/src/components/safety/SafetyDemoPanels.tsx
 d9d845a1c69955ea61d92795556b2c377e16bdeaa6113ed381de00e18c852ad4  0. 소스코드/eottae-web/src/components/safety/SafetyDialog.tsx
 30a2e022e4fb4a352d58dc2ef37365c0197487c04f0b9f719ce87ee53c02e95c  0. 소스코드/eottae-web/src/components/settings/AccountSettingsCard.tsx
 5070a62ba47e529b27018faf352cea1e56ce9c0b5d3730892b2539fe41fa1f49  0. 소스코드/eottae-web/src/components/settings/DemoAdultSettingsStatus.tsx
@@ -167,7 +167,7 @@ f241c3d6060f4a6e81b70b75a746fa0b7a8721816e1a60b866d37d631c3527e0  0. 소스코�
 d985f2b37b8182da799be9a16118c0ec36d141d66f5cd342896c940fb08cd9f7  0. 소스코드/eottae-web/src/lib/auth/use-auth.ts
 8e87f070fa93d603b4bba7487fe35cf3fe0c3c986c162b6edc42f2c38a06cced  0. 소스코드/eottae-web/src/lib/auth/validation.ts
 51c3f10b1dec07f36f570d8f07de26a6157d5200371bff76ec69ab048b38690f  0. 소스코드/eottae-web/src/lib/chat/chat-service.ts
-b299c21726bdc00fdc94c0c26c2c1fbbe2374273e7088064f857b5cc0e9b8156  0. 소스코드/eottae-web/src/lib/chat/demo-data.ts
+b62b34533d223cff3d65daaaef5288fdc84dfd9c37106ca431209dcdb968bce9  0. 소스코드/eottae-web/src/lib/chat/demo-data.ts
 47dd5a142b6a2958e0899ad43a9faf4acfd765b84db24475506139bee3f87ec2  0. 소스코드/eottae-web/src/lib/chat/demo-store.ts
 7f6931812e73648bffd52717003bb51bbb3d1f1dc28c95aa0951dbbd170f0957  0. 소스코드/eottae-web/src/lib/chat/types.ts
 fcd054f592a579f6608b88111e9f987f7b2e4d2f3045dfe21d29d5132c3935fb  0. 소스코드/eottae-web/src/lib/demo/demo-adult.ts

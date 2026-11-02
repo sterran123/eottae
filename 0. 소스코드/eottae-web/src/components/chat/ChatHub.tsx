@@ -7,7 +7,7 @@
 //        구성원이 아닌 방은 열지 않는다.
 // ============================================================
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -27,17 +27,44 @@ import SafetyDemoPanels from '@/components/safety/SafetyDemoPanels';
 import ChatList, { type ChatRoomPreview } from './ChatList';
 import ChatRoom from './ChatRoom';
 
-function previewFor(room: ChatRoomInfo, actorId: string, open: boolean): ChatRoomPreview {
+/** 이 탭에서 그 방의 메시지를 어디까지 봤는지. 예시 unread를 다시 더하지 않는다. */
+type SeenCursor = { id: string; at: string };
+
+function rememberSeen(seen: Record<string, SeenCursor>, actorId: string, roomId: string) {
+  const messages = loadVisibleMessages(roomId, actorId);
+  const last = messages[messages.length - 1];
+  if (!last) return;
+  seen[`${actorId}|${roomId}`] = { id: last.id, at: last.createdAt };
+}
+
+function previewFor(
+  room: ChatRoomInfo,
+  actorId: string,
+  open: boolean,
+  seen: SeenCursor | undefined,
+): ChatRoomPreview {
   const viewed = viewRoomForActor(room, actorId);
   const messages = loadVisibleMessages(room.id, actorId);
   const last = messages[messages.length - 1];
   const seedIds = new Set(room.initialMessages.map((message) => message.id));
-  const fresh = messages.filter((message) => message.sender === 'partner' && !seedIds.has(message.id)).length;
   const lastIsSeed = !last || seedIds.has(last.id);
+  let unread = 0;
+  if (!open) {
+    if (seen) {
+      const index = messages.findIndex((message) => message.id === seen.id);
+      const after = index >= 0
+        ? messages.slice(index + 1)
+        : messages.filter((message) => Date.parse(message.createdAt) > Date.parse(seen.at));
+      unread = after.filter((message) => message.sender === 'partner').length;
+    } else {
+      const fresh = messages.filter((message) => message.sender === 'partner' && !seedIds.has(message.id)).length;
+      unread = (viewed?.unread ?? 0) + fresh;
+    }
+  }
   return {
     lastMessage: last?.body ?? viewed?.initialMessages[viewed.initialMessages.length - 1]?.body ?? '',
     timeLabel: lastIsSeed ? (viewed?.timeLabel ?? room.timeLabel) : '방금',
-    unread: open ? 0 : Math.min(99, (viewed?.unread ?? 0) + fresh),
+    unread: Math.min(99, unread),
   };
 }
 
@@ -70,10 +97,16 @@ export default function ChatHub() {
   const activeRef = useRef<string | null>(null);
   const prevActive = useRef<string | null>(null);
   const openedToken = useRef<string | null>(null);
+  const seenRef = useRef<Record<string, SeenCursor>>({});
 
   useEffect(() => {
     activeRef.current = activeId;
-  }, [activeId]);
+    if (!activeId) return;
+    const member = DEMO_ROOMS.some(
+      (room) => room.id === activeId && room.members.some((person) => person.id === actor.id),
+    );
+    if (member) rememberSeen(seenRef.current, actor.id, activeId);
+  }, [activeId, actor.id]);
 
   useEffect(() => {
     ensureChatSeed();
@@ -81,7 +114,9 @@ export default function ChatHub() {
       const next: Record<string, ChatRoomPreview> = {};
       for (const room of DEMO_ROOMS) {
         if (!room.members.some((member) => member.id === actor.id)) continue;
-        next[room.id] = previewFor(room, actor.id, activeRef.current === room.id);
+        const open = activeRef.current === room.id;
+        if (open) rememberSeen(seenRef.current, actor.id, room.id);
+        next[room.id] = previewFor(room, actor.id, open, seenRef.current[`${actor.id}|${room.id}`]);
       }
       setPreviewActor(actor.id);
       setStoredPreviews(next);
@@ -97,10 +132,13 @@ export default function ChatHub() {
 
   useEffect(() => {
     const visibleIds = visibleRooms.map((room) => room.id);
-    const token = `${actor.id}|${roomParam ?? ''}|${partnerParam ?? ''}|${initialQuestion ?? ''}|${openedRoomId ?? ''}`;
+    const openToken = `${actor.id}|${roomParam ?? ''}|${partnerParam ?? ''}|${openedRoomId ?? ''}`;
+    const token = `${openToken}|${initialQuestion ?? ''}`;
     const auto = shouldAutoOpen && openedRoomId ? openedRoomId : null;
     if (openedToken.current === token) return;
+    const questionCleared = Boolean(openedToken.current?.startsWith(`${openToken}|`) && !initialQuestion);
     openedToken.current = token;
+    if (questionCleared) return;
     setActiveId((current) => {
       if (auto) return auto;
       if (current && visibleIds.includes(current)) return current;
@@ -112,6 +150,8 @@ export default function ChatHub() {
       return kept;
     });
     if (auto) {
+      activeRef.current = auto;
+      rememberSeen(seenRef.current, actor.id, auto);
       setStoredPreviews((current) => {
         if (!current?.[auto]) return current;
         return { ...current, [auto]: { ...current[auto], unread: 0 } };
@@ -130,6 +170,8 @@ export default function ChatHub() {
   }, [activeId]);
 
   function openRoom(id: string) {
+    activeRef.current = id;
+    rememberSeen(seenRef.current, actor.id, id);
     setActiveId(id);
     setVisited((current) => (current.includes(id) ? current : [...current, id]));
     setStoredPreviews((current) => {
@@ -144,12 +186,26 @@ export default function ChatHub() {
   }
 
   function closeRoom() {
+    activeRef.current = null;
     setActiveId(null);
   }
+
+  const consumeQuestion = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (!params.has('q')) return;
+    params.delete('q');
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }, [pathname, router, searchParams]);
 
   function chooseActor(nextId: string) {
     const params = new URLSearchParams(searchParams.toString());
     params.set('as', nextId);
+    params.delete('q');
+    const room = params.get('room');
+    const partner = params.get('partner');
+    if (room && demoRoomAccess(nextId, room) !== 'member') params.delete('room');
+    if (partner && demoRoomAccess(nextId, partner) !== 'member') params.delete('partner');
     const query = params.toString();
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }
@@ -229,7 +285,7 @@ export default function ChatHub() {
   );
   const previews =
     previewActor === actor.id && storedPreviews ? { ...seedPreviews, ...storedPreviews } : seedPreviews;
-  const pair = counterpartDemoLink(actor.id);
+  const pair = counterpartDemoLink(actor.id, activeId);
   const deniedParams = new URLSearchParams();
   if (actor.id !== DEMO_SELF.id) deniedParams.set('as', actor.id);
   deniedParams.set('room', 'not-a-match');
@@ -311,6 +367,7 @@ export default function ChatHub() {
               actorId={actor.id}
               active={activeId === room.id}
               initialQuestion={room.id === openedRoomId ? initialQuestion : null}
+              onQuestionConsumed={consumeQuestion}
               onClose={closeRoom}
               onLastMessage={handleLastMessage}
             />
