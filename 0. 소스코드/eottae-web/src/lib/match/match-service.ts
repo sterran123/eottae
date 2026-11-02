@@ -29,8 +29,13 @@ import { saveDemoBlock, saveDemoReport } from '@/lib/safety/demo-store';
 import type { BlockRequest, ReportCategory, ReportRequest } from '@/lib/safety/types';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase/client';
 import { DEMO_IDENTITY, VALID_INTEREST_IDS } from './demo-data';
+import { applyDemoMutualState, recordDemoLike } from './demo-mutual';
 import { DEMO_MY_ANSWERS } from './demo-qna';
-import { DEMO_ACORN, DEMO_RECOMMENDATIONS } from './demo-recommendations';
+import {
+  DEMO_ACORN,
+  demoPartnerReturnsInterest,
+  demoRecommendationView,
+} from './demo-recommendations';
 import {
   toOnboardingDraft,
   toQnaAnswer,
@@ -102,6 +107,7 @@ function clearSignedInMatchCache(): void {
     // 저장소 접근이 막혀도 실계정 경로는 캐시를 읽지 않는다.
   }
   clearDemoAdult();
+  clearDemoSession();
 }
 
 function gateError(context: MatchAccessContext): ApiError['error'] | null {
@@ -526,12 +532,13 @@ export const matchService = {
       };
     }
 
+    const visible = demoRecommendationView().items;
     return {
       ok: true,
       mode: 'demo',
       context,
       data: {
-        items: DEMO_RECOMMENDATIONS,
+        items: applyDemoMutualState(visible),
         nextCursor: null,
         acorn: DEMO_ACORN,
       },
@@ -597,15 +604,20 @@ export const matchService = {
     }
 
     if (context.mode === 'demo') {
+      const recorded = recordDemoLike(
+        targetId,
+        decision,
+        demoPartnerReturnsInterest(targetId),
+      );
       return {
         ok: true,
         mode: 'demo',
         data: {
           targetId,
           decision,
-          matched: false,
-          matchId: null,
-          conversationId: null,
+          matched: recorded.matched,
+          matchId: recorded.matchId,
+          conversationId: recorded.conversationId,
         },
       };
     }

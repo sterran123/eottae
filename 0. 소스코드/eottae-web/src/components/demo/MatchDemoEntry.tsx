@@ -8,6 +8,7 @@ import {
   DEMO_ADULT_UNAVAILABLE_MESSAGE,
   isDemoAdultActive,
 } from '@/lib/demo/demo-adult';
+import { isDemoLoggedIn } from '@/lib/demo/demo-session';
 import { matchService } from '@/lib/match/match-service';
 import DemoAdultStep from './DemoAdultStep';
 import DemoSheet from './DemoSheet';
@@ -64,6 +65,10 @@ export function DemoGatedLink({
     setBusy(true);
     try {
       const context = await matchService.resolveAccessContext();
+      if (context.mode === 'demo' && !isDemoLoggedIn()) {
+        router.push(`/auth/login?next=${encodeURIComponent(href)}`);
+        return;
+      }
       if (context.mode === 'live' || (context.mode === 'demo' && isDemoAdultActive())) {
         router.push(href);
         return;
@@ -140,6 +145,11 @@ export function DemoAdultPrompt() {
     const href = prompt.href;
     try {
       const context = await matchService.resolveAccessContext();
+      if (context.mode === 'demo' && !isDemoLoggedIn()) {
+        setPrompt(null);
+        router.push(`/auth/login?next=${encodeURIComponent(href)}`);
+        return;
+      }
       if (context.mode === 'live' || (context.mode === 'demo' && isDemoAdultActive())) {
         setPrompt(null);
         router.push(href);
