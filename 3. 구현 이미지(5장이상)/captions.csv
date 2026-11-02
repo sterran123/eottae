@@ -1,4 +1,4 @@
-﻿file,captured_at,environment,requirement_id,note
+file,captured_at,environment,requirement_id,note
 01_공통_홈_데스크톱.png,2026-10-27,Windows + 헤드리스 Chrome(CDP) 1440 전체 높이 · npm run build 정적 산출물 · tools/serve_pages_preview.mjs,CORE-001 / CORE-002,통합 홈 라이트 — 디자인 패스 2차(스티커 모티프 카드·단계 연결선·안전 배지·FAQ Q 스티커·로드맵·새 푸터)
 02_공통_홈_모바일.png,2026-10-27,Windows + 헤드리스 Chrome(CDP) 390 모바일 2x 전체 높이 · npm run build 정적 산출물,CORE-002,통합 홈 모바일 — 어절 단위 줄바꿈·히어로 캐릭터 스티커·가로 스크롤 내비(페이드)
 03_공통_홈_데스크톱_다크.png,2026-10-27,Windows + 헤드리스 Chrome(CDP) 1440 전체 높이 · npm run build 정적 산출물 · tools/serve_pages_preview.mjs · data-theme=dark,CORE-002,통합 홈 다크 — 토큰·다크 로고 스왑(BRAND-004)
@@ -6,9 +6,9 @@
 05_준비중_모듈_데이트소모임_모바일.png,2026-10-27,Windows + 헤드리스 Chrome(CDP) 390 모바일 2x 전체 높이 · npm run build 정적 산출물,CORE-001,/activities 2차 준비중 — 서브히어로·테이프 카드
 06_준비중_모듈_청첩장_모바일.png,2026-10-27,Windows + 헤드리스 Chrome(CDP) 390 모바일 2x 전체 높이 · npm run build 정적 산출물,CORE-001,/invitations 3차 준비중 — 서브히어로·테이프 카드
 07_오프라인_폴백_모바일.png,2026-10-27,Windows + 헤드리스 Chrome(CDP) 390 모바일 2x 전체 높이 · npm run build 정적 산출물,CORE-003,/offline PWA 폴백 화면 (서비스워커 오프라인 동작은 미검증)
-08_매칭_온보딩_모바일.png,2026-10-29,Windows + Chrome 393px 3x(가로 1179 장치 픽셀) 전체 페이지 서빙,/match/onboarding (MATCH-001),1차 매칭 취향 온보딩 모바일 라이트 · 사진 공개범위(실루엣 기본·미리보기 허용)와 MBTI·상대 선택 전체 높이 (관심사 아코디언은 잠금 문구 표시)
-09_매칭_온보딩_데스크톱.png,2026-10-29,Windows + Chrome 1500px 데스크톱 전체 페이지 서빙,/match/onboarding (MATCH-001),1차 매칭 취향 온보딩 데스크톱 라이트 · 1500px 바탕 중앙 본문(최대 480px) 한 열 배치 및 사진 공개범위·MBTI·상대 선택 전체 높이 (관심사 아코디언은 잠금 문구 표시)
-10_매칭_추천_모바일.png,2026-10-29,Windows + Chrome 393px 3x(가로 1179 장치 픽셀) 전체 페이지 서빙,/match/recommend (MATCH-002),오늘의 추천 카드 리스트 모바일 라이트 · 393px 3x 전체 높이에서 관심·나중에·사진 미리보기 버튼과 문답 궁합 태그가 카드 안에 표시 (320·360px 재측정은 별도)
+08_매칭_온보딩_모바일.png,2026-11-02,Windows + 헤드리스 Chrome(CDP) 393px 3x(가로 1179 장치 픽셀) 전체 페이지 서빙,/match/onboarding (MATCH-001),1차 매칭 취향 온보딩 모바일 라이트 · MBTI·상대·찾는 관계·관심사 아코디언(잠금 해제·즉시 선택 가능)·선호 거리 게이지·사진 공개범위 전체 높이
+09_매칭_온보딩_데스크톱.png,2026-11-02,Windows + 헤드리스 Chrome(CDP) 1500px 데스크톱 전체 페이지 서빙,/match/onboarding (MATCH-001),1차 매칭 취향 온보딩 데스크톱 라이트 · 1500px 바탕 중앙 본문(최대 480px) 한 열 배치 및 관심사 아코디언(잠금 해제)·선호 거리 게이지·사진 공개범위 전체 높이
+10_매칭_추천_모바일.png,2026-10-29,Windows + Chrome 393px 3x(가로 1179 장치 픽셀) 전체 페이지 서빙,/match/recommend (MATCH-002),오늘의 추천 카드 리스트 모바일 라이트 · 393px 3x 전체 높이에서 관심·나중에·사진 미리보기 버튼과 문답 궁합 태그가 카드 안에 표시 (2026-11-02 320·360px CDP 실측에서도 버튼이 카드 내부에 위치함을 확인)
 11_매칭_추천_데스크톱.png,2026-10-29,Windows + Chrome 1500px 데스크톱 전체 페이지 서빙,/match/recommend (MATCH-002),오늘의 추천 한 열(최대 480px) 데스크톱 라이트 · 1500px 바탕 중앙 카드 목록에서 관심·나중에·사진 미리보기 버튼이 카드 안에 표시된 전체 높이
 12_매칭_문답_모바일_라이트.png,2026-10-29,Windows + Chrome 393px 3x(가로 1179 장치 픽셀) 전체 페이지 서빙,/match/qna (MATCH-009),프로필 문답 모바일 라이트 · 393px 3x 전체 높이에서 상단 오늘의 추천 질문 카드 슬라이드와 카테고리 칩·40문항 질문 목록 표시
 13_매칭_문답_모바일_다크.png,2026-10-29,Windows + Chrome 393px 3x(가로 1179 장치 픽셀) 전체 페이지 서빙,/match/qna (MATCH-009),프로필 문답 모바일 다크 · 393px 3x 피치 악센트 다크 테마에서 상단 오늘의 추천 질문 카드 슬라이드와 카테고리 칩·40문항 질문 목록 전체 높이

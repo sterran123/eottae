@@ -2,11 +2,13 @@
 
 // ============================================================
 //  저장 경로: src/components/match/ProfileQna.tsx
-//  담당: 오하율 · MATCH-009 (프로필 문답)
+//  담당: 오하율 · MATCH-009 (프로필 문답 · 백엔드 연동)
 //  역할: 문답 메인 화면. 헤더(진행률) + 오늘의 추천 질문(관계 맞춤 랜덤)
 //        + 전체 문답(카테고리 탭) + 질문 답하기 모달.
 //
-//  [DEMO] 답변은 로컬 상태. 실제 저장/조회/삭제는 주한태 API.
+//  [백엔드 연동] matchService.loadMyQnaAnswers / saveMyQnaAnswer /
+//               deleteMyQnaAnswer를 통해 Supabase `public.profile_qna_answers`와
+//               동기화하며, 키 미설정 환경에서는 데모 폴백으로 동작한다 (ADR-005).
 //  [랜덤] 추천 셔플은 마운트 후(useEffect)에만 수행 → 정적 빌드 hydration 안전.
 //  [관계] relationGoal 로 추천 카테고리 결정(RELATION_TO_CATEGORIES).
 // ============================================================
@@ -18,6 +20,7 @@ import {
   QNA_TABS,
   RELATION_TO_CATEGORIES,
 } from '@/lib/match/demo-qna';
+import { matchService } from '@/lib/match/match-service';
 import type {
   QnaAnswer,
   QnaCategory,
@@ -28,7 +31,7 @@ import { IconChevronLeft, IconChevronRight, IconRefresh, IconX } from './icons';
 import QnaQuestionCard from './QnaQuestionCard';
 
 interface ProfileQnaProps {
-  /** 온보딩에서 받은 관계 목적. DEMO 기본값 진지한 연애. */
+  /** 온보딩에서 받은 관계 목적. 미지정 시 저장된 온보딩 설정 또는 'serious' 사용. */
   relationGoal?: RelationGoal;
   questions?: QnaQuestion[];
 }
@@ -36,10 +39,15 @@ interface ProfileQnaProps {
 const RECOMMEND_COUNT = 3;
 
 export default function ProfileQna({
-  relationGoal = 'serious',
+  relationGoal: relationGoalProp,
   questions = DEMO_QUESTIONS,
 }: ProfileQnaProps) {
-  // 답변 상태(로컬). 초기엔 DEMO 답변.
+  const [resolvedRelationGoal, setResolvedRelationGoal] = useState<RelationGoal>(
+    relationGoalProp ?? 'serious',
+  );
+  const [isDemoMode, setIsDemoMode] = useState(true);
+
+  // 답변 상태. 초기엔 DEMO 답변으로 렌더링하고 마운트 후 저장된 답변 동기화.
   const [answers, setAnswers] = useState<Record<string, QnaAnswer>>(() => {
     const init: Record<string, QnaAnswer> = {};
     for (const [qid, a] of Object.entries(DEMO_MY_ANSWERS)) {
@@ -54,6 +62,26 @@ export default function ProfileQna({
   const [reshuffle, setReshuffle] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
   const [carouselIdx, setCarouselIdx] = useState(0);
+
+  const relationGoal = relationGoalProp ?? resolvedRelationGoal;
+
+  useEffect(() => {
+    let active = true;
+    void Promise.all([
+      matchService.loadMyQnaAnswers(),
+      matchService.loadOnboarding(),
+    ]).then(([qnaRes, onbRes]) => {
+      if (!active) return;
+      setIsDemoMode(qnaRes.context.isDemo);
+      setAnswers(qnaRes.answers);
+      if (!relationGoalProp && onbRes.draft?.relationGoal) {
+        setResolvedRelationGoal(onbRes.draft.relationGoal);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [relationGoalProp]);
 
   // 스크롤 시 현재 중앙에 위치한 슬라이드 인덱스 추적
   function handleCarouselScroll() {
@@ -84,7 +112,6 @@ export default function ProfileQna({
     const slides = Array.from(el.querySelectorAll<HTMLElement>('.mt-qna__slide'));
     if (slides.length === 0) return;
 
-    // 현재 위치 기준 다음 타겟 인덱스 결정
     const targetIdx = dir === 'right'
       ? Math.min(slides.length - 1, carouselIdx + 1)
       : Math.max(0, carouselIdx - 1);
@@ -136,16 +163,17 @@ export default function ProfileQna({
   );
 
   function handleSave(a: QnaAnswer) {
-    setAnswers((prev) => ({ ...prev, [a.questionId]: a }));
+    const next = { ...answers, [a.questionId]: a };
+    setAnswers(next);
     setOpenQid(null);
+    void matchService.saveMyQnaAnswer(a, answers);
   }
   function handleDelete(qid: string) {
-    setAnswers((prev) => {
-      const next = { ...prev };
-      delete next[qid];
-      return next;
-    });
+    const next = { ...answers };
+    delete next[qid];
+    setAnswers(next);
     setOpenQid(null);
+    void matchService.deleteMyQnaAnswer(qid, answers);
   }
 
   const openQuestion = openQid ? byId.get(openQid) ?? null : null;
@@ -277,9 +305,11 @@ export default function ProfileQna({
         </ul>
       </div>
 
-      <p className="mt-qna__demo">
-        DEMO · 추천 질문은 매번 랜덤 · 답변 저장/삭제는 연동 예정
-      </p>
+      {isDemoMode && (
+        <p className="mt-qna__demo">
+          DEMO · 추천 질문은 매번 랜덤 · 답변 저장/삭제는 연동 예정
+        </p>
+      )}
 
       {/* 질문 답하기 모달 */}
       {openQuestion && (

@@ -2,24 +2,26 @@
 
 // ============================================================
 //  저장 경로: src/components/match/CommonQna.tsx
-//  담당: 오하율 · MATCH-009 (공통 질문 · 블라인드)
+//  담당: 오하율 · MATCH-009 (공통 질문 · 블라인드 · 백엔드 연동)
 //  역할: 매칭 상대와 공통 질문을 블라인드로 주고받는 화면.
-//        둘 다 답해야 서로 답 공개. 궁합 토스트 상단 노출.
+//        둘 다 답해야 서로 답 공개. 원치 않는 질문은 거절 가능. 궁합 토스트 상단 노출.
 //
-//  [DEMO] 상대 답은 DEMO_PARTNER_ANSWERS. 실제는 주한태 API.
-//         추천 단계가 아니라 '쌍방 관심 후' 화면이므로 답 내용 공개 허용.
-//  [풀 공유] 질문은 프로필 문답과 같은 40문항 풀(DEMO_QUESTIONS) 재사용.
+//  [백엔드 연동] matchService.loadMyQnaAnswers / saveMyQnaAnswer를 통해
+//               내 답변 및 거절 상태를 동기화하며, 키 미설정 환경에서는
+//               데모 폴백으로 동작한다 (ADR-005).
 // ============================================================
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   DEMO_MY_ANSWERS,
   DEMO_PARTNER_ANSWERS,
   DEMO_QUESTIONS,
   demoCompatibility,
 } from '@/lib/match/demo-qna';
+import { matchService } from '@/lib/match/match-service';
 import type {
   CommonQuestionState,
+  QnaAnswer,
   QnaQuestion,
 } from '@/lib/match/types';
 import CompatToast from './CompatToast';
@@ -33,15 +35,38 @@ export default function CommonQna({
   partnerName = '가을',
   questions = DEMO_QUESTIONS,
 }: CommonQnaProps) {
-  // 내 답(로컬). 상대 답은 DEMO 고정.
+  const [isDemoMode, setIsDemoMode] = useState(true);
+  // 내 답. 초기엔 DEMO 답변으로 렌더링하고 마운트 후 저장된 답변 동기화.
   const [myAnswers, setMyAnswers] = useState<
     Record<string, { optionId: string | null; customText?: string }>
   >(() => ({ ...DEMO_MY_ANSWERS }));
   const [declinedIds, setDeclinedIds] = useState<Set<string>>(() => new Set());
   const partner = DEMO_PARTNER_ANSWERS;
 
+  useEffect(() => {
+    let active = true;
+    const declined = matchService.loadDeclinedCommonQuestions();
+    if (declined.length > 0) {
+      setDeclinedIds(new Set(declined));
+    }
+    void matchService.loadMyQnaAnswers().then(({ context, answers }) => {
+      if (!active) return;
+      setIsDemoMode(context.isDemo);
+      const mapped: Record<string, { optionId: string | null; customText?: string }> = {};
+      for (const [qid, a] of Object.entries(answers)) {
+        mapped[qid] = {
+          optionId: a.optionId,
+          ...(a.customText ? { customText: a.customText } : {}),
+        };
+      }
+      setMyAnswers(mapped);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   // 공통 질문으로 다룰 문항: 나 또는 상대가 답했거나, 추천 대상.
-  // DEMO 에서는 둘 중 한 명이라도 답한 문항을 보여준다.
   const items = useMemo(
     () =>
       questions.filter((q) => myAnswers[q.id] || partner[q.id]),
@@ -68,22 +93,34 @@ export default function CommonQna({
   }
 
   function answerQuestion(q: QnaQuestion, optionId: string) {
-    setMyAnswers((prev) => ({
-      ...prev,
+    const nextMine: Record<string, { optionId: string | null; customText?: string }> = {
+      ...myAnswers,
       [q.id]: { optionId },
-    }));
-    setDeclinedIds((prev) => {
-      if (!prev.has(q.id)) return prev;
-      const next = new Set(prev);
-      next.delete(q.id);
-      return next;
-    });
+    };
+    setMyAnswers(nextMine);
+
+    const nextDeclined = new Set(declinedIds);
+    if (nextDeclined.has(q.id)) {
+      nextDeclined.delete(q.id);
+      setDeclinedIds(nextDeclined);
+      matchService.saveDeclinedCommonQuestions(Array.from(nextDeclined));
+    }
+
+    const qnaMap: Record<string, QnaAnswer> = {};
+    for (const [qid, a] of Object.entries(nextMine)) {
+      qnaMap[qid] = { questionId: qid, optionId: a.optionId, customText: a.customText };
+    }
+    void matchService.saveMyQnaAnswer(
+      { questionId: q.id, optionId },
+      qnaMap,
+    );
   }
 
   function declineQuestion(qId: string) {
     setDeclinedIds((prev) => {
       const next = new Set(prev);
       next.add(qId);
+      matchService.saveDeclinedCommonQuestions(Array.from(next));
       return next;
     });
   }
@@ -92,6 +129,7 @@ export default function CommonQna({
     setDeclinedIds((prev) => {
       const next = new Set(prev);
       next.delete(qId);
+      matchService.saveDeclinedCommonQuestions(Array.from(next));
       return next;
     });
   }
@@ -207,9 +245,11 @@ export default function CommonQna({
         })}
       </div>
 
-      <p className="mt-cq__demo">
-        DEMO · 궁합은 겹친 개수만 · 서로 답해야 공개
-      </p>
+      {isDemoMode && (
+        <p className="mt-cq__demo">
+          DEMO · 궁합은 겹친 개수만 · 서로 답해야 공개
+        </p>
+      )}
     </section>
   );
 }

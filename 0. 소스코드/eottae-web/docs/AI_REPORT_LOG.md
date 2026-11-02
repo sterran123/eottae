@@ -658,3 +658,14 @@
 - [미실행] 빌드·브라우저·db push·BBaton/PayApp. 이 세션은 파일 읽기·검색·수정만
 - [변경] PR #64 Grok 리뷰(1ba3083) 반영: FILE_INDEX.csv, MANIFEST.sha256 | 신규 문서 3개와 기존 트리에 맞게 재생성. plan_v2.md·.grok-context/ 는 미수정. 위 [보존]의 「FILE_INDEX.csv·MANIFEST.sha256 미수정」은 이 커밋과 다름. 제출안 김민기 칸은 재생성으로 고침. BBaton·PayApp Secrets 등록은 주한태(권한 부족 시에만 김민기 대행), db push는 김민기 Owner로 DEC-01·DEC-09·제출안 문장을 맞춤. plan_v3 「PR #58, #26」은 이슈 #26으로 구분.
 
+## 2026-11-02 매칭 DTO·Supabase 서비스 계층 연동 및 320·360px 반응형 실측·온보딩 잠금 해제 (오하율 작업)
+- [요청] 이슈 #20(섹션 5 주한태 백엔드 연동 준비·남은 색 토큰 점검), 이슈 #21(DTO 맞추기), `4. 프로젝트 결과 보고서/팀원별_추가작업_2차.md` 오하율 담당 항목 반영
+- [변경] src/lib/match/types.ts & src/lib/match/demo-data.ts | `API_계약_초안.md` 및 `DB_논리모델_전체3단계.md` 기준 Supabase 테이블·RPC 행 타입(`ProfileStatus`, `ProfileRow`, `ProfileInterestRow`, `RecommendationRow`, `LikeDecision`, `LikeActionRow`, `LikeResultDto`, `ProfileQnaAnswerRow`, `CommonQuestionRow`)과 양방향 변환·검증 순수 함수(`validateOnboardingDraft`, `toSaveOnboardingRequest`, `toOnboardingDraft`, `toRecommendProfile`, `toQnaAnswer`) 추가, `DistancePreference` 타입 통합
+- [신규] src/lib/match/match-service.ts | 매칭 데이터 서비스 계층 신설 — `isSupabaseConfigured` + `authService.assertAccountAccess()` 및 성인 확인(`adultVerified`·만료 시각 fail-closed) 검증 후 `profiles`·`profile_interests`·`get_recommendations`·`record_like_decision`/`likes`·`blocks`·`reports`·`profile_qna_answers` 호출, 키 미설정 환경에서만 데모·로컬 폴백 동작
+- [변경] src/components/match/OnboardingForm.tsx | 찾는 관계·관심사 아코디언·선호 거리 게이지의 잠금 문구(`"MBTI와 만나고 싶은 상대를 먼저 골라주세요."`)를 제거해 상시 개방·선택·수정·저장·취소 복원이 되도록 개선(MATCH-001 AC, TC-005), `matchService` 연동 및 실계정 모드에서 DEMO 배지·푸터 조건부 숨김
+- [변경] src/components/match/{RecommendList,ProfileQna,CommonQna}.tsx | 추천 목록 조회·관심/나중에·차단·신고 및 문답 저장/삭제·공통 질문 거절 상태를 `matchService`에 연결, 토스트 닫기 버튼 인라인 스타일 제거, 실계정 모드에서 DEMO 푸터 조건부 숨김
+- [변경] src/app/match/recommend/match-recommend.css & src/app/match/qna/match-qna.css | `.mt-report-*` 신고 모달에 남아 있던 하드코딩 `#hex` 색상 58곳과 `.mt-qna__modal-dim`의 하드코딩 `rgba`를 `--match-*` 시맨틱 토큰으로 전수 치환 (매칭 CSS/TSX 내 `#hex` 하드코딩 0건 확인)
+- [문서] 2. 프로젝트 설계서/테스트_케이스_마스터.md, 3. 구현 이미지(5장이상)/{08,09,captions.csv}, 4. 프로젝트 결과 보고서/{팀원별_추가작업_2차,중간점검_2차_제출안}.md | 320·360px 포함 매칭 5화면 × 7개 폭 CDP 실측 결과(`TC-002`) 및 온보딩 유효성·저장·복원 검증(`TC-005`) 기록, 잠금 문구가 해제된 `08`·`09`번 온보딩 캡처 갱신, 2차 제출안·추가작업 체크리스트 반영
+- [검증] `npm run typecheck` PASS / `npm run build` PASS (정적 21개 라우트 프리렌더 완료)
+- [검증] 헤드리스 Chrome(CDP) 실측: 매칭 5화면 × 320·360·390·393·540·768·1500px 가로 넘침 0건, 44×44px 터치 타겟 미달 0건, `/match/recommend` 320px(카드 262px 내 관심·나중에·미리보기 버튼 140×44px)·360px(카드 302px 내 관심 버튼 180×44px) 카드 내부 배치 확인, `/match/qna` 답하기 모달 540px(500px)·768px(540px) 뷰포트 내 배치 확인
+- [미실행] 실제 Supabase 원격 DB에서 두 계정 실데이터 온보딩·추천·상호 매칭 E2E 확인 — 주한태 `0003_match_core` 마이그레이션 및 BBaton 성인 인증 머지 후 진행 예정
