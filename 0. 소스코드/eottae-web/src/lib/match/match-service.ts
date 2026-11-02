@@ -17,11 +17,13 @@
 //  3. 성인 인증이 완료된 로그인 세션에서는 화면의 DEMO 배지/문구를 숨기고
 //     실제 Supabase 테이블·RPC와 통신한다.
 //  4. 실계정(live/unverified)은 온보딩·문답·공통 질문 거절을 localStorage에 남기지 않는다.
-//     데모(키 미설정·세션 없음)만 로컬 초안을 쓴다. 로그인 세션이 있으면 기존 키를 지운다.
+//     데모(키 미설정·세션 없음)만 로컬 초안을 쓴다. 로그인 세션이 있으면 기존 키와
+//     시연 성인 확인 키(eottae_demo_adult_v1)를 지운다.
 // ============================================================
 
 import { authService } from '@/lib/auth/auth-service';
 import type { MyAccount } from '@/lib/auth/types';
+import { clearDemoAdult } from '@/lib/demo/demo-adult';
 import type { BlockRequest, ReportCategory, ReportRequest } from '@/lib/safety/types';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase/client';
 import { DEMO_IDENTITY, VALID_INTEREST_IDS } from './demo-data';
@@ -97,6 +99,7 @@ function clearSignedInMatchCache(): void {
   } catch {
     // 저장소 접근이 막혀도 실계정 경로는 캐시를 읽지 않는다.
   }
+  clearDemoAdult();
 }
 
 function gateError(context: MatchAccessContext): ApiError['error'] | null {
