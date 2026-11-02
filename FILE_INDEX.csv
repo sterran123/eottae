@@ -18,7 +18,7 @@
 0. 소스코드/eottae-web/.gitignore,202,7710d28a140451e45493d1fd6f52508a4a51133d7fd72b236349d001bde77fb9
 0. 소스코드/eottae-web/AGENTS.md,1371,dfd62088d1b52c3eeb6f9ccb87a62858bb9766b328ae93cd85994f2bb3262587
 0. 소스코드/eottae-web/README.md,5589,65670c8378af81b45e27102daf1ed6152d06e15161f14b2614238250cd727a01
-0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md,131472,c71aa99cf2c7e26775461b7700d53191d7aca6f38b4a7978e5527027d18e8a52
+0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md,132387,71c0c124b2dc46cfe7ef448ac306af6a9cd9bfecd8b6bccc9224bb520f868a70
 0. 소스코드/eottae-web/docs/AI_도구_MCP_권장.md,4206,6ef5f1ba972e9f1d07e1dbddd282ed9c16c3fd132a5301db0a8e0e9cffc2bb2f
 0. 소스코드/eottae-web/docs/AI_에이전트_협업_가이드.md,6263,180d9a55d70be22c9ffa04a4acc113c484a2a19fc71e2410ec6dff1a33487a01
 0. 소스코드/eottae-web/docs/DESIGN_개선_지시서.md,7364,7d34723629b67d6fc6c107846671146dfa18b35250001621174b73afb4da8511
@@ -137,9 +137,9 @@
 0. 소스코드/eottae-web/supabase/migrations/0000_planning_only.sql,832,13444e2661dbe2b18879d4d87112f46bfe015c605d0f0fe3e97c126d537e8e8d
 0. 소스코드/eottae-web/supabase/migrations/0001_create_auth_and_users.sql,3315,eefb91088e3ac72017390566e3e4a3a1ddb2d1e5a28f133b5ae0c0a036d47ea1
 0. 소스코드/eottae-web/supabase/migrations/0002_auth_profiles.sql,22703,a0f9ea7bca4bd948c075648f367e57843b48d720aeaf168b58bcc269e2d32a5e
-0. 소스코드/eottae-web/supabase/migrations/0003_match_core.sql,47248,7a8cabd5020191e281fd68ccf7d802019c3073b5764a02c8d9d9d0dc0f5d47a8
+0. 소스코드/eottae-web/supabase/migrations/0003_match_core.sql,47528,f9469d15697252d08e42c9923831f93e5b138e751aa4af8d55278cfaef0658d0
 0. 소스코드/eottae-web/supabase/tests/0002_auth_profiles_test.sql,13606,dad5a1affc20e52028263dce449e97bd80714fd6a141c792449849415c71d0e2
-0. 소스코드/eottae-web/supabase/tests/0003_match_core_test.sql,26931,a77f364c110b3a2938b6db02fb73a2d7f80b3c49997a70420671ee9fcaa2ef4b
+0. 소스코드/eottae-web/supabase/tests/0003_match_core_test.sql,29788,e234273e2e7d4702eb7e59701c6b90896ad4656d14ef7ef690ff094e56b2c17a
 0. 소스코드/eottae-web/tools/generate_favicons.mjs,4241,5f662480084cf05292bd4a9565f75ea238e33981fdd9a75f136f6247f06ee089
 0. 소스코드/eottae-web/tools/make_dark_logo.py,1896,cc0e80d7740cfdd2cc7e85e59c1d161082f24663f3e0d6f32b6a853af24934b6
 0. 소스코드/eottae-web/tsconfig.json,670,de5556bcb44f244eeba93e0ed9da40c2b864d9d8d7654c0357787de9d4b8f26c
@@ -185,7 +185,7 @@
 1. 프로젝트 계획서/팀원별_인수_계획_정리.md,930,71799db0b9f38f624c7d8b3ba0ded724f02140f11bfcb79aab8f73d648ff6567
 1. 프로젝트 계획서/프로젝트_기획안.md,2523,f6590a8a47da1de14702897fdb0ea7114fbbc0905a55e01adb4b05b746e65d76
 1. 프로젝트 계획서/홈_IA_UI_설계.md,1531,6e5fc510b056f6b70a942a5aa33da9922263b8299c187a1f7cbc0da2a94a446b
-2. 프로젝트 설계서/API_계약_초안.md,5845,921c401b5bcec5594573fe02e0bc8487d84aaff7f0e835ae02e8bd1c41faeeb8
+2. 프로젝트 설계서/API_계약_초안.md,6116,9c3535d60583be01690dba54a5868c1c59695a8b081e71833cb4f8374a23a3dc
 2. 프로젝트 설계서/DB_논리모델_전체3단계.md,2609,4787d9f3e5edad9e5138cd19ba30dabfa7c1189ce7a86dba6634607abdffa2c7
 2. 프로젝트 설계서/데이터베이스_ERD_테이블초안.md,304,fe2481a7ad43dd535f9925346ae0d553eabc674552cb714a24e95a90ddc83e31
 2. 프로젝트 설계서/시스템구성도_흐름.md,304,fe2481a7ad43dd535f9925346ae0d553eabc674552cb714a24e95a90ddc83e31

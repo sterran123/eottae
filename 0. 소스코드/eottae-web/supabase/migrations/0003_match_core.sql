@@ -1034,8 +1034,8 @@ grant execute on function public.list_reports() to authenticated;
 -- ---------------------------------------------------------------------------
 -- 9. 권한 + RLS default deny
 --    Supabase 기본 권한이 anon/authenticated 에 열려 있을 수 있어 먼저 revoke 한다.
---    users 의 anon SELECT 는 0002가 걷어 둔 그대로 둔다. reports·user_roles 도 anon GRANT 없음.
---    그 외 anon SELECT 는 정책이 to authenticated 뿐이라 0건이다 (TC-003의 DB 쪽).
+--    users 의 anon SELECT 는 0002가 걷어 둔 그대로 둔다.
+--    0003 테이블과 reports·user_roles 도 anon GRANT가 없다. 정책이 빠져도 anon은 42501이다.
 --    reports SELECT 는 authenticated 본인 행만. 운영 대기열은 list_reports().
 -- ---------------------------------------------------------------------------
 revoke all on public.interests from public, anon, authenticated;
@@ -1051,16 +1051,16 @@ revoke all on public.reports from public, anon, authenticated;
 revoke all on public.user_roles from public, anon, authenticated;
 revoke all on public.messages from public, anon, authenticated;
 
-grant select on public.interests to anon, authenticated;
-grant select on public.profiles to anon, authenticated;
-grant select on public.user_interests to anon, authenticated;
-grant select on public.profile_answers to anon, authenticated;
-grant select on public.likes to anon, authenticated;
-grant select on public.matches to anon, authenticated;
-grant select on public.match_members to anon, authenticated;
-grant select on public.conversations to anon, authenticated;
-grant select on public.blocks to anon, authenticated;
-grant select on public.messages to anon, authenticated;
+grant select on public.interests to authenticated;
+grant select on public.profiles to authenticated;
+grant select on public.user_interests to authenticated;
+grant select on public.profile_answers to authenticated;
+grant select on public.likes to authenticated;
+grant select on public.matches to authenticated;
+grant select on public.match_members to authenticated;
+grant select on public.conversations to authenticated;
+grant select on public.blocks to authenticated;
+grant select on public.messages to authenticated;
 grant select on public.reports to authenticated;
 
 grant insert (actor_id, target_id, decision) on public.likes to authenticated;
@@ -1104,7 +1104,10 @@ create policy profile_answers_select_own on public.profile_answers
 
 create policy likes_select_own on public.likes
   for select to authenticated
-  using (actor_id = (select auth.uid()));
+  using (
+    actor_id = (select auth.uid())
+    and public.is_active_adult()
+  );
 
 create policy likes_insert_own_adult on public.likes
   for insert to authenticated
@@ -1126,15 +1129,24 @@ create policy likes_update_own_adult on public.likes
 
 create policy matches_select_member on public.matches
   for select to authenticated
-  using (private.is_match_member(id));
+  using (
+    public.is_active_adult()
+    and private.is_match_member(id)
+  );
 
 create policy match_members_select_member on public.match_members
   for select to authenticated
-  using (private.is_match_member(match_id));
+  using (
+    public.is_active_adult()
+    and private.is_match_member(match_id)
+  );
 
 create policy conversations_select_member on public.conversations
   for select to authenticated
-  using (private.is_match_member(match_id));
+  using (
+    public.is_active_adult()
+    and private.is_match_member(match_id)
+  );
 
 create policy blocks_select_own on public.blocks
   for select to authenticated
@@ -1190,7 +1202,9 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------------
--- 11. 비공개 채팅 첨부. 경로 {conversation_id}/{object}. 읽기·쓰기는 그 대화의 활성 구성원·미차단.
+-- 11. 비공개 채팅 첨부. 경로 {conversation_id}/{object}.
+--     읽기·업로드는 그 대화의 활성 구성원·미차단.
+--     UPDATE·DELETE는 업로더(storage.objects.owner = auth.uid())만 허용한다.
 -- ---------------------------------------------------------------------------
 insert into storage.buckets (id, name, public)
 values ('chat-media', 'chat-media', false)
@@ -1219,10 +1233,12 @@ create policy chat_media_update on storage.objects
   for update to authenticated
   using (
     bucket_id = 'chat-media'
+    and owner = (select auth.uid())
     and private.chat_media_path_allowed(name)
   )
   with check (
     bucket_id = 'chat-media'
+    and owner = (select auth.uid())
     and private.chat_media_path_allowed(name)
   );
 
@@ -1230,5 +1246,6 @@ create policy chat_media_delete on storage.objects
   for delete to authenticated
   using (
     bucket_id = 'chat-media'
+    and owner = (select auth.uid())
     and private.chat_media_path_allowed(name)
   );

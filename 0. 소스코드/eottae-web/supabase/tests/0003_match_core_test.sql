@@ -8,7 +8,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(96);
+select plan(115);
 
 create or replace function pg_temp.login_as(p_uid uuid)
 returns void language plpgsql as $$
@@ -169,11 +169,32 @@ select ok(
     where schemaname = 'storage' and tablename = 'objects' and policyname like 'chat_media_%') >= 4,
   'chat-media 읽기·쓰기 정책'
 );
+select ok(
+  coalesce((
+    select position('owner' in qual) > 0
+       and position('owner' in with_check) > 0
+      from pg_policies
+     where schemaname = 'storage'
+       and tablename = 'objects'
+       and policyname = 'chat_media_update'
+  ), false),
+  'chat-media UPDATE는 업로더(owner)만'
+);
+select ok(
+  coalesce((
+    select position('owner' in qual) > 0
+       and with_check is null
+      from pg_policies
+     where schemaname = 'storage'
+       and tablename = 'objects'
+       and policyname = 'chat_media_delete'
+  ), false),
+  'chat-media DELETE는 업로더(owner)만'
+);
 
 -- ---------------------------------------------------------------------------
 -- 익명·JWT 없음 (TC-003 DB).
--- users·reports·user_roles 는 anon GRANT가 없어 42501.
--- 나머지 0003 테이블은 정책이 authenticated 뿐이라 행이 있어도 0건.
+-- users·reports·user_roles와 0003 테이블은 anon GRANT가 없어 42501.
 -- ---------------------------------------------------------------------------
 select pg_temp.become_anon();
 select throws_ok(
@@ -185,18 +206,36 @@ select throws_ok(
 select throws_ok(
   $$ select count(*) from public.user_roles $$,
   '42501', null, 'anon은 user_roles SELECT 불가');
-select is((
-  (select count(*) from public.interests)
-  + (select count(*) from public.profiles)
-  + (select count(*) from public.user_interests)
-  + (select count(*) from public.profile_answers)
-  + (select count(*) from public.likes)
-  + (select count(*) from public.matches)
-  + (select count(*) from public.match_members)
-  + (select count(*) from public.conversations)
-  + (select count(*) from public.blocks)
-  + (select count(*) from public.messages)
-)::int, 0, 'anon·JWT 없음: 정책 없는 0003 테이블 SELECT 0건 (TC-003 DB)');
+select throws_ok(
+  $$ select count(*) from public.interests $$,
+  '42501', null, 'anon은 interests SELECT 불가');
+select throws_ok(
+  $$ select count(*) from public.profiles $$,
+  '42501', null, 'anon은 profiles SELECT 불가');
+select throws_ok(
+  $$ select count(*) from public.user_interests $$,
+  '42501', null, 'anon은 user_interests SELECT 불가');
+select throws_ok(
+  $$ select count(*) from public.profile_answers $$,
+  '42501', null, 'anon은 profile_answers SELECT 불가');
+select throws_ok(
+  $$ select count(*) from public.likes $$,
+  '42501', null, 'anon은 likes SELECT 불가');
+select throws_ok(
+  $$ select count(*) from public.matches $$,
+  '42501', null, 'anon은 matches SELECT 불가');
+select throws_ok(
+  $$ select count(*) from public.match_members $$,
+  '42501', null, 'anon은 match_members SELECT 불가');
+select throws_ok(
+  $$ select count(*) from public.conversations $$,
+  '42501', null, 'anon은 conversations SELECT 불가');
+select throws_ok(
+  $$ select count(*) from public.blocks $$,
+  '42501', null, 'anon은 blocks SELECT 불가');
+select throws_ok(
+  $$ select count(*) from public.messages $$,
+  '42501', null, 'anon은 messages SELECT 불가');
 select throws_ok(
   $$ select public.get_recommendations(null) $$,
   '42501', null, 'anon은 get_recommendations 실행 불가');
@@ -580,6 +619,34 @@ select is(
   1,
   '좌표 거부 후에도 이전 관심사 유지');
 select pg_temp.logout();
+
+-- 호출자가 만료됐거나 SUSPENDED면 멤버십·본인 좋아요 SELECT는 0건.
+-- 행은 남기고 상태만 바꿨다가 되돌린다.
+update public.users
+   set account_status = 'SUSPENDED'
+ where id = '22222222-0000-4000-8000-000000000002';
+select pg_temp.login_as('22222222-0000-4000-8000-000000000002');
+select is((select count(*)::int from public.matches), 0, 'SUSPENDED 구성원 matches SELECT 0건');
+select is((select count(*)::int from public.match_members), 0, 'SUSPENDED 구성원 match_members SELECT 0건');
+select is((select count(*)::int from public.conversations), 0, 'SUSPENDED 구성원 conversations SELECT 0건');
+select is((select count(*)::int from public.likes), 0, 'SUSPENDED 구성원 likes SELECT 0건');
+select pg_temp.logout();
+update public.users
+   set account_status = 'ACTIVE'
+ where id = '22222222-0000-4000-8000-000000000002';
+
+update public.users
+   set adult_verification_expires_at = now() - interval '1 day'
+ where id = '11111111-0000-4000-8000-000000000001';
+select pg_temp.login_as('11111111-0000-4000-8000-000000000001');
+select is((select count(*)::int from public.matches), 0, '인증 만료 구성원 matches SELECT 0건');
+select is((select count(*)::int from public.match_members), 0, '인증 만료 구성원 match_members SELECT 0건');
+select is((select count(*)::int from public.conversations), 0, '인증 만료 구성원 conversations SELECT 0건');
+select is((select count(*)::int from public.likes), 0, '인증 만료 구성원 likes SELECT 0건');
+select pg_temp.logout();
+update public.users
+   set adult_verification_expires_at = now() + interval '1 year'
+ where id = '11111111-0000-4000-8000-000000000001';
 
 select * from finish();
 rollback;
