@@ -8,8 +8,10 @@ import {
   isDemoAdultActive,
   subscribeDemoAdult,
 } from '@/lib/demo/demo-adult';
+import { isDemoLoggedIn, subscribeDemoSession } from '@/lib/demo/demo-session';
 import { matchService, type MatchAccessContext, type MatchOperatingMode } from '@/lib/match/match-service';
 import DemoAdultStep from './DemoAdultStep';
+import DemoLoginNotice from './DemoLoginNotice';
 import './demo-flow.css';
 
 type Area = 'onboarding' | 'recommend' | 'chat' | 'qna' | 'common';
@@ -17,8 +19,25 @@ type Area = 'onboarding' | 'recommend' | 'chat' | 'qna' | 'common';
 type GateState =
   | { status: 'pending' }
   | { status: 'error' }
+  | { status: 'login' }
   | { status: 'open'; mode: 'live' | 'demo' }
   | { status: 'locked'; mode: MatchOperatingMode; message?: string };
+
+const AREA_PATH: Record<Area, string> = {
+  onboarding: '/match/onboarding',
+  recommend: '/match/recommend',
+  chat: '/match/chat',
+  qna: '/match/qna',
+  common: '/match/common',
+};
+
+const AREA_NAME: Record<Area, string> = {
+  onboarding: '취향 온보딩',
+  recommend: '추천',
+  chat: '채팅',
+  qna: '프로필 문답',
+  common: '공통 질문',
+};
 
 const COPY: Record<Exclude<Area, 'onboarding'>, { title: string; reason: string }> = {
   recommend: {
@@ -44,6 +63,7 @@ const COPY: Record<Exclude<Area, 'onboarding'>, { title: string; reason: string 
 };
 
 function nextGate(context: MatchAccessContext): GateState {
+  if (context.mode === 'demo' && !isDemoLoggedIn()) return { status: 'login' };
   if (context.mode === 'live') return { status: 'open', mode: 'live' };
   if (context.mode === 'demo' && isDemoAdultActive()) return { status: 'open', mode: 'demo' };
   return { status: 'locked', mode: context.mode, message: context.gateMessage };
@@ -79,10 +99,13 @@ export default function DemoEntryGuard({ area, children }: { area: Area; childre
     void resolve();
   }, [resolve]);
 
+  useEffect(() => subscribeDemoSession(() => { void resolve(); }), [resolve]);
+
   useEffect(() => {
     return subscribeDemoAdult(() => {
       setGate((current) => {
         if (current.status === 'open' && current.mode === 'live') return current;
+        if (current.status === 'login') return current;
         if (current.status !== 'open' && current.status !== 'locked') return current;
         // 완료 직후에는 만료 시각 화면을 유지하고, '매칭으로 진행'에서만 연다.
         if (current.status === 'open' && current.mode === 'demo' && !isDemoAdultActive()) {
@@ -112,6 +135,16 @@ export default function DemoEntryGuard({ area, children }: { area: Area; childre
           </button>
         </div>
       </div>
+    );
+  }
+
+  if (gate.status === 'login') {
+    return (
+      <DemoLoginNotice
+        heading="로그인이 필요해요"
+        body={`${AREA_NAME[area]} 화면은 데모 로그아웃 상태에서 열리지 않아요. 회원 정보와 대화 내용은 보여 주지 않아요.`}
+        nextPath={AREA_PATH[area]}
+      />
     );
   }
 

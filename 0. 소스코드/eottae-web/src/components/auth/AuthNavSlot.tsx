@@ -5,15 +5,27 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MotifIcon } from '@/components/shared/motif-icon';
 import { authService } from '@/lib/auth/auth-service';
 import { useAuth } from '@/lib/auth/use-auth';
+import {
+  clearDemoSession,
+  readDemoSession,
+  subscribeDemoSession,
+  type DemoSession,
+} from '@/lib/demo/demo-session';
 
 export default function AuthNavSlot() {
   const auth = useAuth();
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
+  const [demoSession, setDemoSession] = useState<DemoSession | null>(null);
+
+  useEffect(() => {
+    setDemoSession(readDemoSession());
+    return subscribeDemoSession(() => setDemoSession(readDemoSession()));
+  }, []);
 
   if (auth.status === 'loading') {
     return (
@@ -24,6 +36,26 @@ export default function AuthNavSlot() {
   }
 
   if (auth.status === 'signed-out') {
+    if (demoSession) {
+      return (
+        <span className="login-slot is-ready is-user">
+          <Link className="login-slot-name" href="/profile" title="내 프로필(데모)">
+            {demoSession.nickname}(데모)
+          </Link>
+          <button
+            type="button"
+            className="login-slot-out"
+            aria-label="데모 로그아웃"
+            onClick={() => {
+              clearDemoSession();
+              router.replace('/');
+            }}
+          >
+            로그아웃
+          </button>
+        </span>
+      );
+    }
     return (
       <Link className="login-slot is-ready" href="/auth/login">
         <MotifIcon name="lock" size={14} />
@@ -53,6 +85,7 @@ export default function AuthNavSlot() {
         disabled={signingOut}
         onClick={async () => {
           setSigningOut(true);
+          clearDemoSession();
           await authService.signOut();
           setSigningOut(false);
           router.replace('/');
