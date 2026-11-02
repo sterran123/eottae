@@ -17,21 +17,30 @@ export const DEMO_DEVICE_STORAGE_KEYS = [
   'eottae_match_common_declined_v1',
 ] as const;
 
-/** 데모 키 삭제가 모두 끝났으면 true. 저장소가 막히면 false. 테마 키는 지우지 않는다. */
+/** 데모 키 여섯 개가 모두 비었으면 true. 하나라도 남거나 저장소가 막히면 false. 테마 키는 지우지 않는다. */
 export function clearDemoDeviceData(): boolean {
   if (typeof window === 'undefined') return false;
 
-  let ok = true;
+  let removed = true;
   for (const key of DEMO_DEVICE_STORAGE_KEYS) {
     try {
       window.localStorage.removeItem(key);
     } catch {
-      ok = false;
+      removed = false;
+    }
+  }
+  if (!removed) return false;
+
+  for (const key of DEMO_DEVICE_STORAGE_KEYS) {
+    try {
+      if (window.localStorage.getItem(key) !== null) return false;
+    } catch {
+      return false;
     }
   }
 
-  // 같은 탭의 시연 성인 확인·청첩장 데모 영수증이 저장소를 다시 읽게 한다.
+  // 여섯 키가 모두 비워진 뒤에만, 같은 탭의 성인 시연·청첩장 영수증이 저장소를 다시 읽게 한다.
   window.dispatchEvent(new Event(DEMO_ADULT_EVENT));
   window.dispatchEvent(new Event(DEMO_THEME_EVENT));
-  return ok;
+  return true;
 }

@@ -77,8 +77,13 @@ export default function ThemeToggle({ variant = 'picker' }: { variant?: 'picker'
     const saved = localStorage.getItem('eottae-theme');
     const initial: Theme = THEME_IDS.includes(saved as Theme) ? (saved as Theme) : 'light';
     setTheme(initial);
-    // FOUC 스크립트가 data-theme을 이미 붙였다 — 저장값이 없으면 기본 'light'를 명시
-    if (document.documentElement.dataset.theme !== initial) apply(initial);
+    // 저장 키가 없으면 라이트로 보이기만 한다. clearSavedTheme가 지운 키를 setItem으로 되돌리지 않는다.
+    if (saved == null) {
+      if (document.documentElement.dataset.theme !== initial) {
+        document.documentElement.dataset.theme = initial;
+      }
+      syncChrome();
+    } else if (document.documentElement.dataset.theme !== initial) apply(initial);
     else syncChrome();
     setMounted(true);
 

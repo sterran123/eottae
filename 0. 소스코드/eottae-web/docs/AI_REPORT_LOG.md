@@ -780,4 +780,5 @@
 - [변경] src/app/page.tsx | 홈 FAQ 「제 데이터는 어떻게 삭제하나요?」만 같은 경로·데모 삭제로 고침. 다른 홈 동작은 그대로
 - [보존] package.json·lock, FILE_INDEX.csv, MANIFEST.sha256, supabase/, 데이트·소모임·청첩장 화면 코드, 설정 테마 선택 동작. db push·마이그레이션·Edge Function 없음
 - [미실행] 브라우저 실측, `npm run typecheck`, `npm run build`, 운영 DB 반영(db push). 이 세션은 파일 읽기·검색·수정만. db push는 목업 결정으로 제외
+- [변경] PR #75 Grok 리뷰(d806b68) 반영: 개인정보 안내를 데모(이 브라우저)와 성인 확인이 끝난 로그인 계정(서버의 프로필·취향·매칭·대화, 설정의 탈퇴는 그 서버 데이터를 지우지 않음)으로 나눔. 다른 탭이 활동 데모 키를 비우면 열린 화면이 storage로 다시 읽고, 온보딩·문답·공통 질문 거절은 저장 전에 그 메모리를 버려 초안을 되돌리지 않음. 신고 본문은 사람 연결을 비운 뒤에도 남을 수 있다고 안내. 테마 저장 키가 없으면 setItem 하지 않음. 확인 문구 오류는 blur·제출 실패 뒤에만 보이고, Escape·취소는 「회원 탈퇴·데이터 삭제」 버튼으로 포커스를 되돌림. 데모 키 6개가 모두 비었을 때만 성인·영수증 이벤트를 보냄. CORE-004·TC-011·ADR-005 `delete-account`는 이 데모에 없고 이슈를 구현 완료로 닫지 않음. 브라우저에 service_role 없음. 위 [미실행]의 typecheck·build 기록은 유지. 이 반영에서는 `FILE_INDEX.csv`·`MANIFEST.sha256`를 고치지 않음.
 

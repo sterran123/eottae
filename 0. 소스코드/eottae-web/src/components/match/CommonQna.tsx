@@ -17,7 +17,14 @@ import {
   DEMO_QUESTIONS,
   demoCompatibility,
 } from '@/lib/match/demo-qna';
-import { matchService, type MatchOperatingMode } from '@/lib/match/match-service';
+import {
+  acknowledgeDemoDraftReload,
+  DEMO_DRAFT_CLEARED_MESSAGE,
+  isDemoDraftCleared,
+  matchService,
+  subscribeDemoDraftCleared,
+  type MatchOperatingMode,
+} from '@/lib/match/match-service';
 import type {
   CommonQuestionState,
   QnaAnswer,
@@ -41,6 +48,8 @@ export default function CommonQna({
   const [loadKey, setLoadKey] = useState(0);
   const [actionError, setActionError] = useState<string | null>(null);
   const demoStorageRef = useRef(false);
+  const reloadEpoch = useRef(0);
+  const demoModeRef = useRef(false);
   // 조회 전에는 빈 맵. 데모 답·데모 상대는 mode === 'demo'일 때만 채운다.
   const [myAnswers, setMyAnswers] = useState<
     Record<string, { optionId: string | null; customText?: string }>
@@ -52,11 +61,21 @@ export default function CommonQna({
     Record<string, { optionId: string | null; customText?: string }>
   >({});
 
+  function discardClearedDraft() {
+    reloadEpoch.current += 1;
+    setActionError(DEMO_DRAFT_CLEARED_MESSAGE);
+    setLoadedMode(null);
+    setListReady(false);
+    setLoadKey((key) => key + 1);
+  }
+
   useEffect(() => {
     let active = true;
+    const epoch = reloadEpoch.current;
     void matchService.loadMyQnaAnswers().then(({ context, answers, errorMessage }) => {
-      if (!active) return;
+      if (!active || epoch !== reloadEpoch.current) return;
       const demo = context.mode === 'demo';
+      demoModeRef.current = demo;
       demoStorageRef.current = demo;
       setIsDemoMode(context.isDemo && demo);
       if (errorMessage) {
@@ -84,9 +103,14 @@ export default function CommonQna({
         };
       }
       setMyAnswers(mapped);
-      setActionError(
-        !demo && context.gateMessage ? context.gateMessage : (errorMessage ?? null),
-      );
+      if (demo && !errorMessage) {
+        acknowledgeDemoDraftReload('qna');
+        acknowledgeDemoDraftReload('commonDeclined');
+      }
+      setActionError((current) => {
+        if (current === DEMO_DRAFT_CLEARED_MESSAGE) return current;
+        return !demo && context.gateMessage ? context.gateMessage : (errorMessage ?? null);
+      });
       setListReady(true);
     });
     return () => {
@@ -94,9 +118,28 @@ export default function CommonQna({
     };
   }, [loadKey]);
 
-  function persistDeclined(ids: string[]) {
-    if (!demoStorageRef.current) return;
-    matchService.saveDeclinedCommonQuestions(ids, 'demo');
+  useEffect(() => {
+    const reload = () => {
+      if (!demoModeRef.current) return;
+      discardClearedDraft();
+    };
+    const offQna = subscribeDemoDraftCleared('qna', reload);
+    const offDeclined = subscribeDemoDraftCleared('commonDeclined', reload);
+    return () => {
+      offQna();
+      offDeclined();
+    };
+  }, []);
+
+  function persistDeclined(ids: string[]): boolean {
+    if (!demoStorageRef.current) return false;
+    if (isDemoDraftCleared('commonDeclined')) {
+      discardClearedDraft();
+      return false;
+    }
+    const saved = matchService.saveDeclinedCommonQuestions(ids, 'demo');
+    if (!saved) discardClearedDraft();
+    return saved;
   }
 
   // 데모는 나 또는 샘플 상대가 답한 문항만. 실계정·상대 id 없음은 문항을 그리지 않는다.
@@ -128,6 +171,13 @@ export default function CommonQna({
   }
 
   function answerQuestion(q: QnaQuestion, optionId: string) {
+    if (
+      demoStorageRef.current &&
+      (isDemoDraftCleared('qna') || isDemoDraftCleared('commonDeclined'))
+    ) {
+      discardClearedDraft();
+      return;
+    }
     const nextMine: Record<string, { optionId: string | null; customText?: string }> = {
       ...myAnswers,
       [q.id]: { optionId },
@@ -137,8 +187,8 @@ export default function CommonQna({
     const nextDeclined = new Set(declinedIds);
     if (nextDeclined.has(q.id)) {
       nextDeclined.delete(q.id);
+      if (!persistDeclined(Array.from(nextDeclined))) return;
       setDeclinedIds(nextDeclined);
-      persistDeclined(Array.from(nextDeclined));
     }
 
     const qnaMap: Record<string, QnaAnswer> = {};
@@ -158,6 +208,10 @@ export default function CommonQna({
       modeAtSave,
     ).then((res) => {
       if (!res.ok) {
+        if (res.demoDraftCleared) {
+          discardClearedDraft();
+          return;
+        }
         setActionError(res.error.message);
         if (res.mode !== modeAtSave) {
           setLoadedMode(null);
@@ -176,22 +230,18 @@ export default function CommonQna({
       setActionError('서로 관심이 성사된 뒤에 공통 질문이 열려요.');
       return;
     }
-    setDeclinedIds((prev) => {
-      const next = new Set(prev);
-      next.add(qId);
-      persistDeclined(Array.from(next));
-      return next;
-    });
+    const next = new Set(declinedIds);
+    next.add(qId);
+    if (!persistDeclined(Array.from(next))) return;
+    setDeclinedIds(next);
   }
 
   function restoreQuestion(qId: string) {
     if (!demoStorageRef.current) return;
-    setDeclinedIds((prev) => {
-      const next = new Set(prev);
-      next.delete(qId);
-      persistDeclined(Array.from(next));
-      return next;
-    });
+    const next = new Set(declinedIds);
+    next.delete(qId);
+    if (!persistDeclined(Array.from(next))) return;
+    setDeclinedIds(next);
   }
 
   if (!listReady) {

@@ -17,19 +17,40 @@ export default function DeleteAccountDemo() {
   const phraseId = `${baseId}-phrase`;
   const panelRef = useRef<HTMLHeadingElement>(null);
   const doneRef = useRef<HTMLDivElement>(null);
+  const openButtonRef = useRef<HTMLButtonElement>(null);
+  const restoreOpenFocusRef = useRef(false);
 
   const [phase, setPhase] = useState<Phase>('idle');
   const [phrase, setPhrase] = useState('');
+  const [phraseTouched, setPhraseTouched] = useState(false);
   const [includeTheme, setIncludeTheme] = useState(false);
   const [clearedTheme, setClearedTheme] = useState(false);
   const [error, setError] = useState('');
 
   const ready = phrase.trim() === DELETE_CONFIRM_PHRASE;
-  const mismatch = phrase.length > 0 && !ready;
+  const phraseInvalid = phraseTouched && phrase.length > 0 && !ready;
+
+  const closeConfirm = () => {
+    restoreOpenFocusRef.current = true;
+    setPhase('idle');
+    setPhrase('');
+    setPhraseTouched(false);
+    setError('');
+  };
 
   useEffect(() => {
-    if (phase === 'confirm') panelRef.current?.focus();
-    if (phase === 'done') doneRef.current?.focus();
+    if (phase === 'confirm') {
+      panelRef.current?.focus();
+      return;
+    }
+    if (phase === 'done') {
+      doneRef.current?.focus();
+      return;
+    }
+    if (restoreOpenFocusRef.current) {
+      restoreOpenFocusRef.current = false;
+      openButtonRef.current?.focus();
+    }
   }, [phase]);
 
   useEffect(() => {
@@ -37,9 +58,7 @@ export default function DeleteAccountDemo() {
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       event.preventDefault();
-      setPhase('idle');
-      setPhrase('');
-      setError('');
+      closeConfirm();
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
@@ -48,6 +67,7 @@ export default function DeleteAccountDemo() {
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (phrase.trim() !== DELETE_CONFIRM_PHRASE) {
+      setPhraseTouched(true);
       setError(`계속하려면 ${DELETE_CONFIRM_PHRASE} 라고 입력해 주세요.`);
       return;
     }
@@ -67,6 +87,7 @@ export default function DeleteAccountDemo() {
         <>
           <div className="settings-actions">
             <button
+              ref={openButtonRef}
               type="button"
               className="btn outline"
               aria-expanded={phase === 'confirm'}
@@ -74,6 +95,7 @@ export default function DeleteAccountDemo() {
               aria-describedby={noteId}
               onClick={() => {
                 setError('');
+                setPhraseTouched(false);
                 setPhase((current) => (current === 'confirm' ? 'idle' : 'confirm'));
               }}
             >
@@ -110,7 +132,8 @@ export default function DeleteAccountDemo() {
             <li>지워지는 쪽: 프로필, 취향, 매칭, 대화처럼 계정에 붙은 이용 기록</li>
             <li>
               익명화되어 남는 쪽: 신고 이력. 신고 기록은 남기고, 신고한 사람과 신고받은 사람이
-              누구인지만 비워요. 탈퇴 뒤 다시 가입해 신고를 없애지 못하게 하려는 안전 정책과 같아요.
+              누구인지만 비워요. 신고 본문은 그대로 남아요. 본문에 이름이 있으면 사람 연결이 남을 수
+              있어요. 탈퇴 뒤 다시 가입해 신고를 없애지 못하게 하려는 안전 정책과 같아요.
             </li>
             <li>보관 기간은 출시 전에 정하는 항목이라, 여기서 기간을 말하지 않아요.</li>
           </ul>
@@ -133,19 +156,20 @@ export default function DeleteAccountDemo() {
                 setPhrase(event.target.value);
                 if (error) setError('');
               }}
+              onBlur={() => setPhraseTouched(true)}
               autoComplete="off"
               autoCapitalize="off"
               autoCorrect="off"
               spellCheck={false}
-              aria-describedby={mismatch || error ? `${helpId} ${errorId}` : helpId}
-              aria-invalid={mismatch || error.length > 0}
+              aria-describedby={phraseInvalid || error ? `${helpId} ${errorId}` : helpId}
+              aria-invalid={phraseInvalid || error.length > 0}
               placeholder={DELETE_CONFIRM_PHRASE}
             />
           </label>
           <p className="settings-note" id={helpId}>
             계속하려면 <b>{DELETE_CONFIRM_PHRASE}</b> 라고 입력하세요.
           </p>
-          {mismatch || error ? (
+          {phraseInvalid || error ? (
             <p className="settings-delete-error" id={errorId} role="alert">
               {error || '문구가 일치하지 않아요.'}
             </p>
@@ -158,11 +182,7 @@ export default function DeleteAccountDemo() {
             <button
               type="button"
               className="btn outline"
-              onClick={() => {
-                setPhase('idle');
-                setPhrase('');
-                setError('');
-              }}
+              onClick={closeConfirm}
             >
               취소
             </button>
