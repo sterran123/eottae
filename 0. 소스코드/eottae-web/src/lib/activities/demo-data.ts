@@ -350,6 +350,7 @@ export const DEMO_GATHERINGS: readonly Gathering[] = [
     category: '취미',
     coverImage: GATHERING_COVER_PATH['취미'],
     region: '노을구',
+    viewerIsHost: true,
     startsAtLabel: '2026년 11월 8일 (일) 14:00',
     startsAtIso: '2026-11-08T14:00',
     capacity: 8,
@@ -545,6 +546,134 @@ export const DEMO_GATHERINGS: readonly Gathering[] = [
       ['2026년 11월 21일 (토) 14:00', 3],
       ['2026년 11월 22일 (일) 15:00', 1],
     ]),
+  },
+  {
+    id: 'meet-past-tea',
+    title: '온기동 식은 차 모임',
+    category: '문화',
+    coverImage: GATHERING_COVER_PATH['문화'],
+    region: '온기동',
+    startsAtLabel: '2026년 10월 18일 (일) 15:00',
+    startsAtIso: '2026-10-18T15:00',
+    recruitmentClosed: true,
+    ended: true,
+    demoAttended: true,
+    capacity: 6,
+    currentCount: 4,
+    hostNickname: '유리주전자',
+    intro: '이미 끝난 예시예요. 따뜻한 차 한 잔을 두고 오늘의 색만 말하고 헤어진 모임입니다. 이 데모에서는 내가 참가 확정된 사람으로 후기를 쓸 수 있어요.',
+    placeLabel: '가상 상호 · 식은주전자',
+    safetyFlags: ['종료된 모임', '공개 장소', '후기 예시'],
+    poll: poll('meet-past-tea', [
+      ['2026년 10월 18일 (일) 15:00', 3],
+      ['2026년 10월 18일 (일) 17:00', 1],
+      ['2026년 10월 17일 (토) 15:00', 1],
+    ]),
+  },
+  {
+    id: 'meet-past-walk',
+    title: '파도읍 짧은 방파제 걷기',
+    category: '운동',
+    coverImage: GATHERING_COVER_PATH['운동'],
+    region: '파도읍',
+    startsAtLabel: '2026년 10월 24일 (토) 16:00',
+    startsAtIso: '2026-10-24T16:00',
+    recruitmentClosed: true,
+    ended: true,
+    demoAttended: true,
+    capacity: 8,
+    currentCount: 5,
+    hostNickname: '조개단추',
+    intro: '이미 끝난 낮 산책 예시예요. 방파제 끝의 벤치까지만 걷고 각자의 일정으로 흩어진 설정입니다. 참가 확정된 데모 계정으로 후기를 남길 수 있어요.',
+    placeLabel: '예시 장소 · 파도읍 서쪽 벤치',
+    safetyFlags: ['종료된 모임', '낮 시간', '후기 예시'],
+    poll: poll('meet-past-walk', [
+      ['2026년 10월 24일 (토) 16:00', 4],
+      ['2026년 10월 24일 (토) 10:00', 1],
+      ['2026년 10월 25일 (일) 16:00', 1],
+    ]),
+  },
+  {
+    id: 'meet-past-read',
+    title: '노을구 짧은 문장 낭독',
+    category: '스터디',
+    coverImage: GATHERING_COVER_PATH['스터디'],
+    region: '노을구',
+    startsAtLabel: '2026년 10월 28일 (수) 19:00',
+    startsAtIso: '2026-10-28T19:00',
+    recruitmentClosed: true,
+    ended: true,
+    capacity: 6,
+    currentCount: 3,
+    hostNickname: '책갈피',
+    intro: '이미 끝난 낭독 예시예요. 가져온 문장 하나만 읽고 끝낸 모임입니다. 이 데모에서는 내가 참가 확정자가 아니라 후기를 쓸 수 없어요.',
+    placeLabel: '가상 상호 · 낮은책상',
+    safetyFlags: ['종료된 모임', '공개 장소', '후기 잠금'],
+    poll: poll('meet-past-read', [
+      ['2026년 10월 28일 (수) 19:00', 2],
+      ['2026년 10월 28일 (수) 20:00', 1],
+      ['2026년 10월 29일 (목) 19:00', 1],
+    ]),
+  },
+];
+
+export type DemoReviewSeed = {
+  id: string;
+  gatheringId: string;
+  nickname: string;
+  stars: number;
+  body: string;
+  atLabel: string;
+};
+
+export const DEMO_REVIEWS: readonly DemoReviewSeed[] = [
+  {
+    id: 'rev-tea-1',
+    gatheringId: 'meet-past-tea',
+    nickname: '솜사탕',
+    stars: 5,
+    body: '창가 자리가 조용해서 처음인데도 말하기 편했어요.',
+    atLabel: '2026-10-18 17:10',
+  },
+  {
+    id: 'rev-tea-2',
+    gatheringId: 'meet-past-tea',
+    nickname: '작은램프',
+    stars: 4,
+    body: '차는 각자 시켰고, 약속한 한 시간 안에 끝났어요.',
+    atLabel: '2026-10-18 18:02',
+  },
+  {
+    id: 'rev-walk-1',
+    gatheringId: 'meet-past-walk',
+    nickname: '밤산책',
+    stars: 4,
+    body: '코스가 짧고 사람 있는 길이어서 마음이 놓였어요.',
+    atLabel: '2026-10-24 17:20',
+  },
+  {
+    id: 'rev-walk-2',
+    gatheringId: 'meet-past-walk',
+    nickname: '종이배',
+    stars: 5,
+    body: '중간에 벤치에서 쉬자는 안내가 미리 있어서 좋았어요.',
+    atLabel: '2026-10-24 18:05',
+  },
+  {
+    id: 'rev-read-1',
+    gatheringId: 'meet-past-read',
+    nickname: '도란도란',
+    stars: 4,
+    body: '한 문장만 읽어서 부담이 적었습니다.',
+    atLabel: '2026-10-28 20:10',
+  },
+  {
+    id: 'rev-read-2',
+    gatheringId: 'meet-past-read',
+    nickname: '하얀봉투',
+    stars: 3,
+    body: '자리는 조용했는데 문장 순서가 조금 헷갈렸어요.',
+    atLabel: '2026-10-28 20:40',
   },
 ];
 
