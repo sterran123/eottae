@@ -731,4 +731,13 @@
 - [변경] src/app/activities/activities.css | 커버 비율·뱃지. 색은 기존 테마 토큰만. 첨부·삭제 버튼은 기존 44px 버튼
 - [미실행] 브라우저에서 목록·상세·첨부·참가 요청 뱃지 변화, 360px·데스크톱 확인. 이 세션은 파일 읽기·검색·수정만이라 typecheck·build도 실행하지 않음. 코스 만들기 화면은 원래 없어 이미지 첨부는 소모임 만들기 폼에만 둠. 코스 표지는 분위기 기본 커버
 
+## 2026-11-02 데이트·소모임 모임장 관리·후기(데모) (김민기 작업)
+- [요청] 2차 P0 남은 모임장 관리·후기를 `/activities` 데모 데이터로 추가. 정적 export, 상태는 기존 `eottae.activities.demo.v1` localStorage. 서버·Supabase·외부 API·package.json·매칭·채팅·청첩장·FILE_INDEX.csv·MANIFEST.sha256는 수정하지 않음. 커버·모집 뱃지 동작은 유지. 명령 실행 없음
+- [AI] 로컬 Grok이 단계 범위(2차 P0 모임 관리·후기), 안전·개인정보·연령 정책, 요구사항 ACT-002, DB 논리모델 ACTIVITY_MEMBER.request_state, 기존 activities 타입·데모 저장·모집 뱃지·신고 모달을 읽고 브라우저 안에서만 동작하는 목업을 추가
+- [변경] src/lib/activities/types.ts, recruitment.ts | 모임장 재개 시에만 쓰는 `recruitmentForceOpen`. 플래그가 없으면 정원·빈자리·마감 임박·마감 계산은 이전과 같음
+- [변경] src/lib/activities/demo-roster.ts, demo-storage.ts | 가상 참가 요청·확정·강퇴·모집 토글과 내 참가 상태(요청됨/수락됨/거절됨), 내 후기를 같은 데모 키에 저장. 예전 참가 요청 기록은 요청됨으로 이어 받음. 만든 모임에 덮어쓴 임시 플래그는 저장하지 않음
+- [변경] src/lib/activities/demo-data.ts, reviews.ts | 종료 모임 3개(온기동 식은 차, 파도읍 짧은 방파제, 노을구 짧은 문장 낭독)와 예시 후기. 앞의 둘은 참가 확정 예시, 낭독은 미확정이라 작성 잠금. 노을 스케치만 `viewerIsHost`
+- [변경] src/components/activities/GatheringManage.tsx, GatheringReviews.tsx, ActivityReportDialog.tsx, GatheringDetail.tsx, ActivitiesDemo.tsx, activities.css, activities/page.tsx | 내가 만든 모임과 노을 스케치의 관리 탭: 가상 닉네임·한줄 소개·요청 시각, 수락/거절, 확정 인원, 강퇴 확인 모달, 모집 마감/재개. 수락·강퇴가 모집 뱃지에 바로 반영. 그 외 모임은 참가 요청 뒤 「모임장 시점으로 보기」로 수락됨/거절됨 전환. 종료 모임의 후기 탭: 별점 1~5, 한줄 작성·수정·삭제, 목록·평균, 기존 신고 모달 재사용, 욕설·개인정보 주의 한 줄. 동작에는 데모 표시. 색은 기존 테마 토큰
+- [미실행] 브라우저에서 관리 탭 수락·거절·강퇴·모집 토글·뱃지 변화, 모임장 시점 전환, 종료 모임 후기 작성·수정·삭제·신고, 미확정 잠금, 360px·6테마 확인. 이 세션은 파일 읽기·검색·수정만이라 typecheck·build도 실행하지 않음
+
 

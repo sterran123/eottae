@@ -339,9 +339,74 @@
 }
 
 .act-detail h2,
-.act-detail h3 {
+.act-detail h3,
+.act-detail h4 {
   margin: 0;
   letter-spacing: -0.03em;
+}
+
+.act-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.act-subhead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.act-person,
+.act-review {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--paper);
+}
+
+.act-person-name,
+.act-review-name {
+  margin: 0;
+  font-weight: 800;
+}
+
+.act-stars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.act-stars legend {
+  flex-basis: 100%;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.act-stars .act-choice {
+  flex: 1 1 44px;
+  justify-content: center;
+  min-width: 44px;
+}
+
+.act-review-stars {
+  margin: 0;
+  color: var(--brand-dark);
+  font-weight: 800;
+  letter-spacing: 0.04em;
 }
 
 .act-detail h2:focus {

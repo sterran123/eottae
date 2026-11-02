@@ -1,6 +1,7 @@
 // 데모 상태만 이 브라우저 localStorage에 둔다. 서버로 보내지 않는다.
 
 import { isSafeCover } from './cover';
+import { isVirtualPerson, type GatheringOps } from './demo-roster';
 import type { Gathering, PollOption } from './types';
 import { isActivityRegion, isGatheringCategory } from './types';
 
@@ -9,16 +10,38 @@ const NOTICE_KEY = 'eottae.activities.demo.notice';
 const MAX_CREATED = 20;
 const LOCAL_DATE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 
+export type MyJoinStatus = 'requested' | 'accepted' | 'rejected';
+
+export type StoredReview = {
+  id: string;
+  nickname: string;
+  stars: number;
+  body: string;
+  atLabel: string;
+  mine: true;
+};
+
 export type ActivitiesDemoState = {
   requests: Record<string, true>;
+  /** 내 참가 요청의 데모 진행. requested·accepted만 모집 인원에 포함한다. */
+  joins: Record<string, MyJoinStatus>;
   votes: Record<string, string>;
   created: Gathering[];
+  /** 모임장 데모: 수락·거절·강퇴·모집 토글 */
+  ops: Record<string, GatheringOps>;
+  /** 내가 쓴 후기. 예시 후기는 여기 넣지 않는다. */
+  reviews: Record<string, StoredReview[]>;
+  hiddenReviewIds: string[];
 };
 
 export const EMPTY_ACTIVITIES_DEMO: ActivitiesDemoState = {
   requests: {},
+  joins: {},
   votes: {},
   created: [],
+  ops: {},
+  reviews: {},
+  hiddenReviewIds: [],
 };
 
 function isPollOption(value: unknown): value is PollOption {
@@ -71,7 +94,114 @@ function sanitizeGathering(value: Gathering): Gathering {
   if (typeof value.recruitmentEndsAt === 'string' && LOCAL_DATE.test(value.recruitmentEndsAt)) {
     next.recruitmentEndsAt = value.recruitmentEndsAt;
   } else delete next.recruitmentEndsAt;
+  delete next.recruitmentForceOpen;
+  delete next.viewerIsHost;
+  delete next.ended;
+  delete next.demoAttended;
   return next;
+}
+
+function readJoins(value: unknown): Record<string, MyJoinStatus> {
+  if (!value || typeof value !== 'object') return {};
+  const next: Record<string, MyJoinStatus> = {};
+  for (const [key, status] of Object.entries(value)) {
+    if (key.length === 0 || key.length > 80) continue;
+    if (status === 'requested' || status === 'accepted' || status === 'rejected') next[key] = status;
+  }
+  return next;
+}
+
+function alignJoinMaps(
+  requests: Record<string, true>,
+  joins: Record<string, MyJoinStatus>
+): { requests: Record<string, true>; joins: Record<string, MyJoinStatus> } {
+  const nextJoins = { ...joins };
+  for (const key of Object.keys(requests)) {
+    if (!nextJoins[key]) nextJoins[key] = 'requested';
+  }
+  const nextRequests: Record<string, true> = {};
+  for (const [key, status] of Object.entries(nextJoins)) {
+    if (status === 'requested' || status === 'accepted') nextRequests[key] = true;
+  }
+  return { requests: nextRequests, joins: nextJoins };
+}
+
+function readOps(value: unknown): Record<string, GatheringOps> {
+  if (!value || typeof value !== 'object') return {};
+  const next: Record<string, GatheringOps> = {};
+  for (const [key, raw] of Object.entries(value)) {
+    if (key.length === 0 || key.length > 80 || !raw || typeof raw !== 'object') continue;
+    const row = raw as GatheringOps;
+    const ops: GatheringOps = {};
+    if (row.recruitment === 'closed' || row.recruitment === 'open') ops.recruitment = row.recruitment;
+    if (Array.isArray(row.people)) {
+      const people = row.people.filter(isVirtualPerson).slice(0, 20);
+      if (people.length > 0) ops.people = people;
+    }
+    if (ops.recruitment || ops.people) next[key] = ops;
+  }
+  return next;
+}
+
+function isStoredReview(value: unknown): value is StoredReview {
+  if (!value || typeof value !== 'object') return false;
+  const row = value as StoredReview;
+  return (
+    row.mine === true &&
+    typeof row.id === 'string' &&
+    row.id.length > 0 &&
+    row.id.length <= 80 &&
+    typeof row.nickname === 'string' &&
+    row.nickname.trim().length >= 2 &&
+    row.nickname.length <= 24 &&
+    typeof row.body === 'string' &&
+    row.body.trim().length >= 2 &&
+    row.body.length <= 80 &&
+    typeof row.atLabel === 'string' &&
+    row.atLabel.length > 0 &&
+    row.atLabel.length <= 40 &&
+    typeof row.stars === 'number' &&
+    Number.isInteger(row.stars) &&
+    row.stars >= 1 &&
+    row.stars <= 5
+  );
+}
+
+function readReviews(value: unknown): Record<string, StoredReview[]> {
+  if (!value || typeof value !== 'object') return {};
+  const next: Record<string, StoredReview[]> = {};
+  for (const [key, raw] of Object.entries(value)) {
+    if (key.length === 0 || key.length > 80 || !Array.isArray(raw)) continue;
+    const rows = raw.filter(isStoredReview).slice(0, 4);
+    if (rows.length > 0) next[key] = rows;
+  }
+  return next;
+}
+
+function readIdList(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const next: string[] = [];
+  for (const item of value) {
+    if (typeof item === 'string' && item.length > 0 && item.length <= 80 && !next.includes(item)) next.push(item);
+    if (next.length >= 80) break;
+  }
+  return next;
+}
+
+export function applyJoin(state: ActivitiesDemoState, id: string, status: MyJoinStatus | null): ActivitiesDemoState {
+  const joins = { ...state.joins };
+  const requests = { ...state.requests };
+  if (status === null) {
+    delete joins[id];
+    delete requests[id];
+  } else if (status === 'rejected') {
+    joins[id] = 'rejected';
+    delete requests[id];
+  } else {
+    joins[id] = status;
+    requests[id] = true;
+  }
+  return { ...state, joins, requests };
 }
 
 function readBoolMap(value: unknown): Record<string, true> {
@@ -105,10 +235,15 @@ export function loadActivitiesDemo(): ActivitiesDemoState {
     const created = Array.isArray(row.created)
       ? row.created.filter(isStoredGathering).slice(0, MAX_CREATED).map(sanitizeGathering)
       : [];
+    const aligned = alignJoinMaps(readBoolMap(row.requests), readJoins(row.joins));
     return {
-      requests: readBoolMap(row.requests),
+      requests: aligned.requests,
+      joins: aligned.joins,
       votes: readVoteMap(row.votes),
       created,
+      ops: readOps(row.ops),
+      reviews: readReviews(row.reviews),
+      hiddenReviewIds: readIdList(row.hiddenReviewIds),
     };
   } catch {
     return EMPTY_ACTIVITIES_DEMO;
@@ -124,8 +259,12 @@ export function saveActivitiesDemo(state: ActivitiesDemoState): boolean {
     if (droppedCover) return false;
     const payload: ActivitiesDemoState = {
       requests: state.requests,
+      joins: state.joins,
       votes: state.votes,
       created,
+      ops: state.ops,
+      reviews: state.reviews,
+      hiddenReviewIds: state.hiddenReviewIds,
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     return true;

@@ -19,7 +19,12 @@ export type RecruitmentView = {
 
 type Input = Pick<
   Gathering,
-  'capacity' | 'currentCount' | 'startsAtIso' | 'recruitmentEndsAt' | 'recruitmentClosed'
+  | 'capacity'
+  | 'currentCount'
+  | 'startsAtIso'
+  | 'recruitmentEndsAt'
+  | 'recruitmentClosed'
+  | 'recruitmentForceOpen'
 >;
 
 function deadlinePassed(value: string | undefined, now: Date): boolean {
@@ -35,7 +40,9 @@ export function recruitmentView(gathering: Input, requested: boolean, now: Date)
   const seats = Math.max(0, capacity - shownCount);
   const deadline = gathering.recruitmentEndsAt ?? gathering.startsAtIso;
   const closed =
-    gathering.recruitmentClosed === true || shownCount >= capacity || deadlinePassed(deadline, now);
+    gathering.recruitmentForceOpen === true
+      ? shownCount >= capacity
+      : gathering.recruitmentClosed === true || shownCount >= capacity || deadlinePassed(deadline, now);
   const badges: RecruitmentBadge[] = [{ id: 'capacity', label: `정원 ${capacity}명` }];
   if (closed) {
     badges.push({ id: 'closed', label: '마감' });
