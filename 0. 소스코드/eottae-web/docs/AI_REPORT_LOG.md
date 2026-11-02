@@ -768,3 +768,16 @@
 - [변경] PR #71 Grok 리뷰(06f8ce7) 반영: 오하율 「바뀐 점」은 서비스 계층(키 없음·세션 없음이면 `mode: 'demo'`, localStorage)과 공개 빌드 매칭 자식 잠금(`NEXT_PUBLIC_DEMO_ADULT_BYPASS` 없음, 「본인 확인이 연결되지 않아 열 수 없어요」, 시연 버튼 없음, 성인 검증이 끝난 `live`만 Supabase)을 나눔. 확인 2번의 캡처 10·TC-002는 그때 측정 기록이고, 세션 없는 창의 자식 라우트는 잠금 문구. 확인 3번의 캡처 12·14도 그때 화면 기록이고, 세션 없는 그 자식도 같은 잠금 문구. 권장 반영: `plan_v3.md`·제출안 #65 문장은 서비스 모드. `GatheringManage.tsx`·`GatheringReviews.tsx`는 모임장 수락·거절·강퇴와 후기에만 붙임. 마감 시각은 `recruitmentEndsAt`가 없으면 `startsAtIso`. 분위기 필터는 코스 탭, 카테고리 필터는 소모임 탭. `eottae-web/README.md`의 매칭 데모 화면·PG 미구현 문장을 자식 잠금·청첩장 테마 모의 결제에 맞춤. 남김: PR 본문(저장소에 없음), `FILE_INDEX.csv`·`MANIFEST.sha256`(미수정), sha256sum·빌드 미실행. 기존 로그 줄은 고치지 않음.
 - [변경] PR #71 Grok 리뷰(0ef5945) 반영: `eottae-web/README.md` 2행·31행은 로그인 세션 없는 공개 빌드의 매칭 자식이 「본인 확인이 연결되지 않아 열 수 없어요」이고, 세션 조회 실패·미인증은 `gateMessage`, 성인 검증이 끝난 `live` 세션은 자식 경로가 열린다고 나눔. 오하율 「바뀐 점」은 키가 없거나 세션이 없으면 `mode: 'demo'`(localStorage), 세션 없는 공개 빌드는 잠금 문구, `unverified`는 `gateMessage`, 키가 있으면 세션 조회를 하고 프로필·추천·관심 등 실데이터 호출은 `live`만. 권장 반영: `plan_v3.md`·제출안 52행은 `NEXT_PUBLIC_DEMO_ADULT_BYPASS`가 `'1'`이어도 `eottae_demo_adult_v1` 기록(24시간)이 있어야 데모 자식이 열리고, 기록 전에는 시연 단계 화면. 남김: PR 본문(저장소에 없음), `FILE_INDEX.csv`·`MANIFEST.sha256`(미수정), sha256sum·빌드 미실행, `src/app/match/page.tsx`의 「링크를 클릭해 직접 시연」(`src` 미수정). 기존 로그 줄은 고치지 않음.
 
+## 2026-11-03 CORE-004 계정·데이터 삭제 목업과 개인정보 안내 (김민기 작업)
+- [요청] 이슈 #26. 설정 → 계정 → 회원 탈퇴·데이터 삭제를 데모로. 정책상 지워지는 것과 익명으로 남는 신고 이력 안내, 확인 문구, 이 앱 localStorage 데모 키만 삭제(테마는 선택), 완료 후 홈. 실제 계정 삭제·서버 호출 없음. `/privacy`는 그 경로와 이 기기 저장, 정책에 있는 보존 예외만. 운영 DB 반영(db push)은 목업 결정으로 제외. 이미 데모로 되는 화면은 유지
+- [AI] 로컬 Grok이 설정·개인정보 화면, `localStorage` 키, `안전_개인정보_연령정책.md`, CORE-004·TC-011·MATCH-008·`reports` FK `ON DELETE SET NULL` 주석을 읽음. 탈퇴 버튼은 비활성(준비 중)이었고 `/privacy`는 로그인 도입 전·삭제할 데이터 없음으로 적혀 있어 데모 흐름은 없었음. 데모 키는 `eottae.activities.demo.v1`, `eottae_demo_adult_v1`, `eottae_demo_theme_purchases_v1`, `eottae_match_onboarding_draft_v1`, `eottae_match_qna_answers_v1`, `eottae_match_common_declined_v1`. 테마 키 `eottae-theme`는 선택. 세션 키는 앱이 localStorage에 두지 않음
+- [신규] src/lib/demo/clear-demo-device.ts | 위 데모 키만 removeItem. 성인 시연·청첩장 데모 영수증 이벤트를 같은 탭에 알림. 테마·Supabase·fetch 없음
+- [신규] src/components/settings/DeleteAccountDemo.tsx | 계정 카드의 탈퇴 패널. 데모 표시, 이 기기에서 지워지는 목록, 정책 안내(이용 기록은 삭제, 신고 이력은 사람 연결만 비우고 남김, 보관 기간은 단정하지 않음), 테마 선택 체크, 확인 문구 `탈퇴`, 완료 안내와 홈 링크. 로그인 세션·서버 계정은 그대로
+- [변경] src/components/settings/AccountSettingsCard.tsx | 비활성 탈퇴 버튼을 데모 패널로 교체. 로그인 표시와 성인 확인 시연 행은 유지
+- [변경] src/components/shared/theme-toggle.tsx | `clearSavedTheme`만 추가. 고른 테마를 지울 때만 키를 제거하고 라이트로 되돌림. 테마 선택 `apply`는 그대로
+- [변경] src/app/globals.css | 탈퇴 패널·확인 입력(16px)·44px 체크. 색은 기존 토큰
+- [변경] src/app/privacy/page.tsx | 탈퇴 위치는 설정 > 계정 > 회원 탈퇴·데이터 삭제. 시연 입력은 이 브라우저만. 보존 예외는 신고 이력(익명). 보관 기간·법적 의무는 적지 않음
+- [변경] src/app/page.tsx | 홈 FAQ 「제 데이터는 어떻게 삭제하나요?」만 같은 경로·데모 삭제로 고침. 다른 홈 동작은 그대로
+- [보존] package.json·lock, FILE_INDEX.csv, MANIFEST.sha256, supabase/, 데이트·소모임·청첩장 화면 코드, 설정 테마 선택 동작. db push·마이그레이션·Edge Function 없음
+- [미실행] 브라우저 실측, `npm run typecheck`, `npm run build`, 운영 DB 반영(db push). 이 세션은 파일 읽기·검색·수정만. db push는 목업 결정으로 제외
+

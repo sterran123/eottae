@@ -43,6 +43,19 @@ function apply(theme: Theme) {
   window.dispatchEvent(new CustomEvent<Theme>(THEME_EVENT, { detail: theme }));
 }
 
+/** 저장된 테마 키만 지운다. 화면은 기본 라이트(:root)로 되돌리고 키는 다시 쓰지 않는다. */
+export function clearSavedTheme(): boolean {
+  try {
+    localStorage.removeItem('eottae-theme');
+  } catch {
+    return false;
+  }
+  document.documentElement.dataset.theme = 'light';
+  syncChrome();
+  window.dispatchEvent(new CustomEvent<Theme>(THEME_EVENT, { detail: 'light' }));
+  return true;
+}
+
 // 현재 테마 팔레트 미리보기 — 점 3개가 globals.css 토큰(브랜드·CTA·카드)을 그대로 칠한다.
 // 색을 tsx에 두지 않으므로 테마가 바뀌면 CSS가 알아서 따라가고, key 교체로 통통 튀는 팝만 재생한다.
 function Swatch() {
