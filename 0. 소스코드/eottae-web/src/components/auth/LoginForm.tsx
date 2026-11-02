@@ -9,11 +9,19 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useId, useState } from 'react';
 import { authService, consumeNextPath, peekNextPath, rememberNextPath } from '@/lib/auth/auth-service';
+import {
+  clearDemoSession,
+  loginDemo,
+  readDemoSession,
+  subscribeDemoSession,
+  type DemoSession,
+} from '@/lib/demo/demo-session';
 import { isSupabaseConfigured } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/auth/use-auth';
 import { validateEmail } from '@/lib/auth/validation';
 import { EmailSentPanel } from './SignupForm';
 import SocialLoginButtons from './SocialLoginButtons';
+import '@/components/demo/demo-flow.css';
 
 export default function LoginForm() {
   const id = useId();
@@ -30,11 +38,17 @@ export default function LoginForm() {
   const [info, setInfo] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [nextHref, setNextHref] = useState('/');
+  const [demoSession, setDemoSession] = useState<DemoSession | null>(null);
 
   useEffect(() => {
     rememberNextPath(searchParams.get('next'));
     setNextHref(peekNextPath());
   }, [searchParams]);
+
+  useEffect(() => {
+    setDemoSession(readDemoSession());
+    return subscribeDemoSession(() => setDemoSession(readDemoSession()));
+  }, []);
 
   const disabled = submitting || !isConfigured;
 
@@ -65,6 +79,7 @@ export default function LoginForm() {
       return;
     }
 
+    clearDemoSession();
     await auth.refresh();
     const myAcc = await authService.getMyAccount();
     if (myAcc?.accountStatus === 'PENDING') {
@@ -93,6 +108,54 @@ export default function LoginForm() {
       {!isConfigured && (
         <div className="auth-form-error auth-form-error--spaced" role="alert">
           인증 환경변수가 설정되지 않아 로그인 및 회원가입이 비활성화되어 있습니다 (ADR-005 fail-closed).
+        </div>
+      )}
+
+      {auth.status === 'signed-out' && (
+        <div className="demo-adult-block demo-login-panel" role="region" aria-label="데모 로그인">
+          <h2>데모 로그인</h2>
+          <p>실제 서버에는 접속하지 않아요. 이 브라우저에만 데모 세션이 남아요.</p>
+          {demoSession ? (
+            <>
+              <p>
+                {demoSession.nickname}(데모)로 로그인되어 있어요. 로그아웃하면 매칭·채팅·내 프로필이
+                열리지 않아요.
+              </p>
+              <div className="demo-flow-actions">
+                <Link className="btn primary" href={nextHref} onClick={() => consumeNextPath()}>
+                  이어서 보기
+                </Link>
+                <button
+                  type="button"
+                  className="btn outline"
+                  onClick={() => {
+                    clearDemoSession();
+                    setInfo('데모 로그아웃했어요. 매칭·채팅·내 프로필은 열리지 않아요.');
+                  }}
+                >
+                  데모 로그아웃
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="demo-flow-actions">
+              <button
+                type="button"
+                className="btn primary"
+                onClick={() => {
+                  const session = loginDemo();
+                  if (!session) {
+                    setError('이 브라우저에 데모 로그인을 저장하지 못했어요.');
+                    return;
+                  }
+                  setInfo('데모로 로그인했어요. 이 브라우저에만 남아요.');
+                  router.replace(consumeNextPath());
+                }}
+              >
+                데모로 로그인
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -132,6 +195,7 @@ export default function LoginForm() {
               type="button"
               className="btn outline"
               onClick={async () => {
+                clearDemoSession();
                 await authService.signOut();
                 await auth.refresh();
                 setInfo('로그아웃되었습니다.');

@@ -74,6 +74,25 @@
   line-height: 1.5;
 }
 
+.mt-rec-list__excluded {
+  margin: 10px 12px 0;
+  padding: 10px 12px;
+  background: var(--match-soft);
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--match-ink);
+  overflow-wrap: anywhere;
+}
+
+.mt-rec-list__excluded p {
+  margin: 0;
+}
+
+.mt-rec-list__excluded p + p {
+  margin-top: 6px;
+}
+
 .mt-rec-list__body {
   padding: 12px;
 }
