@@ -3,12 +3,13 @@
 //  담당: 오하율 · MATCH-002 (추천 카드·질문 UI)
 //  역할: 추천 리스트 라우트. /eottae/match/recommend/
 //
-//  [경계] 실제로는 로그인·성인인증·취향입력 완료 후 진입.
-//         1차 DEMO 단계에서는 게이트 없이 샘플 추천만 노출한다.
+//  [경계] 실계정(live/unverified)은 기존 추천 화면을 그대로 연다.
+//         데모 모드에서 성인 확인(시연) 전에는 추천 대신 이유를 보여 준다.
 // ============================================================
 
 import type { Metadata } from 'next';
 import RecommendList from '@/components/match/RecommendList';
+import DemoEntryGuard from '@/components/demo/DemoEntryGuard';
 import './match-recommend.css';
 
 export const metadata: Metadata = {
@@ -19,7 +20,9 @@ export const metadata: Metadata = {
 export default function MatchRecommendPage() {
   return (
     <div className="mt-rec-page">
-      <RecommendList />
+      <DemoEntryGuard area="recommend">
+        <RecommendList />
+      </DemoEntryGuard>
     </div>
   );
 }

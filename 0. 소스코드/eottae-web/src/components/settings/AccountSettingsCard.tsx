@@ -5,6 +5,7 @@
 
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth/use-auth';
+import DemoAdultSettingsStatus from '@/components/settings/DemoAdultSettingsStatus';
 
 export default function AccountSettingsCard() {
   const auth = useAuth();
@@ -36,6 +37,7 @@ export default function AccountSettingsCard() {
           </div>
         </>
       )}
+      <DemoAdultSettingsStatus />
       <div className="settings-actions">
         <button
           type="button"
