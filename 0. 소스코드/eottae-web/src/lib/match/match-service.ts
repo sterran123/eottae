@@ -2,8 +2,10 @@
 //  저장 경로: src/lib/match/match-service.ts
 //  담당: 오하율 · MATCH-001/002/009 (매칭 데이터 소스 · Supabase 백엔드 연동)
 //  역할: 온보딩(`profiles`·`profile_interests`), 추천(`get_recommendations`),
-//        관심 표현(`likes`), 문답·공통 질문(`profile_qna_answers`·`common_question_answers`)의
+//        관심 표현(`likes`), 문답(`profile_qna_answers`)의
 //        Supabase 호출과 데모 폴백을 분리하는 데이터 서비스 계층.
+//        공통 질문 거절은 `common_question_answers`를 호출하지 않고,
+//        데모(키 없음 또는 세션 없음)에서만 localStorage에 둔다.
 //
 //  [ADR-002 / ADR-005 원칙]
 //  1. 환경변수(NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY)가 없을 때는
@@ -110,6 +112,18 @@ function gateError(context: MatchAccessContext): ApiError['error'] | null {
   };
 }
 
+/** 조회가 끝난 모드와 저장 시점의 모드가 다르면 쓰기 전에 실패시킨다. */
+function modeChangedError(
+  context: MatchAccessContext,
+  expectedMode: MatchOperatingMode,
+): ApiError['error'] | null {
+  if (context.mode === expectedMode) return null;
+  return {
+    code: 'UNAUTHORIZED',
+    message: '로그인 상태가 바뀌었어요. 화면을 다시 연 뒤 저장해 주세요.',
+  };
+}
+
 function readLocalJson<T>(key: string): T | null {
   if (typeof window === 'undefined') return null;
   try {
@@ -203,8 +217,18 @@ export const matchService = {
       };
     }
 
-    const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData.session?.user) {
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    // 조회 실패는 세션 없음(데모)과 같은 성공으로 두지 않는다.
+    if (sessionError) {
+      return {
+        mode: 'unverified',
+        isDemo: false,
+        identity: UNSIGNED_IDENTITY,
+        account: null,
+        gateMessage: '계정 상태를 확인할 수 없어요. 다시 로그인해 주세요.',
+      };
+    }
+    if (!sessionData?.session?.user) {
       return {
         mode: 'demo',
         isDemo: true,
@@ -323,7 +347,14 @@ export const matchService = {
    */
   async saveOnboarding(
     draft: OnboardingDraft,
+    expectedMode: MatchOperatingMode,
   ): Promise<MatchServiceResult<SaveOnboardingRequest>> {
+    const context = await this.resolveAccessContext();
+    const changed = modeChangedError(context, expectedMode);
+    if (changed) {
+      return { ok: false, mode: context.mode, error: changed };
+    }
+
     const validationErrors = validateOnboardingDraft(draft);
     const invalidInterest = draft.interestIds.find(
       (id) => !VALID_INTEREST_IDS.has(id),
@@ -336,7 +367,7 @@ export const matchService = {
     if (validationErrors.length > 0 || !req) {
       return {
         ok: false,
-        mode: 'demo',
+        mode: context.mode,
         error: {
           code: 'VALIDATION_ERROR',
           message: validationErrors[0] ?? '입력값을 다시 확인해 주세요.',
@@ -344,7 +375,6 @@ export const matchService = {
       };
     }
 
-    const context = await this.resolveAccessContext();
     const blocked = gateError(context);
     if (blocked) {
       return { ok: false, mode: context.mode, error: blocked };
@@ -503,8 +533,13 @@ export const matchService = {
   async sendLikeDecision(
     targetId: string,
     decision: LikeDecision,
+    expectedMode: MatchOperatingMode,
   ): Promise<MatchServiceResult<LikeResultDto>> {
     const context = await this.resolveAccessContext();
+    const changed = modeChangedError(context, expectedMode);
+    if (changed) {
+      return { ok: false, mode: context.mode, error: changed };
+    }
     const blocked = gateError(context);
     if (blocked) {
       return { ok: false, mode: context.mode, error: blocked };
@@ -576,8 +611,15 @@ export const matchService = {
   /**
    * 추천 카드에서 사용자를 차단한다 (`public.blocks` insert · MATCH-008 연계).
    */
-  async blockUser(req: BlockRequest): Promise<MatchServiceResult<void>> {
+  async blockUser(
+    req: BlockRequest,
+    expectedMode: MatchOperatingMode,
+  ): Promise<MatchServiceResult<void>> {
     const context = await this.resolveAccessContext();
+    const changed = modeChangedError(context, expectedMode);
+    if (changed) {
+      return { ok: false, mode: context.mode, error: changed };
+    }
     const blocked = gateError(context);
     if (blocked) {
       return { ok: false, mode: context.mode, error: blocked };
@@ -618,8 +660,15 @@ export const matchService = {
   /**
    * 추천 카드에서 사용자를 신고 및 즉시 차단한다 (`public.reports` + `public.blocks` insert · MATCH-008 연계).
    */
-  async reportUser(req: ReportRequest): Promise<MatchServiceResult<void>> {
+  async reportUser(
+    req: ReportRequest,
+    expectedMode: MatchOperatingMode,
+  ): Promise<MatchServiceResult<void>> {
     const context = await this.resolveAccessContext();
+    const changed = modeChangedError(context, expectedMode);
+    if (changed) {
+      return { ok: false, mode: context.mode, error: changed };
+    }
     const blocked = gateError(context);
     if (blocked) {
       return { ok: false, mode: context.mode, error: blocked };
@@ -734,9 +783,14 @@ export const matchService = {
   async saveMyQnaAnswer(
     answer: QnaAnswer,
     currentAnswers: Record<string, QnaAnswer>,
+    expectedMode: MatchOperatingMode,
   ): Promise<MatchServiceResult<Record<string, QnaAnswer>>> {
     const next = { ...currentAnswers, [answer.questionId]: answer };
     const context = await this.resolveAccessContext();
+    const changed = modeChangedError(context, expectedMode);
+    if (changed) {
+      return { ok: false, mode: context.mode, error: changed };
+    }
     const blocked = gateError(context);
     if (blocked) {
       return { ok: false, mode: context.mode, error: blocked };
@@ -787,11 +841,16 @@ export const matchService = {
   async deleteMyQnaAnswer(
     questionId: string,
     currentAnswers: Record<string, QnaAnswer>,
+    expectedMode: MatchOperatingMode,
   ): Promise<MatchServiceResult<Record<string, QnaAnswer>>> {
     const next = { ...currentAnswers };
     delete next[questionId];
 
     const context = await this.resolveAccessContext();
+    const changed = modeChangedError(context, expectedMode);
+    if (changed) {
+      return { ok: false, mode: context.mode, error: changed };
+    }
     const blocked = gateError(context);
     if (blocked) {
       return { ok: false, mode: context.mode, error: blocked };

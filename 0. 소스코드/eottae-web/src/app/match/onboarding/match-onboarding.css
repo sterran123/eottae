@@ -760,4 +760,7 @@
   .mt-dist-gauge__char-pin {
     animation: none;
   }
+  .mt-dist-gauge__track-fill {
+    transition: none;
+  }
 }

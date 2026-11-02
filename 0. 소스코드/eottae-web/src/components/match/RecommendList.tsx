@@ -21,6 +21,7 @@ import {
 import {
   mapUiReasonToReportCategory,
   matchService,
+  type MatchOperatingMode,
 } from '@/lib/match/match-service';
 import type {
   AcornBalance,
@@ -54,6 +55,9 @@ export default function RecommendList({
   );
   const [stateErrorMsg, setStateErrorMsg] = useState<string | null>(null);
   const [isDemoMode, setIsDemoMode] = useState(Boolean(statusProp));
+  /** fetchRecommendations가 끝낸 모드. 끝나기 전에는 관심·차단·신고를 보내지 않는다. */
+  const [loadedMode, setLoadedMode] = useState<MatchOperatingMode | null>(null);
+  const [listEpoch, setListEpoch] = useState(0);
 
   // 패스('나중에') 또는 차단한 카드는 현재 리스트에서 숨김.
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
@@ -88,17 +92,13 @@ export default function RecommendList({
       if (!active) return;
       setIsDemoMode(res.context.isDemo && res.mode === 'demo');
       if (!res.ok) {
+        setLoadedMode(null);
         setSourceItems([]);
         setFetchedStatus('error');
         setStateErrorMsg(res.error.message);
         return;
       }
-      if (res.mode === 'demo') {
-        setSourceItems(res.data.items);
-        setAcorn(res.data.acorn);
-        setFetchedStatus('ready');
-        return;
-      }
+      setLoadedMode(res.mode);
       setSourceItems(res.data.items);
       setAcorn(res.data.acorn);
       setFetchedStatus('ready');
@@ -106,13 +106,26 @@ export default function RecommendList({
     return () => {
       active = false;
     };
-  }, [statusProp]);
+  }, [statusProp, listEpoch]);
 
   useEffect(() => {
     if (!reportingTarget) return;
     const previouslyFocused =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    reportDialogRef.current?.focus();
+    const dialog = reportDialogRef.current;
+
+    function focusableIn(root: HTMLElement | null): HTMLElement[] {
+      if (!root) return [];
+      return Array.from(
+        root.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), a[href]',
+        ),
+      );
+    }
+
+    const initial = focusableIn(dialog);
+    if (initial[0]) initial[0].focus();
+    else dialog?.focus();
 
     function onKeyDown(event: globalThis.KeyboardEvent) {
       if (event.key === 'Escape') {
@@ -121,17 +134,18 @@ export default function RecommendList({
         return;
       }
       if (event.key !== 'Tab') return;
-      const dialog = reportDialogRef.current;
-      if (!dialog) return;
-      const focusable = Array.from(
-        dialog.querySelectorAll<HTMLElement>(
-          'button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), a[href]',
-        ),
-      );
+      const root = reportDialogRef.current;
+      if (!root) return;
+      const focusable = focusableIn(root);
       if (focusable.length === 0) return;
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
       const active = document.activeElement;
+      if (!(active instanceof HTMLElement) || !focusable.includes(active)) {
+        event.preventDefault();
+        first.focus();
+        return;
+      }
       if (event.shiftKey && active === first) {
         event.preventDefault();
         last.focus();
@@ -157,19 +171,42 @@ export default function RecommendList({
   const effectiveStatus: RecommendStatus =
     baseStatus === 'ready' && items.length === 0 ? 'empty' : baseStatus;
 
+  function reloadAfterModeChange() {
+    setLoadedMode(null);
+    setIsDemoMode(false);
+    setSourceItems([]);
+    setSkipped(new Set());
+    setFetchedStatus('loading');
+    setStateErrorMsg(null);
+    setReportingTarget(null);
+    setListEpoch((n) => n + 1);
+  }
+
   async function handleSkip(id: string) {
-    const res = await matchService.sendLikeDecision(id, 'no');
+    if (loadedMode == null) {
+      showNotice('추천을 불러온 뒤에 다시 시도해 주세요.');
+      return;
+    }
+    const modeAtSave = loadedMode;
+    const res = await matchService.sendLikeDecision(id, 'no', modeAtSave);
     if (!res.ok) {
       showNotice(res.error.message);
+      if (res.mode !== modeAtSave) reloadAfterModeChange();
       return;
     }
     setSkipped((prev) => new Set(prev).add(id));
   }
 
   async function handleLike(id: string) {
-    const res = await matchService.sendLikeDecision(id, 'yes');
+    if (loadedMode == null) {
+      showNotice('추천을 불러온 뒤에 다시 시도해 주세요.');
+      return;
+    }
+    const modeAtSave = loadedMode;
+    const res = await matchService.sendLikeDecision(id, 'yes', modeAtSave);
     if (!res.ok) {
       showNotice(res.error.message);
+      if (res.mode !== modeAtSave) reloadAfterModeChange();
       return;
     }
 
@@ -208,10 +245,16 @@ export default function RecommendList({
   }
 
   async function handleBlock(id: string) {
+    if (loadedMode == null) {
+      showNotice('추천을 불러온 뒤에 다시 시도해 주세요.');
+      return;
+    }
+    const modeAtSave = loadedMode;
     const target = sourceItems.find((p) => p.id === id);
-    const res = await matchService.blockUser({ blockedUserId: id });
+    const res = await matchService.blockUser({ blockedUserId: id }, modeAtSave);
     if (!res.ok) {
       showNotice(res.error.message);
+      if (res.mode !== modeAtSave) reloadAfterModeChange();
       return;
     }
     setSkipped((prev) => new Set(prev).add(id));
@@ -229,6 +272,11 @@ export default function RecommendList({
 
   async function confirmReport() {
     if (!reportingTarget || reportLockRef.current) return;
+    if (loadedMode == null) {
+      showNotice('추천을 불러온 뒤에 다시 시도해 주세요.');
+      return;
+    }
+    const modeAtSave = loadedMode;
     const target = reportingTarget;
     reportLockRef.current = true;
     setReportSubmitting(true);
@@ -244,13 +292,14 @@ export default function RecommendList({
         category: mapUiReasonToReportCategory(reportReason),
         description: finalReason,
         alsoBlock: true,
-      });
+      }, modeAtSave);
     } finally {
       reportLockRef.current = false;
       setReportSubmitting(false);
     }
     if (!res.ok) {
       showNotice(res.error.message);
+      if (res.mode !== modeAtSave) reloadAfterModeChange();
       return;
     }
 
@@ -354,7 +403,10 @@ export default function RecommendList({
       {reportingTarget && (
         <div
           className="mt-report-modal-backdrop"
-          onClick={() => setReportingTarget(null)}
+          onClick={() => {
+            if (reportSubmitting) return;
+            setReportingTarget(null);
+          }}
         >
           <div
             ref={reportDialogRef}

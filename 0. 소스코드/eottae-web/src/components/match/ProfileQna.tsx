@@ -19,7 +19,7 @@ import {
   QNA_TABS,
   RELATION_TO_CATEGORIES,
 } from '@/lib/match/demo-qna';
-import { matchService } from '@/lib/match/match-service';
+import { matchService, type MatchOperatingMode } from '@/lib/match/match-service';
 import type {
   QnaAnswer,
   QnaCategory,
@@ -46,12 +46,18 @@ export default function ProfileQna({
   );
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [qnaError, setQnaError] = useState<string | null>(null);
+  /** loadMyQnaAnswers가 끝낸 모드. 끝나기 전에는 저장·삭제하지 않는다. */
+  const [loadedMode, setLoadedMode] = useState<MatchOperatingMode | null>(null);
+  const [qnaLoaded, setQnaLoaded] = useState(false);
+  const [loadKey, setLoadKey] = useState(0);
 
   // 조회 전에는 빈 맵. 데모 답은 mode === 'demo' 응답 이후에만 채운다.
   const [answers, setAnswers] = useState<Record<string, QnaAnswer>>({});
+  const answersRef = useRef(answers);
+  answersRef.current = answers;
   const [activeTab, setActiveTab] = useState<'all' | QnaCategory>('all');
   const [openQid, setOpenQid] = useState<string | null>(null);
-  // 추천 질문 id 목록. 마운트 후 셔플(hydration 안전).
+  // 추천 질문 id 목록. 조회가 끝난 뒤 셔플(hydration 안전).
   const [recommendIds, setRecommendIds] = useState<string[]>([]);
   const [reshuffle, setReshuffle] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -67,7 +73,9 @@ export default function ProfileQna({
     ]).then(([qnaRes, onbRes]) => {
       if (!active) return;
       setIsDemoMode(qnaRes.context.isDemo && qnaRes.context.mode === 'demo');
+      setLoadedMode(qnaRes.context.mode);
       setAnswers(qnaRes.answers);
+      setQnaLoaded(true);
       if (qnaRes.context.mode !== 'demo' && qnaRes.context.gateMessage) {
         setQnaError(qnaRes.context.gateMessage);
       } else if (qnaRes.errorMessage) {
@@ -82,7 +90,7 @@ export default function ProfileQna({
     return () => {
       active = false;
     };
-  }, [relationGoalProp]);
+  }, [relationGoalProp, loadKey]);
 
   // 스크롤 시 현재 중앙에 위치한 슬라이드 인덱스 추적
   function handleCarouselScroll() {
@@ -139,21 +147,22 @@ export default function ProfileQna({
     return m;
   }, [questions]);
 
-  // 추천 질문: 관계 우선 카테고리의 '미답변' 질문을 셔플해 N개.
+  // 추천 질문: 조회가 끝난 답으로 미답변만 한 번 고른다.
+  // 이후 답 저장마다 다시 섞지 않는다.
   useEffect(() => {
+    if (!qnaLoaded) return;
+    const saved = answersRef.current;
     const cats = RELATION_TO_CATEGORIES[relationGoal];
     const pool = questions.filter(
-      (q) => cats.includes(q.category) && !answers[q.id],
+      (q) => cats.includes(q.category) && !saved[q.id],
     );
-    const fallback = questions.filter((q) => !answers[q.id]);
+    const fallback = questions.filter((q) => !saved[q.id]);
     const source = pool.length >= RECOMMEND_COUNT ? pool : fallback;
     const shuffled = [...source].sort(() => Math.random() - 0.5);
     setRecommendIds(shuffled.slice(0, RECOMMEND_COUNT).map((q) => q.id));
     setCarouselIdx(0);
     if (carouselRef.current) carouselRef.current.scrollLeft = 0;
-    // answers 변화 시 추천 갱신은 과하므로 relation/reshuffle 에만 반응.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [relationGoal, reshuffle, questions]);
+  }, [relationGoal, reshuffle, questions, qnaLoaded]);
 
   const listQuestions = useMemo(
     () =>
@@ -163,30 +172,55 @@ export default function ProfileQna({
     [activeTab, questions],
   );
 
+  function reloadAfterModeChange() {
+    setLoadedMode(null);
+    setQnaLoaded(false);
+    setRecommendIds([]);
+    setLoadKey((key) => key + 1);
+  }
+
   function handleSave(a: QnaAnswer) {
+    if (loadedMode == null) {
+      setQnaError('문답을 불러온 뒤에 저장해 주세요.');
+      return;
+    }
+    const modeAtSave = loadedMode;
     const prev = answers;
     const next = { ...prev, [a.questionId]: a };
     setAnswers(next);
     setOpenQid(null);
     setQnaError(null);
-    void matchService.saveMyQnaAnswer(a, prev).then((res) => {
+    void matchService.saveMyQnaAnswer(a, prev, modeAtSave).then((res) => {
       if (!res.ok) {
-        setAnswers(prev);
         setQnaError(res.error.message);
+        if (res.mode !== modeAtSave) {
+          reloadAfterModeChange();
+          return;
+        }
+        setAnswers(prev);
       }
     });
   }
   function handleDelete(qid: string) {
+    if (loadedMode == null) {
+      setQnaError('문답을 불러온 뒤에 저장해 주세요.');
+      return;
+    }
+    const modeAtSave = loadedMode;
     const prev = answers;
     const next = { ...prev };
     delete next[qid];
     setAnswers(next);
     setOpenQid(null);
     setQnaError(null);
-    void matchService.deleteMyQnaAnswer(qid, prev).then((res) => {
+    void matchService.deleteMyQnaAnswer(qid, prev, modeAtSave).then((res) => {
       if (!res.ok) {
-        setAnswers(prev);
         setQnaError(res.error.message);
+        if (res.mode !== modeAtSave) {
+          reloadAfterModeChange();
+          return;
+        }
+        setAnswers(prev);
       }
     });
   }
@@ -224,7 +258,9 @@ export default function ProfileQna({
           </button>
         </div>
 
-        {recommendIds.length === 0 ? (
+        {!qnaLoaded ? (
+          <p className="mt-qna__rec-empty">추천 질문을 고르고 있어요.</p>
+        ) : recommendIds.length === 0 ? (
           <p className="mt-qna__rec-empty">
             추천할 새 질문이 없어요. 전체 문답에서 더 답해보세요.
           </p>

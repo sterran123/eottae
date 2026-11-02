@@ -17,7 +17,7 @@ import {
   DEMO_QUESTIONS,
   demoCompatibility,
 } from '@/lib/match/demo-qna';
-import { matchService } from '@/lib/match/match-service';
+import { matchService, type MatchOperatingMode } from '@/lib/match/match-service';
 import type {
   CommonQuestionState,
   QnaAnswer,
@@ -36,6 +36,9 @@ export default function CommonQna({
 }: CommonQnaProps) {
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [listReady, setListReady] = useState(false);
+  /** loadMyQnaAnswers가 끝낸 모드. 끝나기 전에는 답을 저장하지 않는다. */
+  const [loadedMode, setLoadedMode] = useState<MatchOperatingMode | null>(null);
+  const [loadKey, setLoadKey] = useState(0);
   const [actionError, setActionError] = useState<string | null>(null);
   const demoStorageRef = useRef(false);
   // 조회 전에는 빈 맵. 데모 답·데모 상대는 mode === 'demo'일 때만 채운다.
@@ -55,6 +58,7 @@ export default function CommonQna({
       if (!active) return;
       const demo = context.mode === 'demo';
       demoStorageRef.current = demo;
+      setLoadedMode(context.mode);
       setIsDemoMode(context.isDemo && demo);
       if (demo) {
         setPartner(DEMO_PARTNER_ANSWERS);
@@ -79,7 +83,7 @@ export default function CommonQna({
     return () => {
       active = false;
     };
-  }, []);
+  }, [loadKey]);
 
   function persistDeclined(ids: string[]) {
     if (!demoStorageRef.current) return;
@@ -132,14 +136,27 @@ export default function CommonQna({
     for (const [qid, a] of Object.entries(nextMine)) {
       qnaMap[qid] = { questionId: qid, optionId: a.optionId, customText: a.customText };
     }
+    if (loadedMode == null) {
+      setMyAnswers(myAnswers);
+      setActionError('문답을 불러온 뒤에 저장해 주세요.');
+      return;
+    }
+    const modeAtSave = loadedMode;
     setActionError(null);
     void matchService.saveMyQnaAnswer(
       { questionId: q.id, optionId },
       qnaMap,
+      modeAtSave,
     ).then((res) => {
       if (!res.ok) {
-        setMyAnswers(myAnswers);
         setActionError(res.error.message);
+        if (res.mode !== modeAtSave) {
+          setLoadedMode(null);
+          setListReady(false);
+          setLoadKey((key) => key + 1);
+          return;
+        }
+        setMyAnswers(myAnswers);
       }
     });
   }

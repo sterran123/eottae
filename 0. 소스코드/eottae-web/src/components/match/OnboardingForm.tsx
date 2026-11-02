@@ -24,7 +24,7 @@ import {
   type DistanceIconType,
   type DistancePreference,
 } from '@/lib/match/demo-data';
-import { matchService } from '@/lib/match/match-service';
+import { matchService, type MatchOperatingMode } from '@/lib/match/match-service';
 import {
   INTEREST_RULES,
   validateOnboardingDraft,
@@ -116,6 +116,16 @@ const GENDER_LABEL: Record<'male' | 'female', string> = {
   female: '여성',
 };
 
+const EMPTY_ONBOARDING_DRAFT: OnboardingDraft = {
+  myMbti: null,
+  avoidMbti: [],
+  targetPreference: null,
+  relationGoal: null,
+  interestIds: [],
+  preferredDistance: 'within_10km',
+  photoVisibility: 'hidden',
+};
+
 export default function OnboardingForm({
   identity: identityProp,
   onSubmit,
@@ -127,7 +137,11 @@ export default function OnboardingForm({
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [gateMessage, setGateMessage] = useState<string | null>(null);
   const [loadBlocked, setLoadBlocked] = useState(false);
+  /** loadOnboarding이 끝낸 모드. 끝나기 전에는 저장하지 않는다. */
+  const [loadedMode, setLoadedMode] = useState<MatchOperatingMode | null>(null);
+  const [loadKey, setLoadKey] = useState(0);
   const userEditedRef = useRef(false);
+  const replaceOnLoadRef = useRef(false);
   const [savedSnapshot, setSavedSnapshot] = useState<OnboardingDraft | null>(null);
 
   const [myMbti, setMyMbti] = useState<MyMbti | null>(null);
@@ -186,32 +200,70 @@ export default function OnboardingForm({
     }
   }
 
-  // 마운트 시 세션·저장된 온보딩 설정(Supabase 또는 로컬 저장본) 불러오기
+  const ingestOnboardingRef = useRef<
+    (
+      result: {
+        context: { mode: MatchOperatingMode; isDemo: boolean; identity: VerifiedIdentity; gateMessage?: string };
+        draft: OnboardingDraft | null;
+        loadError?: string;
+      },
+      replaceEdits: boolean,
+    ) => void
+  >(() => {});
+  ingestOnboardingRef.current = (result, replaceEdits) => {
+    if (!identityProp) {
+      setResolvedIdentity(result.context.identity);
+    }
+    setIsDemoMode(result.context.isDemo);
+    setGateMessage(result.context.mode === 'demo' ? null : (result.context.gateMessage ?? null));
+    if (result.loadError) {
+      setServerError(result.loadError);
+      setLoadBlocked(true);
+      setLoadedMode(null);
+      return;
+    }
+    setLoadBlocked(false);
+    setLoadedMode(result.context.mode);
+    if (replaceEdits) {
+      userEditedRef.current = false;
+      setShowAllMbti(false);
+      setShowAvoid(false);
+      setOpenCats(
+        new Set(
+          [INTEREST_CATEGORIES[0]?.id].filter(Boolean) as InterestCategoryId[],
+        ),
+      );
+      if (result.draft) {
+        setSavedSnapshot(result.draft);
+        applyDraftToState(result.draft);
+      } else {
+        setSavedSnapshot(null);
+        applyDraftToState(EMPTY_ONBOARDING_DRAFT);
+      }
+      return;
+    }
+    if (result.draft) {
+      setSavedSnapshot(result.draft);
+      if (!userEditedRef.current) {
+        applyDraftToState(result.draft);
+      }
+    }
+  };
+
+  // 마운트 시 세션·저장된 온보딩 설정(Supabase 또는 로컬 저장본) 불러오기.
+  // 모드가 바뀌어 다시 부를 때는 메모리의 초안을 버리고 조회 결과만 채운다.
   useEffect(() => {
     let active = true;
-    void matchService.loadOnboarding().then(({ context, draft, loadError }) => {
+    const replaceEdits = replaceOnLoadRef.current;
+    replaceOnLoadRef.current = false;
+    void matchService.loadOnboarding().then((result) => {
       if (!active) return;
-      if (!identityProp) {
-        setResolvedIdentity(context.identity);
-      }
-      setIsDemoMode(context.isDemo);
-      setGateMessage(context.mode === 'demo' ? null : (context.gateMessage ?? null));
-      if (loadError) {
-        setServerError(loadError);
-        setLoadBlocked(true);
-        return;
-      }
-      if (draft) {
-        setSavedSnapshot(draft);
-        if (!userEditedRef.current) {
-          applyDraftToState(draft);
-        }
-      }
+      ingestOnboardingRef.current(result, replaceEdits);
     });
     return () => {
       active = false;
     };
-  }, [identityProp]);
+  }, [identityProp, loadKey]);
 
   const identity = identityProp ?? resolvedIdentity;
 
@@ -336,13 +388,25 @@ export default function OnboardingForm({
       return;
     }
 
+    if (loadedMode == null) {
+      setServerError('설정을 불러온 뒤에 저장해 주세요.');
+      scrollErrorIntoView();
+      return;
+    }
+
+    const modeAtSave = loadedMode;
     setSaving(true);
-    const res = await matchService.saveOnboarding(currentDraft);
+    const res = await matchService.saveOnboarding(currentDraft, modeAtSave);
     setSaving(false);
 
     if (!res.ok) {
       setServerError(res.error.message);
       scrollErrorIntoView();
+      if (res.mode !== modeAtSave) {
+        setLoadedMode(null);
+        replaceOnLoadRef.current = true;
+        setLoadKey((key) => key + 1);
+      }
       return;
     }
 
@@ -806,7 +870,7 @@ export default function OnboardingForm({
           type="button"
           className="mt-btn mt-btn--primary"
           onClick={() => void handleSubmit()}
-          disabled={saving}
+          disabled={saving || (!onSubmit && loadedMode == null)}
         >
           {saving ? '저장 중…' : '저장하고 다음 →'}
         </button>
