@@ -7,7 +7,7 @@
 //        + 전체 문답(카테고리 탭) + 질문 답하기 모달.
 //
 //  [백엔드 연동] matchService.loadMyQnaAnswers / saveMyQnaAnswer /
-//               deleteMyQnaAnswer를 통해 Supabase `public.profile_qna_answers`와
+//               deleteMyQnaAnswer를 통해 Supabase `public.profile_answers`와
 //               동기화하며, 키 미설정 환경에서는 데모 폴백으로 동작한다 (ADR-005).
 //  [랜덤] 추천 셔플은 마운트 후(useEffect)에만 수행 → 정적 빌드 hydration 안전.
 //  [관계] relationGoal 로 추천 카테고리 결정(RELATION_TO_CATEGORIES).
@@ -46,7 +46,7 @@ export default function ProfileQna({
   );
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [qnaError, setQnaError] = useState<string | null>(null);
-  /** loadMyQnaAnswers가 끝낸 모드. 끝나기 전에는 저장·삭제하지 않는다. */
+  /** 조회가 성공한 모드. 실패하거나 끝나기 전에는 null이라 저장·삭제하지 않는다. */
   const [loadedMode, setLoadedMode] = useState<MatchOperatingMode | null>(null);
   const [qnaLoaded, setQnaLoaded] = useState(false);
   const [loadKey, setLoadKey] = useState(0);
@@ -73,18 +73,22 @@ export default function ProfileQna({
     ]).then(([qnaRes, onbRes]) => {
       if (!active) return;
       setIsDemoMode(qnaRes.context.isDemo && qnaRes.context.mode === 'demo');
-      setLoadedMode(qnaRes.context.mode);
       setAnswers(qnaRes.answers);
       setQnaLoaded(true);
-      if (qnaRes.context.mode !== 'demo' && qnaRes.context.gateMessage) {
-        setQnaError(qnaRes.context.gateMessage);
-      } else if (qnaRes.errorMessage) {
-        setQnaError(qnaRes.errorMessage);
-      } else {
-        setQnaError(null);
-      }
       if (!relationGoalProp && onbRes.draft?.relationGoal) {
         setResolvedRelationGoal(onbRes.draft.relationGoal);
+      }
+      // 조회 실패 시 저장·삭제를 막는다. 성공한 빈 결과(서버 행 0건)는 첫 저장을 허용한다.
+      if (qnaRes.errorMessage) {
+        setLoadedMode(null);
+        setQnaError(qnaRes.errorMessage);
+        return;
+      }
+      setLoadedMode(qnaRes.context.mode);
+      if (qnaRes.context.mode !== 'demo' && qnaRes.context.gateMessage) {
+        setQnaError(qnaRes.context.gateMessage);
+      } else {
+        setQnaError(null);
       }
     });
     return () => {

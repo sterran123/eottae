@@ -25,7 +25,7 @@
 --   MyMbti / MbtiType[]                     profiles.mbti / profiles.avoid_mbti
 --   preferredDistance                       profiles.preferred_distance. 좌표가 아닌 길이 40 이하의 문구. 숫자 쌍이 들어 있으면 거부
 --   LikeResultDto                           record_like_decision(p_target_id, p_decision) → matched, match_id, conversation_id
---   QnaAnswer                               save_answers(jsonb) → profile_answers. 문항 본문 40개는 SQL에 넣지 않음
+--   QnaAnswer                               save_answers(jsonb) → profile_answers. 문항 본문 40개는 SQL에 넣지 않음. 인자 배열은 그 문항만 덮어쓰고 빠진 문항은 유지한다. removed=true만 삭제.
 --   CommonQuestionState                     get_common_answers.state = unanswered|waiting|revealed
 --   MessageRow                              messages.id, conversation_id, sender_id, body, created_at
 --   (MessageRow 밖 컬럼)                    attachment_path, soft_delete_state (visible|deleted)
@@ -677,14 +677,16 @@ security definer
 set search_path = ''
 as $$
 declare
-  v_me       uuid := (select auth.uid());
-  v_elem     jsonb;
-  v_qid      text;
-  v_option   text;
-  v_custom   text;
-  v_declined boolean;
-  v_seen     text[] := '{}';
-  v_clean    jsonb := '[]'::jsonb;
+  v_me         uuid := (select auth.uid());
+  v_elem       jsonb;
+  v_qid        text;
+  v_option     text;
+  v_custom     text;
+  v_declined   boolean;
+  v_removed    boolean;
+  v_seen       text[] := '{}';
+  v_clean      jsonb := '[]'::jsonb;
+  v_remove_ids text[] := '{}';
 begin
   if v_me is null then
     raise exception 'UNAUTHORIZED';
@@ -706,7 +708,7 @@ begin
     v_custom := nullif(btrim(coalesce(v_elem->>'customText', v_elem->>'custom_text')), '');
 
     begin
-      v_declined := coalesce((v_elem->>'declined')::boolean, false);
+      v_removed := coalesce((v_elem->>'removed')::boolean, false);
     exception
       when others then
         raise exception 'VALIDATION_ERROR';
@@ -715,6 +717,21 @@ begin
     if v_qid is null or char_length(v_qid) > 80 or v_qid = any(v_seen) then
       raise exception 'VALIDATION_ERROR';
     end if;
+
+    -- 이 문항만 지운다. 배열에 없는 기존 답은 남긴다.
+    if v_removed then
+      v_seen := v_seen || v_qid;
+      v_remove_ids := v_remove_ids || v_qid;
+      continue;
+    end if;
+
+    begin
+      v_declined := coalesce((v_elem->>'declined')::boolean, false);
+    exception
+      when others then
+        raise exception 'VALIDATION_ERROR';
+    end;
+
     if v_option is not null and char_length(v_option) > 80 then
       raise exception 'VALIDATION_ERROR';
     end if;
@@ -740,7 +757,9 @@ begin
     ));
   end loop;
 
-  delete from public.profile_answers where user_id = v_me;
+  delete from public.profile_answers
+   where user_id = v_me
+     and question_id = any(v_remove_ids);
 
   insert into public.profile_answers (user_id, question_id, option_id, custom_text, declined)
   select
@@ -749,7 +768,11 @@ begin
     e->>'option_id',
     e->>'custom_text',
     (e->>'declined')::boolean
-  from jsonb_array_elements(v_clean) as e;
+  from jsonb_array_elements(v_clean) as e
+  on conflict (user_id, question_id) do update
+    set option_id = excluded.option_id,
+        custom_text = excluded.custom_text,
+        declined = excluded.declined;
 end;
 $$;
 

@@ -160,39 +160,44 @@ export function mapUiReasonToReportCategory(reason: string): ReportCategory {
 type MatchSupabase = NonNullable<ReturnType<typeof getSupabase>>;
 
 /**
- * 문답은 `save_answers`가 본인 답을 통째로 바꾼다.
- * 화면에 없는 거절 행은 유지하고, 지금 맵에 있는 문항은 거절이 아닌 답으로 덮어쓴다.
+ * `save_answers`는 넘긴 문항만 덮어쓰고, 배열에 없는 기존 답은 지우지 않는다.
+ * 지울 문항만 `removed: true`로 보낸다.
+ * 조회가 일부만 성공한 뒤 한 문항을 저장하거나 지워도 나머지 답은 남는다.
+ * 서버 행이 0건인 첫 저장은 그 문항만 들어간다.
  */
 async function replaceProfileAnswers(
   supabase: MatchSupabase,
-  userId: string,
   next: Record<string, QnaAnswer>,
   failMessage: string,
+  removeQuestionIds: readonly string[] = [],
 ): Promise<string | null> {
-  const { data, error } = await supabase
-    .from('profile_answers')
-    .select('question_id, declined')
-    .eq('user_id', userId);
-  if (error || !Array.isArray(data)) return failMessage;
+  const remove = new Set(removeQuestionIds);
+  const payload: Array<{
+    questionId: string;
+    optionId: string | null;
+    customText: string | null;
+    declined: boolean;
+    removed?: boolean;
+  }> = [];
 
-  const keptDeclined = (data as { question_id: string; declined: boolean }[])
-    .filter((row) => row.declined === true && !Object.prototype.hasOwnProperty.call(next, row.question_id))
-    .map((row) => ({
-      questionId: row.question_id,
-      optionId: null,
-      customText: null,
-      declined: true,
-    }));
-
-  const payload = [
-    ...Object.values(next).map((answer) => ({
+  for (const answer of Object.values(next)) {
+    if (remove.has(answer.questionId)) continue;
+    payload.push({
       questionId: answer.questionId,
       optionId: answer.optionId,
       customText: answer.customText ?? null,
       declined: false,
-    })),
-    ...keptDeclined,
-  ];
+    });
+  }
+  for (const questionId of remove) {
+    payload.push({
+      questionId,
+      optionId: null,
+      customText: null,
+      declined: false,
+      removed: true,
+    });
+  }
 
   const { error: rpcError } = await supabase.rpc('save_answers', { p_answers: payload });
   return rpcError ? failMessage : null;
@@ -209,10 +214,12 @@ function readRecommendationPage(data: unknown): {
   const items: RecommendationRow[] = [];
   for (const raw of payload.items) {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-    const row = raw as RecommendationRow;
-    if (typeof row.user_id !== 'string' || row.user_id.length === 0) return null;
-    if (typeof row.age !== 'number' || !Number.isFinite(row.age)) return null;
-    items.push(row);
+    const record = raw as { user_id?: unknown; age?: unknown };
+    if (typeof record.user_id !== 'string' || record.user_id.length === 0) return null;
+    // 출생연도가 없으면 서버가 age: null을 준다. 그 행만 건너뛰고 페이지는 유지한다.
+    if (record.age === null) continue;
+    if (typeof record.age !== 'number' || !Number.isFinite(record.age)) return null;
+    items.push(raw as RecommendationRow);
   }
 
   const nextCursor =
@@ -676,11 +683,12 @@ export const matchService = {
     const supabase = getSupabase();
 
     if (context.mode === 'live' && context.account && supabase) {
+      const detail = req.description.trim();
       const { error: reportErr } = await supabase.from('reports').insert({
         reporter_id: context.account.id,
         reported_user_id: req.reportedUserId,
         category: req.category,
-        description: req.description.slice(0, 200),
+        description: detail.length > 0 ? detail.slice(0, 200) : null,
       });
 
       if (reportErr) {
@@ -801,7 +809,6 @@ export const matchService = {
     if (context.mode === 'live' && context.account && supabase) {
       const saveError = await replaceProfileAnswers(
         supabase,
-        context.account.id,
         next,
         '문답 저장 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.',
       );
@@ -855,9 +862,9 @@ export const matchService = {
     if (context.mode === 'live' && context.account && supabase) {
       const deleteError = await replaceProfileAnswers(
         supabase,
-        context.account.id,
         next,
         '문답 삭제 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.',
+        [questionId],
       );
       if (deleteError) {
         return {

@@ -8,7 +8,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(120);
+select plan(126);
 
 create or replace function pg_temp.login_as(p_uid uuid)
 returns void language plpgsql as $$
@@ -510,6 +510,28 @@ select ok(
   (select declined and option_id is null and custom_text is null
      from public.profile_answers where question_id = 'q4'),
   'declined=true이면 선택지 없음');
+select lives_ok(
+  $$ select public.save_answers('[{"questionId":"q9","optionId":"a","declined":false}]'::jsonb) $$,
+  '일부 문항 저장');
+select is(
+  (select option_id from public.profile_answers where question_id = 'q1'),
+  'a',
+  '일부 저장은 기존 답을 지우지 않는다');
+select is(
+  (select count(*)::int from public.profile_answers where question_id = 'q9'),
+  1,
+  '일부 저장은 그 문항을 넣는다');
+select lives_ok(
+  $$ select public.save_answers('[{"questionId":"q9","removed":true}]'::jsonb) $$,
+  'removed는 그 문항만 지운다');
+select is(
+  (select count(*)::int from public.profile_answers where question_id = 'q9'),
+  0,
+  'removed 문항은 없다');
+select is(
+  (select option_id from public.profile_answers where question_id = 'q1'),
+  'a',
+  'removed는 다른 답을 지우지 않는다');
 
 select lives_ok(
   $$ insert into public.blocks (blocker_id, blocked_user_id)
