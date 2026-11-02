@@ -278,7 +278,9 @@ create table public.conversations (
 comment on table public.conversations is 'MATCH-007. match 1건당 conversation 1건. 클라이언트 INSERT 금지.';
 
 -- ---------------------------------------------------------------------------
--- 4. 차단 · 신고 · 운영 역할. 신고 조회는 authenticated SELECT가 아니라 list_reports()다.
+-- 4. 차단 · 신고 · 운영 역할.
+--    운영 대기열은 list_reports()만 본다.
+--    authenticated 는 방금 넣은 본인 행만 SELECT 한다 (INSERT ... RETURNING).
 -- ---------------------------------------------------------------------------
 create table public.blocks (
   blocker_id       uuid not null references public.users (id) on delete cascade,
@@ -303,7 +305,7 @@ create table public.reports (
   )
 );
 
-comment on table public.reports is 'MATCH-008. 사용자 삭제 후에도 행은 남고 FK만 NULL. authenticated SELECT·UPDATE 없음.';
+comment on table public.reports is 'MATCH-008. 사용자 삭제 후에도 행은 남고 FK만 NULL. authenticated는 본인 행만 SELECT. UPDATE 없음. 운영 대기열은 list_reports().';
 
 create table public.user_roles (
   user_id  uuid primary key references public.users (id) on delete cascade,
@@ -927,6 +929,17 @@ begin
      and mm.user_id <> v_me
    limit 1;
 
+  -- security definer 라 profile_answers 본인 SELECT 정책을 우회한다.
+  -- 채팅과 같이 양방향 차단이면 상대 문답을 내려주지 않는다.
+  if v_partner is not null and exists (
+    select 1
+      from public.blocks b
+     where (b.blocker_id = v_me and b.blocked_user_id = v_partner)
+        or (b.blocker_id = v_partner and b.blocked_user_id = v_me)
+  ) then
+    raise exception 'INSUFFICIENT_PRIVILEGE' using errcode = '42501';
+  end if;
+
   for v_qid in
     select distinct a.question_id
       from public.profile_answers a
@@ -1021,7 +1034,9 @@ grant execute on function public.list_reports() to authenticated;
 -- ---------------------------------------------------------------------------
 -- 9. 권한 + RLS default deny
 --    Supabase 기본 권한이 anon/authenticated 에 열려 있을 수 있어 먼저 revoke 한다.
---    anon SELECT 는 정책이 없어 0건이다 (TC-003의 DB 쪽). 행 내용은 나가지 않는다.
+--    users 의 anon SELECT 는 0002가 걷어 둔 그대로 둔다. reports·user_roles 도 anon GRANT 없음.
+--    그 외 anon SELECT 는 정책이 to authenticated 뿐이라 0건이다 (TC-003의 DB 쪽).
+--    reports SELECT 는 authenticated 본인 행만. 운영 대기열은 list_reports().
 -- ---------------------------------------------------------------------------
 revoke all on public.interests from public, anon, authenticated;
 revoke all on public.profiles from public, anon, authenticated;
@@ -1036,8 +1051,6 @@ revoke all on public.reports from public, anon, authenticated;
 revoke all on public.user_roles from public, anon, authenticated;
 revoke all on public.messages from public, anon, authenticated;
 
-grant select on public.users to anon;
-
 grant select on public.interests to anon, authenticated;
 grant select on public.profiles to anon, authenticated;
 grant select on public.user_interests to anon, authenticated;
@@ -1048,8 +1061,7 @@ grant select on public.match_members to anon, authenticated;
 grant select on public.conversations to anon, authenticated;
 grant select on public.blocks to anon, authenticated;
 grant select on public.messages to anon, authenticated;
-grant select on public.reports to anon;
-grant select on public.user_roles to anon;
+grant select on public.reports to authenticated;
 
 grant insert (actor_id, target_id, decision) on public.likes to authenticated;
 grant update (decision) on public.likes to authenticated;
@@ -1142,6 +1154,10 @@ create policy reports_insert_own on public.reports
     reporter_id = (select auth.uid())
     and (select auth.uid()) is not null
   );
+
+create policy reports_select_own on public.reports
+  for select to authenticated
+  using (reporter_id = (select auth.uid()));
 
 create policy messages_select_participant on public.messages
   for select to authenticated

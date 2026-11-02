@@ -666,4 +666,5 @@
 - [변경] 2. 프로젝트 설계서/API_계약_초안.md | ADR-005 대응표에 `save_onboarding`, `get_recommendations`, `likes` 트리거, `matches`·`match_members`·`conversations`, `messages`+`supabase_realtime`+`chat-media`, `blocks`, `reports`+`list_reports`, `save_answers`·`get_common_answers`·`profile_answers` 이름을 기입
 - [보존] `0000`·`0001`·`0002`, `public.users`의 클라이언트 UPDATE(`nickname`, `updated_at`), `package.json`, `FILE_INDEX.csv`, `MANIFEST.sha256`, `.grok-context/`, `CODEOWNERS`, 테스트_케이스_마스터.md
 - [미실행] `npx supabase start`, `npx supabase test db`, db push. pgTAP 90건은 파일만 작성했고 실행 결과로 적지 않음
+- [변경] PR #66 Grok 리뷰(d2f3703) 반영: `reports`는 authenticated 본인 행 SELECT와 `INSERT ... RETURNING id`를 허용하고 운영 대기열은 `list_reports()`만 유지. `get_common_answers`는 상대 id를 구한 뒤 양방향 차단이면 42501. anon의 `users`·`reports`·`user_roles` SELECT GRANT는 0002처럼 비움(테스트는 0건 대신 42501). pgTAP plan 96. 권장 중 `birth_year` 유지, `chat-media` UPDATE·DELETE, `save_onboarding` 미사용 필드, `decision=no` 후 match 유지, Realtime 소켓 미확인은 남김. 기존 로그 줄은 고치지 않음. 명령·pgTAP·typecheck·build·sha256sum은 실행하지 않음. `FILE_INDEX.csv`·`MANIFEST.sha256`은 수정하지 않음.
 

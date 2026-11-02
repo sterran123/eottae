@@ -8,7 +8,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(90);
+select plan(96);
 
 create or replace function pg_temp.login_as(p_uid uuid)
 returns void language plpgsql as $$
@@ -171,12 +171,22 @@ select ok(
 );
 
 -- ---------------------------------------------------------------------------
--- 익명·JWT 없음 (TC-003 DB). 행이 있어도 SELECT 0건.
+-- 익명·JWT 없음 (TC-003 DB).
+-- users·reports·user_roles 는 anon GRANT가 없어 42501.
+-- 나머지 0003 테이블은 정책이 authenticated 뿐이라 행이 있어도 0건.
 -- ---------------------------------------------------------------------------
 select pg_temp.become_anon();
+select throws_ok(
+  $$ select count(*) from public.users $$,
+  '42501', null, 'anon은 users SELECT 불가');
+select throws_ok(
+  $$ select count(*) from public.reports $$,
+  '42501', null, 'anon은 reports SELECT 불가');
+select throws_ok(
+  $$ select count(*) from public.user_roles $$,
+  '42501', null, 'anon은 user_roles SELECT 불가');
 select is((
-  (select count(*) from public.users)
-  + (select count(*) from public.interests)
+  (select count(*) from public.interests)
   + (select count(*) from public.profiles)
   + (select count(*) from public.user_interests)
   + (select count(*) from public.profile_answers)
@@ -185,10 +195,8 @@ select is((
   + (select count(*) from public.match_members)
   + (select count(*) from public.conversations)
   + (select count(*) from public.blocks)
-  + (select count(*) from public.reports)
   + (select count(*) from public.messages)
-  + (select count(*) from public.user_roles)
-)::int, 0, 'anon·JWT 없음: users 포함 0003 테이블 SELECT 0건 (TC-003 DB)');
+)::int, 0, 'anon·JWT 없음: 정책 없는 0003 테이블 SELECT 0건 (TC-003 DB)');
 select throws_ok(
   $$ select public.get_recommendations(null) $$,
   '42501', null, 'anon은 get_recommendations 실행 불가');
@@ -209,13 +217,48 @@ select throws_ok(
   '42501', null, '미성인(성인 인증 없음) likes INSERT 거부');
 select pg_temp.logout();
 
+-- 타인 신고가 있어도 authenticated SELECT 는 본인 행만 본다.
+insert into public.reports (reporter_id, reported_user_id, category, description)
+values (
+  '22222222-0000-4000-8000-000000000002',
+  '33333333-0000-4000-8000-000000000003',
+  'scam',
+  '타인 신고 본문'
+);
+
 select pg_temp.login_as('11111111-0000-4000-8000-000000000001');
 select throws_ok(
   $$ select * from public.user_roles $$,
   '42501', null, 'authenticated는 user_roles SELECT 불가');
-select throws_ok(
-  $$ select * from public.reports $$,
-  '42501', null, 'authenticated는 reports SELECT 불가');
+select is(
+  (select count(*)::int from public.reports where reporter_id = (select auth.uid())),
+  0,
+  'authenticated reports SELECT는 본인 행 0건');
+select is(
+  (select count(*)::int from public.reports where reporter_id is distinct from (select auth.uid())),
+  0,
+  'authenticated reports SELECT는 타인 행 0건');
+select lives_ok(
+  $$
+  do $probe$
+  declare
+    v_id uuid;
+  begin
+    insert into public.reports (reporter_id, reported_user_id, category, description)
+    values (
+      '11111111-0000-4000-8000-000000000001',
+      '22222222-0000-4000-8000-000000000002',
+      'other',
+      'returning 확인'
+    )
+    returning id into v_id;
+    if v_id is null then
+      raise exception 'RETURNING id is null';
+    end if;
+  end
+  $probe$;
+  $$,
+  'reports INSERT RETURNING id 성공');
 select throws_ok(
   $$ insert into public.user_roles (user_id, role)
      values ('11111111-0000-4000-8000-000000000001', 'operator') $$,
@@ -428,6 +471,10 @@ select lives_ok(
   $$ insert into public.blocks (blocker_id, blocked_user_id)
      values ('11111111-0000-4000-8000-000000000001', '22222222-0000-4000-8000-000000000002') $$,
   '본인 차단 INSERT');
+select throws_ok(
+  $$ select public.get_common_answers(current_setting('eottae.match_id')::uuid) $$,
+  '42501', null,
+  '차단 후 get_common_answers는 42501이고 상대 본문을 반환하지 않음');
 select is((select count(*)::int from public.messages), 0, '차단 후 본인 messages 0건');
 select throws_ok(
   $$ insert into public.messages (conversation_id, sender_id, body)
@@ -450,10 +497,26 @@ select throws_ok(
      values ('11111111-0000-4000-8000-000000000001', '11111111-0000-4000-8000-000000000001') $$,
   '23514', null, '자기 차단 금지');
 select lives_ok(
-  $$ insert into public.reports (reporter_id, reported_user_id, category, description)
-     values ('11111111-0000-4000-8000-000000000001',
-             '22222222-0000-4000-8000-000000000002', 'abuse', '불쾌한 말') $$,
-  '본인 신고 INSERT');
+  $$
+  do $probe$
+  declare
+    v_id uuid;
+  begin
+    insert into public.reports (reporter_id, reported_user_id, category, description)
+    values (
+      '11111111-0000-4000-8000-000000000001',
+      '22222222-0000-4000-8000-000000000002',
+      'abuse',
+      '불쾌한 말'
+    )
+    returning id into v_id;
+    if v_id is null then
+      raise exception 'RETURNING id is null';
+    end if;
+  end
+  $probe$;
+  $$,
+  '본인 신고 INSERT RETURNING id');
 select throws_ok(
   $$ insert into public.reports (reporter_id, reported_user_id, category, description)
      values ('22222222-0000-4000-8000-000000000002',
@@ -474,10 +537,11 @@ select throws_ok(
 select pg_temp.logout();
 
 select pg_temp.login_as('bbbbbbbb-0000-4000-8000-00000000000b');
-select is((select count(*)::int from public.list_reports()), 1, 'operator는 신고 1건을 읽음');
-select is(
-  (select description from public.list_reports() limit 1),
-  '불쾌한 말',
+select is((select count(*)::int from public.list_reports()), 3, 'operator는 신고 3건을 읽음');
+select ok(
+  exists (select 1 from public.list_reports() r where r.description = '불쾌한 말')
+  and exists (select 1 from public.list_reports() r where r.description = '타인 신고 본문')
+  and exists (select 1 from public.list_reports() r where r.description = 'returning 확인'),
   'operator는 신고 본문을 읽음');
 select pg_temp.logout();
 
