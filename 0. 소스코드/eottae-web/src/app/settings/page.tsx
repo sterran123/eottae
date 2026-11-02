@@ -55,7 +55,7 @@ export default function SettingsPage() {
               </div>
               <div>
                 <dt>2차</dt>
-                <dd>데이트·소모임은 준비 중이에요.</dd>
+                <dd>데이트·소모임은 데모로 체험할 수 있어요. 실제 참가 연동은 아직이에요.</dd>
               </div>
               <div>
                 <dt>3차</dt>
