@@ -17,7 +17,7 @@ f215d3e323380b4e75764c6bfbcab5b4c7b59b4009ed7102f4b9075fc1301a69  .github/workfl
 7710d28a140451e45493d1fd6f52508a4a51133d7fd72b236349d001bde77fb9  0. 소스코드/eottae-web/.gitignore
 dfd62088d1b52c3eeb6f9ccb87a62858bb9766b328ae93cd85994f2bb3262587  0. 소스코드/eottae-web/AGENTS.md
 65670c8378af81b45e27102daf1ed6152d06e15161f14b2614238250cd727a01  0. 소스코드/eottae-web/README.md
-eeee78fc190e264794f35574022dc8d58a5df0c15252ab734c1ae8d6c7a574dd  0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md
+aabfd022b62ce210e315d096df4ada044e190cc47183b99a29a4b88fbc862ad3  0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md
 6ef5f1ba972e9f1d07e1dbddd282ed9c16c3fd132a5301db0a8e0e9cffc2bb2f  0. 소스코드/eottae-web/docs/AI_도구_MCP_권장.md
 180d9a55d70be22c9ffa04a4acc113c484a2a19fc71e2410ec6dff1a33487a01  0. 소스코드/eottae-web/docs/AI_에이전트_협업_가이드.md
 7d34723629b67d6fc6c107846671146dfa18b35250001621174b73afb4da8511  0. 소스코드/eottae-web/docs/DESIGN_개선_지시서.md
@@ -129,7 +129,7 @@ d985f2b37b8182da799be9a16118c0ec36d141d66f5cd342896c940fb08cd9f7  0. 소스코�
 857d6f7b3b39266a738540eee8d0f3f14e80f2c8970df2ef54959c62b436a3fb  0. 소스코드/eottae-web/src/lib/match/demo-data.ts
 d118c6abaac2fc2a4f604bcaa16f1ef7305f8c4df22d2d45e2a191313a25e62a  0. 소스코드/eottae-web/src/lib/match/demo-qna.ts
 1196f353baf0193860b0dfa313efbe64394270ed10c61c43aef6934cf75b5dcf  0. 소스코드/eottae-web/src/lib/match/demo-recommendations.ts
-dfe6d5391f60ff0eee33aa43a12e5c8db153f57830c6ceb6d8119e8215faf70b  0. 소스코드/eottae-web/src/lib/match/match-service.ts
+019e5ae4cc532cba0f7c6269cc8c89834547772a6b65adbeda371e60d9799141  0. 소스코드/eottae-web/src/lib/match/match-service.ts
 3eecb827de46611fb91777018a8f5c9c5c2a49f7195bf292e4c5f4b0de5f278f  0. 소스코드/eottae-web/src/lib/match/types.ts
 220a0d91e08591579f67d241958002b34511f5d9a57d29636b6e6a0ffb142fb5  0. 소스코드/eottae-web/src/lib/safety/types.ts
 b1ba1d3df7352b505817dcc2b656071a3fddaa3f9220c0c33c07d8a13fd2f96f  0. 소스코드/eottae-web/src/lib/supabase/client.ts
@@ -137,9 +137,9 @@ b1ba1d3df7352b505817dcc2b656071a3fddaa3f9220c0c33c07d8a13fd2f96f  0. 소스코�
 13444e2661dbe2b18879d4d87112f46bfe015c605d0f0fe3e97c126d537e8e8d  0. 소스코드/eottae-web/supabase/migrations/0000_planning_only.sql
 eefb91088e3ac72017390566e3e4a3a1ddb2d1e5a28f133b5ae0c0a036d47ea1  0. 소스코드/eottae-web/supabase/migrations/0001_create_auth_and_users.sql
 a0f9ea7bca4bd948c075648f367e57843b48d720aeaf168b58bcc269e2d32a5e  0. 소스코드/eottae-web/supabase/migrations/0002_auth_profiles.sql
-f9469d15697252d08e42c9923831f93e5b138e751aa4af8d55278cfaef0658d0  0. 소스코드/eottae-web/supabase/migrations/0003_match_core.sql
+2c687254dc760da2aad97a56614295e689885783b80807b30dd8082ef8fb884e  0. 소스코드/eottae-web/supabase/migrations/0003_match_core.sql
 dad5a1affc20e52028263dce449e97bd80714fd6a141c792449849415c71d0e2  0. 소스코드/eottae-web/supabase/tests/0002_auth_profiles_test.sql
-e234273e2e7d4702eb7e59701c6b90896ad4656d14ef7ef690ff094e56b2c17a  0. 소스코드/eottae-web/supabase/tests/0003_match_core_test.sql
+300bd1dcd5c34880f16a50a40c4d46f402720a170324cbf667fe94aea165eb3e  0. 소스코드/eottae-web/supabase/tests/0003_match_core_test.sql
 5f662480084cf05292bd4a9565f75ea238e33981fdd9a75f136f6247f06ee089  0. 소스코드/eottae-web/tools/generate_favicons.mjs
 cc0e80d7740cfdd2cc7e85e59c1d161082f24663f3e0d6f32b6a853af24934b6  0. 소스코드/eottae-web/tools/make_dark_logo.py
 de5556bcb44f244eeba93e0ed9da40c2b864d9d8d7654c0357787de9d4b8f26c  0. 소스코드/eottae-web/tsconfig.json

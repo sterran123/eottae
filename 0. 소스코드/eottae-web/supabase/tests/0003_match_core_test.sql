@@ -8,7 +8,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(115);
+select plan(119);
 
 create or replace function pg_temp.login_as(p_uid uuid)
 returns void language plpgsql as $$
@@ -305,7 +305,7 @@ select throws_ok(
 
 select is(jsonb_array_length(public.get_recommendations(null)->'items'), 1, '추천은 조건 통과 후보 1명');
 select is(
-  (public.get_recommendations(null)->'items'->0->>'id'),
+  (public.get_recommendations(null)->'items'->0->>'user_id'),
   '22222222-0000-4000-8000-000000000002',
   '추천 후보는 검증된 활성 프로필');
 select ok(
@@ -352,7 +352,12 @@ select ok(
 select ok(
   position('"gender"' in (public.get_recommendations(null)->'items')::text) = 0,
   '성별은 반환하지 않음');
-select is((public.get_recommendations(null)->'items'->0->>'birth_year'), '1990', 'birth_year');
+select ok(
+  (public.get_recommendations(null)->'items'->0->>'age')
+    = (extract(year from (now() at time zone 'Asia/Seoul'))::int - 1990)::text
+  and (public.get_recommendations(null)->'items'->0->'birth_year') is null
+  and position('birth_year' in (public.get_recommendations(null)->'items')::text) = 0,
+  'age는 서울 기준 연도 차이이고 birth_year 원값은 없다');
 select is((public.get_recommendations(null)->'items'->0->>'photo_visibility'), 'preview', 'photo_visibility');
 select is((public.get_recommendations(null)->'items'->0->>'mbti'), 'INFJ', 'mbti');
 select is((public.get_recommendations(null)->'items'->0->>'bio'), '후보소개', 'bio');
@@ -618,6 +623,18 @@ select is(
   (select count(*)::int from public.user_interests where interest_id = 'indie'),
   1,
   '좌표 거부 후에도 이전 관심사 유지');
+select throws_like(
+  $$ select public.save_onboarding(
+       'ENFP', array['ISTJ']::text[], 'any', 'open',
+       array['cafe', 'indie', 'camping'], '37.5, 127.0 extra', 'hidden') $$,
+  '%VALIDATION_ERROR%',
+  'preferred_distance 좌표 뒤에 글자가 있어도 거부');
+select throws_like(
+  $$ select public.save_onboarding(
+       'ENFP', array['ENFP']::text[], 'any', 'open',
+       array['cafe', 'indie', 'camping'], '5km 이내', 'hidden') $$,
+  '%VALIDATION_ERROR%',
+  '내 MBTI와 같은 비선호는 거부');
 select pg_temp.logout();
 
 -- 호출자가 만료됐거나 SUSPENDED면 멤버십·본인 좋아요 SELECT는 0건.
@@ -647,6 +664,22 @@ select pg_temp.logout();
 update public.users
    set adult_verification_expires_at = now() + interval '1 year'
  where id = '11111111-0000-4000-8000-000000000001';
+
+select pg_temp.login_as('11111111-0000-4000-8000-000000000001');
+select is(
+  public.record_like_decision('99999999-0000-4000-8000-000000000009', 'yes'),
+  jsonb_build_object('matched', false, 'match_id', null, 'conversation_id', null),
+  '한쪽 yes는 matched false와 빈 id');
+select pg_temp.logout();
+select pg_temp.login_as('99999999-0000-4000-8000-000000000009');
+select ok(
+  (public.record_like_decision('11111111-0000-4000-8000-000000000001', 'yes')->>'matched') = 'true'
+  and (public.record_like_decision('11111111-0000-4000-8000-000000000001', 'yes')->>'match_id')
+      ~ '^[0-9a-f-]{36}$'
+  and (public.record_like_decision('11111111-0000-4000-8000-000000000001', 'yes')->>'conversation_id')
+      ~ '^[0-9a-f-]{36}$',
+  '쌍방 yes는 match_id·conversation_id');
+select pg_temp.logout();
 
 select * from finish();
 rollback;

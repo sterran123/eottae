@@ -7,9 +7,9 @@
 -- MVP2·MVP3 테이블(activities, invitations)은 만들지 않는다.
 --
 -- 화면 DTO 대응 (src/lib/match/types.ts, demo-data.ts, src/lib/chat/types.ts, src/lib/safety/types.ts)
---   RecommendResponse.items[].id            users.id
+--   RecommendResponse.items[].id            응답 user_id (users.id). 화면 매퍼가 id로 옮긴다.
 --   RecommendProfile.nickname               users.nickname
---   RecommendProfile.age                    반환하지 않음. birth_year만 주고 화면이 나이로 환산한다.
+--   RecommendProfile.age                    응답 age. Asia/Seoul 현재 연도 − users.birth_year. 원년도는 넣지 않는다.
 --   RecommendProfile.intro                  profiles.bio
 --   RecommendProfile.mbti                   profiles.mbti (16종 또는 unknown)
 --   RecommendProfile.sharedInterestIds      응답 shared_interest_ids. 교집합 id만. 상대의 전체 관심사는 주지 않음
@@ -23,7 +23,8 @@
 --   MatchTargetPreference                   profiles.target_preference opposite|same|any
 --   RelationGoal                            profiles.relation_goal neighbor_friend|casual|serious|open
 --   MyMbti / MbtiType[]                     profiles.mbti / profiles.avoid_mbti
---   preferredDistance                       profiles.preferred_distance. 좌표가 아닌 길이 40 이하의 문구
+--   preferredDistance                       profiles.preferred_distance. 좌표가 아닌 길이 40 이하의 문구. 숫자 쌍이 들어 있으면 거부
+--   LikeResultDto                           record_like_decision(p_target_id, p_decision) → matched, match_id, conversation_id
 --   QnaAnswer                               save_answers(jsonb) → profile_answers. 문항 본문 40개는 SQL에 넣지 않음
 --   CommonQuestionState                     get_common_answers.state = unanswered|waiting|revealed
 --   MessageRow                              messages.id, conversation_id, sender_id, body, created_at
@@ -44,6 +45,7 @@
 --   drop trigger if exists profiles_guard_mbti on public.profiles;
 --   drop function if exists public.list_reports();
 --   drop function if exists public.get_common_answers(uuid);
+--   drop function if exists public.record_like_decision(uuid, text);
 --   drop function if exists public.get_recommendations(text);
 --   drop function if exists public.save_answers(jsonb);
 --   drop function if exists public.save_onboarding(text, text[], text, text, text[], text, text);
@@ -598,6 +600,10 @@ begin
   ) then
     raise exception 'VALIDATION_ERROR';
   end if;
+  -- 화면 validateOnboardingDraft와 같다. 내 유형을 비선호로 두지 않는다.
+  if p_my_mbti <> 'unknown' and p_my_mbti = any (v_avoid) then
+    raise exception 'VALIDATION_ERROR';
+  end if;
 
   if p_target_preference is null
      or p_relation_goal is null
@@ -634,7 +640,7 @@ begin
   v_distance := nullif(btrim(coalesce(p_preferred_distance, '')), '');
   if v_distance is not null then
     if char_length(v_distance) > 40
-       or v_distance ~ '^-?[0-9]+([.][0-9]+)?[[:space:]]*,[[:space:]]*-?[0-9]+([.][0-9]+)?$' then
+       or v_distance ~ '-?[0-9]+([.][0-9]+)?[[:space:]]*,[[:space:]]*-?[0-9]+([.][0-9]+)?' then
       raise exception 'VALIDATION_ERROR';
     end if;
   end if;
@@ -793,8 +799,9 @@ begin
   -- SUSPENDED(이용 정지)를 휴면·비활성 제외로 쓴다. PENDING(가입 미완료)·DELETED(탈퇴)도
   -- ACTIVE 가 아니므로 같은 조건으로 빠진다.
   -- 내가 decision=no 로 넘긴 상대는 다시 보여 주지 않는다.
-  -- 반환은 id, nickname, birth_year, bio, mbti, photo_visibility, 교집합 관심사 id, relation.
-  -- full_name·이메일·성별·좌표·상대의 전체 관심사 목록은 넣지 않는다.
+  -- 반환은 user_id, nickname, age, bio, mbti, photo_visibility, 교집합 관심사 id, relation.
+  -- birth_year 원값·full_name·이메일·성별·좌표·상대의 전체 관심사 목록은 넣지 않는다.
+  -- age는 서울 기준 현재 연도에서 출생연도를 뺀 값이다. 연도가 없으면 null.
   for rec in
     select u.id, u.nickname, u.birth_year, p.bio, p.mbti, p.photo_visibility
       from public.users u
@@ -863,13 +870,16 @@ begin
       into v_rel;
 
     v_items := v_items || jsonb_build_array(jsonb_build_object(
-      'id', rec.id,
+      'user_id', rec.id,
       'nickname', rec.nickname,
-      'birth_year', rec.birth_year,
+      'age', case
+               when rec.birth_year is null then null
+               else extract(year from (now() at time zone 'Asia/Seoul'))::int - rec.birth_year
+             end,
       'bio', rec.bio,
       'mbti', rec.mbti,
-      'photo_visibility', rec.photo_visibility,
       'shared_interest_ids', v_shared,
+      'photo_visibility', rec.photo_visibility,
       'relation', v_rel
     ));
   end loop;
@@ -882,7 +892,62 @@ end;
 $$;
 
 comment on function public.get_recommendations(text) is
-  'MATCH-006. 휴면 enum은 없다. SUSPENDED를 휴면·비활성 제외로 쓴다. 0002 enum은 ACTIVE|SUSPENDED|DELETED|PENDING 뿐이며 새 값은 추가하지 않는다. 다음 페이지가 없으면 next_cursor는 null. limit 20.';
+  'MATCH-006. 휴면 enum은 없다. SUSPENDED를 휴면·비활성 제외로 쓴다. 0002 enum은 ACTIVE|SUSPENDED|DELETED|PENDING 뿐이며 새 값은 추가하지 않는다. 항목은 user_id와 age(서울 기준 연도 차이)만 주고 birth_year 원값은 넣지 않는다. 다음 페이지가 없으면 next_cursor는 null. limit 20.';
+
+-- 본인 likes 행을 쓰고, 쌍방 yes로 생긴 활성 match·conversation id를 돌려준다.
+-- 트리거는 행만 만들 뿐 그 id를 반환하지 않는다. 클라이언트 INSERT로 정책을 열지 않는다.
+create or replace function public.record_like_decision(
+  p_target_id uuid,
+  p_decision  text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_me    uuid := (select auth.uid());
+  v_match uuid;
+  v_conv  uuid;
+begin
+  if v_me is null then
+    raise exception 'UNAUTHORIZED';
+  end if;
+  if not public.is_active_adult() then
+    raise exception 'AGE_VERIFICATION_REQUIRED';
+  end if;
+  if p_target_id is null or p_target_id = v_me or p_decision not in ('yes', 'no') then
+    raise exception 'VALIDATION_ERROR';
+  end if;
+  if not exists (select 1 from public.users u where u.id = p_target_id) then
+    raise exception 'VALIDATION_ERROR';
+  end if;
+
+  insert into public.likes (actor_id, target_id, decision)
+  values (v_me, p_target_id, p_decision)
+  on conflict (actor_id, target_id) do update
+    set decision = excluded.decision;
+
+  if p_decision = 'yes' then
+    select m.id, c.id
+      into v_match, v_conv
+      from public.matches m
+      join public.conversations c on c.match_id = m.id
+     where m.user_low = least(v_me, p_target_id)
+       and m.user_high = greatest(v_me, p_target_id)
+       and m.status = 'active';
+  end if;
+
+  return jsonb_build_object(
+    'matched', v_match is not null,
+    'match_id', v_match,
+    'conversation_id', v_conv
+  );
+end;
+$$;
+
+comment on function public.record_like_decision(uuid, text) is
+  'MATCH-005. 호출자 likes 행을 쓰고, decision=yes이며 활성 match가 있을 때만 match_id·conversation_id를 돌려준다.';
 
 create or replace function public.get_common_answers(p_match_id uuid)
 returns jsonb
@@ -1023,12 +1088,14 @@ revoke all on function public.save_onboarding(text, text[], text, text, text[], 
 revoke all on function public.save_answers(jsonb) from public, anon;
 revoke all on function public.get_recommendations(text) from public, anon;
 revoke all on function public.get_common_answers(uuid) from public, anon;
+revoke all on function public.record_like_decision(uuid, text) from public, anon;
 revoke all on function public.list_reports() from public, anon;
 
 grant execute on function public.save_onboarding(text, text[], text, text, text[], text, text) to authenticated;
 grant execute on function public.save_answers(jsonb) to authenticated;
 grant execute on function public.get_recommendations(text) to authenticated;
 grant execute on function public.get_common_answers(uuid) to authenticated;
+grant execute on function public.record_like_decision(uuid, text) to authenticated;
 grant execute on function public.list_reports() to authenticated;
 
 -- ---------------------------------------------------------------------------
