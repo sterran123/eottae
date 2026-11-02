@@ -731,17 +731,38 @@
 - [변경] src/app/activities/activities.css | 커버 비율·뱃지. 색은 기존 테마 토큰만. 첨부·삭제 버튼은 기존 44px 버튼
 - [미실행] 브라우저에서 목록·상세·첨부·참가 요청 뱃지 변화, 360px·데스크톱 확인. 이 세션은 파일 읽기·검색·수정만이라 typecheck·build도 실행하지 않음. 코스 만들기 화면은 원래 없어 이미지 첨부는 소모임 만들기 폼에만 둠. 코스 표지는 분위기 기본 커버
 
+## 2026-11-02 데이트·소모임 모임장 관리·후기(데모) (김민기 작업)
+- [요청] 2차 P0 남은 모임장 관리·후기를 `/activities` 데모 데이터로 추가. 정적 export, 상태는 기존 `eottae.activities.demo.v1` localStorage. 서버·Supabase·외부 API·package.json·매칭·채팅·청첩장·FILE_INDEX.csv·MANIFEST.sha256는 수정하지 않음. 커버·모집 뱃지 동작은 유지. 명령 실행 없음
+- [AI] 로컬 Grok이 단계 범위(2차 P0 모임 관리·후기), 안전·개인정보·연령 정책, 요구사항 ACT-002, DB 논리모델 ACTIVITY_MEMBER.request_state, 기존 activities 타입·데모 저장·모집 뱃지·신고 모달을 읽고 브라우저 안에서만 동작하는 목업을 추가
+- [변경] src/lib/activities/types.ts, recruitment.ts | 모임장 재개 시에만 쓰는 `recruitmentForceOpen`. 플래그가 없으면 정원·빈자리·마감 임박·마감 계산은 이전과 같음
+- [변경] src/lib/activities/demo-roster.ts, demo-storage.ts | 가상 참가 요청·확정·강퇴·모집 토글과 내 참가 상태(요청됨/수락됨/거절됨), 내 후기를 같은 데모 키에 저장. 예전 참가 요청 기록은 요청됨으로 이어 받음. 만든 모임에 덮어쓴 임시 플래그는 저장하지 않음
+- [변경] src/lib/activities/demo-data.ts, reviews.ts | 종료 모임 3개(온기동 식은 차, 파도읍 짧은 방파제, 노을구 짧은 문장 낭독)와 예시 후기. 앞의 둘은 참가 확정 예시, 낭독은 미확정이라 작성 잠금. 노을 스케치만 `viewerIsHost`
+- [변경] src/components/activities/GatheringManage.tsx, GatheringReviews.tsx, ActivityReportDialog.tsx, GatheringDetail.tsx, ActivitiesDemo.tsx, activities.css, activities/page.tsx | 내가 만든 모임과 노을 스케치의 관리 탭: 가상 닉네임·한줄 소개·요청 시각, 수락/거절, 확정 인원, 강퇴 확인 모달, 모집 마감/재개. 수락·강퇴가 모집 뱃지에 바로 반영. 그 외 모임은 참가 요청 뒤 「모임장 시점으로 보기」로 수락됨/거절됨 전환. 종료 모임의 후기 탭: 별점 1~5, 한줄 작성·수정·삭제, 목록·평균, 기존 신고 모달 재사용, 욕설·개인정보 주의 한 줄. 동작에는 데모 표시. 색은 기존 테마 토큰
+- [미실행] 브라우저에서 관리 탭 수락·거절·강퇴·모집 토글·뱃지 변화, 모임장 시점 전환, 종료 모임 후기 작성·수정·삭제·신고, 미확정 잠금, 360px·6테마 확인. 이 세션은 파일 읽기·검색·수정만이라 typecheck·build도 실행하지 않음
+- [변경] PR #72 Grok 리뷰(dd4c513) 반영: 모임장 모임(`viewerIsHost`·내가 만든 모임)은 참가 요청을 열지 않고 상세·목록 뱃지에 `requested`를 넘기지 않는다. `recruitmentView`도 그 요청을 인원에 더하지 않는다. 저장된 `joins`·`requests`는 읽을 때와 저장할 때 뺀다. `joinStatus`가 없으면 `hostLook`을 끄고, 관리 탭이면 안내로 돌린다. 권장 반영: 관리 문구는 수락·강퇴와 이미 인원에 들어간 내 요청의 거절에 맞추고, 수락됨 버튼은 「참가 취소」, 후기 탭은 `ended === true`만, 수락·강퇴 등 데모 저장은 직전 상태를 이어서 쓴다. 735행은 `FILE_INDEX.csv`·`MANIFEST.sha256`를 수정하지 않았다고 적지만, 현재 두 파일에는 GatheringManage·GatheringReviews·ActivityReportDialog·demo-roster·reviews 항목이 있다. 이 반영에서는 그 두 파일을 고치지 않음. 741행대로 typecheck·build는 미실행이고, 이 반영도 typecheck·build·sha256sum·브라우저는 실행하지 않음. 해시가 파일 바이트와 같은지는 미확인. PR 본문은 저장소에 없어 통과 문장은 빼지 못함.
+
+## 2026-11-02 데이트·소모임 더보기 메뉴·신고 사유 확장·추천/좋아요(데모) — 오하율 요청 (김민기 작업)
+- [요청] `/activities` 데모에 점 세 개 더보기(신고·내 글 수정/삭제·링크 복사), 신고 문구 「어떤 문제가 있나요?」, 기타 입력(16px·모달 100dvh 스크롤, 전역 확대 금지 없음), 「업데이트가 필요해요」 영업·폐업 확인 요청(localStorage·정보 확인 중·모임장/작성자 확인 완료·수정 예정), 코스·소모임 좋아요·추천과 추천순/좋아요순/최신순. 서버·Supabase·package.json·매칭·채팅·FILE_INDEX.csv·MANIFEST.sha256는 수정하지 않음. 명령 실행 없음
+- [AI] 로컬 Grok이 activities 화면·types·demo-data·demo-storage·기존 `ActivityReportDialog`·매칭 `ReportModal`(재사용하지 않음, 매칭 동작 유지)·activities.css 토큰을 읽고 브라우저 저장만 확장
+- [신규] src/components/activities/ActivityMoreMenu.tsx | 직접 그린 세로 점 세 개 SVG, aria-label 「더보기」, 44px. 메뉴는 Enter/Space·Esc·화살표, 바깥 클릭 닫기, 포커스 복귀
+- [신규] src/components/activities/ActivityReactions.tsx, InfoChecks.tsx, src/lib/activities/feedback.ts | ♡ 좋아요·엄지 추천, `aria-pressed`. 확인 요청 목록과 상태 문구
+- [변경] src/lib/activities/demo-data.ts, types.ts, demo-storage.ts | 코스 8·소모임 13의 데모 좋아요·추천·최신순 시각. 내 반응과 확인 요청은 기존 키 `eottae.activities.demo.v1`
+- [변경] src/components/activities/ActivityReportDialog.tsx, DemoDialog.tsx | 기존 사유 뒤에 「업데이트가 필요해요」「기타」. 제목 아래 「어떤 문제가 있나요?」. 기타만 사유 입력 활성(200자·필수). 신고 모달만 `max-height: 100dvh`·내부 스크롤·입력 16px. 매칭 `ReportModal`은 그대로
+- [변경] ActivitiesDemo.tsx, CourseDetail.tsx, GatheringDetail.tsx, GatheringManage.tsx, ActivitiesNewForm.tsx, activities.css, activities/page.tsx | 카드·상세 오른쪽 위 더보기. 내 데모 모임만 수정 안내·삭제 확인. 링크 복사는 데모 토스트(가능하면 이 기기 클립보드). 업데이트 신고 문구는 「관리자와 게시 작성자에게 영업·폐업 확인 승인 요청을 보냈어요(데모)」. 상세·카드에 정보 확인 중/확인 완료/수정 예정. 소모임은 관리 탭, 코스는 작성자 시점 토글에서 처리. 목록 정렬 추가. 커버·모집 뱃지·참가·후기·모임장 수락은 유지. 색은 기존 6테마 토큰
+- [미실행] 브라우저에서 360px·더보기 키보드·기타 입력 확대·확인 요청·좋아요 정렬, typecheck·build. 이 세션은 파일 읽기·검색·수정만
+
 ## 2026-11-02 중간 점검 2차 제출 문서 — 데모 결과 반영 (김민기 작업)
-- [요청] 중간 점검 2차 제출 문서를 2026-11-02 작업 결과로 갱신. 강사 안내로 2차는 예시 데이터 데모. 머지 #64~#69, (진행 중 — PR #70 등), 실연동은 최종 전. 코드·`FILE_INDEX.csv`·`MANIFEST.sha256`는 수정하지 않음. 명령 실행 없음. 근거 없는 수치·완료 주장을 넣지 않음
-- [AI] 로컬 Grok이 `plan_v3.md`, `중간점검_2차_제출안.md`, `팀원별_추가작업_2차.md`, `실제진행현황_기록부.md`, `실행_결정대기_로그.md`, `captions.csv`, `src/app/activities`·`match`·`invitations`·`settings`, `src/lib/activities/demo-data.ts`(코스 8·소모임 10), `demo-adult.ts`(공개 빌드 바이패스 꺼짐), `AI_REPORT_LOG.md`, `TEAM_ACTIVITY.md`를 읽고 문서만 고침
-- [변경] 4. 프로젝트 결과 보고서/중간점검_2차_제출안.md | 4명 칸을 자기 PR 기준으로 갱신. 김민기 #64·#66·#67·#68·#69. 오하율 #65와 피드백. 주한태·손준혁은 오늘 머지 없음과 최종 전 실연동. `/activities/` 데모 확인 3단계. 결과물 URL `https://sterran123.github.io/eottae/`
+- [요청] 중간 점검 2차 제출 문서를 2026-11-02 작업 결과로 갱신. 강사 안내로 2차는 예시 데이터 데모. 16:08 집계 머지 #64·#65·#69, 같은 집계의 열린 PR #66·#67·#68, 실연동은 최종 전. 코드·`FILE_INDEX.csv`·`MANIFEST.sha256`는 수정하지 않음. 명령 실행 없음. 근거 없는 수치·완료 주장을 넣지 않음
+- [AI] 로컬 Grok이 `plan_v3.md`, `중간점검_2차_제출안.md`, `팀원별_추가작업_2차.md`, `실제진행현황_기록부.md`, `실행_결정대기_로그.md`, `captions.csv`, `src/app/activities`·`match`·`invitations`·`settings`, `src/lib/activities/demo-data.ts`(코스 8·소모임 13, 종료 예시 3개 포함), `demo-adult.ts`(공개 빌드 바이패스 꺼짐), `AI_REPORT_LOG.md`, `TEAM_ACTIVITY.md`를 읽고 문서만 고침
+- [변경] 4. 프로젝트 결과 보고서/중간점검_2차_제출안.md | 4명 칸을 자기 PR 기준으로 갱신. 김민기 16:08 집계 머지 #64·#69. #66·#67·#68은 그 집계의 열린 PR. 오하율 머지 #65. 주한태·손준혁은 오늘 머지 없음과 최종 전 실연동. `/activities/` 데모 확인 3단계. 결과물 URL `https://sterran123.github.io/eottae/`
 - [변경] 1. 프로젝트 계획서/plan_v3.md | 진행 단계의 중간 점검 2차와, 그 문장과 어긋나던 상태·목표·범위·완성 기준·v2→v3·남은 위험의 2차 MVP 문장. 2차 MVP는 데모로 구현. 새 파일 없음
-- [변경] 4. 프로젝트 결과 보고서/실제진행현황_기록부.md | 2차 데모 행 추가. 데모는 데모라고 적음. (진행 중 — PR #70 등)
+- [변경] 4. 프로젝트 결과 보고서/실제진행현황_기록부.md | 2차 데모 행 추가. 데모는 데모라고 적음. 소모임 화면은 이 브라우저 데모이고 서버 참가는 최종 전
 - [변경] 1. 프로젝트 계획서/실행_결정대기_로그.md | DEC-10. 2026-11-02 결정: 2차 제출은 데모(목업) — 강사 안내, 실연동은 최종 전. DEC-09 상태 칸에 모의 결제 #68을 덧붙임
 - [변경] 4. 프로젝트 결과 보고서/팀원별_추가작업_2차.md | 최종 제출까지 할 일을 실연동 중심으로 담당자별 체크박스. #65·온보딩·320px 실측은 완료로 유지. db push·pgTAP·BBaton·PayApp 실가입·Realtime·계정 삭제는 미완
-- [보존] 소스 코드, 이 로그의 기존 줄. `FILE_INDEX.csv`·`MANIFEST.sha256`는 문서 6개의 크기·sha256만 갱신. sha256sum은 실행하지 않음
-- [판단] 2차 제출 범위는 데모. `0003` 파일 머지와 로컬 pgTAP·클라우드 db push를 구분. 공개 Pages에서 매칭 자식이 잠기는 사실(바이패스 없음)을 확인 방법에 적음. #70은 진행 중
+- [보존] 소스 코드. `FILE_INDEX.csv`·`MANIFEST.sha256`는 문서 6개의 크기·sha256만 갱신. sha256sum은 실행하지 않음. 커버 절 다음의 모임장 관리·후기 절과 더보기·추천/좋아요 절은 원문으로 이 로그에 있음
+- [판단] 2차 제출 범위는 데모. `0003` 파일 머지와 로컬 pgTAP·클라우드 db push를 구분. 공개 Pages에서 매칭 자식이 잠기는 사실(바이패스 없음)을 확인 방법에 적음. 모임장 수락·거절·강퇴와 후기 화면은 저장소의 이 브라우저 데모다. PR #70이 열려 있는지는 이 세션에서 GitHub를 조회하지 않음
 - [미실행] 빌드·브라우저·db push·pgTAP·BBaton·PayApp. 이 세션은 파일 읽기·검색·수정만
 - [변경] PR #71 Grok 리뷰(a830e72) 반영: `TEAM_ACTIVITY.md` 2026-11-02 16:08 `gh` 집계의 열린 PR #66·#67·#68을 「이번에 만든 것」·「이미 머지」에서 빼고, SQL·시연 화면은 저장소에 있음과 PR 열림을 나눠 적음. 그날 머지는 #64·#65·#69. [보존]은 문서 6개의 크기·sha256 갱신으로 고침. 이 반영에서는 `FILE_INDEX.csv`·`MANIFEST.sha256`를 다시 고치지 않았고 sha256sum·빌드·pgTAP은 실행하지 않음. 권장 중 정원 문장과 #70 분리, 로그인 세션 없는 창, 범위 3번의 데모 잠금·클라우드 RLS 적용 전, MATCH-005·006 미실행 체크만 반영. PR 본문의 typecheck·build 통과 문장은 남김.
-- [변경] PR #71 Grok 리뷰(470f0e8) 반영: 커버·이미지 첨부를 (진행 중 — PR #70 등)에서 빼고, 목록·상세 ActivityCover(분위기·카테고리 기본 SVG)와 소모임 만들기 폼만의 이 브라우저 data URL(서버 업로드 없음)로 적음. 카드 뱃지는 「정원 N명」, 모집 중 「빈자리 N」, 남은 자리 1~2면 「마감 임박」, 정원·마감 시각·모집 종료면 「마감」. 모임장 수락·거절·강퇴와 후기(별점·한줄)만 진행 중이고 `src/components/activities`에 이 둘은 없음. `plan_v3.md`의 「매칭 진입 전」은 자식 라우트 `DemoEntryGuard`와 `/match` 안내 페이지 게이트 링크이고 `/match` 본문은 열림. 매니페스트 재생성·PR 본문 통과 문장은 명령 실행 불가와 `FILE_INDEX.csv`·`MANIFEST.sha256` 미수정으로 남김. 기존 로그 줄은 고치지 않음.
+- [변경] PR #71 Grok 리뷰(470f0e8) 반영: 커버·이미지 첨부를 (진행 중 — PR #70 등)에서 빼고, 목록·상세 ActivityCover(분위기·카테고리 기본 SVG)와 소모임 만들기 폼만의 이 브라우저 data URL(서버 업로드 없음)로 적음. 카드 뱃지는 「정원 N명」, 모집 중 「빈자리 N」, 남은 자리 1~2면 「마감 임박」, 정원·마감 시각·모집 종료면 「마감」. 모임장이 모집을 다시 열면(`recruitmentForceOpen`) 마감 시각·모집 종료여도 정원이 남으면 「마감」이 아니다. 모임장 수락·거절·강퇴와 후기(별점·한줄)는 GatheringManage.tsx·GatheringReviews.tsx의 이 브라우저 데모다. 예시 소모임은 13개(종료 예시 3개 포함). `plan_v3.md`의 「매칭 진입 전」은 자식 라우트 `DemoEntryGuard`와 `/match` 안내 페이지 게이트 링크이고 `/match` 본문은 열림. 매니페스트 재생성·PR 본문 통과 문장은 명령 실행 불가와 `FILE_INDEX.csv`·`MANIFEST.sha256` 미수정으로 남김. #69 절의 당시 소모임 10개는 고치지 않음.
+- [변경] PR #71 Grok 리뷰(3a87ad4) 반영: 제출 문서의 소모임을 예시 코스 8·소모임 13(종료 예시 3개 포함)으로 고치고, 모임장 수락·거절·강퇴와 후기(별점 1~5·한줄)를 GatheringManage.tsx·GatheringReviews.tsx의 이 브라우저 데모로 적음. 서버 참가·실연동은 최종 전. 「src/components/activities에 이 둘은 없음」과 그 화면만 (진행 중 — PR #70 등)으로 둔 문장은 뺌. #69 뱃지·커버 반복은 김민기 #69와 그 이후 데모에만 두고, 오하율 「이번에 만든 것」은 #65만. 커버 절 다음의 모임장 관리·후기 절과 더보기·추천/좋아요 절은 원문으로 되돌림. 새 절의 소모임 10·「이 둘은 없음」·「기존 줄은 고치지 않음」은 그 기록과 현재 demo-data.ts에 맞춤. #69 절의 당시 소모임 10개는 그대로. 권장 반영: `recruitmentForceOpen`이면 마감 시각·모집 종료여도 정원이 남으면 「마감」이 아님. 더보기(ActivityMoreMenu.tsx)·좋아요·추천(ActivityReactions.tsx)은 데모 범위에 한 줄, 서버 완료 아님. 737행에 해당하던 #66·#67·#68은 16:08 집계의 열린 PR로 구분. 남김: sha256sum과 `FILE_INDEX.csv`·`MANIFEST.sha256`(명령 실행 불가, 두 파일 미수정), PR 본문(저장소에 없음).
 
