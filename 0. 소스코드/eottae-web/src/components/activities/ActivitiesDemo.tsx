@@ -3,9 +3,11 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import ActivityCover from '@/components/activities/ActivityCover';
 import CourseDetail from '@/components/activities/CourseDetail';
 import DemoDialog from '@/components/activities/DemoDialog';
 import GatheringDetail from '@/components/activities/GatheringDetail';
+import RecruitmentBadges from '@/components/activities/RecruitmentBadges';
 import SubpageHero from '@/components/shared/subpage-hero';
 import { MotifIcon } from '@/components/shared/motif-icon';
 import { budgetBand, courseTotals, DEMO_COURSES, DEMO_GATHERINGS, findCourse, formatDuration } from '@/lib/activities/demo-data';
@@ -14,8 +16,10 @@ import {
   EMPTY_ACTIVITIES_DEMO,
   loadActivitiesDemo,
   saveActivitiesDemo,
+  takeActivitiesNotice,
   type ActivitiesDemoState,
 } from '@/lib/activities/demo-storage';
+import { recruitmentView } from '@/lib/activities/recruitment';
 import {
   ACTIVITY_REGIONS,
   COURSE_MOODS,
@@ -46,6 +50,11 @@ export default function ActivitiesDemo() {
   useEffect(() => {
     setStored(loadActivitiesDemo());
     setReady(true);
+    const notice = takeActivitiesNotice();
+    if (notice) {
+      setToast(notice);
+      toastTimer.current = window.setTimeout(() => setToast(null), 5000);
+    }
   }, []);
 
   useEffect(
@@ -140,8 +149,13 @@ export default function ActivitiesDemo() {
     const gathering = gatherings.find((item) => item.id === id);
     if (!gathering || !ready) return;
     const has = stored.requests[id] === true;
-    if (!has && gathering.currentCount >= gathering.capacity) {
-      showToast('데모 · 정원이 찬 예시라 요청할 수 없어요.');
+    const view = recruitmentView(gathering, false, new Date());
+    if (!has && view.closed) {
+      showToast(
+        gathering.currentCount >= gathering.capacity
+          ? '데모 · 정원이 찬 예시라 요청할 수 없어요.'
+          : '데모 · 마감된 예시라 요청할 수 없어요.'
+      );
       return;
     }
     const requests = { ...stored.requests };
@@ -355,17 +369,20 @@ export default function ActivitiesDemo() {
                             className="act-card"
                             href={activitiesHref({ ...listQuery, tab: 'courses', course: course.id })}
                           >
-                            <div className="act-chips">
-                              <span className="act-chip">{course.region}</span>
-                              <span className="act-chip">{course.mood}</span>
-                              <span className="act-demo-mark">데모</span>
+                            <ActivityCover item={course} />
+                            <div className="act-card-body">
+                              <div className="act-chips">
+                                <span className="act-chip">{course.region}</span>
+                                <span className="act-chip">{course.mood}</span>
+                                <span className="act-demo-mark">데모</span>
+                              </div>
+                              <h3>{course.title}</h3>
+                              <p className="act-meta">
+                                {budgetBand(totals.costWon)} · {formatDuration(totals.minutes)} · 단계 {course.steps.length}개
+                              </p>
+                              <p className="act-clamp">{course.summary}</p>
+                              <span className="act-card-go">동선 보기 →</span>
                             </div>
-                            <h3>{course.title}</h3>
-                            <p className="act-meta">
-                              {budgetBand(totals.costWon)} · {formatDuration(totals.minutes)} · 단계 {course.steps.length}개
-                            </p>
-                            <p className="act-clamp">{course.summary}</p>
-                            <span className="act-card-go">동선 보기 →</span>
                           </Link>
                         </li>
                       );
@@ -380,29 +397,28 @@ export default function ActivitiesDemo() {
                 <ul className="act-grid">
                   {visibleGatherings.map((item) => {
                     const requested = stored.requests[item.id] === true;
-                    const seats = item.capacity - item.currentCount;
                     return (
                       <li key={item.id}>
                         <Link
                           className="act-card"
                           href={activitiesHref({ ...listQuery, tab: 'gatherings', gathering: item.id })}
                         >
-                          <div className="act-chips">
-                            <span className="act-chip">{item.category}</span>
-                            <span className="act-chip">{item.region}</span>
-                            {item.mine && <span className="act-chip">내 데모</span>}
-                            <span className="act-demo-mark">{requested ? '요청됨' : '데모'}</span>
+                          <ActivityCover item={item} />
+                          <div className="act-card-body">
+                            <div className="act-chips">
+                              <span className="act-chip">{item.category}</span>
+                              <span className="act-chip">{item.region}</span>
+                              {item.mine && <span className="act-chip">내 데모</span>}
+                              <span className="act-demo-mark">{requested ? '요청됨' : '데모'}</span>
+                            </div>
+                            <h3>{item.title}</h3>
+                            <p className="act-meta">
+                              {item.startsAtLabel} · {item.hostNickname}
+                            </p>
+                            <RecruitmentBadges gathering={item} requested={requested} />
+                            <p className="act-clamp">{item.intro}</p>
+                            <span className="act-card-go">모임 보기 →</span>
                           </div>
-                          <h3>{item.title}</h3>
-                          <p className="act-meta">
-                            {item.startsAtLabel} · {item.hostNickname}
-                          </p>
-                          <p className="act-meta">
-                            예시 {item.currentCount}명 / 정원 {item.capacity}명
-                            {seats <= 0 ? ' · 마감' : ` · 빈 자리 ${seats}`}
-                          </p>
-                          <p className="act-clamp">{item.intro}</p>
-                          <span className="act-card-go">모임 보기 →</span>
                         </Link>
                       </li>
                     );

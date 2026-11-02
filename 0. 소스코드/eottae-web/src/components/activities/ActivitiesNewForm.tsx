@@ -3,11 +3,13 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useRef, useState } from 'react';
+import ActivityCover from '@/components/activities/ActivityCover';
 import SubpageHero from '@/components/shared/subpage-hero';
 import { MotifIcon } from '@/components/shared/motif-icon';
+import { readCoverFile } from '@/lib/activities/cover';
 import { buildDemoPoll, formatKoreanDateTime, formatLocalDateTime, parseLocalDateTime } from '@/lib/activities/demo-data';
 import { activitiesHref } from '@/lib/activities/href';
-import { loadActivitiesDemo, saveActivitiesDemo } from '@/lib/activities/demo-storage';
+import { loadActivitiesDemo, saveActivitiesDemo, stashActivitiesNotice } from '@/lib/activities/demo-storage';
 import {
   ACTIVITY_REGIONS,
   GATHERING_CATEGORIES,
@@ -59,8 +61,13 @@ export default function ActivitiesNewForm() {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(INITIAL);
   const [error, setError] = useState<string | null>(null);
+  const [cover, setCover] = useState<string | null>(null);
+  const [coverNote, setCoverNote] = useState<string | null>(null);
+  const [coverBusy, setCoverBusy] = useState(false);
   const errorRef = useRef<HTMLParagraphElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const titleId = useId();
+  const coverHintId = useId();
 
   useEffect(() => {
     if (error) errorRef.current?.focus();
@@ -70,8 +77,35 @@ export default function ActivitiesNewForm() {
     setForm((current) => ({ ...current, [key]: event.target.value }));
   };
 
+  const onCoverPick = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    setCoverBusy(true);
+    setCoverNote(null);
+    void readCoverFile(file).then((result) => {
+      setCoverBusy(false);
+      if (!result.ok) {
+        setCoverNote(result.message);
+        return;
+      }
+      setCover(result.dataUrl);
+      setCoverNote(null);
+    });
+  };
+
+  const clearCover = () => {
+    setCover(null);
+    setCoverNote(null);
+    if (fileRef.current) fileRef.current.value = '';
+  };
+
   const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (coverBusy) {
+      setError('이미지를 아직 읽고 있어요. 잠시 후 다시 눌러 주세요.');
+      return;
+    }
     const message = validate(form);
     if (message) {
       setError(message);
@@ -106,18 +140,33 @@ export default function ActivitiesNewForm() {
       safetyFlags: ['공개 장소', '첫 만남 안내', '데모 모임'],
       poll,
       mine: true,
+      coverImage: cover ?? undefined,
     };
     const current = loadActivitiesDemo();
-    const saved = saveActivitiesDemo({
+    let saved = saveActivitiesDemo({
       ...current,
       created: [gathering, ...current.created].slice(0, 20),
     });
+    if (!saved && gathering.coverImage) {
+      const withoutCover: Gathering = { ...gathering, coverImage: undefined };
+      saved = saveActivitiesDemo({
+        ...current,
+        created: [withoutCover, ...current.created].slice(0, 20),
+      });
+      if (saved) {
+        stashActivitiesNotice('데모 저장 공간이 부족해 첨부 이미지는 넣지 않았어요. 카테고리 기본 커버를 씁니다.');
+        router.push(activitiesHref({ tab: 'gatherings', gathering: id }));
+        return;
+      }
+    }
     if (!saved) {
       setError('데모 · 이 브라우저에 저장하지 못했어요. 목록에 넣지 않았습니다.');
       return;
     }
     router.push(activitiesHref({ tab: 'gatherings', gathering: id }));
   };
+
+  const previewCategory = isGatheringCategory(form.category) ? form.category : '취미';
 
   return (
     <>
@@ -204,6 +253,54 @@ export default function ActivitiesNewForm() {
               placeholder="처음 오는 사람에게 모임이 어떤 자리인지 10자 이상 적어 주세요."
             />
           </label>
+          <div className="act-field">
+            <span>커버 이미지 (선택)</span>
+            <input
+              ref={fileRef}
+              className="act-file-input"
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif"
+              tabIndex={-1}
+              aria-hidden="true"
+              onChange={onCoverPick}
+            />
+            <div className="act-actions">
+              <button
+                type="button"
+                className="btn outline"
+                aria-describedby={coverHintId}
+                disabled={coverBusy}
+                onClick={() => fileRef.current?.click()}
+              >
+                {coverBusy ? '이미지 읽는 중' : '이미지 첨부'}
+              </button>
+              {cover ? (
+                <button type="button" className="btn outline" onClick={clearCover}>
+                  첨부 삭제
+                </button>
+              ) : null}
+            </div>
+            <p id={coverHintId} className="act-note">
+              jpg, png, webp, gif · 2MB 이하. 첨부하지 않으면 선택한 카테고리의 기본 커버가 자동으로 붙어요.
+            </p>
+            <p className="act-note">
+              <span className="act-demo-mark">데모: 이 기기에만 저장</span> 서버로 올리지 않아요. 움직이는 gif는 한 장면으로 줄여 저장해요.
+            </p>
+            {coverNote ? (
+              <p className="act-warn" role="status">
+                {coverNote}
+              </p>
+            ) : null}
+            <ActivityCover
+              large
+              lazy={false}
+              item={{
+                title: form.title.trim() || '새 소모임',
+                category: previewCategory,
+                coverImage: cover ?? undefined,
+              }}
+            />
+          </div>
           <p className="act-note">
             <span className="act-demo-mark">데모</span> 일정 투표 후보 3개는 고른 시간, 두 시간 뒤, 다음 날로 자동으로 붙습니다. 참가 인원은
             모임장 1명으로 시작합니다.

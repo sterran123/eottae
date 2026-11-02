@@ -1,10 +1,13 @@
 // 데모 상태만 이 브라우저 localStorage에 둔다. 서버로 보내지 않는다.
 
+import { isSafeCover } from './cover';
 import type { Gathering, PollOption } from './types';
 import { isActivityRegion, isGatheringCategory } from './types';
 
 const STORAGE_KEY = 'eottae.activities.demo.v1';
+const NOTICE_KEY = 'eottae.activities.demo.notice';
 const MAX_CREATED = 20;
+const LOCAL_DATE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 
 export type ActivitiesDemoState = {
   requests: Record<string, true>;
@@ -59,6 +62,18 @@ function isStoredGathering(value: unknown): value is Gathering {
   return true;
 }
 
+function sanitizeGathering(value: Gathering): Gathering {
+  const next: Gathering = { ...value };
+  if (typeof value.coverImage === 'string' && isSafeCover(value.coverImage)) next.coverImage = value.coverImage;
+  else delete next.coverImage;
+  if (typeof value.recruitmentClosed === 'boolean') next.recruitmentClosed = value.recruitmentClosed;
+  else delete next.recruitmentClosed;
+  if (typeof value.recruitmentEndsAt === 'string' && LOCAL_DATE.test(value.recruitmentEndsAt)) {
+    next.recruitmentEndsAt = value.recruitmentEndsAt;
+  } else delete next.recruitmentEndsAt;
+  return next;
+}
+
 function readBoolMap(value: unknown): Record<string, true> {
   if (!value || typeof value !== 'object') return {};
   const next: Record<string, true> = {};
@@ -87,7 +102,9 @@ export function loadActivitiesDemo(): ActivitiesDemoState {
     const parsed: unknown = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object') return EMPTY_ACTIVITIES_DEMO;
     const row = parsed as Partial<ActivitiesDemoState>;
-    const created = Array.isArray(row.created) ? row.created.filter(isStoredGathering).slice(0, MAX_CREATED) : [];
+    const created = Array.isArray(row.created)
+      ? row.created.filter(isStoredGathering).slice(0, MAX_CREATED).map(sanitizeGathering)
+      : [];
     return {
       requests: readBoolMap(row.requests),
       votes: readVoteMap(row.votes),
@@ -101,14 +118,38 @@ export function loadActivitiesDemo(): ActivitiesDemoState {
 export function saveActivitiesDemo(state: ActivitiesDemoState): boolean {
   if (typeof window === 'undefined') return false;
   try {
+    const sliced = state.created.slice(0, MAX_CREATED);
+    const created = sliced.map(sanitizeGathering);
+    const droppedCover = sliced.some((item, index) => Boolean(item.coverImage) && !created[index]?.coverImage);
+    if (droppedCover) return false;
     const payload: ActivitiesDemoState = {
       requests: state.requests,
       votes: state.votes,
-      created: state.created.slice(0, MAX_CREATED),
+      created,
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     return true;
   } catch {
     return false;
+  }
+}
+
+export function stashActivitiesNotice(message: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.sessionStorage.setItem(NOTICE_KEY, message.slice(0, 200));
+  } catch {
+    // 안내 문구를 못 남겨도 모임 저장 자체는 막지 않는다.
+  }
+}
+
+export function takeActivitiesNotice(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const value = window.sessionStorage.getItem(NOTICE_KEY);
+    if (value) window.sessionStorage.removeItem(NOTICE_KEY);
+    return value;
+  } catch {
+    return null;
   }
 }
