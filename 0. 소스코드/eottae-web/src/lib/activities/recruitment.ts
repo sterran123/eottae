@@ -25,6 +25,8 @@ type Input = Pick<
   | 'recruitmentEndsAt'
   | 'recruitmentClosed'
   | 'recruitmentForceOpen'
+  | 'viewerIsHost'
+  | 'mine'
 >;
 
 function deadlinePassed(value: string | undefined, now: Date): boolean {
@@ -36,7 +38,9 @@ function deadlinePassed(value: string | undefined, now: Date): boolean {
 
 export function recruitmentView(gathering: Input, requested: boolean, now: Date): RecruitmentView {
   const capacity = gathering.capacity;
-  const shownCount = Math.min(capacity, gathering.currentCount + (requested ? 1 : 0));
+  // 모임장 자리는 currentCount에 이미 있다. 그 모임의 참가 요청은 인원에 더하지 않는다.
+  const addOwnRequest = requested && gathering.viewerIsHost !== true && gathering.mine !== true;
+  const shownCount = Math.min(capacity, gathering.currentCount + (addOwnRequest ? 1 : 0));
   const seats = Math.max(0, capacity - shownCount);
   const deadline = gathering.recruitmentEndsAt ?? gathering.startsAtIso;
   const closed =

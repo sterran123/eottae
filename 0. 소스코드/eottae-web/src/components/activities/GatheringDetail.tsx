@@ -73,6 +73,13 @@ export default function GatheringDetail({
     titleRef.current?.focus();
   }, [gathering?.id]);
 
+  useEffect(() => {
+    if (!joinStatus) {
+      setHostLook(false);
+      setPanel((current) => (current === 'manage' ? 'info' : current));
+    }
+  }, [gathering?.id, joinStatus]);
+
   if (!gathering) {
     return (
       <div className="act-detail">
@@ -87,10 +94,11 @@ export default function GatheringDetail({
   }
 
   const now = new Date();
-  const roster = recruitmentView(gathering, requested, now);
   const host = gathering.viewerIsHost === true || gathering.mine === true;
-  const showManage = host || hostLook;
-  const showReviews = isEndedGathering(gathering, now);
+  const countedRequest = host ? false : requested;
+  const roster = recruitmentView(gathering, countedRequest, now);
+  const showManage = host || (hostLook && Boolean(joinStatus));
+  const showReviews = isEndedGathering(gathering);
   const panels: { id: PanelId; label: string }[] = [{ id: 'info', label: '안내' }];
   if (showManage) panels.push({ id: 'manage', label: '관리' });
   if (showReviews) panels.push({ id: 'reviews', label: '후기' });
@@ -100,7 +108,7 @@ export default function GatheringDetail({
     (sum, option) => sum + option.demoVotes + (selectedVote === option.id ? 1 : 0),
     0
   );
-  const canWrite = canWriteReview(gathering, joinStatus, now);
+  const canWrite = canWriteReview(gathering, joinStatus);
   const average = averageStars(reviewRows);
   const averageLabel =
     average === null ? '평균 별점 · 후기 없음 · 데모' : `평균 ${average.toFixed(1)}점 · 후기 ${reviewRows.length}개 · 데모`;
@@ -133,47 +141,55 @@ export default function GatheringDetail({
     <>
       <section aria-labelledby="act-join-title">
         <h3 id="act-join-title">참가 요청</h3>
-        <p className="act-note">
-          <span className="act-demo-mark">데모</span> 누르면 상태가 ‘요청됨’으로 바뀌고 이 브라우저에만 남아요. 모임장에게 전달되지
-          않습니다.
-        </p>
-        <div className="act-actions">
-          {requested ? (
-            <button type="button" className="btn outline" onClick={onToggleRequest} disabled={!ready}>
-              요청 취소
-            </button>
-          ) : (
-            <button type="button" className="btn primary" onClick={onToggleRequest} disabled={!ready || roster.closed}>
-              {roster.closed
-                ? roster.shownCount >= gathering.capacity
-                  ? '정원이 찬 예시'
-                  : '마감된 예시'
-                : joinStatus === 'rejected'
-                  ? '다시 요청'
-                  : '참가 요청'}
-            </button>
-          )}
-          <span className="act-demo-mark">{joinStatus ? `${JOIN_LABEL[joinStatus]} · 데모` : '데모'}</span>
-        </div>
-        {joinStatus === 'requested' && (
-          <p role="status" className="act-note">
-            참가 요청됨. 새로고침해도 이 브라우저에서는 요청됨으로 남아 있어요.
+        {host ? (
+          <p className="act-note">
+            <span className="act-demo-mark">데모</span> 모임장은 이미 인원에 들어 있어 참가 요청을 열지 않아요.
           </p>
-        )}
-        {joinStatus === 'accepted' && (
-          <p role="status" className="act-note">
-            수락됨 · 데모. 참가 확정으로 표시하고 모집 인원에도 넣어요.
-          </p>
-        )}
-        {joinStatus === 'rejected' && (
-          <p role="status" className="act-note">
-            거절됨 · 데모. 모집 인원에는 넣지 않아요.
-          </p>
-        )}
-        {gathering.demoAttended && joinStatus !== 'accepted' && (
-          <p role="status" className="act-note">
-            데모 · 이 종료 모임에서는 내가 참가 확정된 사람으로 후기를 쓸 수 있어요.
-          </p>
+        ) : (
+          <>
+            <p className="act-note">
+              <span className="act-demo-mark">데모</span> 누르면 상태가 ‘요청됨’으로 바뀌고 이 브라우저에만 남아요. 모임장에게
+              전달되지 않습니다.
+            </p>
+            <div className="act-actions">
+              {countedRequest ? (
+                <button type="button" className="btn outline" onClick={onToggleRequest} disabled={!ready}>
+                  {joinStatus === 'accepted' ? '참가 취소' : '요청 취소'}
+                </button>
+              ) : (
+                <button type="button" className="btn primary" onClick={onToggleRequest} disabled={!ready || roster.closed}>
+                  {roster.closed
+                    ? roster.shownCount >= gathering.capacity
+                      ? '정원이 찬 예시'
+                      : '마감된 예시'
+                    : joinStatus === 'rejected'
+                      ? '다시 요청'
+                      : '참가 요청'}
+                </button>
+              )}
+              <span className="act-demo-mark">{joinStatus ? `${JOIN_LABEL[joinStatus]} · 데모` : '데모'}</span>
+            </div>
+            {joinStatus === 'requested' && (
+              <p role="status" className="act-note">
+                참가 요청됨. 새로고침해도 이 브라우저에서는 요청됨으로 남아 있어요.
+              </p>
+            )}
+            {joinStatus === 'accepted' && (
+              <p role="status" className="act-note">
+                수락됨 · 데모. 참가 확정으로 표시하고 모집 인원에도 넣어요.
+              </p>
+            )}
+            {joinStatus === 'rejected' && (
+              <p role="status" className="act-note">
+                거절됨 · 데모. 모집 인원에는 넣지 않아요.
+              </p>
+            )}
+            {gathering.demoAttended && joinStatus !== 'accepted' && (
+              <p role="status" className="act-note">
+                데모 · 이 종료 모임에서는 내가 참가 확정된 사람으로 후기를 쓸 수 있어요.
+              </p>
+            )}
+          </>
         )}
       </section>
 
@@ -291,12 +307,12 @@ export default function GatheringDetail({
         <div>
           <dt>모집</dt>
           <dd aria-live="polite">
-            <RecruitmentBadges gathering={gathering} requested={requested} now={now} />
-            {requested ? <span className="act-sr">내 참가 요청이 인원에 포함되어 뱃지가 바뀝니다.</span> : null}
+            <RecruitmentBadges gathering={gathering} requested={countedRequest} now={now} />
+            {countedRequest ? <span className="act-sr">내 참가 요청이 인원에 포함되어 뱃지가 바뀝니다.</span> : null}
           </dd>
         </div>
       </dl>
-      {joinStatus && (
+      {!host && joinStatus && (
         <p role="status" className="act-note">
           내 참가: {JOIN_LABEL[joinStatus]} · 데모
         </p>
@@ -361,7 +377,7 @@ export default function GatheringDetail({
             <GatheringManage
               hostNickname={gathering.hostNickname}
               people={people}
-              selfStatus={joinStatus}
+              selfStatus={host ? null : joinStatus}
               recruitmentLabel={recruitmentToggleLabel(roster.closed, recruitmentOverride)}
               canTakeSeat={roster.shownCount < gathering.capacity}
               onDecision={onDecision}

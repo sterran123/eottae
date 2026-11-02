@@ -1,6 +1,7 @@
 // 데모 상태만 이 브라우저 localStorage에 둔다. 서버로 보내지 않는다.
 
 import { isSafeCover } from './cover';
+import { DEMO_GATHERINGS } from './demo-data';
 import { isVirtualPerson, type GatheringOps } from './demo-roster';
 import type { Gathering, PollOption } from './types';
 import { isActivityRegion, isGatheringCategory } from './types';
@@ -111,6 +112,33 @@ function readJoins(value: unknown): Record<string, MyJoinStatus> {
   return next;
 }
 
+/** 노을 스케치·내가 만든 모임은 모임장이 이미 currentCount에 있다. */
+function hostGatheringIds(created: readonly Pick<Gathering, 'id' | 'mine' | 'viewerIsHost'>[]): Set<string> {
+  const ids = new Set<string>();
+  for (const item of created) {
+    if (item.mine === true || item.viewerIsHost === true) ids.add(item.id);
+  }
+  for (const item of DEMO_GATHERINGS) {
+    if (item.mine === true || item.viewerIsHost === true) ids.add(item.id);
+  }
+  return ids;
+}
+
+function omitHostMembership(
+  requests: Record<string, true>,
+  joins: Record<string, MyJoinStatus>,
+  created: readonly Pick<Gathering, 'id' | 'mine' | 'viewerIsHost'>[]
+): { requests: Record<string, true>; joins: Record<string, MyJoinStatus> } {
+  const hostIds = hostGatheringIds(created);
+  const nextRequests = { ...requests };
+  const nextJoins = { ...joins };
+  for (const id of hostIds) {
+    delete nextRequests[id];
+    delete nextJoins[id];
+  }
+  return { requests: nextRequests, joins: nextJoins };
+}
+
 function alignJoinMaps(
   requests: Record<string, true>,
   joins: Record<string, MyJoinStatus>
@@ -191,6 +219,11 @@ function readIdList(value: unknown): string[] {
 export function applyJoin(state: ActivitiesDemoState, id: string, status: MyJoinStatus | null): ActivitiesDemoState {
   const joins = { ...state.joins };
   const requests = { ...state.requests };
+  if (hostGatheringIds(state.created).has(id)) {
+    delete joins[id];
+    delete requests[id];
+    return { ...state, joins, requests };
+  }
   if (status === null) {
     delete joins[id];
     delete requests[id];
@@ -236,9 +269,10 @@ export function loadActivitiesDemo(): ActivitiesDemoState {
       ? row.created.filter(isStoredGathering).slice(0, MAX_CREATED).map(sanitizeGathering)
       : [];
     const aligned = alignJoinMaps(readBoolMap(row.requests), readJoins(row.joins));
+    const membership = omitHostMembership(aligned.requests, aligned.joins, created);
     return {
-      requests: aligned.requests,
-      joins: aligned.joins,
+      requests: membership.requests,
+      joins: membership.joins,
       votes: readVoteMap(row.votes),
       created,
       ops: readOps(row.ops),
@@ -257,9 +291,10 @@ export function saveActivitiesDemo(state: ActivitiesDemoState): boolean {
     const created = sliced.map(sanitizeGathering);
     const droppedCover = sliced.some((item, index) => Boolean(item.coverImage) && !created[index]?.coverImage);
     if (droppedCover) return false;
+    const membership = omitHostMembership(state.requests, state.joins, created);
     const payload: ActivitiesDemoState = {
-      requests: state.requests,
-      joins: state.joins,
+      requests: membership.requests,
+      joins: membership.joins,
       votes: state.votes,
       created,
       ops: state.ops,

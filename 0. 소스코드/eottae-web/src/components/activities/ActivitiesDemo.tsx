@@ -40,10 +40,15 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]['id'];
 
+function isHostGathering(gathering: Pick<Gathering, 'viewerIsHost' | 'mine'> | undefined): boolean {
+  return gathering?.viewerIsHost === true || gathering?.mine === true;
+}
+
 export default function ActivitiesDemo() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [stored, setStored] = useState<ActivitiesDemoState>(EMPTY_ACTIVITIES_DEMO);
+  const storedRef = useRef(stored);
   const [ready, setReady] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [clearOpen, setClearOpen] = useState(false);
@@ -51,7 +56,9 @@ export default function ActivitiesDemo() {
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
   useEffect(() => {
-    setStored(loadActivitiesDemo());
+    const loaded = loadActivitiesDemo();
+    storedRef.current = loaded;
+    setStored(loaded);
     setReady(true);
     const notice = takeActivitiesNotice();
     if (notice) {
@@ -73,8 +80,10 @@ export default function ActivitiesDemo() {
     toastTimer.current = window.setTimeout(() => setToast(null), 5000);
   }, []);
 
-  const persist = useCallback((next: ActivitiesDemoState) => {
-    setStored(next);
+  const persist = useCallback((recipe: (current: ActivitiesDemoState) => ActivitiesDemoState) => {
+    const next = recipe(storedRef.current);
+    storedRef.current = next;
+    setStored(() => next);
     return saveActivitiesDemo(next);
   }, []);
 
@@ -144,16 +153,18 @@ export default function ActivitiesDemo() {
     selectTab(TABS[next].id, next);
   };
 
-  const remember = (next: ActivitiesDemoState, okMessage: string) => {
-    const saved = persist(next);
+  const remember = (recipe: (current: ActivitiesDemoState) => ActivitiesDemoState, okMessage: string) => {
+    const saved = persist(recipe);
     showToast(saved ? okMessage : '데모 · 화면에는 반영했지만 이 브라우저에 저장하지 못했어요.');
   };
 
   const toggleRequest = (id: string) => {
     const gathering = gatherings.find((item) => item.id === id);
     if (!gathering || !ready) return;
-    const presented = presentGathering(gathering, stored.ops[id]);
-    const has = stored.joins[id] === 'requested' || stored.joins[id] === 'accepted';
+    if (isHostGathering(gathering)) return;
+    const current = storedRef.current;
+    const presented = presentGathering(gathering, current.ops[id]);
+    const has = current.joins[id] === 'requested' || current.joins[id] === 'accepted';
     const view = recruitmentView(presented, false, new Date());
     if (!has && view.closed) {
       showToast(
@@ -164,9 +175,12 @@ export default function ActivitiesDemo() {
       return;
     }
     remember(
-      applyJoin(stored, id, has ? null : 'requested'),
+      (state) => {
+        const liveHas = state.joins[id] === 'requested' || state.joins[id] === 'accepted';
+        return applyJoin(state, id, liveHas ? null : 'requested');
+      },
       has
-        ? stored.joins[id] === 'accepted'
+        ? current.joins[id] === 'accepted'
           ? '데모 · 참가 확정을 취소했어요. 이 브라우저 기록만 바뀌었어요.'
           : '데모 · 참가 요청을 취소했어요. 이 브라우저 기록만 바뀌었어요.'
         : '데모 · 참가 요청됨으로 바꿔 두었어요. 모임장에게는 가지 않아요.'
@@ -176,11 +190,13 @@ export default function ActivitiesDemo() {
   const decide = (id: string, personId: string, status: 'accepted' | 'rejected' | 'kicked') => {
     const gathering = gatherings.find((item) => item.id === id);
     if (!gathering || !ready) return;
+    const current = storedRef.current;
     if (personId === 'self') {
+      if (isHostGathering(gathering)) return;
       if (status !== 'accepted' && status !== 'rejected') return;
-      const counted = stored.joins[id] === 'requested' || stored.joins[id] === 'accepted';
+      const counted = current.joins[id] === 'requested' || current.joins[id] === 'accepted';
       if (status === 'accepted' && !counted) {
-        const presented = presentGathering(gathering, stored.ops[id]);
+        const presented = presentGathering(gathering, current.ops[id]);
         const view = recruitmentView(presented, false, new Date());
         if (view.shownCount >= presented.capacity) {
           showToast('데모 · 정원이 차서 수락할 수 없어요.');
@@ -188,55 +204,62 @@ export default function ActivitiesDemo() {
         }
       }
       remember(
-        applyJoin(stored, id, status),
+        (state) => applyJoin(state, id, status),
         status === 'accepted'
           ? '데모 · 내 요청을 수락됨으로 바꿨어요. 이 브라우저에만 남습니다.'
           : '데모 · 내 요청을 거절됨으로 바꿨어요. 인원 뱃지에서 빠집니다.'
       );
       return;
     }
-    const currentPeople = rosterPeople(gathering, stored.ops[id]);
+    const currentPeople = rosterPeople(gathering, current.ops[id]);
     if (!currentPeople.some((person) => person.id === personId)) return;
     if (status === 'accepted') {
-      const presented = presentGathering(gathering, stored.ops[id]);
-      const view = recruitmentView(presented, stored.requests[id] === true, new Date());
+      const presented = presentGathering(gathering, current.ops[id]);
+      const view = recruitmentView(presented, !isHostGathering(gathering) && current.requests[id] === true, new Date());
       if (view.shownCount >= presented.capacity) {
         showToast('데모 · 정원이 차서 수락할 수 없어요.');
         return;
       }
     }
-    const prev = stored.ops[id] ?? {};
     const message =
       status === 'accepted'
         ? '데모 · 수락했어요. 모집 뱃지 인원이 바로 늘어납니다.'
         : status === 'rejected'
           ? '데모 · 거절했어요. 인원은 그대로입니다.'
           : '데모 · 강퇴했어요. 확정 인원과 모집 뱃지에서 빠집니다.';
-    remember(
-      {
-        ...stored,
+    remember((state) => {
+      const people = rosterPeople(gathering, state.ops[id]);
+      if (!people.some((person) => person.id === personId)) return state;
+      if (status === 'accepted') {
+        const presented = presentGathering(gathering, state.ops[id]);
+        const view = recruitmentView(presented, !isHostGathering(gathering) && state.requests[id] === true, new Date());
+        if (view.shownCount >= presented.capacity) return state;
+      }
+      const prev = state.ops[id] ?? {};
+      return {
+        ...state,
         ops: {
-          ...stored.ops,
-          [id]: { ...prev, people: withPersonStatus(currentPeople, personId, status) },
+          ...state.ops,
+          [id]: { ...prev, people: withPersonStatus(people, personId, status) },
         },
-      },
-      message
-    );
+      };
+    }, message);
   };
 
   const toggleRecruitment = (id: string) => {
     const gathering = gatherings.find((item) => item.id === id);
     if (!gathering || !ready) return;
-    const prev = stored.ops[id] ?? {};
-    const presented = presentGathering(gathering, stored.ops[id]);
-    const view = recruitmentView(presented, stored.requests[id] === true, new Date());
+    const current = storedRef.current;
+    const prev = current.ops[id] ?? {};
+    const presented = presentGathering(gathering, current.ops[id]);
+    const view = recruitmentView(presented, !isHostGathering(gathering) && current.requests[id] === true, new Date());
     const openNow = prev.recruitment === 'open' || (!prev.recruitment && !view.closed);
     const recruitment = openNow ? 'closed' : 'open';
     remember(
-      {
-        ...stored,
-        ops: { ...stored.ops, [id]: { ...prev, recruitment } },
-      },
+      (state) => ({
+        ...state,
+        ops: { ...state.ops, [id]: { ...(state.ops[id] ?? {}), recruitment } },
+      }),
       recruitment === 'closed'
         ? '데모 · 모집을 마감했어요. 뱃지가 마감으로 바뀝니다.'
         : '데모 · 모집을 다시 열었어요. 빈자리가 있으면 뱃지가 바뀝니다.'
@@ -245,48 +268,54 @@ export default function ActivitiesDemo() {
 
   const saveReview = (id: string, stars: number, body: string) => {
     const gathering = gatherings.find((item) => item.id === id);
-    if (!gathering || !canWriteReview(gathering, stored.joins[id] ?? null, new Date())) {
+    const current = storedRef.current;
+    if (!gathering || !canWriteReview(gathering, current.joins[id] ?? null)) {
       showToast('데모 · 참가 확정자만 후기를 쓸 수 있어요.');
       return;
     }
     const text = body.trim();
     if (!Number.isInteger(stars) || stars < 1 || stars > 5 || text.length < 2 || text.length > 80) return;
+    const atLabel = formatKoreanDateTime(new Date());
     remember(
-      {
-        ...stored,
+      (state) => ({
+        ...state,
         reviews: {
-          ...stored.reviews,
+          ...state.reviews,
           [id]: [
             {
               id: `mine-${id}`,
               nickname: '나 (데모)',
               stars,
               body: text,
-              atLabel: formatKoreanDateTime(new Date()),
+              atLabel,
               mine: true,
             },
           ],
         },
-      },
+      }),
       '데모 · 한줄 후기를 이 브라우저에만 남겼어요.'
     );
   };
 
   const deleteReview = (id: string) => {
-    const reviews = { ...stored.reviews };
-    delete reviews[id];
-    remember({ ...stored, reviews }, '데모 · 내 후기를 이 브라우저에서 지웠어요.');
+    remember((state) => {
+      const reviews = { ...state.reviews };
+      delete reviews[id];
+      return { ...state, reviews };
+    }, '데모 · 내 후기를 이 브라우저에서 지웠어요.');
   };
 
   const vote = (id: string, optionId: string) => {
     const gathering = gatherings.find((item) => item.id === id);
     if (!gathering || !gathering.poll.some((option) => option.id === optionId)) return;
-    const votes = { ...stored.votes };
-    const retract = votes[id] === optionId;
-    if (retract) delete votes[id];
-    else votes[id] = optionId;
+    const retract = storedRef.current.votes[id] === optionId;
     remember(
-      { ...stored, votes },
+      (state) => {
+        const votes = { ...state.votes };
+        if (votes[id] === optionId) delete votes[id];
+        else votes[id] = optionId;
+        return { ...state, votes };
+      },
       retract
         ? '데모 · 표를 거뒀어요. 이 브라우저에서만 빠집니다.'
         : '데모 · 이 브라우저에만 표를 남겼어요. 다른 사람 화면은 그대로예요.'
@@ -294,34 +323,33 @@ export default function ActivitiesDemo() {
   };
 
   const removeMine = (id: string) => {
-    const requests = { ...stored.requests };
-    const joins = { ...stored.joins };
-    const votes = { ...stored.votes };
-    const ops = { ...stored.ops };
-    const reviews = { ...stored.reviews };
-    delete requests[id];
-    delete joins[id];
-    delete votes[id];
-    delete ops[id];
-    delete reviews[id];
-    remember(
-      {
-        ...stored,
+    remember((state) => {
+      const requests = { ...state.requests };
+      const joins = { ...state.joins };
+      const votes = { ...state.votes };
+      const ops = { ...state.ops };
+      const reviews = { ...state.reviews };
+      delete requests[id];
+      delete joins[id];
+      delete votes[id];
+      delete ops[id];
+      delete reviews[id];
+      return {
+        ...state,
         requests,
         joins,
         votes,
         ops,
         reviews,
-        created: stored.created.filter((item) => item.id !== id),
-      },
-      '데모 · 내가 만든 모임 예시를 이 브라우저에서 지웠어요.'
-    );
+        created: state.created.filter((item) => item.id !== id),
+      };
+    }, '데모 · 내가 만든 모임 예시를 이 브라우저에서 지웠어요.');
     go({ gathering: null });
   };
 
   const clearDemo = () => {
     setClearOpen(false);
-    remember(EMPTY_ACTIVITIES_DEMO, '데모 · 이 브라우저의 참가 요청, 투표, 모임장 처리, 후기, 만든 모임을 지웠어요.');
+    remember(() => EMPTY_ACTIVITIES_DEMO, '데모 · 이 브라우저의 참가 요청, 투표, 모임장 처리, 후기, 만든 모임을 지웠어요.');
     go({ gathering: null, course: null });
   };
 
@@ -395,8 +423,10 @@ export default function ActivitiesDemo() {
           ) : showingGathering ? (
             <GatheringDetail
               gathering={shownGathering}
-              requested={ready && stored.requests[gatheringId ?? ''] === true}
-              joinStatus={ready && gatheringId ? (stored.joins[gatheringId] ?? null) : null}
+              requested={ready && !isHostGathering(shownGathering) && stored.requests[gatheringId ?? ''] === true}
+              joinStatus={
+                ready && gatheringId && !isHostGathering(shownGathering) ? (stored.joins[gatheringId] ?? null) : null
+              }
               ready={ready}
               myVote={ready && gatheringId ? (stored.votes[gatheringId] ?? null) : null}
               people={baseGathering ? rosterPeople(baseGathering, stored.ops[baseGathering.id]) : []}
@@ -527,8 +557,9 @@ export default function ActivitiesDemo() {
               ) : (
                 <ul className="act-grid">
                   {visibleGatherings.map((item) => {
-                    const requested = stored.requests[item.id] === true;
-                    const join = stored.joins[item.id];
+                    const cardHost = isHostGathering(item);
+                    const requested = !cardHost && stored.requests[item.id] === true;
+                    const join = cardHost ? undefined : stored.joins[item.id];
                     const shown = presentGathering(item, stored.ops[item.id]);
                     const mark =
                       join === 'accepted' ? '수락됨' : join === 'rejected' ? '거절됨' : requested ? '요청됨' : '데모';

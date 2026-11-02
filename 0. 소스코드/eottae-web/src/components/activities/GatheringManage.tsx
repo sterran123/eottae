@@ -43,7 +43,8 @@ export default function GatheringManage({
         <span className="act-demo-mark">데모 · 이 브라우저만</span>
       </div>
       <p className="act-note">
-        수락하면 위 모집 뱃지의 인원이 바로 늘어나고, 거절·강퇴하면 빠집니다. 가상 닉네임이라 연락처는 없습니다.
+        수락하면 위 모집 뱃지의 인원이 바로 늘어나고, 강퇴하면 빠집니다. 가상 대기 요청을 거절해도 인원은 그대로이고, 이미
+        인원에 들어간 내 요청을 거절하면 빠집니다. 가상 닉네임이라 연락처는 없습니다.
       </p>
       <div className="act-actions">
         <button type="button" className="btn outline" onClick={onToggleRecruitment}>
@@ -123,7 +124,7 @@ export default function GatheringManage({
           {selfStatus === 'accepted' && (
             <li className="act-person">
               <p className="act-person-name">나 (이 브라우저)</p>
-              <p className="act-meta">수락됨 · 데모 · 요청 취소는 안내 탭에서</p>
+              <p className="act-meta">수락됨 · 데모 · 참가 취소는 안내 탭에서</p>
             </li>
           )}
           {confirmed.map((person) => (
