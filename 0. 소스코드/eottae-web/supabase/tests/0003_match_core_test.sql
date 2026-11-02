@@ -8,7 +8,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(119);
+select plan(120);
 
 create or replace function pg_temp.login_as(p_uid uuid)
 returns void language plpgsql as $$
@@ -629,6 +629,12 @@ select throws_like(
        array['cafe', 'indie', 'camping'], '37.5, 127.0 extra', 'hidden') $$,
   '%VALIDATION_ERROR%',
   'preferred_distance 좌표 뒤에 글자가 있어도 거부');
+select throws_like(
+  $$ select public.save_onboarding(
+       'ENFP', array['ISTJ']::text[], 'any', 'open',
+       array['cafe', 'indie', 'camping'], '37.5 127.0', 'hidden') $$,
+  '%VALIDATION_ERROR%',
+  'preferred_distance 공백으로 구분한 좌표 쌍은 거부');
 select throws_like(
   $$ select public.save_onboarding(
        'ENFP', array['ENFP']::text[], 'any', 'open',

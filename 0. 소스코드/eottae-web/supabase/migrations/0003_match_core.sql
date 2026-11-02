@@ -639,8 +639,9 @@ begin
 
   v_distance := nullif(btrim(coalesce(p_preferred_distance, '')), '');
   if v_distance is not null then
+    -- 쉼표 또는 공백으로 나뉜 숫자 쌍(좌표)은 거부. 5km 이내·within_10km는 숫자 하나라 통과.
     if char_length(v_distance) > 40
-       or v_distance ~ '-?[0-9]+([.][0-9]+)?[[:space:]]*,[[:space:]]*-?[0-9]+([.][0-9]+)?' then
+       or v_distance ~ '-?[0-9]+([.][0-9]+)?[[:space:]]*[,[:space:]][[:space:]]*-?[0-9]+([.][0-9]+)?' then
       raise exception 'VALIDATION_ERROR';
     end if;
   end if;

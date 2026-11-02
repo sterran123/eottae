@@ -632,7 +632,7 @@ export const matchService = {
           blocker_id: context.account.id,
           blocked_user_id: req.blockedUserId,
         },
-        { onConflict: 'blocker_id,blocked_user_id' },
+        { onConflict: 'blocker_id,blocked_user_id', ignoreDuplicates: true },
       );
       if (error) {
         return {
@@ -700,7 +700,7 @@ export const matchService = {
             blocker_id: context.account.id,
             blocked_user_id: req.reportedUserId,
           },
-          { onConflict: 'blocker_id,blocked_user_id' },
+          { onConflict: 'blocker_id,blocked_user_id', ignoreDuplicates: true },
         );
         if (blockErr) {
           return {
