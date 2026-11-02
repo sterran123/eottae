@@ -31,7 +31,7 @@ interface CommonQnaProps {
 }
 
 export default function CommonQna({
-  partnerName = '가을',
+  partnerName,
   questions = DEMO_QUESTIONS,
 }: CommonQnaProps) {
   const [isDemoMode, setIsDemoMode] = useState(false);
@@ -86,7 +86,7 @@ export default function CommonQna({
     matchService.saveDeclinedCommonQuestions(ids, 'demo');
   }
 
-  // 데모는 나 또는 샘플 상대가 답한 문항만. 실계정은 가짜 상대 답 없이 문항 목록을 보여 준다.
+  // 데모는 나 또는 샘플 상대가 답한 문항만. 실계정·상대 id 없음은 문항을 그리지 않는다.
   const items = useMemo(() => {
     if (!listReady) return [];
     if (isDemoMode) {
@@ -145,6 +145,11 @@ export default function CommonQna({
   }
 
   function declineQuestion(qId: string) {
+    // 상대 행이 생기기 전에는 거절을 저장하지 않으므로, 저장된 것처럼 말하지 않는다.
+    if (!demoStorageRef.current) {
+      setActionError('서로 관심이 성사된 뒤에 공통 질문이 열려요.');
+      return;
+    }
     setDeclinedIds((prev) => {
       const next = new Set(prev);
       next.add(qId);
@@ -154,6 +159,7 @@ export default function CommonQna({
   }
 
   function restoreQuestion(qId: string) {
+    if (!demoStorageRef.current) return;
     setDeclinedIds((prev) => {
       const next = new Set(prev);
       next.delete(qId);
@@ -162,14 +168,34 @@ export default function CommonQna({
     });
   }
 
+  if (!listReady) {
+    return (
+      <section className="mt-cq" aria-label="공통 질문">
+        <p role="status">공통 질문을 확인하고 있어요.</p>
+      </section>
+    );
+  }
+
+  // 이 화면은 매칭 상대 id를 받지 않는다. 실계정이면 가을·문항·거절을 그리지 않는다.
+  if (!isDemoMode) {
+    return (
+      <section className="mt-cq" aria-label="공통 질문">
+        {actionError ? <p role="status">{actionError}</p> : null}
+        <p role="status">서로 관심이 성사된 뒤에 공통 질문이 열려요.</p>
+      </section>
+    );
+  }
+
+  const displayPartnerName = partnerName ?? '가을';
+
   return (
-    <section className="mt-cq" aria-label={`${partnerName}님과의 공통 질문`}>
-      <CompatToast partnerName={partnerName} summary={summary} />
+    <section className="mt-cq" aria-label={`${displayPartnerName}님과의 공통 질문`}>
+      <CompatToast partnerName={displayPartnerName} summary={summary} />
 
       <header className="mt-cq__head">
         <div className="mt-cq__avatar" aria-hidden="true" />
         <div className="mt-cq__head-text">
-          <div className="mt-cq__title">{partnerName}님과의 공통 질문</div>
+          <div className="mt-cq__title">{displayPartnerName}님과의 공통 질문</div>
           <div className="mt-cq__sub">둘 다 답하면 서로 답이 공개돼요 · 원치 않는 질문은 거절 가능</div>
         </div>
       </header>
@@ -250,7 +276,7 @@ export default function CommonQna({
                     </span>
                   </div>
                   <div className="mt-cq-ans mt-cq-ans--locked">
-                    <span className="mt-cq-ans__who">{partnerName}</span>
+                    <span className="mt-cq-ans__who">{displayPartnerName}</span>
                     <span className="mt-cq-ans__lock">답하면 공개돼요</span>
                   </div>
                 </div>
@@ -265,7 +291,7 @@ export default function CommonQna({
                     </span>
                   </div>
                   <div className={`mt-cq-ans${same ? ' mt-cq-ans--hit' : ' mt-cq-ans--theirs'}`}>
-                    <span className="mt-cq-ans__who">{partnerName}</span>
+                    <span className="mt-cq-ans__who">{displayPartnerName}</span>
                     <span className="mt-cq-ans__text">
                       {labelOf(q, theirs!.optionId, theirs!.customText)}
                     </span>

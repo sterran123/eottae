@@ -755,3 +755,9 @@
   outline: 2px solid var(--match-focus);
   outline-offset: 2px;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .mt-dist-gauge__char-pin {
+    animation: none;
+  }
+}

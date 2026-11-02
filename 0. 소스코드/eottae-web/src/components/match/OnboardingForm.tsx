@@ -311,14 +311,18 @@ export default function OnboardingForm({
     }
   }
 
+  function scrollErrorIntoView() {
+    const errEl = document.getElementById('mt-onb-errors');
+    if (!errEl) return;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    errEl.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
+  }
+
   async function handleSubmit() {
     setSubmitted(true);
     setServerError(null);
     if (!isValid) {
-      const errEl = document.getElementById('mt-onb-errors');
-      if (errEl) {
-        errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
+      scrollErrorIntoView();
       return;
     }
 
@@ -338,10 +342,7 @@ export default function OnboardingForm({
 
     if (!res.ok) {
       setServerError(res.error.message);
-      const errEl = document.getElementById('mt-onb-errors');
-      if (errEl) {
-        errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
+      scrollErrorIntoView();
       return;
     }
 
@@ -378,7 +379,6 @@ export default function OnboardingForm({
         <div className="mt-onb__verified-text">
           <strong>
             {[
-              typeof identity.age === 'number' ? `${identity.age}세` : null,
               identity.gender ? GENDER_LABEL[identity.gender] : null,
               identity.verified ? '성인 인증 완료' : '성인 인증 필요',
             ]

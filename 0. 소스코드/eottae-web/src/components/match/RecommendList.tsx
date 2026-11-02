@@ -61,8 +61,10 @@ export default function RecommendList({
   const [reportingTarget, setReportingTarget] = useState<RecommendProfile | null>(null);
   const [reportReason, setReportReason] = useState('부적절하거나 불쾌한 프로필');
   const [etcDetail, setEtcDetail] = useState('');
+  const [reportSubmitting, setReportSubmitting] = useState(false);
   const noticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reportDialogRef = useRef<HTMLDivElement>(null);
+  const reportLockRef = useRef(false);
 
   function showNotice(msg: string, ms = 3500) {
     if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
@@ -226,19 +228,27 @@ export default function RecommendList({
   }
 
   async function confirmReport() {
-    if (!reportingTarget) return;
+    if (!reportingTarget || reportLockRef.current) return;
     const target = reportingTarget;
+    reportLockRef.current = true;
+    setReportSubmitting(true);
     const isEtc = reportReason === '기타 사유 (직접 입력)';
     const finalReason = isEtc
       ? (etcDetail.trim() ? `기타: ${etcDetail.trim()}` : '기타 사유')
       : reportReason;
 
-    const res = await matchService.reportUser({
-      reportedUserId: target.id,
-      category: mapUiReasonToReportCategory(reportReason),
-      description: finalReason,
-      alsoBlock: true,
-    });
+    let res: Awaited<ReturnType<typeof matchService.reportUser>>;
+    try {
+      res = await matchService.reportUser({
+        reportedUserId: target.id,
+        category: mapUiReasonToReportCategory(reportReason),
+        description: finalReason,
+        alsoBlock: true,
+      });
+    } finally {
+      reportLockRef.current = false;
+      setReportSubmitting(false);
+    }
     if (!res.ok) {
       showNotice(res.error.message);
       return;
@@ -255,6 +265,11 @@ export default function RecommendList({
   }
 
   function handleAskQuestion(id: string, question: string) {
+    // 실계정 UUID는 데모 방(DEMO_ROOMS[0])으로 떨어지므로 이동·전송하지 않는다.
+    if (!isDemoMode || !id.startsWith('rec_')) {
+      showNotice('1:1 대화 전송은 채팅 연동 후에 열려요.');
+      return;
+    }
     const target = sourceItems.find((p) => p.id === id);
     showNotice(`'${target?.nickname ?? '상대'}' 님과의 1:1 대화방으로 질문을 전달하여 이동합니다...`);
     setTimeout(() => {
@@ -428,9 +443,11 @@ export default function RecommendList({
               <button
                 type="button"
                 className="mt-report-btn mt-report-btn--submit"
+                disabled={reportSubmitting}
+                aria-busy={reportSubmitting}
                 onClick={() => void confirmReport()}
               >
-                신고 접수하기
+                {reportSubmitting ? '접수 중…' : '신고 접수하기'}
               </button>
             </div>
           </div>

@@ -327,7 +327,7 @@ export default function ProfileQna({
 
       {isDemoMode && (
         <p className="mt-qna__demo">
-          DEMO · 추천 질문은 매번 랜덤 · 답변 저장/삭제는 연동 예정
+          DEMO · 추천 질문은 매번 랜덤 · 답변 저장/삭제는 이 브라우저에만 남아요
         </p>
       )}
 

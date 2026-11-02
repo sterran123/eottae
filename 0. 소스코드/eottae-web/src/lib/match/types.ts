@@ -349,7 +349,7 @@ export interface CommonQuestionRow {
 
 /**
  * 온보딩 입력값 유효성 검증 (TC-005).
- * 필수 항목 누락 및 관심사 최소(3개)·최대(7개) 규칙을 검사한다.
+ * 필수 항목 누락, 관심사 최소(3개)·최대(7개), 내 MBTI와 같은 비선호를 검사한다.
  */
 export function validateOnboardingDraft(draft: OnboardingDraft): string[] {
   const errors: string[] = [];
@@ -368,6 +368,13 @@ export function validateOnboardingDraft(draft: OnboardingDraft): string[] {
   }
   if (uniqueInterests.length > INTEREST_RULES.max) {
     errors.push(`관심사는 최대 ${INTEREST_RULES.max}개까지 선택할 수 있어요.`);
+  }
+  if (
+    draft.myMbti !== null &&
+    draft.myMbti !== 'unknown' &&
+    draft.avoidMbti.includes(draft.myMbti)
+  ) {
+    errors.push('내 MBTI와 같은 유형은 피하고 싶은 MBTI로 고를 수 없어요.');
   }
   return errors;
 }
