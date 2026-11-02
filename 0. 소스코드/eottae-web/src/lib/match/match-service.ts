@@ -24,6 +24,7 @@
 import { authService } from '@/lib/auth/auth-service';
 import type { MyAccount } from '@/lib/auth/types';
 import { clearDemoAdult } from '@/lib/demo/demo-adult';
+import { clearDemoSession } from '@/lib/demo/demo-session';
 import { DEMO_SELF } from '@/lib/chat/demo-data';
 import { saveDemoBlock, saveDemoReport } from '@/lib/safety/demo-store';
 import type { BlockRequest, ReportCategory, ReportRequest } from '@/lib/safety/types';
@@ -34,6 +35,7 @@ import { DEMO_MY_ANSWERS } from './demo-qna';
 import {
   DEMO_ACORN,
   demoPartnerReturnsInterest,
+  DEMO_RECOMMENDATIONS,
   demoRecommendationView,
 } from './demo-recommendations';
 import {

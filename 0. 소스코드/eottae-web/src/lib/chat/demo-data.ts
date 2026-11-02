@@ -160,14 +160,16 @@ export function nicknameForDemoId(id: string): string {
   return found?.nickname ?? '상대';
 }
 
-/** 다른 탭에서 열 상대 계정과 그 사람이 들어가는 방. 열린 방이 있으면 그 방의 상대다. */
+/** 다른 탭에서 열 상대 계정과 그 사람이 들어가는 방.
+ *  `roomId`는 지금 열린 방 또는 마지막으로 연 방이다. 이 사용자 구성원이 아니면 무시한다.
+ */
 export function counterpartDemoLink(
   actorId: string,
-  openRoomId?: string | null,
+  roomId?: string | null,
 ): { actorId: string; nickname: string; roomId: string } {
-  const opened = openRoomId
+  const opened = roomId
     ? DEMO_ROOMS.find(
-        (item) => item.id === openRoomId && item.members.some((member) => member.id === actorId),
+        (item) => item.id === roomId && item.members.some((member) => member.id === actorId),
       )
     : undefined;
   if (actorId === DEMO_SELF.id) {

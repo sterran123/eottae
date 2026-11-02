@@ -95,6 +95,8 @@ export default function ChatHub() {
   const [storedPreviews, setStoredPreviews] = useState<Record<string, ChatRoomPreview> | null>(null);
   const [previewActor, setPreviewActor] = useState<string | null>(null);
   const activeRef = useRef<string | null>(null);
+  // 닫아도 유지한다. 열린 동안 허브는 inert이고 딤이 클릭을 받아, 닫힌 뒤 링크가 다른 방으로 바뀌면 안 된다.
+  const linkRoomRef = useRef<string | null>(null);
   const prevActive = useRef<string | null>(null);
   const openedToken = useRef<string | null>(null);
   const seenRef = useRef<Record<string, SeenCursor>>({});
@@ -150,6 +152,7 @@ export default function ChatHub() {
       return kept;
     });
     if (auto) {
+      linkRoomRef.current = auto;
       activeRef.current = auto;
       rememberSeen(seenRef.current, actor.id, auto);
       setStoredPreviews((current) => {
@@ -170,6 +173,7 @@ export default function ChatHub() {
   }, [activeId]);
 
   function openRoom(id: string) {
+    linkRoomRef.current = id;
     activeRef.current = id;
     rememberSeen(seenRef.current, actor.id, id);
     setActiveId(id);
@@ -285,7 +289,7 @@ export default function ChatHub() {
   );
   const previews =
     previewActor === actor.id && storedPreviews ? { ...seedPreviews, ...storedPreviews } : seedPreviews;
-  const pair = counterpartDemoLink(actor.id, activeId);
+  const pair = counterpartDemoLink(actor.id, activeId ?? linkRoomRef.current);
   const deniedParams = new URLSearchParams();
   if (actor.id !== DEMO_SELF.id) deniedParams.set('as', actor.id);
   deniedParams.set('room', 'not-a-match');
