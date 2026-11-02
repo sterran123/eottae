@@ -21,12 +21,13 @@ const cards: ServiceCardProps[] = [
     index: '02',
     title: '데이트·소모임',
     english: 'ACTIVITIES',
-    tag: '2차 · 준비 중',
+    tag: '2차 · 데모 체험',
+    live: true,
     desc: '데이트 코스, 소모임, 취미 활동과 참석·일정 관리.',
-    href: '/activities',
+    href: '/activities/',
     color: 'blue',
     motif: 'spark',
-    cta: '서비스 소개 보기',
+    cta: '데모 둘러보기',
   },
   {
     index: '03',
@@ -86,8 +87,8 @@ export default function Home() {
             </a>
           </div>
           <div className="notice">
-            팀 프로젝트 1차 MVP — 매칭 화면은 데모 데이터로 체험할 수 있고, 실제 회원 매칭·대화는
-            로그인·성인 인증 구현 후 열립니다.
+            팀 프로젝트 중간 점검 — 매칭과 데이트·소모임은 데모 데이터로 체험할 수 있어요. 실제 회원
+            매칭·대화는 로그인·성인 인증 후, 모임 참가는 서버 연동 후 열립니다.
           </div>
         </div>
       </section>
