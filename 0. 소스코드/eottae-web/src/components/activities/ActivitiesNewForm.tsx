@@ -141,6 +141,9 @@ export default function ActivitiesNewForm() {
       poll,
       mine: true,
       coverImage: cover ?? undefined,
+      demoLikes: 0,
+      demoRecommends: 0,
+      listedAt: formatLocalDateTime(new Date()),
     };
     const current = loadActivitiesDemo();
     let saved = saveActivitiesDemo({

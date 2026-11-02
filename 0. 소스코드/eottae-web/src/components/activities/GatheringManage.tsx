@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import DemoDialog from '@/components/activities/DemoDialog';
-import type { MyJoinStatus } from '@/lib/activities/demo-storage';
+import InfoChecks from '@/components/activities/InfoChecks';
+import type { InfoCheckRequest, InfoCheckStatus, MyJoinStatus } from '@/lib/activities/demo-storage';
 import type { VirtualPerson } from '@/lib/activities/demo-roster';
 
 type Props = {
@@ -11,8 +12,10 @@ type Props = {
   selfStatus: MyJoinStatus | null;
   recruitmentLabel: '모집 마감' | '모집 재개';
   canTakeSeat: boolean;
+  infoChecks: readonly InfoCheckRequest[];
   onDecision: (personId: string, status: 'accepted' | 'rejected' | 'kicked') => void;
   onToggleRecruitment: () => void;
+  onResolveInfo: (id: string, status: Exclude<InfoCheckStatus, 'pending'>) => void;
 };
 
 export default function GatheringManage({
@@ -21,8 +24,10 @@ export default function GatheringManage({
   selfStatus,
   recruitmentLabel,
   canTakeSeat,
+  infoChecks,
   onDecision,
   onToggleRecruitment,
+  onResolveInfo,
 }: Props) {
   const [kick, setKick] = useState<VirtualPerson | null>(null);
   const pending = people.filter(
@@ -112,6 +117,15 @@ export default function GatheringManage({
           </p>
         )}
         {!canTakeSeat && <p className="act-note">정원이 차 있어 새 수락은 멈춰 있어요. 강퇴하면 빈자리가 생깁니다.</p>}
+      </section>
+
+      <section aria-labelledby="act-info-check-title">
+        <h4 id="act-info-check-title">영업·폐업 확인 요청</h4>
+        <p className="act-note">
+          <span className="act-demo-mark">데모</span> 「업데이트가 필요해요」로 들어온 요청입니다. 확인 완료나 수정 예정은 이
+          브라우저에만 남고, 관리자 알림은 보내지 않아요.
+        </p>
+        <InfoChecks rows={infoChecks} canResolve onResolve={onResolveInfo} />
       </section>
 
       <section aria-labelledby="act-confirmed-title">
