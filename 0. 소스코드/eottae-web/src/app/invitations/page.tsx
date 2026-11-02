@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import SubpageHero from '@/components/shared/subpage-hero';
 import { MotifIcon } from '@/components/shared/motif-icon';
+import ThemePreviewSection from '@/components/invitations/ThemePreviewSection';
 
 export const metadata: Metadata = {
   title: '모바일 청첩장',
@@ -39,11 +40,14 @@ export default function InvitationsPage() {
           ))}
         </div>
 
+        <ThemePreviewSection />
+
         <aside className="warn">
           <strong>현재는 서비스 입구와 계획 안내만 제공합니다</strong>
           <p>
-            에디터·공유 링크·RSVP 등 실제 사용자 기능은 개발하지 않았습니다. 1·2차 모듈 이후
-            순차적으로 개통합니다.
+            에디터·공유 링크·RSVP 등 실제 사용자 기능은 개발하지 않았습니다. 테마 미리보기의 테스트
+            결제는 예시 금액의 모의 동작이며 실제 청구가 없습니다. 1·2차 모듈 이후 순차적으로
+            개통합니다.
           </p>
         </aside>
 

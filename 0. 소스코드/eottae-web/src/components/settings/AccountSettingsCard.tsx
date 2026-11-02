@@ -3,11 +3,30 @@
 // src/components/settings/AccountSettingsCard.tsx
 // 설정 화면 02번 계정 카드 — useAuth 상태 연동 및 로그인/비로그인 분기
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth/use-auth';
+import { matchService } from '@/lib/match/match-service';
+import DemoAdultSettingsStatus from '@/components/settings/DemoAdultSettingsStatus';
 
 export default function AccountSettingsCard() {
   const auth = useAuth();
+  const [showDemoAdult, setShowDemoAdult] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    void matchService.resolveAccessContext().then(
+      (context) => {
+        if (active) setShowDemoAdult(context.mode === 'demo');
+      },
+      () => {
+        if (active) setShowDemoAdult(false);
+      },
+    );
+    return () => {
+      active = false;
+    };
+  }, [auth.status]);
 
   return (
     <article className="feature settings-card">
@@ -36,6 +55,7 @@ export default function AccountSettingsCard() {
           </div>
         </>
       )}
+      {showDemoAdult ? <DemoAdultSettingsStatus /> : null}
       <div className="settings-actions">
         <button
           type="button"

@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
+import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import SubpageHero from '@/components/shared/subpage-hero';
+import { DemoAdultPrompt, DemoGatedLink } from '@/components/demo/MatchDemoEntry';
 
 export const metadata: Metadata = {
   title: '매칭',
@@ -15,6 +17,7 @@ const modules = [
     href: '/match/onboarding',
     tag: 'MATCH-001',
     cta: '온보딩 시작',
+    gate: 'onboarding',
   },
   {
     num: '02',
@@ -23,6 +26,7 @@ const modules = [
     href: '/match/recommend',
     tag: 'MATCH-002',
     cta: '추천 카드 보기',
+    gate: 'recommend',
   },
   {
     num: '03',
@@ -31,6 +35,7 @@ const modules = [
     href: '/match/qna',
     tag: 'MATCH-009',
     cta: '문답 작성하기',
+    gate: 'qna',
   },
   {
     num: '04',
@@ -39,8 +44,20 @@ const modules = [
     href: '/match/chat',
     tag: 'MATCH-007',
     cta: '채팅방 체험',
+    gate: 'chat',
   },
 ] as const;
+
+const entryLinkStyle: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: '12px',
+  height: '44px',
+  minHeight: '44px',
+  padding: '0 14px',
+  lineHeight: '1',
+};
 
 export default function MatchPage() {
   return (
@@ -71,7 +88,7 @@ export default function MatchPage() {
 
       <section className="shell subpage">
         <div className="feature-grid">
-          {modules.map(({ num, title, desc, href, tag, cta }) => (
+          {modules.map(({ num, title, desc, href, tag, cta, gate }) => (
             <article className="feature" key={num}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                 <span>{num}</span>
@@ -80,22 +97,15 @@ export default function MatchPage() {
               <h3>{title}</h3>
               <p>{desc}</p>
               <div style={{ marginTop: '14px' }}>
-                <Link
-                  className="btn outline"
-                  href={href}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '12px',
-                    height: '44px',
-                    minHeight: '44px',
-                    padding: '0 14px',
-                    lineHeight: '1',
-                  }}
-                >
-                  {cta} →
-                </Link>
+                {gate ? (
+                  <DemoGatedLink className="btn outline" href={href} intent={gate} style={entryLinkStyle}>
+                    {cta} →
+                  </DemoGatedLink>
+                ) : (
+                  <Link className="btn outline" href={href} style={entryLinkStyle}>
+                    {cta} →
+                  </Link>
+                )}
               </div>
             </article>
           ))}
@@ -116,13 +126,14 @@ export default function MatchPage() {
         </aside>
 
         <div className="actions">
-          <Link className="btn primary" href="/match/onboarding">
+          <DemoGatedLink className="btn primary" href="/match/onboarding" intent="onboarding">
             취향 온보딩 바로가기 →
-          </Link>
+          </DemoGatedLink>
           <Link className="btn outline" href="/">
             ← 통합 홈으로
           </Link>
         </div>
+        <DemoAdultPrompt />
       </section>
     </>
   );
