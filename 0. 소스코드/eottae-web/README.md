@@ -1,5 +1,5 @@
 # 어때? 단일 PWA — 김민기 초기 담당
-**1차 MVP 개발 중(데모).** 완성된 출시 제품이 아닙니다. 통합 홈·6테마·설정(`/settings`)·PWA 오프라인 셸은 동작합니다(서비스워커·오프라인은 TC-012 Android PASS). 매칭(온보딩·추천·문답·공통 질문·채팅·신고/차단)은 데모 데이터 화면입니다. 로그인·성인 인증·DB 연동은 #21 진행 중. PG 결제·푸시는 미구현입니다.
+**중간 점검 2차(데모).** 완성된 출시 제품이 아닙니다. 통합 홈·6테마·설정(`/settings`)·PWA 오프라인 셸은 동작합니다(서비스워커·오프라인은 TC-012 Android PASS). 매칭 서비스 모드는 키가 없거나 세션이 없으면 `mode: 'demo'`(localStorage)다. 공개 빌드에는 `NEXT_PUBLIC_DEMO_ADULT_BYPASS`가 없다. 로그인 세션이 없는 공개 빌드에서는 매칭 자식(온보딩·추천·문답·공통 질문·채팅)이 「본인 확인이 연결되지 않아 열 수 없어요」이다. 세션 조회 실패·미인증은 `gateMessage`다. 성인 검증이 끝난 `live` 세션은 자식 경로가 열린다. `/match` 본문은 열린다. 로그인·성인 게이트·DB 실연동은 최종 전이다. 청첩장 테마 모의 결제(카드번호 없음, 승인 후 즉시 취소, 실제 청구 없음)는 저장소에 있다. PG 실결제·푸시는 미구현입니다.
 
 ## 시작
 Node.js 20+ 및 npm 필요.
@@ -18,7 +18,7 @@ npm run build
 - `npm run build`: **PASS** (정적 8페이지 + `/offline` + 동적 `/api/health`).
 - 코드 대비 점검: 다크 `.btn.primary` 1.39:1 결함 발견 → CTA 전용 토큰(`--cta-bg`/`--cta-ink`)으로 **8.19:1** 수정. `.eyebrow.dark`·카드 라벨은 `--brand` 적용(라이트 4.6:1↑).
 - 브라우저 수동 테스트(360/390/768/1440px, 라이트·다크): 코드 기준으로 구성했으나 **당시 실기기 시각 검증 미실행**.
-- **이후 (plan_v2 중간 점검 1차):** PWA 오프라인 TC-012 Android PASS (2026-10-28). `/settings` 추가. 매칭 화면은 데모 데이터. 로그인·DB는 #21 진행 중.
+- **이후 (plan_v2 중간 점검 1차):** PWA 오프라인 TC-012 Android PASS (2026-10-28). `/settings` 추가. 당시 매칭 화면은 데모 데이터. 로그인·DB는 #21 진행 중.
 
 ## 협업 문서 (docs/)
 - `AI_REPORT_LOG.md` — 작업 이력 로그 (본인 이름 태그 필수)
@@ -28,7 +28,7 @@ npm run build
 - `README_테스트배포.md` — 실행·검증·배포 단계와 PWA 점검 표
 
 ## 라우트
-`/` 통합 허브 / `/match` 매칭 소개·데모 진입 / `/match/onboarding` `/match/recommend` `/match/qna` `/match/common` `/match/chat` 매칭 데모 / `/activities` 2차 준비중 / `/invitations` 3차 준비중 / `/settings` 설정(테마·계정 안내) / `/safety` 안전 정책 / `/privacy` 개인정보·계정 삭제 안내 / `/offline` PWA 오프라인 폴백 / `/api/health` 개발 헬스 체크. `not-found`·`error`·`loading` 공통 경계 포함.
+`/` 통합 허브 / `/match` 매칭 소개(본문은 열림) / `/match/onboarding` `/match/recommend` `/match/qna` `/match/common` `/match/chat` 매칭 자식(로그인 세션이 없는 공개 빌드는 「본인 확인이 연결되지 않아 열 수 없어요」. 세션 조회 실패·미인증은 `gateMessage`. 성인 검증이 끝난 `live` 세션은 자식 경로가 열림) / `/activities` 데이트·소모임 브라우저 데모 / `/invitations` 청첩장 본 기능은 3차 준비중, 테마 모의 결제는 저장소에 있음 / `/settings` 설정(테마·계정 안내) / `/safety` 안전 정책 / `/privacy` 개인정보·계정 삭제 안내 / `/offline` PWA 오프라인 폴백 / `/api/health` 개발 헬스 체크. `not-found`·`error`·`loading` 공통 경계 포함.
 
 ## 구조
 - `src/app/layout.tsx` — 공통 shell, 메타데이터(manifest·theme-color·apple), 스킵 링크
