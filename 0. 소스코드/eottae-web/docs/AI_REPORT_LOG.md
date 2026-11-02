@@ -643,3 +643,18 @@
 - [정리] auth.css & globals.css | 인라인 style 제거, 미사용 .auth-preset-* 및 .auth-demo-otp 스타일 삭제, .nav .login-slot-out에 prefers-reduced-motion(transition: none) 적용
 - [검증] `npm run typecheck` PASS / `npm run build` PASS (정적 21개 라우트 프리렌더 완료) / 시크릿 스캔 PASS (0건)
 - [미실행] 로컬 Supabase(`npx supabase start`) 마이그레이션 적용 및 `supabase/tests/0002_auth_profiles_test.sql` pgTAP 실행 — 작업 PC에 Docker 미설치로 미실행
+
+## 2026-11-02 중간 점검 2차 패키지 — plan_v3·제출안·팀원별 추가 작업 (김민기 작업, 구현은 로컬 Grok)
+- [요청] 중간 점검 2차 제출일. plan_v3, 팀원 4명 제출 칸 초안, 최종까지 팀원별 할 일, 1차 문서 최소 보강. FILE_INDEX·MANIFEST·.grok-context는 수정하지 않음. 명령 실행 없음
+- [AI] 로컬 Grok이 `.grok-context/state.md`(2026-11-02 09:46, main ea45798), plan_v1·v2, WBS, 결정 로그, 요구사항·TC·ADR, captions.csv, 결과 보고서, src·supabase를 읽고 문서만 작성
+- [신규] 1. 프로젝트 계획서/plan_v3.md | 중간 점검 2차 현황(완료/데모/진행 중/미착수, PR 번호). 핵심 루프 실데이터는 미완으로 명시. v2→v3: 설정(#59), 로그인 UI(#57), 생일 기준 만 19세, BBaton 시연·PayApp 테스트 10회 즉시 취소·사업자등록 없이, 신분증/OCR 미수집(#21 10-30)
+- [신규] 4. 프로젝트 결과 보고서/중간점검_2차_제출안.md | 공통 URL 2개 + 4인 복사용 칸. 각자 머지 PR만. 오하율은 1차 이후 머지 없음 → 빈 칸+안내
+- [신규] 4. 프로젝트 결과 보고서/팀원별_추가작업_2차.md | #21·#22·#26 미체크, PR #57 이후, SEC-002·WBS 캡처 기준, iPhone 문서 미반영. 의존: 준혁 채팅 ← 한태 테이블, 하율 실데이터 ← 한태 API
+- [변경] 2. 프로젝트 설계서/요구사항_마스터.md SEC-002 | 캡처 5장 → 19장 충족, 이후는 실데이터 흐름 증빙(plan_v3)
+- [변경] 1. 프로젝트 계획서/팀_작업지시서_WBS.md W11~W12 | 같은 기준으로 맞춤. 과거 W1~W10 줄은 유지
+- [변경] 1. 프로젝트 계획서/실행_결정대기_로그.md | DEC-01에 10-30 BBaton·만 19세·OCR 미수집을 덧붙임(1차 「미결정」문구 유지). DEC-09 PayApp 행 추가. 다른 행은 유지
+- [보존] plan_v2.md 미수정. FILE_INDEX.csv·MANIFEST.sha256·.grok-context/ 미수정
+- [판단] 2차 목표(실데이터 핵심 루프)를 완료로 쓰지 않음. iPhone은 구두 PASS만, 문서 미반영을 할 일로 남김
+- [미실행] 빌드·브라우저·db push·BBaton/PayApp. 이 세션은 파일 읽기·검색·수정만
+- [변경] PR #64 Grok 리뷰(1ba3083) 반영: FILE_INDEX.csv, MANIFEST.sha256 | 신규 문서 3개와 기존 트리에 맞게 재생성. plan_v2.md·.grok-context/ 는 미수정. 위 [보존]의 「FILE_INDEX.csv·MANIFEST.sha256 미수정」은 이 커밋과 다름. 제출안 김민기 칸은 재생성으로 고침. BBaton·PayApp Secrets 등록은 주한태(권한 부족 시에만 김민기 대행), db push는 김민기 Owner로 DEC-01·DEC-09·제출안 문장을 맞춤. plan_v3 「PR #58, #26」은 이슈 #26으로 구분.
+
