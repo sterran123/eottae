@@ -28,6 +28,8 @@ export type DateCourse = {
   mood: CourseMood;
   summary: string;
   steps: readonly CourseStep[];
+  /** 사이트 경로(`/activities/covers/...`) 또는 이 브라우저 data URL. 없으면 분위기 기본 커버 */
+  coverImage?: string;
 };
 
 export type PollOption = {
@@ -46,6 +48,10 @@ export type Gathering = {
   startsAtLabel: string;
   /** 정렬용 `YYYY-MM-DDTHH:mm` */
   startsAtIso: string;
+  /** 모집 마감 시각. 없으면 시작 시각이 지나면 마감으로 본다. */
+  recruitmentEndsAt?: string;
+  /** 모집을 끝낸 예시. 빈자리가 있어도 마감 */
+  recruitmentClosed?: boolean;
   capacity: number;
   /** 예시 참가 인원. 내 참가 요청은 화면에서만 더한다. */
   currentCount: number;
@@ -56,6 +62,8 @@ export type Gathering = {
   poll: readonly PollOption[];
   /** 이 브라우저에서 만든 데모 모임 */
   mine?: boolean;
+  /** 사이트 경로(`/activities/covers/...`) 또는 이 브라우저 data URL. 없으면 카테고리 기본 커버 */
+  coverImage?: string;
 };
 
 export function isActivityRegion(value: string): value is ActivityRegion {

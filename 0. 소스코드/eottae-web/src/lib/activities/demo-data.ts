@@ -2,6 +2,7 @@
 // 지역·상호·닉네임은 모두 가상이다. 실존 가게·인물을 넣지 않는다.
 // 이 파일의 값으로 서버 저장이나 실제 모임을 만들지 않는다.
 
+import { COURSE_COVER_PATH, GATHERING_COVER_PATH } from './cover';
 import type { DateCourse, Gathering, PollOption } from './types';
 
 export function formatWon(amount: number): string {
@@ -97,6 +98,7 @@ export const DEMO_COURSES: readonly DateCourse[] = [
     title: '노을구에서 책 한 권, 차 한 잔',
     region: '노을구',
     mood: '잔잔한',
+    coverImage: COURSE_COVER_PATH['잔잔한'],
     summary: '말이 적어도 괜찮은 반나절 예시예요. 가상 서점과 찻집, 공개된 벤치만 잇습니다.',
     steps: [
       {
@@ -127,6 +129,7 @@ export const DEMO_COURSES: readonly DateCourse[] = [
     title: '달동네 야시장을 천천히',
     region: '달동네',
     mood: '활기찬',
+    coverImage: COURSE_COVER_PATH['활기찬'],
     summary: '불빛이 많은 예시 시장을 네 걸음으로 도는 코스예요. 줄이 긴 집은 건너뜁니다.',
     steps: [
       {
@@ -164,6 +167,7 @@ export const DEMO_COURSES: readonly DateCourse[] = [
     title: '한들시 잔디에 김밥 펴기',
     region: '한들시',
     mood: '야외',
+    coverImage: COURSE_COVER_PATH['야외'],
     summary: '그늘과 화장실이 있는 공원만 고른 낮 예시예요. 날씨가 궂으면 실내 코스로 바꿔요.',
     steps: [
       {
@@ -194,6 +198,7 @@ export const DEMO_COURSES: readonly DateCourse[] = [
     title: '별포구 바닷바람과 야경',
     region: '별포구',
     mood: '야경',
+    coverImage: COURSE_COVER_PATH['야경'],
     summary: '짧은 두 단계예요. 어두운 골목은 빼고, 등대가 보이는 밝은 데크만 걷습니다.',
     steps: [
       {
@@ -217,6 +222,7 @@ export const DEMO_COURSES: readonly DateCourse[] = [
     title: '온기동에서 작은 그릇 만들기',
     region: '온기동',
     mood: '실내',
+    coverImage: COURSE_COVER_PATH['실내'],
     summary: '비 오는 날에 맞춘 실내 예시예요. 작품은 가져가지 않고 사진만 남기는 설정입니다.',
     steps: [
       {
@@ -247,6 +253,7 @@ export const DEMO_COURSES: readonly DateCourse[] = [
     title: '파도읍, 필름 세 장과 노을',
     region: '파도읍',
     mood: '감성',
+    coverImage: COURSE_COVER_PATH['감성'],
     summary: '사진을 많이 찍지 않는 예시예요. 서로 찍기 전에는 한 번 더 물어보는 코스입니다.',
     steps: [
       {
@@ -284,6 +291,7 @@ export const DEMO_COURSES: readonly DateCourse[] = [
     title: '노을구 아침 시장, 두 걸음',
     region: '노을구',
     mood: '활기찬',
+    coverImage: COURSE_COVER_PATH['활기찬'],
     summary: '오전에 끝나는 짧은 예시예요. 북적이는 시간 전, 문이 열린 가게만 지납니다.',
     steps: [
       {
@@ -307,6 +315,7 @@ export const DEMO_COURSES: readonly DateCourse[] = [
     title: '비 오는 달동네, 실내 세 곳',
     region: '달동네',
     mood: '감성',
+    coverImage: COURSE_COVER_PATH['감성'],
     summary: '우산이 필요한 날을 위한 예시예요. 야외 대기는 없고 모두 실내 공개 장소입니다.',
     steps: [
       {
@@ -339,6 +348,7 @@ export const DEMO_GATHERINGS: readonly Gathering[] = [
     id: 'meet-sketch',
     title: '노을 스케치 소모임',
     category: '취미',
+    coverImage: GATHERING_COVER_PATH['취미'],
     region: '노을구',
     startsAtLabel: '2026년 11월 8일 (일) 14:00',
     startsAtIso: '2026-11-08T14:00',
@@ -358,6 +368,7 @@ export const DEMO_GATHERINGS: readonly Gathering[] = [
     id: 'meet-dosirak',
     title: '달동네 도시락 나눠 먹기',
     category: '밥',
+    coverImage: GATHERING_COVER_PATH['밥'],
     region: '달동네',
     startsAtLabel: '2026년 11월 9일 (월) 12:00',
     startsAtIso: '2026-11-09T12:00',
@@ -377,6 +388,7 @@ export const DEMO_GATHERINGS: readonly Gathering[] = [
     id: 'meet-walk',
     title: '한들 공원 가벼운 걷기',
     category: '운동',
+    coverImage: GATHERING_COVER_PATH['운동'],
     region: '한들시',
     startsAtLabel: '2026년 11월 7일 (토) 10:00',
     startsAtIso: '2026-11-07T10:00',
@@ -396,6 +408,7 @@ export const DEMO_GATHERINGS: readonly Gathering[] = [
     id: 'meet-reading',
     title: '별포 문장 나눔 스터디',
     category: '스터디',
+    coverImage: GATHERING_COVER_PATH['스터디'],
     region: '별포구',
     startsAtLabel: '2026년 11월 12일 (목) 19:00',
     startsAtIso: '2026-11-12T19:00',
@@ -415,6 +428,7 @@ export const DEMO_GATHERINGS: readonly Gathering[] = [
     id: 'meet-frame',
     title: '온기동 액자 이야기',
     category: '문화',
+    coverImage: GATHERING_COVER_PATH['문화'],
     region: '온기동',
     startsAtLabel: '2026년 11월 14일 (토) 15:00',
     startsAtIso: '2026-11-14T15:00',
@@ -434,6 +448,7 @@ export const DEMO_GATHERINGS: readonly Gathering[] = [
     id: 'meet-board',
     title: '파도읍 보드 한 판',
     category: '취미',
+    coverImage: GATHERING_COVER_PATH['취미'],
     region: '파도읍',
     startsAtLabel: '2026년 11월 15일 (일) 13:30',
     startsAtIso: '2026-11-15T13:30',
@@ -453,6 +468,7 @@ export const DEMO_GATHERINGS: readonly Gathering[] = [
     id: 'meet-brunch',
     title: '노을구 늦은 브런치',
     category: '밥',
+    coverImage: GATHERING_COVER_PATH['밥'],
     region: '노을구',
     startsAtLabel: '2026년 11월 16일 (월) 11:00',
     startsAtIso: '2026-11-16T11:00',
@@ -472,13 +488,15 @@ export const DEMO_GATHERINGS: readonly Gathering[] = [
     id: 'meet-stretch',
     title: '달동네 아침 스트레칭',
     category: '운동',
+    coverImage: GATHERING_COVER_PATH['운동'],
     region: '달동네',
     startsAtLabel: '2026년 11월 11일 (수) 07:30',
     startsAtIso: '2026-11-11T07:30',
+    recruitmentEndsAt: '2026-11-01T18:00',
     capacity: 12,
     currentCount: 5,
     hostNickname: '파란의자',
-    intro: '매트 없이 서서 하는 20분 예시예요. 통증이 있으면 동작을 쉬고, 강사는 없습니다. 모임장이 박자만 세는 설정입니다.',
+    intro: '매트 없이 서서 하는 20분 예시예요. 통증이 있으면 동작을 쉬고, 강사는 없습니다. 모임장이 박자만 세는 설정입니다. 모집 마감 시각은 이미 지난 예시예요.',
     placeLabel: '예시 장소 · 달동네 광장',
     safetyFlags: ['공개 장소', '아침 시간', '첫 만남 안내'],
     poll: poll('meet-stretch', [
@@ -491,6 +509,7 @@ export const DEMO_GATHERINGS: readonly Gathering[] = [
     id: 'meet-words',
     title: '한들 단어장 30분',
     category: '스터디',
+    coverImage: GATHERING_COVER_PATH['스터디'],
     region: '한들시',
     startsAtLabel: '2026년 11월 18일 (수) 19:30',
     startsAtIso: '2026-11-18T19:30',
@@ -510,13 +529,15 @@ export const DEMO_GATHERINGS: readonly Gathering[] = [
     id: 'meet-screen',
     title: '별포 영화 엔딩 이야기',
     category: '문화',
+    coverImage: GATHERING_COVER_PATH['문화'],
     region: '별포구',
     startsAtLabel: '2026년 11월 20일 (금) 18:00',
     startsAtIso: '2026-11-20T18:00',
+    recruitmentClosed: true,
     capacity: 9,
     currentCount: 3,
     hostNickname: '포근담요',
-    intro: '상영은 하지 않고, 이미 본 영화의 마지막 장면만 말하는 예시예요. 결말을 듣기 싫은 사람은 그 순서에 자리를 비워도 됩니다.',
+    intro: '상영은 하지 않고, 이미 본 영화의 마지막 장면만 말하는 예시예요. 결말을 듣기 싫은 사람은 그 순서에 자리를 비워도 됩니다. 이 예시는 모집을 끝낸 상태예요.',
     placeLabel: '가상 상호 · 창틈레코드',
     safetyFlags: ['공개 장소', '실내', '첫 만남 안내'],
     poll: poll('meet-screen', [

@@ -705,3 +705,22 @@
 - [변경] PR #66 Grok 리뷰(3b8adea) 반영: `blockUser`와 `reportUser`의 `blocks` upsert에 `ignoreDuplicates: true`를 넣어 `ON CONFLICT DO NOTHING`으로 두고 INSERT 권한만 쓴다. `blocks`에 UPDATE 정책은 열지 않음. 권장 반영: `save_onboarding`의 `preferred_distance`는 공백으로 나뉜 숫자 쌍(`37.5 127.0`)도 거부. pgTAP plan 120. 보류: `decision=no` 후 기존 match 유지, 차단·신고 INSERT의 `is_active_adult`, `get_common_answers`의 상대 상태·`matches.status`, `caller_can_use_conversation`의 상대 성인, `CommonQna`의 `get_common_answers` 연결·`save_answers` 카탈로그 40, 메시지 `soft_delete_state`·사용자 UPDATE·Realtime `REPLICA IDENTITY`·소켓(미확인), `chat-media` `owner_id`(미확인), `save_onboarding`의 `bio`와 추천 필터의 `avoid_mbti`·`target_preference`, `reports.description` 빈 문자열, CODEOWNERS. 이 줄보다 앞의 로그 문장은 고치지 않음. 이 반영에서는 명령·pgTAP·typecheck·build·sha256sum을 실행하지 않음. `FILE_INDEX.csv`·`MANIFEST.sha256`은 수정하지 않음.
 - [변경] PR #66 Grok 리뷰(bf4a86d) 반영: 문답 조회가 실패하면 `ProfileQna`·`CommonQna`는 `loadedMode`를 비워 저장·삭제를 막는다. 조회가 성공하고 서버 행이 0건인 첫 저장은 그대로다. `save_answers`는 넘긴 문항만 덮어쓰고, 빠진 문항은 지우지 않으며 `removed: true`인 문항만 지운다. `replaceProfileAnswers`는 거절이 아닌 기존 답을 `next`에 없다고 버리지 않는다. pgTAP plan 126(일부 저장·`removed` 단언 추가). 권장 반영: 추천 `age: null` 행은 페이지 전체를 오류로 두지 않고 건너뜀. 신고 `description`이 빈 문자열이면 NULL로 넣음. API 계약의 문답 문장을 이 저장 방식에 맞춤. 보류: `caller_can_use_conversation`·`get_common_answers`의 상대 성인, `decision=no` 후 match 유지, `save_onboarding`의 `bio`와 추천 필터의 `avoid_mbti`·`target_preference`, `CommonQna`의 `get_common_answers` 연결·내가 안 답한 문항 id, 차단·신고 INSERT의 `is_active_adult`(로그인 안전 조치는 유지), 메시지 `soft_delete_state`·사용자 UPDATE·Realtime `REPLICA IDENTITY`·소켓(미확인), `chat-media` `owner`/`owner_id`(미확인), `private.set_updated_at` EXECUTE 회수, CODEOWNERS·매니페스트 재생성. 이 줄보다 앞의 로그 문장은 고치지 않음. 이 반영에서는 명령·pgTAP·typecheck·build·sha256sum을 실행하지 않음. `FILE_INDEX.csv`·`MANIFEST.sha256`은 수정하지 않음.
 
+## 2026-11-02 데이트·소모임 커버 이미지·첨부(데모)·모집 상태 뱃지 — 오하율 피드백 반영 (김민기 작업)
+- [요청] 2차 데이트·소모임 데모에 팀 피드백 반영. 코스·소모임 커버가 없어 몰입이 떨어진다는 지적. 만들 때 이미지 첨부, 없으면 카테고리 예시 이미지가 자동으로 붙기. 인원 숫자 텍스트를 정원·빈자리·마감 뱃지로. 정적 export, basePath `/eottae`, 외부 이미지·CDN·API·새 패키지 없음. 서버·Supabase·package.json·매칭·채팅·FILE_INDEX.csv·MANIFEST.sha256는 수정하지 않음. 명령 실행 없음
+- [AI] 로컬 Grok이 activities 화면·types·demo-data·demo-storage·activities.css·globals 테마 토큰·public 경로·브랜드 가이드를 읽고, 분위기 6·소모임 카테고리 5의 자체 SVG와 브라우저 안 첨부·모집 뱃지만 추가
+- [신규] public/activities/covers/*.svg | 데이트 분위기 6(잔잔한 카페·활기찬 액티비티·감성·야외 산책·실내 전시·야경)과 소모임 5(취미·밥·운동·스터디·문화). 16:9, 글자 없음, 배경 포함, 실사·실존 상호 없음
+- [신규] src/lib/activities/cover.ts | `coverFor`. 안전하지 않거나 비어 있으면 분위기·카테고리 기본 커버. `NEXT_PUBLIC_BASE_PATH` 접두. 첨부 파일은 jpg/png/webp/gif·2MB 이하만 FileReader로 읽어 줄인 data URL
+- [신규] src/lib/activities/recruitment.ts | `정원 N명`, `빈자리 N`, 남은 자리 1~2면 `마감 임박`, 정원 도달·마감 시각 지남·모집 종료면 `마감`
+- [신규] src/components/activities/ActivityCover.tsx | 목록·상세 커버. 고정 16:9, object-fit cover, loading=lazy, 제목·분위기 또는 카테고리가 들어간 alt
+- [신규] src/components/activities/RecruitmentBadges.tsx | 목록 카드·상세의 모집 뱃지. 글자로 상태를 말함
+- [변경] src/lib/activities/types.ts | DateCourse·Gathering에 선택 coverImage. Gathering에 recruitmentEndsAt·recruitmentClosed
+- [변경] src/lib/activities/demo-data.ts | 코스 8·소모임 10에 기본 커버 경로. 달동네 아침 스트레칭은 지난 마감 시각, 별포 영화 엔딩은 모집 종료 예시
+- [변경] src/lib/activities/demo-storage.ts | 만든 모임의 커버 data URL만 유지. 용량 초과·안전하지 않은 커버는 저장 실패로 돌려 기본 커버로 다시 저장. 안내 문구는 sessionStorage
+- [변경] src/components/activities/ActivitiesDemo.tsx | 카드 상단 커버. 인원 `n/m명` 문장을 뱃지로 교체. 참가 요청이 정원을 채우거나 마감이면 뱃지와 요청 가능 여부가 같이 바뀜
+- [변경] src/components/activities/CourseDetail.tsx | 상세 상단 큰 커버
+- [변경] src/components/activities/GatheringDetail.tsx | 상세 상단 큰 커버와 모집 뱃지. 마감이면 새 참가 요청을 막고, 이미 요청한 사람은 취소 가능
+- [변경] src/components/activities/ActivitiesNewForm.tsx | 이미지 첨부·미리보기·삭제. 미첨부는 선택 카테고리 기본 커버라는 안내와 「데모: 이 기기에만 저장」. 서버 업로드 없음
+- [변경] src/app/activities/activities.css | 커버 비율·뱃지. 색은 기존 테마 토큰만. 첨부·삭제 버튼은 기존 44px 버튼
+- [미실행] 브라우저에서 목록·상세·첨부·참가 요청 뱃지 변화, 360px·데스크톱 확인. 이 세션은 파일 읽기·검색·수정만이라 typecheck·build도 실행하지 않음. 코스 만들기 화면은 원래 없어 이미지 첨부는 소모임 만들기 폼에만 둠. 코스 표지는 분위기 기본 커버
+
+

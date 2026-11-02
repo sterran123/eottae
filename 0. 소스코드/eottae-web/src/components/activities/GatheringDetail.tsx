@@ -2,7 +2,10 @@
 
 import Link from 'next/link';
 import { useEffect, useId, useRef, useState } from 'react';
+import ActivityCover from '@/components/activities/ActivityCover';
 import DemoDialog from '@/components/activities/DemoDialog';
+import RecruitmentBadges from '@/components/activities/RecruitmentBadges';
+import { recruitmentView } from '@/lib/activities/recruitment';
 import type { Gathering } from '@/lib/activities/types';
 
 const REPORT_REASONS = ['불쾌하거나 위험한 안내', '사칭·광고', '공개되지 않은 장소로 유도', '기타'] as const;
@@ -52,8 +55,8 @@ export default function GatheringDetail({
     );
   }
 
-  const full = gathering.currentCount >= gathering.capacity;
-  const shownCount = gathering.currentCount + (requested ? 1 : 0);
+  const now = new Date();
+  const roster = recruitmentView(gathering, requested, now);
   const selectedVote = gathering.poll.some((option) => option.id === myVote) ? myVote : null;
   const pollTotal = gathering.poll.reduce(
     (sum, option) => sum + option.demoVotes + (selectedVote === option.id ? 1 : 0),
@@ -72,6 +75,7 @@ export default function GatheringDetail({
           ← 모임 목록
         </button>
       </div>
+      <ActivityCover item={gathering} large />
       <p className="act-kicker">{gathering.mine ? '내가 만든 데모 모임' : '소모임 · 예시'}</p>
       <h2 id="act-meet-title" ref={titleRef} tabIndex={-1}>
         {gathering.title}
@@ -101,11 +105,10 @@ export default function GatheringDetail({
           <dd>{gathering.mine ? `${gathering.hostNickname} · 이 브라우저의 데모` : `${gathering.hostNickname} · 예시 닉네임`}</dd>
         </div>
         <div>
-          <dt>인원</dt>
+          <dt>모집</dt>
           <dd>
-            예시 {gathering.currentCount}명
-            {requested ? ' + 내 요청 1명' : ''} / 정원 {gathering.capacity}명
-            <span className="act-sr">화면 합계 {shownCount}명</span>
+            <RecruitmentBadges gathering={gathering} requested={requested} now={now} />
+            {requested ? <span className="act-sr">내 참가 요청이 인원에 포함되어 뱃지가 바뀝니다.</span> : null}
           </dd>
         </div>
       </dl>
@@ -121,8 +124,8 @@ export default function GatheringDetail({
               요청 취소
             </button>
           ) : (
-            <button type="button" className="btn primary" onClick={onToggleRequest} disabled={!ready || full}>
-              {full ? '정원이 찬 예시' : '참가 요청'}
+            <button type="button" className="btn primary" onClick={onToggleRequest} disabled={!ready || roster.closed}>
+              {roster.closed ? (roster.shownCount >= gathering.capacity ? '정원이 찬 예시' : '마감된 예시') : '참가 요청'}
             </button>
           )}
           <span className="act-demo-mark">{requested ? '요청됨 · 데모' : '데모'}</span>

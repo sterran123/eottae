@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import ActivityCover from '@/components/activities/ActivityCover';
 import { budgetBand, courseTotals, formatDuration, formatWon } from '@/lib/activities/demo-data';
 import type { DateCourse } from '@/lib/activities/types';
 
@@ -39,6 +40,7 @@ export default function CourseDetail({ course, onBack, onShare }: Props) {
           ← 코스 목록
         </button>
       </div>
+      <ActivityCover item={course} large />
       <p className="act-kicker">데이트 코스 · 예시</p>
       <h2 id="act-course-title" ref={titleRef} tabIndex={-1}>
         {course.title}
