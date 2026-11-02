@@ -467,7 +467,7 @@
 .mt-qna__modal-dim {
   position: absolute;
   inset: 0;
-  background: rgba(40, 30, 35, 0.45);
+  background: var(--match-dim);
   backdrop-filter: blur(2px);
 }
 .mt-qna__modal-body {

@@ -2,20 +2,27 @@
 
 // ============================================================
 //  저장 경로: src/components/match/RecommendList.tsx
-//  담당: 오하율 · MATCH-002 (추천 리스트 · 상태)
-//  역할: 추천 카드 리스트 + 로딩/빈/에러 상태 (인수조건).
+//  담당: 오하율 · MATCH-002 (추천 리스트 · 상태 · 백엔드 연동)
+//  역할: 추천 카드 리스트 + 로딩/빈/에러/성인게이트 상태 (인수조건).
 //        헤더에 도토리 잔액 표시(1차 준비중).
 //
-//  [DEMO] 데이터는 DEMO_RECOMMENDATIONS. 실제는 주한태 추천 API 연동.
-//  [상태] status prop 으로 로딩/빈/에러를 시연할 수 있게 열어둠.
+//  [백엔드 연동] matchService.fetchRecommendations / sendLikeDecision /
+//               blockUser / reportUser를 통해 Supabase RPC·테이블과 통신하며,
+//               키 미설정 환경에서는 데모 데이터로 동작한다 (ADR-005).
 // ============================================================
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   DEMO_ACORN,
   DEMO_RECOMMENDATIONS,
 } from '@/lib/match/demo-recommendations';
+import {
+  mapUiReasonToReportCategory,
+  matchService,
+  type MatchOperatingMode,
+} from '@/lib/match/match-service';
 import type {
   AcornBalance,
   RecommendProfile,
@@ -27,78 +34,293 @@ import RecommendCard from './RecommendCard';
 interface RecommendListProps {
   initialItems?: RecommendProfile[];
   acorn?: AcornBalance;
-  /** 상태를 강제로 지정(시연/테스트용). 미지정 시 ready. */
+  /** 상태를 강제로 지정(시연/테스트용). 미지정 시 자동 판정. */
   status?: RecommendStatus;
 }
 
 export default function RecommendList({
   initialItems = DEMO_RECOMMENDATIONS,
-  acorn = DEMO_ACORN,
-  status = 'ready',
+  acorn: initialAcorn = DEMO_ACORN,
+  status: statusProp,
 }: RecommendListProps) {
   const router = useRouter();
+  const [sourceItems, setSourceItems] = useState<RecommendProfile[]>(
+    statusProp ? initialItems : [],
+  );
+  const [acorn, setAcorn] = useState<AcornBalance>(
+    statusProp ? initialAcorn : { acorn: null },
+  );
+  const [fetchedStatus, setFetchedStatus] = useState<RecommendStatus>(
+    statusProp ?? 'loading',
+  );
+  const [stateErrorMsg, setStateErrorMsg] = useState<string | null>(null);
+  const [isDemoMode, setIsDemoMode] = useState(Boolean(statusProp));
+  /** fetchRecommendations가 끝낸 모드. 끝나기 전에는 관심·차단·신고를 보내지 않는다. */
+  const [loadedMode, setLoadedMode] = useState<MatchOperatingMode | null>(null);
+  const [listEpoch, setListEpoch] = useState(0);
+
   // 패스('나중에') 또는 차단한 카드는 현재 리스트에서 숨김.
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
   const [notice, setNotice] = useState<string | null>(null);
   const [reportingTarget, setReportingTarget] = useState<RecommendProfile | null>(null);
   const [reportReason, setReportReason] = useState('부적절하거나 불쾌한 프로필');
   const [etcDetail, setEtcDetail] = useState('');
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const noticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reportDialogRef = useRef<HTMLDivElement>(null);
+  const reportLockRef = useRef(false);
+
+  function showNotice(msg: string, ms = 3500) {
+    if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
+    setNotice(msg);
+    noticeTimerRef.current = setTimeout(() => {
+      setNotice(null);
+      noticeTimerRef.current = null;
+    }, ms);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (statusProp) return;
+    let active = true;
+    void matchService.fetchRecommendations().then((res) => {
+      if (!active) return;
+      setIsDemoMode(res.context.isDemo && res.mode === 'demo');
+      if (!res.ok) {
+        setLoadedMode(null);
+        setSourceItems([]);
+        setFetchedStatus('error');
+        setStateErrorMsg(res.error.message);
+        return;
+      }
+      setLoadedMode(res.mode);
+      setSourceItems(res.data.items);
+      setAcorn(res.data.acorn);
+      setFetchedStatus('ready');
+    });
+    return () => {
+      active = false;
+    };
+  }, [statusProp, listEpoch]);
+
+  useEffect(() => {
+    if (!reportingTarget) return;
+    const previouslyFocused =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const dialog = reportDialogRef.current;
+
+    function focusableIn(root: HTMLElement | null): HTMLElement[] {
+      if (!root) return [];
+      return Array.from(
+        root.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), a[href]',
+        ),
+      );
+    }
+
+    const initial = focusableIn(dialog);
+    if (initial[0]) initial[0].focus();
+    else dialog?.focus();
+
+    function onKeyDown(event: globalThis.KeyboardEvent) {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setReportingTarget(null);
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const root = reportDialogRef.current;
+      if (!root) return;
+      const focusable = focusableIn(root);
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+      if (!(active instanceof HTMLElement) || !focusable.includes(active)) {
+        event.preventDefault();
+        first.focus();
+        return;
+      }
+      if (event.shiftKey && active === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      previouslyFocused?.focus();
+    };
+  }, [reportingTarget]);
 
   const items = useMemo(
-    () => initialItems.filter((p) => !skipped.has(p.id)),
-    [initialItems, skipped],
+    () => sourceItems.filter((p) => !skipped.has(p.id)),
+    [sourceItems, skipped],
   );
 
+  const baseStatus = statusProp ?? fetchedStatus;
   const effectiveStatus: RecommendStatus =
-    status === 'ready' && items.length === 0 ? 'empty' : status;
+    baseStatus === 'ready' && items.length === 0 ? 'empty' : baseStatus;
 
-  function handleSkip(id: string) {
+  function reloadAfterModeChange() {
+    setLoadedMode(null);
+    setIsDemoMode(false);
+    setSourceItems([]);
+    setSkipped(new Set());
+    setFetchedStatus('loading');
+    setStateErrorMsg(null);
+    setReportingTarget(null);
+    setListEpoch((n) => n + 1);
+  }
+
+  async function handleSkip(id: string) {
+    if (loadedMode == null) {
+      showNotice('추천을 불러온 뒤에 다시 시도해 주세요.');
+      return;
+    }
+    const modeAtSave = loadedMode;
+    const res = await matchService.sendLikeDecision(id, 'no', modeAtSave);
+    if (!res.ok) {
+      showNotice(res.error.message);
+      if (res.mode !== modeAtSave) reloadAfterModeChange();
+      return;
+    }
     setSkipped((prev) => new Set(prev).add(id));
   }
-  function handleLike(_id: string) {
-    // DEMO: 실제로는 POST /match/likes (주한태). 여기선 안내만.
-    setNotice('관심을 보냈어요. 상대도 관심을 누르면 대화가 열려요. (DEMO)');
-    setTimeout(() => setNotice(null), 3500);
+
+  async function handleLike(id: string) {
+    if (loadedMode == null) {
+      showNotice('추천을 불러온 뒤에 다시 시도해 주세요.');
+      return;
+    }
+    const modeAtSave = loadedMode;
+    const res = await matchService.sendLikeDecision(id, 'yes', modeAtSave);
+    if (!res.ok) {
+      showNotice(res.error.message);
+      if (res.mode !== modeAtSave) reloadAfterModeChange();
+      return;
+    }
+
+    if (res.data.matched) {
+      setSourceItems((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? { ...item, relation: 'mutual', photo: 'revealed' }
+            : item,
+        ),
+      );
+      showNotice('서로 관심이 통했어요! 이제 1:1 대화가 열렸습니다.');
+      return;
+    }
+
+    setSourceItems((prev) =>
+      prev.map((item) =>
+        item.id === id && item.relation === 'none'
+          ? { ...item, relation: 'liked_by_me' }
+          : item,
+      ),
+    );
+    showNotice(
+      isDemoMode
+        ? '관심을 보냈어요. 상대도 관심을 누르면 대화가 열려요. (DEMO)'
+        : '관심을 보냈어요. 상대도 관심을 누르면 대화가 열려요.',
+    );
   }
+
   function handlePreview() {
-    setNotice('사진 미리보기는 준비 중이에요. 결제는 아직 열리지 않았어요.');
-    setTimeout(() => setNotice(null), 3500);
+    showNotice('사진 미리보기는 준비 중이에요. 결제는 아직 열리지 않았어요.');
   }
+
   function handleAcornClick() {
-    setNotice('🌰 도토리 충전 및 결제 서비스는 준비 중이에요. 정식 오픈 후 이용하실 수 있습니다.');
-    setTimeout(() => setNotice(null), 3500);
+    showNotice('🌰 도토리 충전 및 결제 서비스는 준비 중이에요. 정식 오픈 후 이용하실 수 있습니다.');
   }
-  function handleBlock(id: string) {
-    const target = initialItems.find((p) => p.id === id);
+
+  async function handleBlock(id: string) {
+    if (loadedMode == null) {
+      showNotice('추천을 불러온 뒤에 다시 시도해 주세요.');
+      return;
+    }
+    const modeAtSave = loadedMode;
+    const target = sourceItems.find((p) => p.id === id);
+    const res = await matchService.blockUser({ blockedUserId: id }, modeAtSave);
+    if (!res.ok) {
+      showNotice(res.error.message);
+      if (res.mode !== modeAtSave) reloadAfterModeChange();
+      return;
+    }
     setSkipped((prev) => new Set(prev).add(id));
-    setNotice(`${target?.nickname ?? '해당 상대'} 님을 차단했어요. 추천 목록에서 제외되었습니다.`);
-    setTimeout(() => setNotice(null), 3500);
+    showNotice(`${target?.nickname ?? '해당 상대'} 님을 차단했어요. 추천 목록에서 제외되었습니다.`);
   }
+
   function handleReport(id: string) {
-    const target = initialItems.find((p) => p.id === id);
+    const target = sourceItems.find((p) => p.id === id);
     if (target) {
       setReportingTarget(target);
       setReportReason('부적절하거나 불쾌한 프로필');
       setEtcDetail('');
     }
   }
-  function confirmReport() {
-    if (!reportingTarget) return;
+
+  async function confirmReport() {
+    if (!reportingTarget || reportLockRef.current) return;
+    if (loadedMode == null) {
+      showNotice('추천을 불러온 뒤에 다시 시도해 주세요.');
+      return;
+    }
+    const modeAtSave = loadedMode;
     const target = reportingTarget;
+    reportLockRef.current = true;
+    setReportSubmitting(true);
     const isEtc = reportReason === '기타 사유 (직접 입력)';
     const finalReason = isEtc
       ? (etcDetail.trim() ? `기타: ${etcDetail.trim()}` : '기타 사유')
       : reportReason;
 
+    let res: Awaited<ReturnType<typeof matchService.reportUser>>;
+    try {
+      res = await matchService.reportUser({
+        reportedUserId: target.id,
+        category: mapUiReasonToReportCategory(reportReason),
+        description: finalReason,
+        alsoBlock: true,
+      }, modeAtSave);
+    } finally {
+      reportLockRef.current = false;
+      setReportSubmitting(false);
+    }
+    if (!res.ok) {
+      showNotice(res.error.message);
+      if (res.mode !== modeAtSave) reloadAfterModeChange();
+      return;
+    }
+
     setSkipped((prev) => new Set(prev).add(target.id));
     setReportingTarget(null);
     setEtcDetail('');
-    setNotice(`'${target.nickname}' 님에 대한 신고(${finalReason})가 안전센터에 접수되었습니다. 상대방은 즉시 차단되었습니다.`);
-    setTimeout(() => setNotice(null), 4000);
+
+    showNotice(
+      `'${target.nickname}' 님에 대한 신고(${finalReason})가 안전센터에 접수되었습니다. 상대방은 즉시 차단되었습니다.`,
+      4000,
+    );
   }
+
   function handleAskQuestion(id: string, question: string) {
-    const target = initialItems.find((p) => p.id === id);
-    setNotice(`'${target?.nickname ?? '상대'}' 님과의 1:1 대화방으로 질문을 전달하여 이동합니다...`);
+    // 실계정 UUID는 데모 방(DEMO_ROOMS[0])으로 떨어지므로 이동·전송하지 않는다.
+    if (!isDemoMode || !id.startsWith('rec_')) {
+      showNotice('1:1 대화 전송은 채팅 연동 후에 열려요.');
+      return;
+    }
+    const target = sourceItems.find((p) => p.id === id);
+    showNotice(`'${target?.nickname ?? '상대'}' 님과의 1:1 대화방으로 질문을 전달하여 이동합니다...`);
     setTimeout(() => {
       router.push(`/match/chat?partner=${id}&q=${encodeURIComponent(question)}`);
     }, 400);
@@ -115,10 +337,14 @@ export default function RecommendList({
           type="button"
           className="mt-rec-list__acorn"
           onClick={handleAcornClick}
-          aria-label={`보유 도토리 ${acorn.acorn}개 (충전 준비 중)`}
+          aria-label={
+            acorn.acorn == null
+              ? '도토리 잔액은 아직 표시하지 않아요 (충전 준비 중)'
+              : `보유 도토리 ${acorn.acorn}개 (충전 준비 중)`
+          }
         >
           <IconAcorn width={15} height={15} />
-          <span>{acorn.acorn}</span>
+          {acorn.acorn != null && <span>{acorn.acorn}</span>}
         </button>
       </header>
 
@@ -135,7 +361,7 @@ export default function RecommendList({
           <div className="mt-rec-state" role="alert">
             <p className="mt-rec-state__title">추천을 불러오지 못했어요</p>
             <p className="mt-rec-state__desc">
-              잠시 후 다시 시도해 주세요.
+              {stateErrorMsg ?? '잠시 후 다시 시도해 주세요.'}
             </p>
           </div>
         )}
@@ -146,9 +372,9 @@ export default function RecommendList({
             <p className="mt-rec-state__desc">
               내일 새로운 추천이 도착해요. 취향을 더 추가하면 추천이 넓어져요.
             </p>
-            <a className="mt-rec-state__link" href="/match/onboarding/">
+            <Link className="mt-rec-state__link" href="/match/onboarding/">
               취향 수정하기
-            </a>
+            </Link>
           </div>
         )}
 
@@ -157,9 +383,9 @@ export default function RecommendList({
             <RecommendCard
               key={p.id}
               profile={p}
-              onLike={handleLike}
-              onSkip={handleSkip}
-              onBlock={handleBlock}
+              onLike={(id) => void handleLike(id)}
+              onSkip={(id) => void handleSkip(id)}
+              onBlock={(id) => void handleBlock(id)}
               onReport={handleReport}
               onPreview={handlePreview}
               onAskQuestion={handleAskQuestion}
@@ -167,20 +393,30 @@ export default function RecommendList({
           ))}
       </div>
 
-      <p className="mt-rec-list__demo">
-        DEMO · 샘플 추천 · 거리/접속은 대략 표시 · 결제(도토리)는 준비중
-      </p>
+      {isDemoMode && (
+        <p className="mt-rec-list__demo">
+          DEMO · 샘플 추천 · 거리/접속은 대략 표시 · 결제(도토리)는 준비중
+        </p>
+      )}
 
       {/* 신고 다이얼로그 모달 */}
       {reportingTarget && (
         <div
           className="mt-report-modal-backdrop"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="mt-report-title"
-          onClick={() => setReportingTarget(null)}
+          onClick={() => {
+            if (reportSubmitting) return;
+            setReportingTarget(null);
+          }}
         >
-          <div className="mt-report-modal" onClick={(e) => e.stopPropagation()}>
+          <div
+            ref={reportDialogRef}
+            className="mt-report-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="mt-report-title"
+            tabIndex={-1}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="mt-report-header">
               <h2 id="mt-report-title" className="mt-report-title">
                 사용자 신고하기
@@ -259,9 +495,11 @@ export default function RecommendList({
               <button
                 type="button"
                 className="mt-report-btn mt-report-btn--submit"
-                onClick={confirmReport}
+                disabled={reportSubmitting}
+                aria-busy={reportSubmitting}
+                onClick={() => void confirmReport()}
               >
-                신고 접수하기
+                {reportSubmitting ? '접수 중…' : '신고 접수하기'}
               </button>
             </div>
           </div>
@@ -274,7 +512,7 @@ export default function RecommendList({
           <span>{notice}</span>
           <button
             type="button"
-            style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', padding: '6px 8px', fontSize: '14px', minWidth: '44px', minHeight: '44px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+            className="mt-rec-floating-toast__close"
             onClick={() => setNotice(null)}
             aria-label="알림 닫기"
           >
