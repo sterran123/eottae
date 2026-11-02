@@ -10,12 +10,15 @@
 // ============================================================
 
 import type {
+  DistancePreference,
   InterestCategory,
   InterestOption,
   MbtiType,
   RelationGoal,
   VerifiedIdentity,
 } from './types';
+
+export type { DistancePreference };
 
 // ---- 찾는 관계 목적 옵션 (성별 선택 후 노출) ----
 export const RELATION_OPTIONS: ReadonlyArray<{
@@ -195,7 +198,6 @@ export const INTEREST_LABELS: Record<string, string> = {
 };
 
 // ---- 선호 거리 게이지바 스텝 옵션 ----
-export type DistancePreference = 'within_5km' | 'within_10km' | 'within_25km' | 'anywhere';
 export type DistanceIconType = 'pin' | 'coffee' | 'subway' | 'sparkle';
 
 export const DISTANCE_PREFERENCE_OPTIONS: ReadonlyArray<{
