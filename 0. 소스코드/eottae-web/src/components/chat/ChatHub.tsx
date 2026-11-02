@@ -3,60 +3,122 @@
 // ============================================================
 //  저장 경로: src/components/chat/ChatHub.tsx
 //  담당: 손준혁 · MATCH-007
-//  역할: 대화방 목록(ChatList) + 우측 슬라이드 패널(ChatRoom) 오케스트레이션.
-//        방을 열면 패널이 우측에서 열리고, ✕·Esc·바깥(딤) 클릭으로 닫혀 목록으로 돌아온다.
-//        한 번 연 방은 닫아도 마운트를 유지해 대화·차단 상태가 보존된다(카카오톡처럼).
-//
-//  [경계] 대화방·메시지는 모두 DEMO 로컬 state. 서버 연동(주한태)·실시간 구독은 별도 설계 후.
+//  역할: 대화 목록과 우측 패널. 탭마다 데모 사용자를 고르고,
+//        구성원이 아닌 방은 열지 않는다.
 // ============================================================
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { DEMO_ROOMS, resolveDemoRoomId } from '@/lib/chat/demo-data';
-import type { ChatMessage } from '@/lib/chat/types';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import {
+  DEMO_ACTORS,
+  DEMO_ROOMS,
+  DEMO_SELF,
+  actorFromQuery,
+  counterpartDemoLink,
+  demoRoomAccess,
+  findDemoRoomId,
+  viewRoomForActor,
+} from '@/lib/chat/demo-data';
+import { ensureChatSeed, loadVisibleMessages, subscribeChatDemo } from '@/lib/chat/demo-store';
+import type { ChatMessage, ChatRoomInfo } from '@/lib/chat/types';
+import { subscribeSafetyDemo } from '@/lib/safety/demo-store';
+import SafetyDemoPanels from '@/components/safety/SafetyDemoPanels';
 import ChatList, { type ChatRoomPreview } from './ChatList';
 import ChatRoom from './ChatRoom';
 
-const INITIAL_PREVIEWS: Record<string, ChatRoomPreview> = Object.fromEntries(
-  DEMO_ROOMS.map((room) => [
-    room.id,
-    {
-      lastMessage: room.initialMessages[room.initialMessages.length - 1]?.body ?? '',
-      timeLabel: room.timeLabel,
-      unread: room.unread,
-    },
-  ]),
-);
+function previewFor(room: ChatRoomInfo, actorId: string, open: boolean): ChatRoomPreview {
+  const viewed = viewRoomForActor(room, actorId);
+  const messages = loadVisibleMessages(room.id, actorId);
+  const last = messages[messages.length - 1];
+  const seedIds = new Set(room.initialMessages.map((message) => message.id));
+  const fresh = messages.filter((message) => message.sender === 'partner' && !seedIds.has(message.id)).length;
+  const lastIsSeed = !last || seedIds.has(last.id);
+  return {
+    lastMessage: last?.body ?? viewed?.initialMessages[viewed.initialMessages.length - 1]?.body ?? '',
+    timeLabel: lastIsSeed ? (viewed?.timeLabel ?? room.timeLabel) : '방금',
+    unread: open ? 0 : Math.min(99, (viewed?.unread ?? 0) + fresh),
+  };
+}
 
 export default function ChatHub() {
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
-  const initialPartnerId = searchParams.get('partner');
+  const roomParam = searchParams.get('room');
+  const partnerParam = searchParams.get('partner');
   const initialQuestion = searchParams.get('q');
-  // 추천 카드(?partner=&q=) 진입 시 일치하는 partner/room id 또는 추천 프로필 매핑으로 방을 열고, 없으면 첫 데모 방으로 폴백
-  const questionRoomId = resolveDemoRoomId(initialPartnerId);
+  const actor = actorFromQuery(searchParams.get('as'));
+  const requested = roomParam || partnerParam || '';
+  const access = demoRoomAccess(actor.id, requested || null);
+  const openedRoomId = access === 'member' ? findDemoRoomId(requested) : null;
+  const shouldAutoOpen = Boolean(openedRoomId && (roomParam || initialQuestion));
+  const forbidden = access === 'denied';
+
+  const visibleRooms = useMemo(
+    () =>
+      DEMO_ROOMS.map((room) => viewRoomForActor(room, actor.id)).filter(
+        (room): room is ChatRoomInfo => room !== null,
+      ),
+    [actor.id],
+  );
 
   const [activeId, setActiveId] = useState<string | null>(null);
-  // 한 번이라도 연 방 — 닫아도 마운트를 유지해 상태를 보존한다.
   const [visited, setVisited] = useState<string[]>([]);
-  const [previews, setPreviews] = useState(INITIAL_PREVIEWS);
-
+  const [storedPreviews, setStoredPreviews] = useState<Record<string, ChatRoomPreview> | null>(null);
+  const [previewActor, setPreviewActor] = useState<string | null>(null);
   const activeRef = useRef<string | null>(null);
   const prevActive = useRef<string | null>(null);
-  const handledQuestion = useRef(false);
+  const openedToken = useRef<string | null>(null);
 
   useEffect(() => {
     activeRef.current = activeId;
   }, [activeId]);
 
-  const openRoom = useCallback((id: string) => {
-    setActiveId(id);
-    setVisited((v) => (v.includes(id) ? v : [...v, id]));
-    setPreviews((p) => ({ ...p, [id]: { ...p[id], unread: 0 } }));
-  }, []);
+  useEffect(() => {
+    ensureChatSeed();
+    const apply = () => {
+      const next: Record<string, ChatRoomPreview> = {};
+      for (const room of DEMO_ROOMS) {
+        if (!room.members.some((member) => member.id === actor.id)) continue;
+        next[room.id] = previewFor(room, actor.id, activeRef.current === room.id);
+      }
+      setPreviewActor(actor.id);
+      setStoredPreviews(next);
+    };
+    apply();
+    const offChat = subscribeChatDemo(apply);
+    const offSafety = subscribeSafetyDemo(apply);
+    return () => {
+      offChat();
+      offSafety();
+    };
+  }, [actor.id]);
 
-  const closeRoom = useCallback(() => setActiveId(null), []);
+  useEffect(() => {
+    const visibleIds = visibleRooms.map((room) => room.id);
+    const token = `${actor.id}|${roomParam ?? ''}|${partnerParam ?? ''}|${initialQuestion ?? ''}|${openedRoomId ?? ''}`;
+    const auto = shouldAutoOpen && openedRoomId ? openedRoomId : null;
+    if (openedToken.current === token) return;
+    openedToken.current = token;
+    setActiveId((current) => {
+      if (auto) return auto;
+      if (current && visibleIds.includes(current)) return current;
+      return null;
+    });
+    setVisited((current) => {
+      const kept = current.filter((id) => visibleIds.includes(id));
+      if (auto && !kept.includes(auto)) return [...kept, auto];
+      return kept;
+    });
+    if (auto) {
+      setStoredPreviews((current) => {
+        if (!current?.[auto]) return current;
+        return { ...current, [auto]: { ...current[auto], unread: 0 } };
+      });
+    }
+  }, [actor.id, initialQuestion, openedRoomId, partnerParam, roomParam, shouldAutoOpen, visibleRooms]);
 
-  // 패널이 열려 있는 동안 배경 페이지 스크롤 방지
   useEffect(() => {
     if (activeId) {
       const originalOverflow = document.body.style.overflow;
@@ -67,74 +129,78 @@ export default function ChatHub() {
     }
   }, [activeId]);
 
-  // 추천 카드 "가볍게 물어보기"(?q=) 진입 → 첫 방을 열고 질문을 전송한다.
-  // [경계] DEMO에서는 DEMO_ROOMS[0]으로 고정하지만, 서버 연동 시에는 쿼리의 match id 대상 방으로 연결한다.
-  useEffect(() => {
-    if (initialQuestion && !handledQuestion.current) {
-      handledQuestion.current = true;
-      openRoom(questionRoomId);
-    }
-  }, [initialQuestion, openRoom, questionRoomId]);
+  function openRoom(id: string) {
+    setActiveId(id);
+    setVisited((current) => (current.includes(id) ? current : [...current, id]));
+    setStoredPreviews((current) => {
+      const room = visibleRooms.find((item) => item.id === id);
+      const base = current?.[id] ?? {
+        lastMessage: room?.initialMessages[room.initialMessages.length - 1]?.body ?? '',
+        timeLabel: room?.timeLabel ?? '',
+        unread: 0,
+      };
+      return { ...(current ?? {}), [id]: { ...base, unread: 0 } };
+    });
+  }
 
-  // 새 메시지 → 목록 미리보기 갱신. 닫힌 방에 온 상대 메시지는 안 읽음으로 센다.
-  const handleLastMessage = useCallback((roomId: string, msg: ChatMessage) => {
-    const isOpen = activeRef.current === roomId;
-    setPreviews((p) => {
-      const cur = p[roomId];
-      const incoming = msg.sender === 'partner' && !isOpen;
+  function closeRoom() {
+    setActiveId(null);
+  }
+
+  function chooseActor(nextId: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('as', nextId);
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }
+
+  const handleLastMessage = (roomId: string, message: ChatMessage) => {
+    setStoredPreviews((current) => {
+      const room = visibleRooms.find((item) => item.id === roomId);
+      const base = current?.[roomId] ?? {
+        lastMessage: '',
+        timeLabel: room?.timeLabel ?? '방금',
+        unread: 0,
+      };
       return {
-        ...p,
-        [roomId]: {
-          ...cur,
-          lastMessage: msg.body,
-          timeLabel: '방금',
-          unread: incoming ? cur.unread + 1 : cur.unread,
-        },
+        ...(current ?? {}),
+        [roomId]: { ...base, lastMessage: message.body, timeLabel: '방금' },
       };
     });
-  }, []);
+  };
 
-  // 포커스 관리: 열면 닫기 버튼으로, 닫으면 눌렀던 목록 항목으로 복귀
   useEffect(() => {
     const prev = prevActive.current;
     prevActive.current = activeId;
     if (activeId) {
-      document
-        .querySelector<HTMLElement>(`#mt-chat-panel-${activeId} .mt-chat-close`)
-        ?.focus();
+      document.querySelector<HTMLElement>(`#mt-chat-panel-${activeId} .mt-chat-close`)?.focus();
     } else if (prev) {
       document.getElementById(`mt-chatlist-item-${prev}`)?.focus();
     }
   }, [activeId]);
 
-  // 패널 내 포커스 트랩: 활성 패널 밖(헤더·푸터 등)으로 Tab 포커스가 빠져나가지 않도록 순환
   useEffect(() => {
     if (!activeId) return;
     const panel = document.getElementById(`mt-chat-panel-${activeId}`);
     if (!panel) return;
 
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return;
-      // 대화상자(dialog[open])는 브라우저가 자체 포커스를 가두므로 양보
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab') return;
       if (panel.querySelector('dialog[open]')) return;
-
       const focusables = Array.from(
         panel.querySelectorAll<HTMLElement>(
           'button:not([disabled]), textarea:not([disabled]), input:not([disabled]):not([tabindex="-1"]), a[href], [tabindex]:not([tabindex="-1"])',
         ),
-        // 닫힌 dialog 안·hidden 요소는 제외 (화면에 박스가 없으면 포커스 불가)
-      ).filter((el) => !el.closest('dialog:not([open])') && el.getClientRects().length > 0);
+      ).filter((element) => !element.closest('dialog:not([open])') && element.getClientRects().length > 0);
       if (focusables.length === 0) return;
-
       const first = focusables[0];
       const last = focusables[focusables.length - 1];
       const inside = panel.contains(document.activeElement);
-
-      if (e.shiftKey && (document.activeElement === first || !inside)) {
-        e.preventDefault();
+      if (event.shiftKey && (document.activeElement === first || !inside)) {
+        event.preventDefault();
         last.focus();
-      } else if (!e.shiftKey && (document.activeElement === last || !inside)) {
-        e.preventDefault();
+      } else if (!event.shiftKey && (document.activeElement === last || !inside)) {
+        event.preventDefault();
         first.focus();
       }
     };
@@ -143,58 +209,114 @@ export default function ChatHub() {
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [activeId]);
 
-  // Esc로 닫기 — 한글 IME 조합 중이거나 활성 패널 내의 더보기 메뉴·차단/신고 모달이 열려 있으면 양보한다.
   useEffect(() => {
     if (!activeId) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape' || e.defaultPrevented || e.isComposing) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented || event.isComposing) return;
       const activePanel = document.getElementById(`mt-chat-panel-${activeId}`);
       if (activePanel?.querySelector('dialog[open], .mt-chat-menu-list')) return;
       closeRoom();
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [activeId, closeRoom]);
+  }, [activeId]);
+
+  const seedPreviews: Record<string, ChatRoomPreview> = Object.fromEntries(
+    visibleRooms.map((room) => {
+      const last = room.initialMessages[room.initialMessages.length - 1];
+      return [room.id, { lastMessage: last?.body ?? '', timeLabel: room.timeLabel, unread: room.unread }];
+    }),
+  );
+  const previews =
+    previewActor === actor.id && storedPreviews ? { ...seedPreviews, ...storedPreviews } : seedPreviews;
+  const pair = counterpartDemoLink(actor.id);
+  const deniedParams = new URLSearchParams();
+  if (actor.id !== DEMO_SELF.id) deniedParams.set('as', actor.id);
+  deniedParams.set('room', 'not-a-match');
+  const actors = DEMO_ACTORS.some((item) => item.id === actor.id) ? DEMO_ACTORS : [...DEMO_ACTORS, actor];
 
   return (
     <>
-      {/* 패널이 열려 있는 동안 뒤 목록은 포커스·읽기 대상에서 제외 */}
       <div className="mt-chathub" inert={activeId !== null}>
         <header className="mt-chathub-head">
           <h1 className="mt-chathub-title">채팅</h1>
           <p className="mt-chathub-note" role="note">
-            DEMO · 가상 대화방이에요. 실제 상대·서버 연동은 아직 없어요.
+            데모 · 가상 대화예요. 서버로는 가지 않고 이 브라우저에 남아요. 다른 탭에서 상대 계정을 고르면
+            메시지를 주고받을 수 있어요.
           </p>
         </header>
-        <ChatList
-          rooms={DEMO_ROOMS}
-          previews={previews}
-          activeId={activeId}
-          onOpen={openRoom}
-        />
+
+        <div className="mt-chat-tools">
+          <label className="mt-chat-actor-label">
+            이 탭의 데모 사용자
+            <select
+              className="mt-chat-actor"
+              value={actor.id}
+              onChange={(event) => chooseActor(event.target.value)}
+            >
+              {actors.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.nickname}
+                </option>
+              ))}
+            </select>
+          </label>
+          <Link
+            className="mt-chat-tool-link"
+            href={`/match/chat?as=${encodeURIComponent(pair.actorId)}&room=${encodeURIComponent(pair.roomId)}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            새 탭에서 {pair.nickname} 계정으로 이 대화 열기 (데모)
+          </Link>
+          <Link className="mt-chat-tool-link" href={`/match/chat?${deniedParams.toString()}`}>
+            구성원이 아닌 방 열어보기 (데모)
+          </Link>
+        </div>
+
+        {forbidden && (
+          <section className="mt-chat-forbidden" role="status" aria-labelledby="mt-chat-forbidden-title">
+            <h2 id="mt-chat-forbidden-title">볼 수 없는 대화</h2>
+            <p>이 방의 매칭 구성원이 아니라 메시지를 볼 수 없어요.</p>
+            <p className="mt-chat-demo">데모</p>
+          </section>
+        )}
+
+        {visibleRooms.length === 0 ? (
+          <p className="mt-report-empty">이 데모 사용자로 열린 대화가 없어요.</p>
+        ) : (
+          <ChatList rooms={visibleRooms} previews={previews} activeId={activeId} onOpen={openRoom} />
+        )}
+
+        <SafetyDemoPanels actorId={actor.id} />
       </div>
 
       {activeId && <div className="mt-chat-backdrop" aria-hidden="true" onClick={closeRoom} />}
 
-      {DEMO_ROOMS.filter((r) => visited.includes(r.id)).map((room) => (
-        <div
-          key={room.id}
-          id={`mt-chat-panel-${room.id}`}
-          className="mt-chat-panel"
-          role="dialog"
-          aria-modal="true"
-          aria-label={`${room.partner.nickname}님과의 채팅`}
-          hidden={activeId !== room.id}
-        >
-          <ChatRoom
-            room={room}
-            active={activeId === room.id}
-            initialQuestion={room.id === questionRoomId ? initialQuestion : null}
-            onClose={closeRoom}
-            onLastMessage={handleLastMessage}
-          />
-        </div>
-      ))}
+      {DEMO_ROOMS.filter((room) => visited.includes(room.id)).map((room) => {
+        const viewed = viewRoomForActor(room, actor.id);
+        if (!viewed) return null;
+        return (
+          <div
+            key={`${actor.id}-${room.id}`}
+            id={`mt-chat-panel-${room.id}`}
+            className="mt-chat-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${viewed.partner.nickname}님과의 채팅`}
+            hidden={activeId !== room.id}
+          >
+            <ChatRoom
+              room={viewed}
+              actorId={actor.id}
+              active={activeId === room.id}
+              initialQuestion={room.id === openedRoomId ? initialQuestion : null}
+              onClose={closeRoom}
+              onLastMessage={handleLastMessage}
+            />
+          </div>
+        );
+      })}
     </>
   );
 }

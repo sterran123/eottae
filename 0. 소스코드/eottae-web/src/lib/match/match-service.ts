@@ -24,6 +24,8 @@
 import { authService } from '@/lib/auth/auth-service';
 import type { MyAccount } from '@/lib/auth/types';
 import { clearDemoAdult } from '@/lib/demo/demo-adult';
+import { DEMO_SELF } from '@/lib/chat/demo-data';
+import { saveDemoBlock, saveDemoReport } from '@/lib/safety/demo-store';
 import type { BlockRequest, ReportCategory, ReportRequest } from '@/lib/safety/types';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase/client';
 import { DEMO_IDENTITY, VALID_INTEREST_IDS } from './demo-data';
@@ -658,6 +660,7 @@ export const matchService = {
     }
 
     if (context.mode === 'demo') {
+      saveDemoBlock(DEMO_SELF.id, req.blockedUserId);
       return { ok: true, mode: 'demo', data: undefined };
     }
     return {
@@ -728,6 +731,15 @@ export const matchService = {
     }
 
     if (context.mode === 'demo') {
+      const nickname = DEMO_RECOMMENDATIONS.find((item) => item.id === req.reportedUserId)?.nickname ?? '상대';
+      saveDemoReport({
+        reporterId: DEMO_SELF.id,
+        targetId: req.reportedUserId,
+        nickname,
+        category: req.category,
+        description: req.description,
+      });
+      if (req.alsoBlock) saveDemoBlock(DEMO_SELF.id, req.reportedUserId);
       return { ok: true, mode: 'demo', data: undefined };
     }
     return {
