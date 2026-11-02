@@ -52,6 +52,17 @@ export type Gathering = {
   recruitmentEndsAt?: string;
   /** 모집을 끝낸 예시. 빈자리가 있어도 마감 */
   recruitmentClosed?: boolean;
+  /**
+   * 데모 모임장이 마감 시각·모집 종료 표시를 덮고 다시 연 경우.
+   * 저장본에는 남기지 않고, 화면에서만 뱃지 계산에 쓴다.
+   */
+  recruitmentForceOpen?: boolean;
+  /** 데모에서 이 브라우저 사용자를 모임장으로 둔 예시 1곳 */
+  viewerIsHost?: boolean;
+  /** 이미 끝난 예시. 후기 섹션을 연다 */
+  ended?: boolean;
+  /** 종료 모임에서 이 브라우저 사용자를 참가 확정자로 둔 예시 */
+  demoAttended?: boolean;
   capacity: number;
   /** 예시 참가 인원. 내 참가 요청은 화면에서만 더한다. */
   currentCount: number;
