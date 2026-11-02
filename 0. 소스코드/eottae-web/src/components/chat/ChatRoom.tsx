@@ -12,8 +12,14 @@
 // ============================================================
 
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
-import { createDemoChatDataSource, type ChatDataSource } from '@/lib/chat/chat-service';
-import type { ChatMessage, ChatRoomInfo } from '@/lib/chat/types';
+import {
+  createChatDataSource,
+  fetchConversationMessages,
+  isSupabaseChatConfigured,
+  type ChatDataSource,
+} from '@/lib/chat/chat-service';
+import { isUuid, type ChatMessage, type ChatRoomInfo } from '@/lib/chat/types';
+import { submitBlock, submitReport } from '@/lib/safety/safety-service';
 import type { BlockRequest, ReportRequest } from '@/lib/safety/types';
 import BlockConfirmModal from '@/components/safety/BlockConfirmModal';
 import ReportModal from '@/components/safety/ReportModal';
@@ -79,20 +85,28 @@ export default function ChatRoom({
   // 데이터 소스 연결 및 언마운트 시 대기 중 타이머/구독 정리
   const createSource = useCallback(() => {
     dataSourceRef.current?.dispose();
-    dataSourceRef.current = createDemoChatDataSource({
-      onMessageSent: (messageId) => {
-        setMessages((prev) =>
-          prev.map((m) => (m.id === messageId ? { ...m, status: 'sent' } : m)),
-        );
+    dataSourceRef.current = createChatDataSource(
+      { conversationId: room.id },
+      {
+        onMessageSent: (messageId) => {
+          setMessages((prev) =>
+            prev.map((m) => (m.id === messageId ? { ...m, status: 'sent' } : m)),
+          );
+        },
+        onMessageFailed: (messageId) => {
+          setMessages((prev) =>
+            prev.map((m) => (m.id === messageId ? { ...m, status: 'failed' } : m)),
+          );
+        },
+        onTypingChange: (isTyping) => {
+          setTyping(isTyping);
+        },
+        onIncomingMessage: (incoming) => {
+          setMessages((prev) => [...prev, incoming]);
+        },
       },
-      onTypingChange: (isTyping) => {
-        setTyping(isTyping);
-      },
-      onIncomingMessage: (incoming) => {
-        setMessages((prev) => [...prev, incoming]);
-      },
-    });
-  }, []);
+    );
+  }, [room.id]);
 
   useEffect(() => {
     createSource();
@@ -100,6 +114,20 @@ export default function ChatRoom({
       dataSourceRef.current?.dispose();
     };
   }, [createSource]);
+
+  // 실제 Supabase 대화방(UUID)인 경우 RLS 범위 내 과거 메시지 초기 로드
+  useEffect(() => {
+    if (!isSupabaseChatConfigured() || !isUuid(room.id)) return;
+    let cancelled = false;
+    void fetchConversationMessages(room.id).then((loaded) => {
+      if (!cancelled && loaded) {
+        setMessages(loaded);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [room.id]);
 
   const pushSystem = useCallback((body: string) => {
     setMessages((prev) => [
@@ -114,11 +142,7 @@ export default function ChatRoom({
     ]);
   }, []);
 
-  // 차단 적용: 대기 중 전송·자동응답·구독 전부 해제, 미전송 메시지는 실패 처리
-  const applyBlock = useCallback(() => {
-    if (blockedRef.current) return;
-    const req: BlockRequest = { blockedUserId: partner.id };
-    void req; // [DEMO] Supabase 연동 시 blocks 테이블 insert에 사용
+  const confirmBlockLock = useCallback(() => {
     blockedRef.current = true;
     setBlocked(true);
     dataSourceRef.current?.dispose();
@@ -126,7 +150,32 @@ export default function ChatRoom({
       prev.map((m) => (m.status === 'sending' ? { ...m, status: 'failed' } : m)),
     );
     pushSystem(`${partner.nickname}님을 차단했어요. 더 이상 대화할 수 없어요.`);
-  }, [pushSystem, partner.id, partner.nickname]);
+  }, [pushSystem, partner.nickname]);
+
+  // 차단 적용:
+  // - 데모 방/상대일 때는 즉시 잠금 및 구독/타이머 해제(TC-009).
+  // - 실제 Supabase 상대(UUID)일 때는 `public.blocks` INSERT가 성공한 뒤에만 잠금·시스템 문구를 확정하고
+  //   구독을 회수하며, 실패 시 잠금을 확정하지 않고 실패 안내를 표시한다.
+  const applyBlock = useCallback(() => {
+    if (blockedRef.current) return;
+    const req: BlockRequest = { blockedUserId: partner.id };
+
+    if (!isSupabaseChatConfigured() || !isUuid(partner.id)) {
+      confirmBlockLock();
+      return;
+    }
+
+    void submitBlock(req).then((res) => {
+      if (blockedRef.current) return;
+      if (!res.ok) {
+        pushSystem(
+          res.error?.message ?? '차단 요청을 서버에 반영하지 못했어요. 잠시 후 다시 시도해 주세요.',
+        );
+        return;
+      }
+      confirmBlockLock();
+    });
+  }, [confirmBlockLock, partner.id, pushSystem]);
 
   const releaseBlock = useCallback(() => {
     if (!blockedRef.current) return;
@@ -137,8 +186,23 @@ export default function ChatRoom({
   }, [createSource, pushSystem]);
 
   function handleReportSubmit(req: ReportRequest) {
-    // [DEMO] 서버 전송 없음. 신고 내용은 저장·로깅하지 않는다.
-    if (req.alsoBlock) applyBlock();
+    // [보안 / DB_논리모델_전체3단계.md:41] 신고 사유 본문(req.description)은 콘솔·로그에 남기지 않는다.
+    if (!isSupabaseChatConfigured() || !isUuid(req.reportedUserId)) {
+      if (req.alsoBlock) applyBlock();
+      return;
+    }
+
+    void submitReport(req).then((res) => {
+      if (!res.ok) {
+        pushSystem(
+          res.error?.message ?? '신고 접수를 완료하지 못했어요. 잠시 후 다시 시도해 주세요.',
+        );
+        return;
+      }
+      if (req.alsoBlock) {
+        applyBlock();
+      }
+    });
   }
 
   // 차단/해제 확인 모달 열기 (해제도 실수 방지를 위해 항상 확인을 거친다)
