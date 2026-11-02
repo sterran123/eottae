@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import SubpageHero from '@/components/shared/subpage-hero';
+import MatchHomeGate from '@/components/demo/MatchHomeGate';
 import { DemoAdultPrompt, DemoGatedLink } from '@/components/demo/MatchDemoEntry';
 
 export const metadata: Metadata = {
@@ -61,6 +62,7 @@ const entryLinkStyle: CSSProperties = {
 
 export default function MatchPage() {
   return (
+    <MatchHomeGate>
     <>
       <SubpageHero
         eyebrow="MODULE 01 · MATCH"
@@ -109,6 +111,19 @@ export default function MatchPage() {
               </div>
             </article>
           ))}
+          <article className="feature">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <span>05</span>
+              <span className="chip" style={{ fontSize: '11px', padding: '2px 8px' }}>MATCH-003</span>
+            </div>
+            <h3>내 프로필</h3>
+            <p>데모 계정의 표시 이름과 연령 기준만 보여 줍니다. 로그아웃하면 열리지 않아요.</p>
+            <div style={{ marginTop: '14px' }}>
+              <Link className="btn outline" href="/profile" style={entryLinkStyle}>
+                내 프로필 →
+              </Link>
+            </div>
+          </article>
         </div>
 
         <div className="chip-row" aria-label="매칭 이용 조건">
@@ -120,8 +135,8 @@ export default function MatchPage() {
         <aside className="warn">
           <strong>1차 MVP 프로토타입 체험 안내</strong>
           <p>
-            현재 1차 매칭 모듈의 핵심 4단계(취향 온보딩, 추천 카드, 프로필 문답, 1:1 채팅) UI 및 인터랙션이
-            모두 구현되어 있습니다. 각 기능 카드의 링크를 클릭해 직접 시연해 보실 수 있습니다.
+            데모 로그인 뒤에 취향 온보딩, 추천 카드, 프로필 문답, 1:1 채팅을 둘러볼 수 있어요.
+            매칭·채팅은 성인 확인(시연)을 마친 뒤에만 열리고, 기준은 만 19세예요.
           </p>
         </aside>
 
@@ -136,5 +151,6 @@ export default function MatchPage() {
         <DemoAdultPrompt />
       </section>
     </>
+    </MatchHomeGate>
   );
 }
