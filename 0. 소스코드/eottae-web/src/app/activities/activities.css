@@ -688,7 +688,7 @@
 
 @media (min-width: 760px) {
   .act-filters {
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
   }
 
   .act-totals {
@@ -705,6 +705,10 @@
 }
 
 @media (min-width: 1024px) {
+  .act-filters {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+  }
+
   .act-grid {
     grid-template-columns: 1fr 1fr 1fr;
   }
@@ -715,6 +719,175 @@
   .act-actions .btn,
   .act-filter-actions .btn {
     flex: 1 1 100%;
+  }
+}
+
+.act-card-slot {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--paper);
+  box-shadow: var(--shadow-card);
+}
+
+.act-card-slot:focus-within {
+  z-index: 4;
+}
+
+.act-card-slot > .act-more {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+}
+
+.act-card-slot .act-card {
+  border: 0;
+  border-radius: 20px 20px 0 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.act-card-slot .act-react {
+  padding: 0 12px 12px;
+}
+
+.act-detail-bar {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.act-more {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.act-more-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.act-more-btn:focus-visible,
+.act-menu-item:focus-visible,
+.act-react-btn:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.act-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  min-width: 168px;
+  max-width: min(240px, calc(100vw - 32px));
+  margin: 0;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: var(--shadow-card-hover);
+}
+
+.act-menu-item {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
+  font-weight: 800;
+  text-align: left;
+}
+
+.act-menu-item:hover,
+.act-menu-item:focus-visible {
+  background: var(--soft);
+}
+
+.act-react {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.act-react-btn {
+  display: inline-flex;
+  flex: 1 1 132px;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.act-react-btn[aria-pressed='true'] {
+  border-color: transparent;
+  background: var(--cta-bg);
+  color: var(--cta-ink);
+}
+
+.act-react-count {
+  font-variant-numeric: tabular-nums;
+}
+
+.act-report-prompt {
+  margin: 0;
+  font-weight: 800;
+}
+
+.act-modal-backdrop.act-report-backdrop {
+  padding: 0;
+  overflow: hidden;
+  place-items: start center;
+}
+
+.act-modal.act-report-modal {
+  width: min(100%, 440px);
+  max-height: 100dvh;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border-radius: 0 0 20px 20px;
+}
+
+.act-page textarea.act-report-note {
+  min-height: 5.5rem;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.act-page textarea.act-report-note:disabled {
+  resize: none;
+}
+
+@media (min-width: 760px) {
+  .act-modal-backdrop.act-report-backdrop {
+    place-items: center;
+  }
+
+  .act-modal.act-report-modal {
+    border-radius: 20px;
   }
 }
 

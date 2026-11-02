@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ActivityCover from '@/components/activities/ActivityCover';
+import ActivityMoreMenu, { type MoreMenuItem } from '@/components/activities/ActivityMoreMenu';
+import ActivityReactions from '@/components/activities/ActivityReactions';
+import ActivityReportDialog, { type ActivityReportReason } from '@/components/activities/ActivityReportDialog';
 import CourseDetail from '@/components/activities/CourseDetail';
 import DemoDialog from '@/components/activities/DemoDialog';
 import GatheringDetail from '@/components/activities/GatheringDetail';
@@ -11,6 +14,16 @@ import RecruitmentBadges from '@/components/activities/RecruitmentBadges';
 import SubpageHero from '@/components/shared/subpage-hero';
 import { MotifIcon } from '@/components/shared/motif-icon';
 import { budgetBand, courseTotals, DEMO_COURSES, DEMO_GATHERINGS, findCourse, formatDuration, formatKoreanDateTime } from '@/lib/activities/demo-data';
+import {
+  compareBySort,
+  infoStatusLabel,
+  reactionBase,
+  reactionKey,
+  shownCount,
+  UPDATE_NEEDED_REASON,
+  type ActivityKind,
+  type ActivitySort,
+} from '@/lib/activities/feedback';
 import { activitiesHref } from '@/lib/activities/href';
 import {
   applyJoin,
@@ -19,6 +32,8 @@ import {
   saveActivitiesDemo,
   takeActivitiesNotice,
   type ActivitiesDemoState,
+  type InfoCheckRequest,
+  type InfoCheckStatus,
 } from '@/lib/activities/demo-storage';
 import { presentGathering, rosterPeople, withPersonStatus } from '@/lib/activities/demo-roster';
 import { recruitmentView } from '@/lib/activities/recruitment';
@@ -40,6 +55,21 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]['id'];
 
+const SORTS: { id: ActivitySort; label: string }[] = [
+  { id: 'recommend', label: '추천순' },
+  { id: 'like', label: '좋아요순' },
+  { id: 'latest', label: '최신순' },
+];
+
+type ReportTarget = { kind: ActivityKind; id: string; title: string };
+
+function toggleFlag(map: Record<string, true>, key: string): Record<string, true> {
+  const next = { ...map };
+  if (next[key]) delete next[key];
+  else next[key] = true;
+  return next;
+}
+
 function isHostGathering(gathering: Pick<Gathering, 'viewerIsHost' | 'mine'> | undefined): boolean {
   return gathering?.viewerIsHost === true || gathering?.mine === true;
 }
@@ -52,6 +82,10 @@ export default function ActivitiesDemo() {
   const [ready, setReady] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [clearOpen, setClearOpen] = useState(false);
+  const [sort, setSort] = useState<ActivitySort>('latest');
+  const [reportTarget, setReportTarget] = useState<ReportTarget | null>(null);
+  const [editTitle, setEditTitle] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
   const toastTimer = useRef<number | null>(null);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
@@ -113,11 +147,7 @@ export default function ActivitiesDemo() {
   const gatherings = useMemo(() => {
     const mineIds = new Set(stored.created.map((item) => item.id));
     const merged: Gathering[] = [...stored.created, ...DEMO_GATHERINGS.filter((item) => !mineIds.has(item.id))];
-    return merged.sort((a, b) => {
-      if (Boolean(a.mine) !== Boolean(b.mine)) return a.mine ? -1 : 1;
-      if (Boolean(a.ended) !== Boolean(b.ended)) return a.ended ? 1 : -1;
-      return a.startsAtIso.localeCompare(b.startsAtIso);
-    });
+    return merged;
   }, [stored.created]);
 
   const courses = DEMO_COURSES.filter((course) => {
@@ -329,11 +359,15 @@ export default function ActivitiesDemo() {
       const votes = { ...state.votes };
       const ops = { ...state.ops };
       const reviews = { ...state.reviews };
+      const likes = { ...state.likes };
+      const recommends = { ...state.recommends };
       delete requests[id];
       delete joins[id];
       delete votes[id];
       delete ops[id];
       delete reviews[id];
+      delete likes[reactionKey('gathering', id)];
+      delete recommends[reactionKey('gathering', id)];
       return {
         ...state,
         requests,
@@ -341,6 +375,9 @@ export default function ActivitiesDemo() {
         votes,
         ops,
         reviews,
+        likes,
+        recommends,
+        infoChecks: state.infoChecks.filter((row) => !(row.kind === 'gathering' && row.targetId === id)),
         created: state.created.filter((item) => item.id !== id),
       };
     }, '데모 · 내가 만든 모임 예시를 이 브라우저에서 지웠어요.');
@@ -349,9 +386,119 @@ export default function ActivitiesDemo() {
 
   const clearDemo = () => {
     setClearOpen(false);
-    remember(() => EMPTY_ACTIVITIES_DEMO, '데모 · 이 브라우저의 참가 요청, 투표, 모임장 처리, 후기, 만든 모임을 지웠어요.');
+    remember(
+      () => EMPTY_ACTIVITIES_DEMO,
+      '데모 · 이 브라우저의 참가 요청, 투표, 모임장 처리, 후기, 만든 모임, 좋아요·추천, 정보 확인 요청을 지웠어요.'
+    );
     go({ gathering: null, course: null });
   };
+
+  const reactionOf = (kind: ActivityKind, id: string, item: { id: string; demoLikes?: number; demoRecommends?: number; listedAt?: string; startsAtIso?: string; title: string }) => {
+    const base = reactionBase(item);
+    const liked = stored.likes[reactionKey(kind, id)] === true;
+    const recommended = stored.recommends[reactionKey(kind, id)] === true;
+    return {
+      base,
+      liked,
+      recommended,
+      likeCount: shownCount(base.likes, liked),
+      recommendCount: shownCount(base.recommends, recommended),
+      title: item.title,
+    };
+  };
+
+  const toggleReaction = (kind: ActivityKind, id: string, field: 'likes' | 'recommends') => {
+    if (!ready) return;
+    const key = reactionKey(kind, id);
+    const had = storedRef.current[field][key] === true;
+    remember(
+      (state) => ({ ...state, [field]: toggleFlag(state[field], key) }),
+      had
+        ? field === 'likes'
+          ? '데모 · 좋아요를 이 브라우저에서 거뒀어요.'
+          : '데모 · 추천을 이 브라우저에서 거뒀어요.'
+        : field === 'likes'
+          ? '데모 · 좋아요를 이 브라우저에만 남겼어요.'
+          : '데모 · 추천을 이 브라우저에만 남겼어요.'
+    );
+  };
+
+  const copyLink = (kind: ActivityKind, id: string) => {
+    const href = activitiesHref(kind === 'course' ? { tab: 'courses', course: id } : { tab: 'gatherings', gathering: id });
+    const base = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
+    const url = `${window.location.origin}${base}${href}`;
+    const notify = (copied: boolean) =>
+      showToast(
+        copied
+          ? '데모 · 링크를 이 기기에 복사했어요. 서버로는 보내지 않아요.'
+          : '데모 · 링크 복사는 이 브라우저에서 막혀 알림만 띄워요.'
+      );
+    if (navigator.clipboard?.writeText) {
+      void navigator.clipboard.writeText(url).then(() => notify(true)).catch(() => notify(false));
+      return;
+    }
+    notify(false);
+  };
+
+  const submitReport = (reason: ActivityReportReason, note: string) => {
+    const target = reportTarget;
+    setReportTarget(null);
+    if (!target) return;
+    if (!ready) {
+      showToast('데모 · 기록을 아직 읽고 있어요. 잠시 후 다시 눌러 주세요.');
+      return;
+    }
+    if (reason !== UPDATE_NEEDED_REASON) {
+      showToast(
+        reason === '기타'
+          ? '데모 · ‘기타’ 신고는 확인만 했어요. 적은 내용은 저장하거나 전송하지 않았습니다.'
+          : `데모 · ‘${reason}’ 신고는 확인만 했어요. 저장하거나 전송하지 않았습니다.`
+      );
+      return;
+    }
+    const now = new Date();
+    const entry: InfoCheckRequest = {
+      id: `check-${now.getTime().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+      kind: target.kind,
+      targetId: target.id,
+      reason: '업데이트가 필요해요',
+      note,
+      atLabel: formatKoreanDateTime(now),
+      atIso: now.toISOString(),
+      status: 'pending',
+    };
+    remember(
+      (state) => ({
+        ...state,
+        infoChecks: [entry, ...state.infoChecks].slice(0, 40),
+      }),
+      '관리자와 게시 작성자에게 영업·폐업 확인 승인 요청을 보냈어요(데모)'
+    );
+  };
+
+  const resolveInfo = (id: string, status: Exclude<InfoCheckStatus, 'pending'>) => {
+    const row = storedRef.current.infoChecks.find((item) => item.id === id && item.status === 'pending');
+    if (!row) return;
+    remember(
+      (state) => ({
+        ...state,
+        infoChecks: state.infoChecks.map((item) => (item.id === id && item.status === 'pending' ? { ...item, status } : item)),
+      }),
+      status === 'confirmed'
+        ? '데모 · 확인 완료로 바꿔 이 브라우저에만 남겼어요.'
+        : '데모 · 수정 예정으로 바꿔 이 브라우저에만 남겼어요.'
+    );
+  };
+
+  const checksFor = (kind: ActivityKind, id: string) =>
+    stored.infoChecks.filter((row) => row.kind === kind && row.targetId === id);
+
+  const sortedCourses = [...courses].sort((a, b) =>
+    compareBySort(sort, reactionOf('course', a.id, a), reactionOf('course', b.id, b))
+  );
+  const sortedGatherings = [...visibleGatherings].sort((a, b) =>
+    compareBySort(sort, reactionOf('gathering', a.id, a), reactionOf('gathering', b.id, b))
+  );
 
   const listQuery = {
     tab,
@@ -381,7 +528,7 @@ export default function ActivitiesDemo() {
         </h2>
         <p className="act-preview-badge">데모 데이터로 동작하는 2차 미리보기</p>
         <p className="act-lead">
-          서버와 계정은 쓰지 않아요. 참가 요청, 모임장 수락, 후기, 투표, 직접 만든 모임은 이 브라우저의 데모 기록으로만 남습니다.
+          서버와 계정은 쓰지 않아요. 참가 요청, 모임장 수락, 후기, 투표, 좋아요·추천, 정보 확인 요청, 직접 만든 모임은 이 브라우저의 데모 기록으로만 남습니다.
           {ready ? ` 저장해 둔 데모 모임 ${stored.created.length}개.` : ' 데모 기록을 확인하고 있어요.'}
         </p>
 
@@ -411,10 +558,35 @@ export default function ActivitiesDemo() {
           {showingCourse ? (
             <CourseDetail
               course={courseId ? findCourse(courseId) : undefined}
+              ready={ready}
+              liked={courseId ? stored.likes[reactionKey('course', courseId)] === true : false}
+              recommended={courseId ? stored.recommends[reactionKey('course', courseId)] === true : false}
+              likeCount={
+                courseId && findCourse(courseId)
+                  ? shownCount(reactionBase(findCourse(courseId)!).likes, stored.likes[reactionKey('course', courseId)] === true)
+                  : 0
+              }
+              recommendCount={
+                courseId && findCourse(courseId)
+                  ? shownCount(
+                      reactionBase(findCourse(courseId)!).recommends,
+                      stored.recommends[reactionKey('course', courseId)] === true
+                    )
+                  : 0
+              }
+              infoChecks={courseId ? checksFor('course', courseId) : []}
               onBack={() => go({ course: null }, true)}
               onShare={() =>
                 showToast('데모 · 우리 사이에 공유하지 않았어요. 알림만 띄우고 전송하지 않습니다.')
               }
+              onToggleLike={() => courseId && toggleReaction('course', courseId, 'likes')}
+              onToggleRecommend={() => courseId && toggleReaction('course', courseId, 'recommends')}
+              onCopyLink={() => courseId && copyLink('course', courseId)}
+              onReport={() => {
+                const course = courseId ? findCourse(courseId) : undefined;
+                if (course) setReportTarget({ kind: 'course', id: course.id, title: course.title });
+              }}
+              onResolveInfo={resolveInfo}
             />
           ) : showingGathering && !ready && !gatherings.some((item) => item.id === gatheringId) ? (
             <p className="act-fallback" role="status">
@@ -443,6 +615,36 @@ export default function ActivitiesDemo() {
               onSaveReview={(stars, body) => gatheringId && saveReview(gatheringId, stars, body)}
               onDeleteReview={() => gatheringId && deleteReview(gatheringId)}
               onToast={showToast}
+              liked={gatheringId ? stored.likes[reactionKey('gathering', gatheringId)] === true : false}
+              recommended={gatheringId ? stored.recommends[reactionKey('gathering', gatheringId)] === true : false}
+              likeCount={
+                shownGathering
+                  ? shownCount(
+                      reactionBase(shownGathering).likes,
+                      stored.likes[reactionKey('gathering', shownGathering.id)] === true
+                    )
+                  : 0
+              }
+              recommendCount={
+                shownGathering
+                  ? shownCount(
+                      reactionBase(shownGathering).recommends,
+                      stored.recommends[reactionKey('gathering', shownGathering.id)] === true
+                    )
+                  : 0
+              }
+              infoChecks={gatheringId ? checksFor('gathering', gatheringId) : []}
+              onToggleLike={() => gatheringId && toggleReaction('gathering', gatheringId, 'likes')}
+              onToggleRecommend={() => gatheringId && toggleReaction('gathering', gatheringId, 'recommends')}
+              onCopyLink={() => gatheringId && copyLink('gathering', gatheringId)}
+              onReportPlace={() => {
+                if (shownGathering) setReportTarget({ kind: 'gathering', id: shownGathering.id, title: shownGathering.title });
+              }}
+              onEdit={() => shownGathering && setEditTitle(shownGathering.title)}
+              onAskDelete={() => {
+                if (shownGathering?.mine) setDeleteTarget({ id: shownGathering.id, title: shownGathering.title });
+              }}
+              onResolveInfo={resolveInfo}
             />
           ) : (
             <div className="act-page">
@@ -474,6 +676,16 @@ export default function ActivitiesDemo() {
                   </select>
                 </label>
                 <label className="act-field">
+                  <span>정렬</span>
+                  <select value={sort} onChange={(event) => setSort(event.target.value as ActivitySort)}>
+                    {SORTS.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="act-field">
                   <span>{tab === 'gatherings' ? '카테고리' : '카테고리 (소모임)'}</span>
                   <select value={category} onChange={(event) => go({ category: event.target.value })}>
                     <option value="all">전체 카테고리</option>
@@ -487,8 +699,8 @@ export default function ActivitiesDemo() {
               </fieldset>
               <p className="act-note">
                 {tab === 'courses'
-                  ? '지역·분위기는 이 코스 목록에 바로 적용돼요. 카테고리는 소모임 탭에서 쓰입니다.'
-                  : '지역·카테고리는 이 모임 목록에 바로 적용돼요. 분위기는 데이트 코스 탭에서 쓰입니다.'}
+                  ? '지역·분위기·정렬은 이 코스 목록에 바로 적용돼요. 카테고리는 소모임 탭에서 쓰입니다.'
+                  : '지역·카테고리·정렬은 이 모임 목록에 바로 적용돼요. 분위기는 데이트 코스 탭에서 쓰입니다.'}
               </p>
 
               <div className="act-toolbar">
@@ -522,10 +734,21 @@ export default function ActivitiesDemo() {
                   </p>
                 ) : (
                   <ul className="act-grid">
-                    {courses.map((course) => {
+                    {sortedCourses.map((course) => {
                       const totals = courseTotals(course);
+                      const reaction = reactionOf('course', course.id, course);
+                      const statusLabel = infoStatusLabel(checksFor('course', course.id));
+                      const menuItems: MoreMenuItem[] = [
+                        {
+                          id: 'report',
+                          label: '신고하기',
+                          onSelect: () => setReportTarget({ kind: 'course', id: course.id, title: course.title }),
+                        },
+                        { id: 'copy', label: '링크 복사', onSelect: () => copyLink('course', course.id) },
+                      ];
                       return (
-                        <li key={course.id}>
+                        <li key={course.id} className="act-card-slot">
+                          <ActivityMoreMenu items={menuItems} />
                           <Link
                             className="act-card"
                             href={activitiesHref({ ...listQuery, tab: 'courses', course: course.id })}
@@ -535,6 +758,7 @@ export default function ActivitiesDemo() {
                               <div className="act-chips">
                                 <span className="act-chip">{course.region}</span>
                                 <span className="act-chip">{course.mood}</span>
+                                {statusLabel && <span className="act-chip">{statusLabel}</span>}
                                 <span className="act-demo-mark">데모</span>
                               </div>
                               <h3>{course.title}</h3>
@@ -545,26 +769,58 @@ export default function ActivitiesDemo() {
                               <span className="act-card-go">동선 보기 →</span>
                             </div>
                           </Link>
+                          <ActivityReactions
+                            likes={reaction.likeCount}
+                            recommends={reaction.recommendCount}
+                            liked={reaction.liked}
+                            recommended={reaction.recommended}
+                            disabled={!ready}
+                            onLike={() => toggleReaction('course', course.id, 'likes')}
+                            onRecommend={() => toggleReaction('course', course.id, 'recommends')}
+                          />
                         </li>
                       );
                     })}
                   </ul>
                 )
-              ) : visibleGatherings.length === 0 ? (
+              ) : sortedGatherings.length === 0 ? (
                 <p className="act-empty" role="status">
                   이 조건의 예시 모임이 없어요. 필터를 바꾸거나 데모 모임을 만들어 보세요.
                 </p>
               ) : (
                 <ul className="act-grid">
-                  {visibleGatherings.map((item) => {
+                  {sortedGatherings.map((item) => {
                     const cardHost = isHostGathering(item);
                     const requested = !cardHost && stored.requests[item.id] === true;
                     const join = cardHost ? undefined : stored.joins[item.id];
                     const shown = presentGathering(item, stored.ops[item.id]);
+                    const reaction = reactionOf('gathering', item.id, item);
+                    const statusLabel = infoStatusLabel(checksFor('gathering', item.id));
                     const mark =
                       join === 'accepted' ? '수락됨' : join === 'rejected' ? '거절됨' : requested ? '요청됨' : '데모';
+                    const menuItems: MoreMenuItem[] = [
+                      {
+                        id: 'report',
+                        label: '신고하기',
+                        onSelect: () => setReportTarget({ kind: 'gathering', id: item.id, title: item.title }),
+                      },
+                      ...(item.mine || item.viewerIsHost
+                        ? [{ id: 'edit', label: '수정', onSelect: () => setEditTitle(item.title) }]
+                        : []),
+                      ...(item.mine
+                        ? [
+                            {
+                              id: 'delete',
+                              label: '삭제',
+                              onSelect: () => setDeleteTarget({ id: item.id, title: item.title }),
+                            },
+                          ]
+                        : []),
+                      { id: 'copy', label: '링크 복사', onSelect: () => copyLink('gathering', item.id) },
+                    ];
                     return (
-                      <li key={item.id}>
+                      <li key={item.id} className="act-card-slot">
+                        <ActivityMoreMenu items={menuItems} />
                         <Link
                           className="act-card"
                           href={activitiesHref({ ...listQuery, tab: 'gatherings', gathering: item.id })}
@@ -577,6 +833,7 @@ export default function ActivitiesDemo() {
                               {item.mine && <span className="act-chip">내 데모</span>}
                               {item.viewerIsHost && <span className="act-chip">내가 모임장</span>}
                               {item.ended && <span className="act-chip">종료 · 후기</span>}
+                              {statusLabel && <span className="act-chip">{statusLabel}</span>}
                               <span className="act-demo-mark">{mark}</span>
                             </div>
                             <h3>{item.title}</h3>
@@ -588,6 +845,15 @@ export default function ActivitiesDemo() {
                             <span className="act-card-go">모임 보기 →</span>
                           </div>
                         </Link>
+                        <ActivityReactions
+                          likes={reaction.likeCount}
+                          recommends={reaction.recommendCount}
+                          liked={reaction.liked}
+                          recommended={reaction.recommended}
+                          disabled={!ready}
+                          onLike={() => toggleReaction('gathering', item.id, 'likes')}
+                          onRecommend={() => toggleReaction('gathering', item.id, 'recommends')}
+                        />
                       </li>
                     );
                   })}
@@ -600,6 +866,53 @@ export default function ActivitiesDemo() {
         <Link className="btn outline" href="/">
           ← 통합 홈으로
         </Link>
+
+        {reportTarget && (
+          <ActivityReportDialog
+            subject={reportTarget.title}
+            onClose={() => setReportTarget(null)}
+            onConfirm={submitReport}
+          />
+        )}
+
+        {editTitle && (
+          <DemoDialog titleId="act-edit-title" title="수정 (데모)" onClose={() => setEditTitle(null)}>
+            <p>
+              <span className="act-demo-mark">데모</span> {editTitle}은 이 화면에서 고치지 않아요. 서버로 수정 요청을 보내지
+              않습니다.
+            </p>
+            <div className="act-actions">
+              <button type="button" className="btn primary" onClick={() => setEditTitle(null)}>
+                닫기
+              </button>
+            </div>
+          </DemoDialog>
+        )}
+
+        {deleteTarget && (
+          <DemoDialog titleId="act-delete-title" title="삭제 (데모)" onClose={() => setDeleteTarget(null)}>
+            <p>
+              <span className="act-demo-mark">데모</span> {deleteTarget.title}을 이 브라우저 목록에서만 지워요. 서버에는 원래
+              없습니다.
+            </p>
+            <div className="act-actions">
+              <button
+                type="button"
+                className="btn primary"
+                onClick={() => {
+                  const id = deleteTarget.id;
+                  setDeleteTarget(null);
+                  removeMine(id);
+                }}
+              >
+                이 브라우저에서 지우기
+              </button>
+              <button type="button" className="btn outline" onClick={() => setDeleteTarget(null)}>
+                닫기
+              </button>
+            </div>
+          </DemoDialog>
+        )}
 
         {clearOpen && (
           <DemoDialog titleId="act-clear-title" title="데모 기록 지우기" onClose={() => setClearOpen(false)}>

@@ -7,12 +7,14 @@ type Props = {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
+  panelClassName?: string;
+  backdropClassName?: string;
 };
 
 const FOCUSABLE =
   'button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled)';
 
-export default function DemoDialog({ titleId, title, onClose, children }: Props) {
+export default function DemoDialog({ titleId, title, onClose, children, panelClassName, backdropClassName }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
@@ -54,10 +56,13 @@ export default function DemoDialog({ titleId, title, onClose, children }: Props)
   }, []);
 
   return (
-    <div className="act-modal-backdrop" onMouseDown={() => onCloseRef.current()}>
+    <div
+      className={backdropClassName ? `act-modal-backdrop ${backdropClassName}` : 'act-modal-backdrop'}
+      onMouseDown={() => onCloseRef.current()}
+    >
       <div
         ref={ref}
-        className="act-modal"
+        className={panelClassName ? `act-modal ${panelClassName}` : 'act-modal'}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
