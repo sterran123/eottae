@@ -67,13 +67,10 @@ export default function AuthCallback() {
 
       // 1) PKCE 인증 코드 교환 처리 (모듈 스코프 1회 보장)
       if (code) {
-        const pending =
-          codeExchange ??
-          supabase.auth.exchangeCodeForSession(code).then((result) => ({
-            error: result.error ? { message: result.error.message } : null,
-          }));
-        codeExchange = pending;
-        const exchanged = await pending;
+        codeExchange ??= supabase.auth.exchangeCodeForSession(code).then(({ error }) => ({
+          error: error ? { message: error.message } : null,
+        }));
+        const exchanged = await codeExchange;
         if (cancelled) return;
         if (exchanged.error) {
           setDetail('인증 링크가 만료되었거나 이미 사용되었어요.');

@@ -83,7 +83,7 @@
 0. 소스코드/eottae-web/src/app/privacy/page.tsx,3091,9c973f2c0c6f6c620da6eab09ebd408089d4c2f39bb1562e62aed071f803f05d
 0. 소스코드/eottae-web/src/app/safety/page.tsx,2083,b7fff35a33b1c4b90385524e4fa2ae8af97add00ff4b60cf9c60b4dabb6fff6b
 0. 소스코드/eottae-web/src/app/settings/page.tsx,2849,a1b9483936ae94f645628315bde82223556230aedd39f2294037d04bbb564972
-0. 소스코드/eottae-web/src/components/auth/AuthCallback.tsx,5233,6960fd104e56277f041ca4769d86dcc0dc8a68cdd24c9f0297fc7a262aba3255
+0. 소스코드/eottae-web/src/components/auth/AuthCallback.tsx,5156,9515cbccc69dbd678824d6b8d2bbde69a18fe2df67c3be26ff0118f263fbe8c9
 0. 소스코드/eottae-web/src/components/auth/AuthCard.tsx,1190,adb66c75038486bc599f7495f12874ba6fe4a23fc31a3f4d86edcf0183126f61
 0. 소스코드/eottae-web/src/components/auth/AuthNavSlot.tsx,1691,f5b0bfacfc3986d0995492aefe7cc18a85b5632f9c819b60b6eebf099e9bd999
 0. 소스코드/eottae-web/src/components/auth/CompleteSignupForm.tsx,3998,a2dcc9b43350ec7521c08e757062f4b8315c2851ae1507eaba4134d41210929d
@@ -122,7 +122,7 @@
 0. 소스코드/eottae-web/src/lib/auth/client-auth.ts,459,f241c3d6060f4a6e81b70b75a746fa0b7a8721816e1a60b866d37d631c3527e0
 0. 소스코드/eottae-web/src/lib/auth/config.ts,1064,969b1bf8a00a78711959836d7a0980653e9856146c202d1d5dc32cdf8157315a
 0. 소스코드/eottae-web/src/lib/auth/types.ts,2265,7047aa497f09f64f14adb39f20e8d38e8c294fb10191577096b55e9f7f89565c
-0. 소스코드/eottae-web/src/lib/auth/use-auth.ts,2980,dd7dd856c1fcff64d3578ab9451d4b7c285271c3a7a081ca77e223dfb7d40f63
+0. 소스코드/eottae-web/src/lib/auth/use-auth.ts,2960,d985f2b37b8182da799be9a16118c0ec36d141d66f5cd342896c940fb08cd9f7
 0. 소스코드/eottae-web/src/lib/auth/validation.ts,3218,8e87f070fa93d603b4bba7487fe35cf3fe0c3c986c162b6edc42f2c38a06cced
 0. 소스코드/eottae-web/src/lib/chat/chat-service.ts,3992,841f726e351e7bb43640bffe0a480d16925e78d295ae8bd5245a9a67589e03b0
 0. 소스코드/eottae-web/src/lib/chat/demo-data.ts,3680,11f05ad3c5bf193e98c24ab2fdb3d9cf3664ff3fa4f718556cfe7ebaddcc2a2b
