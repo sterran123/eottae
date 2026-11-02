@@ -18,7 +18,7 @@
 0. 소스코드/eottae-web/.gitignore,202,7710d28a140451e45493d1fd6f52508a4a51133d7fd72b236349d001bde77fb9
 0. 소스코드/eottae-web/AGENTS.md,1371,dfd62088d1b52c3eeb6f9ccb87a62858bb9766b328ae93cd85994f2bb3262587
 0. 소스코드/eottae-web/README.md,5589,65670c8378af81b45e27102daf1ed6152d06e15161f14b2614238250cd727a01
-0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md,126976,62ed4e47326c6dea37759a5cd2a92a7d48ca1dd4e4b33b120d246b10eb12b214
+0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md,127510,19c47e84b385008309a2932de60ed2cd1b04105066e5afc03388adc94da32ed9
 0. 소스코드/eottae-web/docs/AI_도구_MCP_권장.md,4206,6ef5f1ba972e9f1d07e1dbddd282ed9c16c3fd132a5301db0a8e0e9cffc2bb2f
 0. 소스코드/eottae-web/docs/AI_에이전트_협업_가이드.md,6263,180d9a55d70be22c9ffa04a4acc113c484a2a19fc71e2410ec6dff1a33487a01
 0. 소스코드/eottae-web/docs/DESIGN_개선_지시서.md,7364,7d34723629b67d6fc6c107846671146dfa18b35250001621174b73afb4da8511
@@ -160,13 +160,13 @@
 1. 프로젝트 계획서/AI_협업_지시문/에이전트_공통_실행프롬프트.md,750,cdb664f0cf5da0e88bb1a6c2091f40db23b21e6cfa86717865a0452f76e81676
 1. 프로젝트 계획서/plan_v1.md,2282,8a313f188b8aa30ce7e454ac42965fa0f53d1ee8abcc496e9b936780c409d479
 1. 프로젝트 계획서/plan_v2.md,5559,15bc29d73d6497ccf1be5afb78704e82c4d903206ae9eba1e69fb5dc8ce08930
-1. 프로젝트 계획서/plan_v3.md,8414,12d135a2288afb7c74ce295302e8b7b30a8bda97825f164b184e3e93af303ddc
+1. 프로젝트 계획서/plan_v3.md,8421,28ab342d71d336802db5d0b96b8f6c929e0f501a87981e86c8f5744c5c499172
 1. 프로젝트 계획서/단계_범위고정_인수조건.md,2820,a4fed328dab1c1abd004d724d097089b271eb5d13eb133d904029adf9b3e19aa
 1. 프로젝트 계획서/단계별_로드맵_수익화.md,1154,4fc0bc4cc7200ab5e418cafb89de6e209c0a08dca6641d0e17fe39a934a2237a
 1. 프로젝트 계획서/브랜드_가이드.md,2103,64ae173cf978157656cd7225bbc0eba1b3bab3203a66c885d2f70e00d04569f1
 1. 프로젝트 계획서/브랜드_에셋/어때_로고_다크_원본.png,1833742,219395acd431836dc4e9a2827be7c4a02218454bfe1b76f2ffaedd9a757c1e37
 1. 프로젝트 계획서/브랜드_에셋/어때_로고_라이트_원본.png,769833,4956d02f3cc4fa6f0c8ff61dadaa42d118672550ad835d9bf700448e10f6e52a
-1. 프로젝트 계획서/실행_결정대기_로그.md,2385,c0ef8a1a255d91fe9c7123c2e2a5ae0ab8e79c41b4c3a1dd11992579a36aa42d
+1. 프로젝트 계획서/실행_결정대기_로그.md,2584,9b8bbe9c7084ce58fa11fa1aac0e1126f8aeb21436700a17d804f652810491b5
 1. 프로젝트 계획서/안전_개인정보_연령정책.md,2587,d55d3b66a39ee300c3bdc876c534b53b21eae77da8fab14679ce1e57687cfec3
 1. 프로젝트 계획서/양식원본/00_제출물_통합본_타프로젝트_샘플.xlsx,22298,21a36db58a169f82912d59a35d2ac730d7da305e126f8e09e42b9e296f5dae30
 1. 프로젝트 계획서/양식원본/제출물 예시_샘플.xlsx,357595,9b5bbc6a7f1a0b0245387ace1e53c99b3a7b380047a903f49aa859587c21dbf4
@@ -230,8 +230,8 @@
 4. 프로젝트 결과 보고서/README_결과보고서_작성예정.md,433,2433967cd3ed949c869a6ceca2fecfb363a16dac9e1c2b7cb09731919b8921a5
 4. 프로젝트 결과 보고서/실제진행현황_기록부.md,2457,b0eb0c5979c2c8e7770e8416842970910bdcf86e553daa338e0c946a85249cf2
 4. 프로젝트 결과 보고서/양식원본/개인 프로젝트 결과 보고서.xlsx,55104,faa467fc925081cb9925b645e09ac1705205155b81b6b23d60451398fea49411
-4. 프로젝트 결과 보고서/중간점검_2차_제출안.md,9233,c3c1f6078ecf08c8b090ed57dd1963b97c91235fec790e995eb5d504eaa42396
-4. 프로젝트 결과 보고서/팀원별_추가작업_2차.md,9715,c1799ba52801d59ba1ff891d35cf7d7817489ff70bb00ac791a5fb9c313b5a9e
+4. 프로젝트 결과 보고서/중간점검_2차_제출안.md,9561,c4b08af41369b9296ee8ed188726463efad9deb3284dcb4e3a2823273fd10ab8
+4. 프로젝트 결과 보고서/팀원별_추가작업_2차.md,9755,fe1eb07cc1ca7c3d8fb1bb3b03ef997d501e7e289f5c4a708806079b54930bdf
 5. 발표자료(PDF)/README_발표자료_작성예정.md,506,fa76caaafdee83357aa85b16acc4501d26991c18678c13c5d1ac715bf23eb23a
 5. 발표자료(PDF)/어때_팀프로젝트_기획발표_초안.pdf,1104319,5d9df57850a47f16453ccecb20b64ba97a73bd1140496a7937078fcbd87a928a
 QA_최종검증보고서.md,8775,e9001851f82e124c909e4d1ba91c836e9568fef3c2c0a1fb94d886761f0843a7

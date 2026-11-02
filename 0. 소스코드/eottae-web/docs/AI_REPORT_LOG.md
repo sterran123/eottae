@@ -656,4 +656,5 @@
 - [보존] plan_v2.md 미수정. FILE_INDEX.csv·MANIFEST.sha256·.grok-context/ 미수정
 - [판단] 2차 목표(실데이터 핵심 루프)를 완료로 쓰지 않음. iPhone은 구두 PASS만, 문서 미반영을 할 일로 남김
 - [미실행] 빌드·브라우저·db push·BBaton/PayApp. 이 세션은 파일 읽기·검색·수정만
+- [변경] PR #64 Grok 리뷰(1ba3083) 반영: FILE_INDEX.csv, MANIFEST.sha256 | 신규 문서 3개와 기존 트리에 맞게 재생성. plan_v2.md·.grok-context/ 는 미수정. 위 [보존]의 「FILE_INDEX.csv·MANIFEST.sha256 미수정」은 이 커밋과 다름. 제출안 김민기 칸은 재생성으로 고침. BBaton·PayApp Secrets 등록은 주한태(권한 부족 시에만 김민기 대행), db push는 김민기 Owner로 DEC-01·DEC-09·제출안 문장을 맞춤. plan_v3 「PR #58, #26」은 이슈 #26으로 구분.
 
