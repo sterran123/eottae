@@ -35,13 +35,14 @@
 
 | 논리 계약 | Supabase 구현 | 권한 판정 위치 |
 |---|---|---|
-| `GET /users/me` | `auth.getUser()` + `profiles` select | RLS: `user_id = auth.uid()` |
-| `POST /users/me/interests` | `profile_interests` insert/delete | RLS: 본인 + 검증 성인 |
-| `GET /match/recommendations` | RPC `get_recommendations(cursor)` 또는 RLS view | 본인·차단·탈퇴·휴면·미성년 제외 |
-| `POST /match/likes` | `likes` insert → 트리거/RPC가 쌍방 시 `matches`·`conversations` 1건 생성 | RLS + UNIQUE + `security definer` |
-| `GET /match/mutual` | `matches` select (`match_members` 조인) | RLS: 구성원만 |
-| `GET/POST /conversations/:id/messages` | `messages` select/insert + Realtime 구독 | RLS: 활성 match 구성원 · 미차단 · ACTIVE |
-| `POST /safety/blocks` | `blocks` insert | RLS: `blocker_id = auth.uid()` |
-| `POST /safety/reports` | `reports` insert (조회는 운영자 역할만) | RLS |
+| `GET /users/me` | `auth.getUser()` + `public.users` select + `public.profiles` select | RLS: `users.id = auth.uid()`, `profiles.user_id = auth.uid()`. 클라이언트 UPDATE는 `users.nickname`, `users.updated_at`만 |
+| `POST /users/me/interests` | RPC `public.save_onboarding(p_my_mbti, p_avoid_mbti, p_target_preference, p_relation_goal, p_interest_ids, p_preferred_distance, p_photo_visibility)` — `public.profiles` upsert + `public.user_interests` 통째 교체. 카탈로그 `public.interests` | `auth.uid()` + `is_active_adult()`. 관심사 3–7개, id는 `interests`에 있는 것만. `user_interests` 직접 INSERT 없음 |
+| `GET /match/recommendations` | RPC `public.get_recommendations(p_cursor text)` limit 20. 다음 페이지가 없으면 `next_cursor` null | 본인·어느 방향이든 차단·`account_status <> 'ACTIVE'`(휴면 enum 없음. `SUSPENDED`를 휴면·비활성 제외)·성인 인증 없음/만료·`profile_status <> 'active'` 제외. `full_name`·이메일·성별·좌표·상대 관심사 전체는 반환하지 않음 |
+| `POST /match/likes` | `public.likes` INSERT/UPDATE(`decision`). 트리거 `private.ensure_mutual_match`가 쌍방 `yes`이고 둘 다 활성 성인이며 서로 차단이 아니면 `public.matches`·`public.match_members` 2명·`public.conversations` 1건. `decision=no`이면 match 없음 | RLS: `actor_id = auth.uid()` 이고 `is_active_adult()`. PK·UNIQUE(`actor_id`,`target_id`). 클라이언트 `matches` INSERT 금지 |
+| `GET /match/mutual` | `public.matches` select (`public.match_members` 조인, `public.conversations.match_id`) | RLS: 구성원만. 클라이언트 INSERT 금지 |
+| `GET/POST /conversations/:id/messages` | `public.messages` select/insert + publication `supabase_realtime`. 행은 `MessageRow`(`id`,`conversation_id`,`sender_id`,`body`,`created_at`) + `attachment_path` + `soft_delete_state`. 첨부 버킷 `chat-media`, 경로 `{conversation_id}/{object}` | RLS: 활성 match 구성원 · 서로 미차단 · `is_active_adult()` · INSERT는 `sender_id = auth.uid()` |
+| `POST /safety/blocks` | `public.blocks` insert/delete | RLS: INSERT·DELETE `blocker_id = auth.uid()`. SELECT는 본인이 blocker인 행만 |
+| `POST /safety/reports` | `public.reports` insert. 조회는 RPC `public.list_reports()` (`public.user_roles.role = 'operator'`만. 아니면 SQLSTATE `42501`) | INSERT: `reporter_id = auth.uid()`. `authenticated` SELECT·UPDATE 없음 |
+| 프로필 문답 (MATCH-009) | RPC `public.save_answers(p_answers jsonb)`, `public.get_common_answers(p_match_id uuid)`, 테이블 `public.profile_answers` | 본인 답만 교체. `declined=true`이면 선택지 없음. 공통 답은 구성원만, 호출자가 그 문항에 답했고 거절하지 않았을 때만 상대 본문 |
 | `DELETE /users/me` | Edge Function `delete-account` (service_role) | 재인증 후 함수 내부 검증 |
-| 성인 인증 결과 기록 | Edge Function `verify-adult` (service_role) | 클라이언트 update 금지 |
+| 성인 인증 결과 기록 | Edge Function `verify-adult` (service_role) | 클라이언트 update 금지 (`adult_verified` 직접 UPDATE 거부) |
