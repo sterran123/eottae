@@ -94,9 +94,16 @@ export default function DeleteAccountDemo() {
               aria-controls={phase === 'confirm' ? panelId : undefined}
               aria-describedby={noteId}
               onClick={() => {
+                if (phase === 'confirm') {
+                  setPhrase('');
+                  setPhraseTouched(false);
+                  setError('');
+                  setPhase('idle');
+                  return;
+                }
                 setError('');
                 setPhraseTouched(false);
-                setPhase((current) => (current === 'confirm' ? 'idle' : 'confirm'));
+                setPhase('confirm');
               }}
             >
               회원 탈퇴·데이터 삭제
@@ -121,6 +128,7 @@ export default function DeleteAccountDemo() {
           <h3>이 브라우저에서 지워지는 것</h3>
           <ul className="settings-delete-list">
             <li>매칭에 적어 둔 온보딩, 문답, 공통 질문 거절</li>
+            <li>추천에 남긴 관심, 성사된 매칭</li>
             <li>성인 확인 시연 표시</li>
             <li>데이트·소모임에 남긴 참가, 투표, 만든 모임, 후기, 좋아요·추천, 정보 확인 요청</li>
             <li>청첩장 테마 데모 영수증</li>
@@ -194,7 +202,7 @@ export default function DeleteAccountDemo() {
         <div ref={doneRef} className="settings-delete-done" tabIndex={-1} role="status" aria-live="polite">
           <p className="settings-demo-flag">데모</p>
           <h3>이 브라우저의 데모 데이터를 지웠어요</h3>
-          <p>서버에는 요청하지 않았고, 실제 계정은 삭제하지 않았어요. 로그인 세션이 있어도 그대로 두었어요.</p>
+          <p>서버에는 요청하지 않았고, 실제 계정은 삭제하지 않았어요. 데모 로그인(시연 회원)과 실계정 로그인 세션은 그대로 두었어요.</p>
           <p>
             {includeTheme && clearedTheme
               ? '화면 테마 설정도 지우고 기본 라이트로 되돌렸어요.'
