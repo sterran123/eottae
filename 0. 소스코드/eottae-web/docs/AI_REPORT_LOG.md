@@ -672,6 +672,25 @@
 - [변경] PR #65 Grok 리뷰(f8bba49) 반영: 실계정 온보딩·문답·공통질문 거절은 사용자 ID 없는 localStorage를 읽거나 쓰지 않음(로그인 세션이면 기존 키 삭제, 데모만 로컬 초안). 성인 미인증 문답 저장은 캐시보다 먼저 거부하고 upsert/delete 오류는 ok false. 출생연도 없으면 나이 비움, 19세 바닥 제거, 검증 성별 필드 전에는 성별 문구 없음. 데모가 아니면 상대 답 비움(revealed만 공개, 데모 상대를 쓰는 동안 DEMO 문구 유지). 차단·신고는 미인증 거부·라이브 오류 반환, 화면은 성공일 때만 카드 제거. record_like_decision 실패 시 likes 재기록 없음·매칭 필드는 RPC 값만. 관심사는 새 행 삽입 후 빠진 id만 삭제하고 실패는 ok false. 추천·문답은 판정 전 빈 목록. 권장 반영: 거리·접속 null이면 문구 생략, 성인 게이트에 accountStatus ACTIVE, 계정 조회 실패는 데모와 구분하고 사유 표시, 라이브 도토리 수 숨김, 허위 프로필 신고는 abuse, reduced-motion에 신고 모달·토스트 애니메이션 해제, 온보딩 조회가 늦으면 수정 중 값은 유지, 신고 다이얼로그 Esc·포커스 이동. 보류: CSS/TSX rgba·hex 전수 치환, 클라이언트의 profile_status ACTIVE 기록(RLS 미확인).
 - [변경] PR #65 Grok 리뷰(f3e5573) 반영: 실계정 공통 질문은 매칭 상대 없이 가을·문항·거절을 그리지 않고, 서로 관심 이후 안내와 gateMessage만 보여 준다. 가을·DEMO_PARTNER_ANSWERS·거절 로컬 저장은 데모만. 거절은 데모 저장이 아니면 저장했다고 말하지 않는다. 추천 「가볍게 물어보기」는 데모 id(`rec_`)만 채팅 쿼리로 이동하고, 실계정은 전송 없이 채팅 연동 전 안내만 한다. 권장 반영: 비선호 MBTI가 내 MBTI와 같으면 검증 오류, 거리 게이지 바운스와 온보딩 오류 스크롤은 reduced-motion에서 멈춤, 온보딩 배너는 출생연도 차이를 만 나이로 단정하지 않음, 문답 데모 푸터는 이 브라우저 로컬 저장으로 정정, 신고 접수 중 버튼 잠금. 제출안·추가작업의 데모 폴백 문장을 키 없음 또는 세션 없음(localStorage, 세션 시 키 삭제)으로 맞춤. 보류: profile_status ACTIVE 제거(RLS 미확인), get_recommendations 커서 파싱(응답 형태 미확인), match CSS/TSX rgba·hex 전수 치환.
 - [변경] PR #65 Grok 리뷰(8faaef3) 반영: 세션 조회 오류는 데모 성공으로 두지 않고 unverified로 막음. 온보딩 저장·문답 저장/삭제·관심·차단·신고는 조회가 끝난 모드와 같을 때만 쓰고, 화면(공통 질문 포함)은 `loadOnboarding`·`loadMyQnaAnswers`·`fetchRecommendations`가 끝낸 모드만 넘김. 모드가 바뀌면 메모리의 데모 초안은 실계정에 올리지 않고 다시 불러옴. 권장 반영: 문답 추천은 조회 후 한 번 다시 고름, 신고 포커스가 목록 밖이면 첫 항목으로 보내고 접수 중에는 배경 클릭으로 닫지 않음, 거리 게이지 너비 전환은 reduced-motion에서 끔, 서비스 머리 주석의 `common_question_answers` 호출 설명을 삭제(그 테이블은 쓰지 않음. 거절은 데모 localStorage만). 데모 폴백은 키 없음 또는 세션 없음. 보류: profile_status ACTIVE 제거(RLS 미확인), get_recommendations 커서(응답 형태 미확인), 44px 미만 터치 영역(레이아웃 실측 없음), match CSS/TSX rgba·hex 전수 치환. 이 절의 기존 줄은 유지.
+
+## 2026-11-02 2차 MVP 데이트·소모임 데모 화면 (김민기 작업)
+- [요청] 중간 점검 2차. `/activities`를 서버·DB·외부 API 없이 예시 데이터 데모로 체험 가능하게. 데이트 코스 6~8, 소모임 8~10, 탭·필터·상세·일정 투표·참가 요청(localStorage)·모임 만들기·신고 확인 모달·홈 카드 「2차 · 데모 체험」. 1차 매칭 코드·package.json·FILE_INDEX.csv·MANIFEST.sha256는 수정하지 않음. 명령 실행 없음
+- [AI] 로컬 Grok이 plan_v3, 단계 범위(2차 P0 모임·일정 투표 / P1 데이트 코스), 홈 IA, 브랜드 가이드, 안전 정책, 요구사항 ACT-001~004, DB 논리모델 ACTIVITY/MEMBER/POLL, 기존 activities 준비중 페이지·match 데모·globals 토큰을 읽고 정적 export(basePath `/eottae`, trailingSlash)용 클라이언트 화면만 추가
+- [신규] src/lib/activities/types.ts | 지역·분위기·카테고리, 코스 단계, 모임·투표 타입
+- [신규] src/lib/activities/demo-data.ts | 가상 데이트 코스 8개(단계 2~4), 가상 소모임 10개(취미/밥/운동/스터디/문화). 실존 상호·인물 없음
+- [신규] src/lib/activities/demo-storage.ts | 참가 요청·투표·내가 만든 모임만 localStorage `eottae.activities.demo.v1`
+- [신규] src/lib/activities/href.ts | `/activities/?course=`·`?gathering=` 쿼리 주소
+- [신규] src/app/activities/activities.css | 기존 CSS 변수만 사용. 360px·데스크톱, 터치 44px, reduced-motion
+- [신규] src/components/activities/ActivitiesDemo.tsx | 배지, 탭, 지역·분위기·카테고리 필터, 카드 목록, 데모 토스트
+- [신규] src/components/activities/CourseDetail.tsx | 단계 동선, 예상 비용·시간, 「우리 사이에 공유」 데모 토스트
+- [신규] src/components/activities/GatheringDetail.tsx | 소개·일정, 참가 요청/취소, 일정 투표 막대, 안전 안내, 신고 데모 모달
+- [신규] src/components/activities/ActivitiesNewForm.tsx | `/activities/new/` 모임 만들기. 제출 시 데모 목록에만 추가
+- [신규] src/components/activities/DemoDialog.tsx | Esc·포커스 이동·배경 닫기
+- [변경] src/app/activities/page.tsx | 준비중 안내를 2차 데모 화면으로 교체
+- [신규] src/app/activities/new/page.tsx | 모임 만들기 라우트
+- [변경] src/app/page.tsx | 데이트·소모임 카드 문구 「2차 · 데모 체험」, live, CTA 「데모 둘러보기」, href `/activities/`. 히어로 안내 문장에 데모 범위 반영
+- [변경] src/app/settings/page.tsx | 앱 정보 2차 문구를 데모 체험·실제 연동 전으로 맞춤
+- [미실행] 브라우저 확인은 빌드 후. 이 세션은 파일 읽기·검색·수정만이라 typecheck·build도 실행하지 않음
 ## 2026-11-02 MATCH-005~009 매칭 핵심 스키마 0003 (주한태 작업, 구현은 로컬 Grok)
 - [요청] `0003_match_core` 마이그레이션·pgTAP, API 계약 ADR-005 대응표에 RPC·테이블 이름 기입. `0000`~`0002`·`public.users`·`package.json`·`FILE_INDEX.csv`·`MANIFEST.sha256`·`.grok-context/`·`CODEOWNERS`는 유지. Next API 라우트·MVP2/MVP3 테이블·성별·생년월일 원본·BBaton 식별자·토큰 컬럼은 만들지 않음. 명령과 pgTAP은 실행하지 않음. 테스트_케이스_마스터에는 실행 결과를 쓰지 않음
 - [AI] 로컬 Grok이 `0002` 마이그레이션·pgTAP, DB 논리모델, ADR-002·003·005, API 대응표, `src/lib/match/types.ts`·`demo-data.ts`의 관심사 50개, `MessageRow`, `src/lib/safety/types.ts`를 읽고 같은 열 권한·RLS 문체로 작성. 명령 실행 없음
