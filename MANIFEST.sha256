@@ -17,7 +17,7 @@ f215d3e323380b4e75764c6bfbcab5b4c7b59b4009ed7102f4b9075fc1301a69  .github/workfl
 7710d28a140451e45493d1fd6f52508a4a51133d7fd72b236349d001bde77fb9  0. 소스코드/eottae-web/.gitignore
 dfd62088d1b52c3eeb6f9ccb87a62858bb9766b328ae93cd85994f2bb3262587  0. 소스코드/eottae-web/AGENTS.md
 65670c8378af81b45e27102daf1ed6152d06e15161f14b2614238250cd727a01  0. 소스코드/eottae-web/README.md
-c75c1e267ba70f21e6daf3b490b82750f83548fb814285e94ea85e2002f3d668  0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md
+772895132a3a578c6a1facf5f02c99fa1777c7a66b275c61b7763e06863234a9  0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md
 6ef5f1ba972e9f1d07e1dbddd282ed9c16c3fd132a5301db0a8e0e9cffc2bb2f  0. 소스코드/eottae-web/docs/AI_도구_MCP_권장.md
 180d9a55d70be22c9ffa04a4acc113c484a2a19fc71e2410ec6dff1a33487a01  0. 소스코드/eottae-web/docs/AI_에이전트_협업_가이드.md
 7d34723629b67d6fc6c107846671146dfa18b35250001621174b73afb4da8511  0. 소스코드/eottae-web/docs/DESIGN_개선_지시서.md
@@ -197,7 +197,7 @@ d345f79fd1467f7a7b8b7aa80deadcc3cbdfe34ce8377224d73cc8c50b158425  1. 프로젝�
 cdb664f0cf5da0e88bb1a6c2091f40db23b21e6cfa86717865a0452f76e81676  1. 프로젝트 계획서/AI_협업_지시문/에이전트_공통_실행프롬프트.md
 8a313f188b8aa30ce7e454ac42965fa0f53d1ee8abcc496e9b936780c409d479  1. 프로젝트 계획서/plan_v1.md
 15bc29d73d6497ccf1be5afb78704e82c4d903206ae9eba1e69fb5dc8ce08930  1. 프로젝트 계획서/plan_v2.md
-85d605d40467ef7545e2cb93f32266f87c320cc445901441276c077d44c34fea  1. 프로젝트 계획서/plan_v3.md
+9e52ed4d5909a3051606d6040528a5f7e97d369d948ac819182ffa6eb0c4b145  1. 프로젝트 계획서/plan_v3.md
 a4fed328dab1c1abd004d724d097089b271eb5d13eb133d904029adf9b3e19aa  1. 프로젝트 계획서/단계_범위고정_인수조건.md
 4fc0bc4cc7200ab5e418cafb89de6e209c0a08dca6641d0e17fe39a934a2237a  1. 프로젝트 계획서/단계별_로드맵_수익화.md
 64ae173cf978157656cd7225bbc0eba1b3bab3203a66c885d2f70e00d04569f1  1. 프로젝트 계획서/브랜드_가이드.md
@@ -265,10 +265,10 @@ b8a0be83312602948bbd3d6a623f4658f3655790e0f532db10f7f5d232345318  3. 구현 이�
 93ffe3bbee508d5293fc6cb82845f7a6ced06d9311060e5ba2a147f87702b124  3. 구현 이미지(5장이상)/README_캡처_체크리스트.md
 063541b953dc9d93922b8d9dba7cfbd050510989062cd3a4679d6012778cc4d2  3. 구현 이미지(5장이상)/captions.csv
 2433967cd3ed949c869a6ceca2fecfb363a16dac9e1c2b7cb09731919b8921a5  4. 프로젝트 결과 보고서/README_결과보고서_작성예정.md
-25e7ca88437011badf5ca13413770603139dae0b4e9dfc28bd609f0277c38baa  4. 프로젝트 결과 보고서/실제진행현황_기록부.md
+7a51c59d5300e4eb0f588988a387463f8140b14d2904650bed090a1f473593d5  4. 프로젝트 결과 보고서/실제진행현황_기록부.md
 faa467fc925081cb9925b645e09ac1705205155b81b6b23d60451398fea49411  4. 프로젝트 결과 보고서/양식원본/개인 프로젝트 결과 보고서.xlsx
-493300fbbd7477ab583fb949010a58b87e972805e0a7785986ef8daa5f2ea834  4. 프로젝트 결과 보고서/중간점검_2차_제출안.md
-eeba2894e4c8d390d990ef414749648171fb167b392e4ab972bee6022aa86221  4. 프로젝트 결과 보고서/팀원별_추가작업_2차.md
+6cc8b71309e46206fd4b2668b3245bb94fc0c055ff5c3519bd3c1473a303ebae  4. 프로젝트 결과 보고서/중간점검_2차_제출안.md
+5f9641fe6428d680f67c348a7030e0889131e87cfb6e9c260e3f2cb31f4559cb  4. 프로젝트 결과 보고서/팀원별_추가작업_2차.md
 fa76caaafdee83357aa85b16acc4501d26991c18678c13c5d1ac715bf23eb23a  5. 발표자료(PDF)/README_발표자료_작성예정.md
 5d9df57850a47f16453ccecb20b64ba97a73bd1140496a7937078fcbd87a928a  5. 발표자료(PDF)/어때_팀프로젝트_기획발표_초안.pdf
 e9001851f82e124c909e4d1ba91c836e9568fef3c2c0a1fb94d886761f0843a7  QA_최종검증보고서.md
