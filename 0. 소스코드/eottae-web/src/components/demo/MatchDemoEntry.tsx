@@ -3,21 +3,28 @@
 import { useEffect, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { isDemoAdultActive } from '@/lib/demo/demo-adult';
+import {
+  DEMO_ADULT_BYPASS,
+  DEMO_ADULT_UNAVAILABLE_MESSAGE,
+  isDemoAdultActive,
+} from '@/lib/demo/demo-adult';
 import { matchService } from '@/lib/match/match-service';
 import DemoAdultStep from './DemoAdultStep';
 import DemoSheet from './DemoSheet';
 import './demo-flow.css';
 
-export type DemoEntryIntent = 'onboarding' | 'recommend' | 'chat';
+export type DemoEntryIntent = 'onboarding' | 'recommend' | 'chat' | 'qna';
+
+type PromptPhase = 'block' | 'step' | 'error' | 'unverified' | 'unavailable';
 
 type Prompt = {
   href: string;
   intent: DemoEntryIntent;
-  phase: 'block' | 'step' | 'error';
+  phase: PromptPhase;
+  message?: string;
 };
 
-const BLOCK: Record<'recommend' | 'chat', { title: string; reason: string }> = {
+const BLOCK: Record<'recommend' | 'chat' | 'qna', { title: string; reason: string }> = {
   recommend: {
     title: '추천을 열 수 없어요',
     reason:
@@ -27,6 +34,11 @@ const BLOCK: Record<'recommend' | 'chat', { title: string; reason: string }> = {
     title: '채팅을 열 수 없어요',
     reason:
       '성인 확인(시연)이 끝나기 전에는 채팅을 열지 않아요. 1:1 채팅은 생일 기준 만 19세 이상만 이용할 수 있어요.',
+  },
+  qna: {
+    title: '문답을 열 수 없어요',
+    reason:
+      '성인 확인(시연)이 끝나기 전에는 프로필 문답을 열지 않아요. 문답은 생일 기준 만 19세 이상만 이용할 수 있어요.',
   },
 };
 
@@ -52,16 +64,25 @@ export function DemoGatedLink({
     setBusy(true);
     try {
       const context = await matchService.resolveAccessContext();
-      if (context.mode !== 'demo' || isDemoAdultActive()) {
+      if (context.mode === 'live' || (context.mode === 'demo' && isDemoAdultActive())) {
         router.push(href);
         return;
       }
+      const phase: PromptPhase =
+        context.mode === 'demo'
+          ? DEMO_ADULT_BYPASS
+            ? intent === 'onboarding'
+              ? 'step'
+              : 'block'
+            : 'unavailable'
+          : 'unverified';
       window.dispatchEvent(
         new CustomEvent<Prompt>('eottae-demo-adult-prompt', {
           detail: {
             href,
             intent,
-            phase: intent === 'onboarding' ? 'step' : 'block',
+            phase,
+            message: context.gateMessage,
           },
         }),
       );
@@ -114,6 +135,33 @@ export function DemoAdultPrompt() {
   const block = prompt && prompt.intent !== 'onboarding' ? BLOCK[prompt.intent] : null;
   const titleId = 'demo-adult-prompt-title';
 
+  async function finishStep() {
+    if (!prompt) return;
+    const href = prompt.href;
+    try {
+      const context = await matchService.resolveAccessContext();
+      if (context.mode === 'live' || (context.mode === 'demo' && isDemoAdultActive())) {
+        setPrompt(null);
+        router.push(href);
+        return;
+      }
+      if (context.mode === 'demo' && DEMO_ADULT_BYPASS) {
+        setPrompt({
+          ...prompt,
+          phase: prompt.intent === 'onboarding' ? 'step' : 'block',
+        });
+        return;
+      }
+      if (context.mode === 'demo') {
+        setPrompt({ ...prompt, phase: 'unavailable' });
+        return;
+      }
+      setPrompt({ ...prompt, phase: 'unverified', message: context.gateMessage });
+    } catch {
+      setPrompt({ ...prompt, phase: 'error' });
+    }
+  }
+
   return (
     <DemoSheet open={prompt !== null} labelledBy={titleId} onClose={() => setPrompt(null)}>
       {prompt && prompt.phase === 'block' && block && (
@@ -135,6 +183,16 @@ export function DemoAdultPrompt() {
           </div>
         </div>
       )}
+      {prompt && prompt.phase === 'unavailable' && (
+        <div className="demo-adult-block">
+          <h2 id={titleId}>{DEMO_ADULT_UNAVAILABLE_MESSAGE}</h2>
+        </div>
+      )}
+      {prompt && prompt.phase === 'unverified' && (
+        <div className="demo-adult-block">
+          <h2 id={titleId}>{prompt.message ?? '성인 확인 후 이용할 수 있어요.'}</h2>
+        </div>
+      )}
       {prompt && prompt.phase === 'error' && (
         <div className="demo-adult-block">
           <h2 id={titleId}>이용 조건을 확인하지 못했어요</h2>
@@ -149,9 +207,7 @@ export function DemoAdultPrompt() {
           <DemoAdultStep
             onCancel={() => setPrompt(null)}
             onCompleted={() => {
-              const href = prompt.href;
-              setPrompt(null);
-              router.push(href);
+              void finishStep();
             }}
           />
         </div>

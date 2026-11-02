@@ -3,8 +3,8 @@
 //  담당: 오하율 · MATCH-002 (추천 카드·질문 UI)
 //  역할: 추천 리스트 라우트. /eottae/match/recommend/
 //
-//  [경계] 실계정(live/unverified)은 기존 추천 화면을 그대로 연다.
-//         데모 모드에서 성인 확인(시연) 전에는 추천 대신 이유를 보여 준다.
+//  [경계] live만 추천 화면을 연다. unverified는 사유만 보여 주고 시연 버튼은 두지 않는다.
+//         데모는 NEXT_PUBLIC_DEMO_ADULT_BYPASS가 '1'이고 시연 확인이 유효할 때만 연다.
 // ============================================================
 
 import type { Metadata } from 'next';

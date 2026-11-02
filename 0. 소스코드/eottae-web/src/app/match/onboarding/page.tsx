@@ -3,8 +3,9 @@
 //  담당: 오하율 · MATCH-001 (취향/가치관 입력)
 //  역할: 온보딩 라우트 진입점. /eottae/match/onboarding/
 //
-//  [경계] 실계정(live/unverified)은 match-service 흐름을 그대로 쓴다.
-//         데모 모드에서만 폼 앞에 성인 확인(시연)을 둔다. 생년월일은 받지 않는다.
+//  [경계] live만 폼을 연다. unverified는 사유만 보여 주고 시연 버튼은 두지 않는다.
+//         데모는 NEXT_PUBLIC_DEMO_ADULT_BYPASS가 '1'이고 시연 확인이 유효할 때만 연다.
+//         생년월일은 받지 않는다.
 // ============================================================
 
 import type { Metadata } from 'next';

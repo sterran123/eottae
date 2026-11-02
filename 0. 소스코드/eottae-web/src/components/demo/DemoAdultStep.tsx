@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import {
+  DEMO_ADULT_BYPASS,
+  DEMO_ADULT_UNAVAILABLE_MESSAGE,
   completeDemoAdult,
   formatDemoWhen,
   type DemoAdultRecord,
@@ -25,6 +27,10 @@ export default function DemoAdultStep({ headingLevel = 'h2', onCompleted, onCanc
   }, [done]);
 
   function confirm() {
+    if (!DEMO_ADULT_BYPASS) {
+      setError(DEMO_ADULT_UNAVAILABLE_MESSAGE);
+      return;
+    }
     const record = completeDemoAdult();
     if (!record) {
       setError('이 브라우저에 시연 결과를 저장하지 못했어요. 저장소를 허용한 뒤 다시 시도해 주세요.');

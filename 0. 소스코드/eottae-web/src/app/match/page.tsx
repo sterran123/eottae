@@ -35,7 +35,7 @@ const modules = [
     href: '/match/qna',
     tag: 'MATCH-009',
     cta: '문답 작성하기',
-    gate: null,
+    gate: 'qna',
   },
   {
     num: '04',
