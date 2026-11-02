@@ -54,6 +54,48 @@
   color: inherit;
 }
 
+.demo-adult-birth {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 12px 0 0;
+}
+
+.demo-adult-birth label,
+.demo-adult-birth-help {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.demo-adult-birth label {
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.demo-adult-birth input[type='date'] {
+  font-size: 16px;
+  line-height: 1.4;
+  min-height: 44px;
+  min-width: 44px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.demo-adult-birth-help {
+  margin: 0;
+  color: var(--muted);
+}
+
+.demo-adult-step .demo-flow-actions .btn {
+  font-size: 16px;
+}
+
 .demo-login-panel {
   margin-bottom: 16px;
 }
@@ -125,6 +167,7 @@
 
 .demo-flow-error {
   margin: 10px 0 0;
+  font-size: 16px;
   color: var(--warn-ink);
   background: var(--warn-bg);
   border: 1px solid var(--warn-line);

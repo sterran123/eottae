@@ -781,3 +781,4 @@
 - [AI] Claude Code가 배포 빌드에서 매칭이 잠기는 원인(`NEXT_PUBLIC_DEMO_ADULT_BYPASS` 미설정, ADR-002 fail-closed)을 찾아 설정 한 줄을 제안, 김민기 승인
 - [변경] .github/workflows/deploy-pages.yml(build env에 `NEXT_PUBLIC_DEMO_ADULT_BYPASS: '1'`), 아키텍처_결정기록_ADR.md(ADR-002 예외 한 줄), 실행_결정대기_로그.md(DEC-11)
 - [미실행] 배포 후 실제 화면에서 시연 확인 → 매칭 진입 확인은 배포가 끝난 뒤 사람 확인
+- [변경] PR #78 리뷰 반영: 시연 확인(`DemoAdultStep`)에 생년월일 입력을 넣어 오늘 기준 만 나이(`fullAge`, 생일 지남)를 `MIN_SIGNUP_AGE`(19)와 비교한다. 미만이면 「만 19세 이상만 이용할 수 있어요」이고 통과시키지 않는다. 미래 날짜·빈 값·이상값은 거부한다. `completeDemoAdult`는 만 19세 이상 나이 인자를 다시 검사할 때만 저장하고, 기록은 시각과 만 19세 이상 확인 플래그만 남긴다(생년월일 원본은 저장하지 않고 확인 후 입력 상태에서 지움). README·`plan_v3.md`·중간점검 제출안 등 「공개 빌드에는 변수가 없다/배포에서는 매칭이 잠긴다」 문장을 DEC-11에 맞췄다(목업 단계 동안 배포에서도 시연 확인 후 열림, 실데이터 단계에서 되돌림). 이 PR이 `FILE_INDEX.csv`·`MANIFEST.sha256`를 재생성했다.
