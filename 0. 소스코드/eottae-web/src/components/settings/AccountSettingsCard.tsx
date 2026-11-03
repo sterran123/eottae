@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth/use-auth';
 import { matchService } from '@/lib/match/match-service';
 import DemoAdultSettingsStatus from '@/components/settings/DemoAdultSettingsStatus';
+import DeleteAccountDemo from '@/components/settings/DeleteAccountDemo';
 
 export default function AccountSettingsCard() {
   const auth = useAuth();
@@ -56,20 +57,7 @@ export default function AccountSettingsCard() {
         </>
       )}
       {showDemoAdult ? <DemoAdultSettingsStatus /> : null}
-      <div className="settings-actions">
-        <button
-          type="button"
-          className="btn outline"
-          disabled
-          aria-disabled="true"
-          aria-describedby="settings-delete-note"
-        >
-          회원 탈퇴·데이터 삭제
-        </button>
-      </div>
-      <p className="settings-note" id="settings-delete-note">
-        계정 및 데이터 삭제 기능은 준비 중이에요 (CORE-004 미구현)
-      </p>
+      <DeleteAccountDemo />
     </article>
   );
 }

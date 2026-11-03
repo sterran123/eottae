@@ -74,7 +74,7 @@ export interface MatchAccessContext {
 
 export type MatchServiceResult<T> =
   | { ok: true; mode: MatchOperatingMode; data: T }
-  | { ok: false; mode: MatchOperatingMode; error: ApiError['error'] };
+  | { ok: false; mode: MatchOperatingMode; error: ApiError['error']; demoDraftCleared?: boolean };
 
 function isAdultVerificationActive(account: MyAccount): boolean {
   // 0002 is_active_adult(): ACTIVE가 아니면 성인으로 보지 않는다.
@@ -146,13 +146,150 @@ function readLocalJson<T>(key: string): T | null {
   }
 }
 
-function writeLocalJson<T>(key: string, value: T): void {
-  if (typeof window === 'undefined') return;
+function writeLocalJson<T>(key: string, value: T): boolean {
+  if (typeof window === 'undefined') return false;
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
+    return true;
   } catch {
     // 저장소 용량·사생활 보호 모드 제한 시 무시
+    return false;
   }
+}
+
+export type DemoDraftSlot = 'onboarding' | 'qna' | 'commonDeclined';
+
+const DEMO_DRAFT_KEYS: Record<DemoDraftSlot, string> = {
+  onboarding: STORAGE_ONBOARDING_KEY,
+  qna: STORAGE_QNA_KEY,
+  commonDeclined: STORAGE_COMMON_DECLINED_KEY,
+};
+
+/** 다른 탭이 데모 키를 비운 뒤, 열린 화면이 메모리 초안을 다시 쓰지 않게 막는다. */
+const demoWriteBlocked = new Set<string>();
+/** 이 탭이 마지막으로 읽었을 때 키가 있었는지. 이벤트를 놓쳐도 빈 키에 초안을 되돌리지 않는다. */
+const demoKeyWasPresent = new Map<string, boolean>();
+let demoDraftEpoch = 0;
+let demoDraftWatchInstalled = false;
+
+export const DEMO_DRAFT_CLEARED_MESSAGE =
+  '다른 탭에서 이 브라우저의 데모 데이터를 지웠어요. 저장하지 않고 다시 불러왔어요.';
+
+function watchDemoDraftKeys(): void {
+  if (demoDraftWatchInstalled || typeof window === 'undefined') return;
+  demoDraftWatchInstalled = true;
+  window.addEventListener('storage', (event: StorageEvent) => {
+    const all = Object.values(DEMO_DRAFT_KEYS);
+    const keys =
+      event.key === null ? all : all.includes(event.key) ? [event.key] : [];
+    if (keys.length === 0) return;
+    // 값이 바뀐 것이 아니라 비워진 경우만. 첫 저장은 막지 않는다.
+    if (event.key !== null && event.newValue !== null) return;
+    demoDraftEpoch += 1;
+    for (const key of keys) demoWriteBlocked.add(key);
+  });
+}
+
+function noteDemoKey(key: string): void {
+  if (demoWriteBlocked.has(key)) return;
+  if (typeof window === 'undefined') {
+    demoKeyWasPresent.set(key, false);
+    return;
+  }
+  try {
+    demoKeyWasPresent.set(key, window.localStorage.getItem(key) !== null);
+  } catch {
+    demoKeyWasPresent.set(key, false);
+  }
+}
+
+function demoDraftKeyCleared(key: string): boolean {
+  watchDemoDraftKeys();
+  if (demoWriteBlocked.has(key)) return true;
+  if (demoKeyWasPresent.get(key) !== true) return false;
+  if (typeof window === 'undefined') return false;
+  try {
+    if (window.localStorage.getItem(key) !== null) return false;
+  } catch {
+    demoWriteBlocked.add(key);
+    return true;
+  }
+  demoWriteBlocked.add(key);
+  return true;
+}
+
+function currentDemoDraftEpoch(): number {
+  watchDemoDraftKeys();
+  return demoDraftEpoch;
+}
+
+function readDemoRaw(key: string): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 저장을 시작한 뒤 키가 바뀌거나 비면 false.
+ * await 중에 들어온 storage 이벤트보다 먼저 이어져도, 시작 시점의 원문과 다르면 메모리를 쓰지 않는다.
+ * 용량 실패는 다른 탭의 삭제와 구분하고, 그 경우 키를 본 것으로 표시하지 않는다.
+ */
+function writeDemoJson<T>(key: string, value: T, epochAtStart: number, rawAtStart: string | null): boolean {
+  if (
+    epochAtStart !== demoDraftEpoch
+    || readDemoRaw(key) !== rawAtStart
+    || demoDraftKeyCleared(key)
+  ) {
+    return false;
+  }
+  if (writeLocalJson(key, value)) demoKeyWasPresent.set(key, true);
+  return true;
+}
+
+function clearedDemoResult<T>(mode: MatchOperatingMode): MatchServiceResult<T> {
+  return {
+    ok: false,
+    mode,
+    demoDraftCleared: true,
+    error: { code: 'NETWORK_ERROR', message: DEMO_DRAFT_CLEARED_MESSAGE },
+  };
+}
+
+/** 다른 탭이 이 데모 키를 비웠으면 true. 저장 전에 호출해 메모리 초안을 버린다. */
+export function isDemoDraftCleared(slot: DemoDraftSlot): boolean {
+  return demoDraftKeyCleared(DEMO_DRAFT_KEYS[slot]);
+}
+
+/** 다시 읽은 결과를 화면에 넣은 뒤 호출한다. 그 다음 저장은 새 입력만 쓴다. */
+export function acknowledgeDemoDraftReload(slot: DemoDraftSlot): void {
+  const key = DEMO_DRAFT_KEYS[slot];
+  demoWriteBlocked.delete(key);
+  if (typeof window === 'undefined') {
+    demoKeyWasPresent.set(key, false);
+    return;
+  }
+  try {
+    demoKeyWasPresent.set(key, window.localStorage.getItem(key) !== null);
+  } catch {
+    demoKeyWasPresent.set(key, false);
+  }
+}
+
+/** 해당 키가 비워지면 onCleared. 같은 탭의 removeItem은 storage를 내지 않는다. */
+export function subscribeDemoDraftCleared(slot: DemoDraftSlot, onCleared: () => void): () => void {
+  watchDemoDraftKeys();
+  if (typeof window === 'undefined') return () => {};
+  const key = DEMO_DRAFT_KEYS[slot];
+  const onStorage = (event: StorageEvent) => {
+    if (event.key !== null && event.key !== key) return;
+    if (event.key !== null && event.newValue !== null) return;
+    onCleared();
+  };
+  window.addEventListener('storage', onStorage);
+  return () => window.removeEventListener('storage', onStorage);
 }
 
 /**
@@ -244,6 +381,7 @@ export const matchService = {
    * 현재 매칭 모듈의 동작 모드(데모 폴백 vs 성인 인증 완료 실데이터 vs 성인 미인증 차단)를 판정한다.
    */
   async resolveAccessContext(): Promise<MatchAccessContext> {
+    watchDemoDraftKeys();
     const supabase = getSupabase();
     if (!isSupabaseConfigured || !supabase) {
       return {
@@ -374,6 +512,7 @@ export const matchService = {
     }
 
     const cached = readLocalJson<OnboardingDraft>(STORAGE_ONBOARDING_KEY);
+    noteDemoKey(STORAGE_ONBOARDING_KEY);
     return { context, draft: cached };
   },
 
@@ -386,6 +525,8 @@ export const matchService = {
     draft: OnboardingDraft,
     expectedMode: MatchOperatingMode,
   ): Promise<MatchServiceResult<SaveOnboardingRequest>> {
+    const draftEpoch = currentDemoDraftEpoch();
+    const onboardingRaw = readDemoRaw(STORAGE_ONBOARDING_KEY);
     const context = await this.resolveAccessContext();
     const changed = modeChangedError(context, expectedMode);
     if (changed) {
@@ -444,7 +585,9 @@ export const matchService = {
     }
 
     if (context.mode === 'demo') {
-      writeLocalJson(STORAGE_ONBOARDING_KEY, req);
+      if (!writeDemoJson(STORAGE_ONBOARDING_KEY, req, draftEpoch, onboardingRaw)) {
+        return clearedDemoResult(context.mode);
+      }
       return { ok: true, mode: 'demo', data: req };
     }
 
@@ -786,6 +929,7 @@ export const matchService = {
       return { context, answers: map };
     }
 
+    noteDemoKey(STORAGE_QNA_KEY);
     const cached = readLocalJson<Record<string, QnaAnswer>>(STORAGE_QNA_KEY);
     if (cached) {
       return { context, answers: cached };
@@ -810,6 +954,8 @@ export const matchService = {
     currentAnswers: Record<string, QnaAnswer>,
     expectedMode: MatchOperatingMode,
   ): Promise<MatchServiceResult<Record<string, QnaAnswer>>> {
+    const draftEpoch = currentDemoDraftEpoch();
+    const qnaRaw = readDemoRaw(STORAGE_QNA_KEY);
     const next = { ...currentAnswers, [answer.questionId]: answer };
     const context = await this.resolveAccessContext();
     const changed = modeChangedError(context, expectedMode);
@@ -839,7 +985,9 @@ export const matchService = {
     }
 
     if (context.mode === 'demo') {
-      writeLocalJson(STORAGE_QNA_KEY, next);
+      if (!writeDemoJson(STORAGE_QNA_KEY, next, draftEpoch, qnaRaw)) {
+        return clearedDemoResult(context.mode);
+      }
       return { ok: true, mode: 'demo', data: next };
     }
 
@@ -861,6 +1009,8 @@ export const matchService = {
     currentAnswers: Record<string, QnaAnswer>,
     expectedMode: MatchOperatingMode,
   ): Promise<MatchServiceResult<Record<string, QnaAnswer>>> {
+    const draftEpoch = currentDemoDraftEpoch();
+    const qnaRaw = readDemoRaw(STORAGE_QNA_KEY);
     const next = { ...currentAnswers };
     delete next[questionId];
 
@@ -893,7 +1043,9 @@ export const matchService = {
     }
 
     if (context.mode === 'demo') {
-      writeLocalJson(STORAGE_QNA_KEY, next);
+      if (!writeDemoJson(STORAGE_QNA_KEY, next, draftEpoch, qnaRaw)) {
+        return clearedDemoResult(context.mode);
+      }
       return { ok: true, mode: 'demo', data: next };
     }
 
@@ -912,15 +1064,24 @@ export const matchService = {
    */
   loadDeclinedCommonQuestions(mode: MatchOperatingMode): string[] {
     if (mode !== 'demo') return [];
+    watchDemoDraftKeys();
+    noteDemoKey(STORAGE_COMMON_DECLINED_KEY);
     return readLocalJson<string[]>(STORAGE_COMMON_DECLINED_KEY) ?? [];
   },
 
   /**
    * 공통 질문 거절 목록을 저장한다 (MATCH-009). 데모가 아니면 쓰지 않는다.
    */
-  saveDeclinedCommonQuestions(questionIds: string[], mode: MatchOperatingMode): void {
-    if (mode !== 'demo') return;
-    writeLocalJson(STORAGE_COMMON_DECLINED_KEY, Array.from(new Set(questionIds)));
+  saveDeclinedCommonQuestions(questionIds: string[], mode: MatchOperatingMode): boolean {
+    if (mode !== 'demo') return false;
+    const draftEpoch = currentDemoDraftEpoch();
+    const declinedRaw = readDemoRaw(STORAGE_COMMON_DECLINED_KEY);
+    return writeDemoJson(
+      STORAGE_COMMON_DECLINED_KEY,
+      Array.from(new Set(questionIds)),
+      draftEpoch,
+      declinedRaw,
+    );
   },
 };
 
