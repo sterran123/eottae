@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import ModalCloseButton from '@/components/activities/ModalCloseButton';
 
 type Props = {
   titleId: string;
@@ -70,9 +71,7 @@ export default function DemoDialog({ titleId, title, onClose, children, panelCla
       >
         <div className="act-modal-head">
           <h2 id={titleId}>{title}</h2>
-          <button type="button" className="btn outline act-icon-btn" onClick={() => onCloseRef.current()}>
-            닫기
-          </button>
+          <ModalCloseButton onClick={() => onCloseRef.current()} />
         </div>
         {children}
       </div>
