@@ -53,7 +53,12 @@ export function subscribeDemo(
   if (typeof window === 'undefined') return () => {};
 
   const onStorage = (event: StorageEvent) => {
-    if (event.key === key) listener();
+    // 다른 탭의 removeItem은 newValue가 null이다. clear()는 key가 null이다.
+    // 같은 탭의 removeItem은 이 이벤트를 만들지 않는다. sessionStorage는 대상이 아니다.
+    if (event.storageArea && event.storageArea !== window.localStorage) return;
+    if (event.key !== null && event.key !== key) return;
+    if (event.key === null || event.newValue === null) onRemoteState(null);
+    listener();
   };
   const onMessage = (event: MessageEvent) => {
     if (isStatePacket(event.data)) onRemoteState(event.data.state);

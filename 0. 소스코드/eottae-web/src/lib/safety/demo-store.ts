@@ -11,8 +11,10 @@ import {
   type ReportStatus,
 } from './types';
 
-const STORAGE_KEY = 'eottae.safety.demo.v1';
-const EVENT_NAME = 'eottae-safety-demo';
+export const SAFETY_DEMO_STORAGE_KEY = 'eottae.safety.demo.v1';
+export const SAFETY_DEMO_EVENT = 'eottae-safety-demo';
+const STORAGE_KEY = SAFETY_DEMO_STORAGE_KEY;
+const EVENT_NAME = SAFETY_DEMO_EVENT;
 const CHANNEL_NAME = 'eottae.safety.demo';
 
 const CATEGORIES = new Set<ReportCategory>(['abuse', 'sexual', 'scam', 'other']);
@@ -80,6 +82,8 @@ function read(): SafetyState {
   if (typeof window === 'undefined') return memory;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
+    // 키가 없어도 메모리를 비우지 않는다. 비우면 저장 실패로 메모리에만 둔 신고·차단까지 사라진다.
+    // 비우기는 resetSafetyDemo와 키 삭제 이벤트에서만 한다.
     if (raw) {
       const parsed = parseState(JSON.parse(raw));
       if (parsed && parsed.rev >= memory.rev) memory = parsed;
@@ -98,7 +102,27 @@ function commit(update: (prev: SafetyState) => SafetyState) {
   publishDemo(STORAGE_KEY, EVENT_NAME, CHANNEL_NAME, memory);
 }
 
+function blankSafety(): SafetyState {
+  return { rev: 0, reports: [], blocks: [] };
+}
+
+/** 같은 탭의 탈퇴 데모가 호출한다. 신고와 차단 메모리를 함께 비운다. */
+export function resetSafetyDemo(): void {
+  memory = blankSafety();
+}
+
 function rememberRemote(state: unknown) {
+  if (state == null) {
+    memory = blankSafety();
+    try {
+      if (typeof window !== 'undefined' && window.localStorage.getItem(STORAGE_KEY) !== null) {
+        window.localStorage.removeItem(STORAGE_KEY);
+      }
+    } catch {
+      // 다시 지우지 못하면 다음 read가 되살린 신고·차단을 올릴 수 있다.
+    }
+    return;
+  }
   const parsed = parseState(state);
   if (parsed && parsed.rev > memory.rev) memory = parsed;
 }

@@ -132,6 +132,7 @@ export default function DeleteAccountDemo() {
             <li>성인 확인 시연 표시</li>
             <li>데이트·소모임에 남긴 참가, 투표, 만든 모임, 후기, 좋아요·추천, 정보 확인 요청</li>
             <li>청첩장 테마 데모 영수증</li>
+            <li>이 기기의 데모 대화, 신고와 차단</li>
           </ul>
 
           <h3>정책상 실제 삭제라면</h3>

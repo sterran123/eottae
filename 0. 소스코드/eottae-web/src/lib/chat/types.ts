@@ -47,6 +47,7 @@ export interface DemoChatMessage {
 /**
  * 메시지 행. 화면으로 바꿀 때는 `toChatMessage`.
  * 데모 저장은 이 행을 서버에 쓰지 않는다.
+ * `soft_delete_state`가 `deleted`인 행은 화면에 넣지 않는다.
  */
 export interface MessageRow {
   id: string;
@@ -55,14 +56,17 @@ export interface MessageRow {
   body: string;
   /** ISO 8601 */
   created_at: string;
+  /** 0003 `messages.soft_delete_state`. 없으면 visible로 본다. */
+  soft_delete_state?: 'visible' | 'deleted';
 }
 
-/** 행을 화면 메시지로 바꾼다. `sender_id === myId`이면 내가 보낸 말이다. */
+/** 행을 화면 메시지로 바꾼다. `deleted`는 null. `sender_id === myId`이면 내가 보낸 말이다. */
 export function toChatMessage(
   row: MessageRow,
   myId: string,
   status: MessageStatus = 'sent',
-): ChatMessage {
+): ChatMessage | null {
+  if (row.soft_delete_state === 'deleted') return null;
   return {
     id: row.id,
     senderId: row.sender_id,

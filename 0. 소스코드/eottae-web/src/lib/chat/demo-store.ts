@@ -11,9 +11,19 @@ import {
   type MessageStatus,
 } from './types';
 
-const STORAGE_KEY = 'eottae.chat.demo.v1';
-const EVENT_NAME = 'eottae-chat-demo';
+export const CHAT_DEMO_STORAGE_KEY = 'eottae.chat.demo.v1';
+export const CHAT_DEMO_EVENT = 'eottae-chat-demo';
+const STORAGE_KEY = CHAT_DEMO_STORAGE_KEY;
+const EVENT_NAME = CHAT_DEMO_EVENT;
 const CHANNEL_NAME = 'eottae.chat.demo';
+
+/**
+ * chat-service의 보내기 확인(400ms)과 자동응답(1600ms)이 삭제 뒤에 한 번 더 쓰지 않게 막는다.
+ * 그 시각이 지나면 새 입력은 저장한다.
+ */
+const PENDING_APPEND_MS = 1700;
+let suppressAppendUntil = 0;
+let epoch = 0;
 
 const STATUSES = new Set<MessageStatus>(['sending', 'sent', 'failed']);
 
@@ -66,6 +76,8 @@ function read(): ChatState {
   if (typeof window === 'undefined') return memory;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
+    // 키가 없어도 메모리를 비우지 않는다. 비우면 저장 실패로 메모리에만 둔 데모까지 사라진다.
+    // 비우기는 resetChatDemo와 키 삭제 이벤트에서만 한다.
     if (raw) {
       const parsed = parseState(JSON.parse(raw));
       if (parsed && parsed.rev >= memory.rev) memory = parsed;
@@ -84,7 +96,42 @@ function commit(update: (prev: ChatState) => ChatState) {
   publishDemo(STORAGE_KEY, EVENT_NAME, CHANNEL_NAME, memory);
 }
 
+function clearChatMemory(): void {
+  memory = { rev: 0, rooms: {} };
+  epoch += 1;
+  const until = Date.now() + PENDING_APPEND_MS;
+  if (until > suppressAppendUntil) suppressAppendUntil = until;
+}
+
+/** 같은 탭의 탈퇴 데모가 호출한다. 키를 지우기 전에 메모리부터 비운다. */
+export function resetChatDemo(): void {
+  clearChatMemory();
+}
+
+/** 키 삭제가 실패하면, 방금 건 저장 금지를 푼다. 메모리는 다음 read가 저장소로 되돌린다. */
+export function releaseChatDemoAppendSuppress(): void {
+  suppressAppendUntil = 0;
+}
+
+/** 삭제 세대. 열린 채팅이 낙관적 메시지를 다시 붙이지 않게 구분한다. */
+export function chatDemoEpoch(): number {
+  return epoch;
+}
+
 function rememberRemote(state: unknown) {
+  if (state == null) {
+    clearChatMemory();
+    // 이 이벤트보다 먼저 예약된 저장이 키를 되살렸으면 같은 탭에서 다시 지운다.
+    // read()는 키가 없다는 이유만으로 메모리를 비우지 않는다.
+    try {
+      if (typeof window !== 'undefined' && window.localStorage.getItem(STORAGE_KEY) !== null) {
+        window.localStorage.removeItem(STORAGE_KEY);
+      }
+    } catch {
+      // 다시 지우지 못하면 다음 read가 되살린 값을 올릴 수 있다.
+    }
+    return;
+  }
   const parsed = parseState(state);
   if (parsed && parsed.rev > memory.rev) memory = parsed;
 }
@@ -121,10 +168,12 @@ export function ensureChatSeed() {
   });
 }
 
-export function appendDemoMessage(message: DemoChatMessage) {
+export function appendDemoMessage(message: DemoChatMessage): boolean {
   const parsed = parseMessage(message);
-  if (!parsed) return;
-  if (!DEMO_ROOMS.some((room) => room.id === parsed.conversationId)) return;
+  if (!parsed) return false;
+  if (!DEMO_ROOMS.some((room) => room.id === parsed.conversationId)) return false;
+  // reset 직후 이미 예약된 onMessageSent·자동응답이 그 한 대화를 다시 저장하지 않게 한다.
+  if (Date.now() < suppressAppendUntil) return false;
   commit((prev) => {
     const list = prev.rooms[parsed.conversationId] ?? [];
     if (list.some((item) => item.id === parsed.id)) return prev;
@@ -136,6 +185,7 @@ export function appendDemoMessage(message: DemoChatMessage) {
       },
     };
   });
+  return true;
 }
 
 function visibleRows(roomId: string, actorId: string): DemoChatMessage[] {

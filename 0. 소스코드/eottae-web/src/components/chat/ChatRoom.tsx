@@ -10,7 +10,7 @@
 
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { createDemoChatDataSource, type ChatDataSource } from '@/lib/chat/chat-service';
-import { appendDemoMessage, loadVisibleMessages, subscribeChatDemo } from '@/lib/chat/demo-store';
+import { appendDemoMessage, chatDemoEpoch, loadVisibleMessages, subscribeChatDemo } from '@/lib/chat/demo-store';
 import type { ChatMessage, ChatRoomInfo } from '@/lib/chat/types';
 import type { ReportRequest } from '@/lib/safety/types';
 import {
@@ -97,20 +97,6 @@ export default function ChatRoom({
     onLastMessage?.(room.id, last);
   }, [messages, room.id, onLastMessage]);
 
-  useEffect(() => {
-    const reload = () => {
-      setMessages((prev) => mergeMessages(prev, loadVisibleMessages(room.id, actorId)));
-    };
-    reload();
-    setHydrated(true);
-    const offChat = subscribeChatDemo(reload);
-    const offSafety = subscribeSafetyDemo(reload);
-    return () => {
-      offChat();
-      offSafety();
-    };
-  }, [room.id, actorId]);
-
   const pushSystem = useCallback((body: string) => {
     setMessages((prev) => [
       ...prev,
@@ -138,7 +124,7 @@ export default function ChatRoom({
         const pending = pendingRef.current.get(messageId);
         pendingRef.current.delete(messageId);
         if (pending) {
-          appendDemoMessage({
+          const saved = appendDemoMessage({
             id: messageId,
             conversationId: room.id,
             senderId: actorId,
@@ -146,6 +132,12 @@ export default function ChatRoom({
             createdAt: pending.createdAt,
             status: 'sent',
           });
+          if (!saved) {
+            setMessages((prev) =>
+              prev.map((message) => (message.id === messageId ? { ...message, status: 'failed' } : message)),
+            );
+            return;
+          }
         }
         setMessages((prev) =>
           prev.map((message) => (message.id === messageId ? { ...message, status: 'sent' } : message)),
@@ -168,6 +160,32 @@ export default function ChatRoom({
       },
     }, partner.id);
   }, [actorId, partner.id, room.id]);
+
+  const chatEpochRef = useRef<number | null>(null);
+  useEffect(() => {
+    const reload = () => {
+      const epoch = chatDemoEpoch();
+      const cleared = chatEpochRef.current !== null && epoch !== chatEpochRef.current;
+      chatEpochRef.current = epoch;
+      if (cleared) {
+        pendingRef.current.clear();
+        setTyping(false);
+        dataSourceRef.current?.dispose();
+        dataSourceRef.current = null;
+        if (!blockedRef.current && !isDemoBlocked(actorId, partner.id)) createSource();
+      }
+      const stored = loadVisibleMessages(room.id, actorId);
+      setMessages((prev) => (cleared ? stored : mergeMessages(prev, stored)));
+    };
+    reload();
+    setHydrated(true);
+    const offChat = subscribeChatDemo(reload);
+    const offSafety = subscribeSafetyDemo(reload);
+    return () => {
+      offChat();
+      offSafety();
+    };
+  }, [actorId, createSource, partner.id, room.id]);
 
   useEffect(() => {
     if (isDemoBlocked(actorId, partner.id)) {
