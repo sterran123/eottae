@@ -17,7 +17,7 @@ f215d3e323380b4e75764c6bfbcab5b4c7b59b4009ed7102f4b9075fc1301a69  .github/workfl
 7710d28a140451e45493d1fd6f52508a4a51133d7fd72b236349d001bde77fb9  0. 소스코드/eottae-web/.gitignore
 dfd62088d1b52c3eeb6f9ccb87a62858bb9766b328ae93cd85994f2bb3262587  0. 소스코드/eottae-web/AGENTS.md
 85501bb21df690a69f544cc51a733c8738432eb532e1500b24adee796cae8112  0. 소스코드/eottae-web/README.md
-0fc90d3a831e8243f39b214365ff3d6a9ae6f229452bcf0ab696d6ca5a02aba0  0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md
+f80d36dfed2463544647384bf509e4a89a5473171eb90d3ed4590463b5273c06  0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md
 6ef5f1ba972e9f1d07e1dbddd282ed9c16c3fd132a5301db0a8e0e9cffc2bb2f  0. 소스코드/eottae-web/docs/AI_도구_MCP_권장.md
 180d9a55d70be22c9ffa04a4acc113c484a2a19fc71e2410ec6dff1a33487a01  0. 소스코드/eottae-web/docs/AI_에이전트_협업_가이드.md
 7d34723629b67d6fc6c107846671146dfa18b35250001621174b73afb4da8511  0. 소스코드/eottae-web/docs/DESIGN_개선_지시서.md
@@ -200,11 +200,15 @@ dad5a1affc20e52028263dce449e97bd80714fd6a141c792449849415c71d0e2  0. 소스코�
 5f662480084cf05292bd4a9565f75ea238e33981fdd9a75f136f6247f06ee089  0. 소스코드/eottae-web/tools/generate_favicons.mjs
 cc0e80d7740cfdd2cc7e85e59c1d161082f24663f3e0d6f32b6a853af24934b6  0. 소스코드/eottae-web/tools/make_dark_logo.py
 de5556bcb44f244eeba93e0ed9da40c2b864d9d8d7654c0357787de9d4b8f26c  0. 소스코드/eottae-web/tsconfig.json
+f267145084a1d0ac0c5f4675e2725af7c594c7e242d496fa108f7b299f6343cf  1. 프로젝트 계획서/3차_작업지시서.md
 f57f5130531ce8627c81c90080ec3014564fa19456093130c16c4380fc038d9b  1. 프로젝트 계획서/AI_협업_지시문/AGENT_김민기_CORE.md
 0a7c3ece8b7b51014a7ca7eacaf605c34f0c1d2b7efbd51b696a549c02370663  1. 프로젝트 계획서/AI_협업_지시문/AGENT_바로시작_김민기.md
 8af78ed736bbe6a26b58fc34b4e865dd63f79dd448bb4f32efe9113507822237  1. 프로젝트 계획서/AI_협업_지시문/AGENT_손준혁_CHAT_QA.md
+57a12635c8049df65e90b62f04d3fb156bba0890248dc5eb9d2b5c06c5472914  1. 프로젝트 계획서/AI_협업_지시문/AGENT_손준혁_INV_RSVP.md
+b95626a94544afece2354ff83aa76a4d8a5c45bcef186538a96bb453e6e9f826  1. 프로젝트 계획서/AI_협업_지시문/AGENT_오하율_INV_EDITOR.md
 a294af1f14bdca69e67f62cd36e994f8cafbad240bb65ec511753192ce4611cc  1. 프로젝트 계획서/AI_협업_지시문/AGENT_오하율_MATCH_UI.md
 af5e1bddddfef22c1bc72ec4cebe842545da81dad1f8b26ec7e6fb5e506a3426  1. 프로젝트 계획서/AI_협업_지시문/AGENT_주한태_BACKEND.md
+0ec291c0162bfe578b9c26fbd1bf9f7f94577087d365c63ad7d2593534bac719  1. 프로젝트 계획서/AI_협업_지시문/AGENT_주한태_INV_POLICY.md
 eeb7df7e8ee51893c5c14ec229df7d9af828f7412198c60439143974cc00ee01  1. 프로젝트 계획서/AI_협업_지시문/MCP_SETUP.md
 ae532f1a86f1e7538ff0a47a6eab27756f4ffc739bb00e704e2fa6980c64979a  1. 프로젝트 계획서/AI_협업_지시문/MCP_SETUP_검증.md
 d28fb0111d3737663ac061a9a0e94f65d4ac59cf0b9eb6b5d3372f8a52d2844b  1. 프로젝트 계획서/AI_협업_지시문/RULES.md
@@ -219,13 +223,13 @@ d345f79fd1467f7a7b8b7aa80deadcc3cbdfe34ce8377224d73cc8c50b158425  1. 프로젝�
 cdb664f0cf5da0e88bb1a6c2091f40db23b21e6cfa86717865a0452f76e81676  1. 프로젝트 계획서/AI_협업_지시문/에이전트_공통_실행프롬프트.md
 8a313f188b8aa30ce7e454ac42965fa0f53d1ee8abcc496e9b936780c409d479  1. 프로젝트 계획서/plan_v1.md
 15bc29d73d6497ccf1be5afb78704e82c4d903206ae9eba1e69fb5dc8ce08930  1. 프로젝트 계획서/plan_v2.md
-a6af67ab7e3ca3c3a194e3a79694a34f3cfd60b9845d17f6b95c5b6170988880  1. 프로젝트 계획서/plan_v3.md
+c5ba4e4658ead9d0307a04c60b529acf93ce5c2e67288b0082662226ef3899f5  1. 프로젝트 계획서/plan_v3.md
 a4fed328dab1c1abd004d724d097089b271eb5d13eb133d904029adf9b3e19aa  1. 프로젝트 계획서/단계_범위고정_인수조건.md
 4fc0bc4cc7200ab5e418cafb89de6e209c0a08dca6641d0e17fe39a934a2237a  1. 프로젝트 계획서/단계별_로드맵_수익화.md
 64ae173cf978157656cd7225bbc0eba1b3bab3203a66c885d2f70e00d04569f1  1. 프로젝트 계획서/브랜드_가이드.md
 219395acd431836dc4e9a2827be7c4a02218454bfe1b76f2ffaedd9a757c1e37  1. 프로젝트 계획서/브랜드_에셋/어때_로고_다크_원본.png
 4956d02f3cc4fa6f0c8ff61dadaa42d118672550ad835d9bf700448e10f6e52a  1. 프로젝트 계획서/브랜드_에셋/어때_로고_라이트_원본.png
-5abb7b7f7a241711e8a9fdc675a3f3c5499a753f6d716e552bd723a27f0e1c88  1. 프로젝트 계획서/실행_결정대기_로그.md
+bf8ea99b2654009169aeaf6d8faa0b6aa31b6c6e4389d362976cfc4d5025a046  1. 프로젝트 계획서/실행_결정대기_로그.md
 d55d3b66a39ee300c3bdc876c534b53b21eae77da8fab14679ce1e57687cfec3  1. 프로젝트 계획서/안전_개인정보_연령정책.md
 21a36db58a169f82912d59a35d2ac730d7da305e126f8e09e42b9e296f5dae30  1. 프로젝트 계획서/양식원본/00_제출물_통합본_타프로젝트_샘플.xlsx
 9b5bbc6a7f1a0b0245387ace1e53c99b3a7b380047a903f49aa859587c21dbf4  1. 프로젝트 계획서/양식원본/제출물 예시_샘플.xlsx

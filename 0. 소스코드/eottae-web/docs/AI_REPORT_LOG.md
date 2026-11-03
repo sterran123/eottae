@@ -803,3 +803,12 @@
 - [변경] src/app/activities/activities.css | `.act-modal-close`는 `--paper`·`--ink`·`--line`·`--soft`·`--brand-soft`·`--brand-dark`·`--focus`. 포커스 링 3px. 제목 `min-width: 0`·줄바꿈, 360px에서 두 줄 말줄임. `.act-icon-btn`은 토스트용으로 유지
 - [유지] 아래쪽 닫기 글자: `ActivityReportDialog` 「데모로 보내기」 옆, `ActivitiesDemo` 수정 모달 유일한 행동 「닫기」·삭제 「이 브라우저에서 지우기」 옆·데모 기록 지우기 옆, `GatheringManage` 「데모로 강퇴」 옆, `GatheringReviews` 「데모로 삭제」 옆. 토스트 닫기(모달 머리 아님). 매칭·채팅·청첩장
 - [미실행] 브라우저에서 머리 X, 360px 제목 겹침, 6테마, 포커스 링, Esc·바깥 클릭·포커스 복귀, 아래쪽 「닫기」 글자 유지. typecheck·build. 이 세션은 파일 읽기·검색·수정만
+
+## 2026-11-03 3차 작업지시서 작성 — 모바일 청첩장 목업 (김민기 작업)
+- [요청] 3차(모바일 청첩장) 작업지시서를 만든다. 메인 담당 오하율, 김민기는 총괄 모니터링. 문서·지시문만. 앱 코드·package.json·FILE_INDEX.csv·MANIFEST.sha256·supabase/는 수정하지 않음. 명령 실행 없음
+- [AI] 로컬 Grok이 `요구사항_마스터.md` INV-001~004, `plan_v3.md`, `단계_범위고정_인수조건.md` 3차, `단계별_로드맵_수익화.md`, `안전_개인정보_연령정책.md`, `팀_작업지시서_WBS.md`, `팀원별_인수_계획_정리.md`, `실행_결정대기_로그.md` DEC-10·11, ADR-004, DB 논리모델 INVITATION/RSVP, `API_계약_초안.md`, 기존 `AGENT_*.md`·`RULES.md`, `src/app/invitations/`, `ThemePreviewSection`, `src/lib/demo/demo-themes.ts`, 2차 `src/lib/activities/`(types·demo-data·demo-storage·href), `globals.css` 6테마, `next.config.mjs` 정적 export를 읽고 문서만 씀
+- [신규] 1. 프로젝트 계획서/3차_작업지시서.md | 목표·목업 범위, 3차 P0를 화면 기준으로 다시 씀, 화면 경로(문서 근거 / 제안 구분), `src/lib/invitations/` 타입·데모 데이터 첫 PR은 오하율, 사람별 체크박스, 일정은 1·2·3단계만, 이슈 초안 4개
+- [신규] 1. 프로젝트 계획서/AI_협업_지시문/AGENT_오하율_INV_EDITOR.md, AGENT_주한태_INV_POLICY.md, AGENT_손준혁_INV_RSVP.md | 기존 AGENT 형식 + 붙여넣기 프롬프트(읽을 파일, 만들 것, 하지 말 것, 목업, PR)
+- [변경] 1. 프로젝트 계획서/plan_v3.md | 진행 단계 3차 줄: 작업지시서 작성 — 목업. 최종 제출은 6번으로 옮김. 다른 진행 단계 줄은 유지
+- [변경] 1. 프로젝트 계획서/실행_결정대기_로그.md | DEC-12. 2026-11-03 결정: 3차 메인 오하율, 목업, 김민기 총괄 모니터링
+- [미실행] 앱 코드 수정, 이슈 생성, typecheck·build·브라우저. 이 세션은 파일 읽기·검색·수정만
