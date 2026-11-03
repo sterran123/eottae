@@ -1,5 +1,5 @@
 # 어때? 단일 PWA — 김민기 초기 담당
-**중간 점검 2차(데모).** 완성된 출시 제품이 아닙니다. 통합 홈·6테마·설정(`/settings`)·PWA 오프라인 셸은 동작합니다(서비스워커·오프라인은 TC-012 Android PASS). 매칭 서비스 모드는 키가 없거나 세션이 없으면 `mode: 'demo'`(localStorage)다. 공개 빌드에는 `NEXT_PUBLIC_DEMO_ADULT_BYPASS`가 없다. 로그인 세션이 없는 공개 빌드에서는 매칭 자식(온보딩·추천·문답·공통 질문·채팅)이 「본인 확인이 연결되지 않아 열 수 없어요」이다. 세션 조회 실패·미인증은 `gateMessage`다. 성인 검증이 끝난 `live` 세션은 자식 경로가 열린다. `/match` 본문은 열린다. 로그인·성인 게이트·DB 실연동은 최종 전이다. 청첩장 테마 모의 결제(카드번호 없음, 승인 후 즉시 취소, 실제 청구 없음)는 저장소에 있다. PG 실결제·푸시는 미구현입니다.
+**중간 점검 2차(데모).** 완성된 출시 제품이 아닙니다. 통합 홈·6테마·설정(`/settings`)·PWA 오프라인 셸은 동작합니다(서비스워커·오프라인은 TC-012 Android PASS). 매칭 서비스 모드는 키가 없거나 세션이 없으면 `mode: 'demo'`(localStorage)다. 목업 단계(DEC-11, 2026-11-03) 동안 공개 배포 빌드(`deploy-pages.yml`)는 `NEXT_PUBLIC_DEMO_ADULT_BYPASS`가 `'1'`이다. 로그인 세션이 없는 공개 빌드의 매칭 자식(온보딩·추천·문답·공통 질문·채팅)은 생년월일로 만 19세를 확인한 시연 기록(`eottae_demo_adult_v1`, 24시간, 생년월일 원본은 저장하지 않음)이 있으면 데모로 열리고, 기록이 없으면 시연 확인 화면이 나온다. 그 값이 `'1'`이 아니면 「본인 확인이 연결되지 않아 열 수 없어요」이고 시연 버튼은 없다. 실데이터 단계에서 이 값을 지워 fail-closed(ADR-002)로 되돌린다. 세션 조회 실패·미인증은 `gateMessage`다. 성인 검증이 끝난 `live` 세션은 자식 경로가 열린다. `/match` 본문은 열린다. 로그인·성인 게이트·DB 실연동은 최종 전이다. 청첩장 테마 모의 결제(카드번호 없음, 승인 후 즉시 취소, 실제 청구 없음)는 저장소에 있다. PG 실결제·푸시는 미구현입니다.
 
 ## 시작
 Node.js 20+ 및 npm 필요.
@@ -28,7 +28,7 @@ npm run build
 - `README_테스트배포.md` — 실행·검증·배포 단계와 PWA 점검 표
 
 ## 라우트
-`/` 통합 허브 / `/match` 매칭 소개(본문은 열림) / `/match/onboarding` `/match/recommend` `/match/qna` `/match/common` `/match/chat` 매칭 자식(로그인 세션이 없는 공개 빌드는 「본인 확인이 연결되지 않아 열 수 없어요」. 세션 조회 실패·미인증은 `gateMessage`. 성인 검증이 끝난 `live` 세션은 자식 경로가 열림) / `/activities` 데이트·소모임 브라우저 데모 / `/invitations` 청첩장 본 기능은 3차 준비중, 테마 모의 결제는 저장소에 있음 / `/settings` 설정(테마·계정 안내) / `/safety` 안전 정책 / `/privacy` 개인정보·계정 삭제 안내 / `/offline` PWA 오프라인 폴백 / `/api/health` 개발 헬스 체크. `not-found`·`error`·`loading` 공통 경계 포함.
+`/` 통합 허브 / `/match` 매칭 소개(본문은 열림) / `/match/onboarding` `/match/recommend` `/match/qna` `/match/common` `/match/chat` 매칭 자식(목업 단계 DEC-11의 공개 빌드는 만 19세 시연 확인 후 데모로 열림. 기록이 없으면 시연 확인 화면. 바이패스가 `'1'`이 아니면 「본인 확인이 연결되지 않아 열 수 없어요」. 실데이터 단계에서 fail-closed로 되돌림. 세션 조회 실패·미인증은 `gateMessage`. 성인 검증이 끝난 `live` 세션은 자식 경로가 열림) / `/activities` 데이트·소모임 브라우저 데모 / `/invitations` 청첩장 본 기능은 3차 준비중, 테마 모의 결제는 저장소에 있음 / `/settings` 설정(테마·계정 안내) / `/safety` 안전 정책 / `/privacy` 개인정보·계정 삭제 안내 / `/offline` PWA 오프라인 폴백 / `/api/health` 개발 헬스 체크. `not-found`·`error`·`loading` 공통 경계 포함.
 
 ## 구조
 - `src/app/layout.tsx` — 공통 shell, 메타데이터(manifest·theme-color·apple), 스킵 링크

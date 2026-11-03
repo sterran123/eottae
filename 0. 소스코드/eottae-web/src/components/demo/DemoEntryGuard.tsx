@@ -183,7 +183,7 @@ export default function DemoEntryGuard({ area, children }: { area: Area; childre
       <p id={`demo-adult-reason-${area}`}>{copy.reason}</p>
       <aside className="warn">
         <strong>실제 본인 확인이 아닌 시연용</strong>
-        <p>아래 확인은 예시를 보여주는 단계예요. 생년월일이나 신분증은 받지 않아요.</p>
+        <p>아래 확인은 생일 기준 만 19세 판정이에요. 생년월일 원본은 저장하지 않고, 신분증은 받지 않아요.</p>
       </aside>
       <DemoAdultStep
         headingLevel="h2"
