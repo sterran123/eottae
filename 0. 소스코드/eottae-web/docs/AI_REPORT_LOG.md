@@ -803,3 +803,10 @@
 - [변경] src/app/activities/activities.css | `.act-modal-close`는 `--paper`·`--ink`·`--line`·`--soft`·`--brand-soft`·`--brand-dark`·`--focus`. 포커스 링 3px. 제목 `min-width: 0`·줄바꿈, 360px에서 두 줄 말줄임. `.act-icon-btn`은 토스트용으로 유지
 - [유지] 아래쪽 닫기 글자: `ActivityReportDialog` 「데모로 보내기」 옆, `ActivitiesDemo` 수정 모달 유일한 행동 「닫기」·삭제 「이 브라우저에서 지우기」 옆·데모 기록 지우기 옆, `GatheringManage` 「데모로 강퇴」 옆, `GatheringReviews` 「데모로 삭제」 옆. 토스트 닫기(모달 머리 아님). 매칭·채팅·청첩장
 - [미실행] 브라우저에서 머리 X, 360px 제목 겹침, 6테마, 포커스 링, Esc·바깥 클릭·포커스 복귀, 아래쪽 「닫기」 글자 유지. typecheck·build. 이 세션은 파일 읽기·검색·수정만
+
+## 2026-11-03 전체 디자인·사용성 검토 3차 착수 전 (김민기 작업)
+- [요청] 3차 착수 전에 사이트 전체 디자인·사용성·일관성 검토 보고서만 작성. 코드는 고치지 않음. 화면별 좋은 점·개선점(근거 파일:줄, 이유, 고치는 방법, P0/P1/P2, S/M/L, 담당), 공통 패턴 표, 3차 디자인 원칙 5~10줄, 맨 끝 P0·P1 이슈 초안 1~3개. 브라우저를 열 수 없으니 코드·CSS 근거만. DEC-11: 3차까지 목업, 서버·Supabase·새 마이그레이션·Edge Function·외부 API는 범위 밖. 앱 코드(`src/**`)·`package.json`·`FILE_INDEX.csv`·`MANIFEST.sha256`·`supabase/`는 수정하지 않음
+- [AI] 로컬 Grok이 브랜드 가이드, `globals.css` 6테마, `layout.tsx`·헤더·내비, 홈, `/match/**`, `/activities/**`, `/invitations/**`, `/settings`, `/auth/**`, `/privacy`, 공통 버튼·모달·뱃지·더보기·X 닫기, `captions.csv`, 접근성·44px·aria 검색 결과를 읽고 보고서만 작성. 브라우저·명령은 실행하지 않음
+- [변경] `4. 프로젝트 결과 보고서/전체_디자인_검토_3차전.md` | 화면별 검토, 공통 패턴 표, 청첩장 테마와 6테마를 나누는 3차 원칙, P0·P1 이슈 초안 3개
+- [변경] `0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md` | 이 절만 추가. 기존 줄은 유지
+- [미실행] 브라우저 실측, 대비 수치 계산, typecheck·build. 앱 코드는 수정하지 않음. `FILE_INDEX.csv`·`MANIFEST.sha256`는 수정하지 않았고 해시는 다시 계산하지 않음
