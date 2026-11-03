@@ -336,7 +336,9 @@ export default function RecommendList({
     setEtcDetail('');
 
     showNotice(
-      `'${target.nickname}' 님에 대한 신고(${finalReason})가 안전센터에 접수되었습니다. 상대방은 즉시 차단되었습니다.`,
+      res.mode === 'demo'
+        ? `'${target.nickname}' 님에 대한 신고(${finalReason})는 이 기기의 내 신고 내역에 남았어요. 서버로는 보내지 않아요. 상대는 이 기기에서 차단되었어요.`
+        : `'${target.nickname}' 님에 대한 신고(${finalReason})가 안전센터에 접수되었습니다. 상대방은 즉시 차단되었습니다.`,
       4000,
     );
   }

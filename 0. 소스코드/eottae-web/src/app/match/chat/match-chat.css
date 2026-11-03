@@ -175,7 +175,7 @@ body:has(.mt-chat-page) .footer::before {
   max-height: 120px;
   padding: 10px 14px;
   font: inherit;
-  font-size: 0.92rem;
+  font-size: 16px;
   line-height: 1.4;
   color: var(--match-ink);
   background: var(--match-bg);
@@ -606,7 +606,7 @@ body:has(.mt-chat-page) .footer::before {
   resize: vertical;
   padding: 10px 12px;
   font: inherit;
-  font-size: 0.88rem;
+  font-size: 16px;
   color: var(--match-ink);
   background: var(--match-bg);
   border: 1px solid var(--match-line);
@@ -756,3 +756,87 @@ body:has(.mt-chat-page) .footer::before {
 @media (prefers-reduced-motion: reduce) {
   .mt-chat-panel { animation: none; }
 }
+
+/* 데모 사용자·구성원이 아닌 방·신고 내역 */
+.mt-chat-tools {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  margin: 12px 0 16px;
+}
+.mt-chat-actor-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--match-ink);
+}
+.mt-chat-actor {
+  width: 100%;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 16px;
+  color: var(--match-ink);
+  background: var(--match-paper);
+  border: 1px solid var(--match-line);
+  border-radius: 12px;
+}
+.mt-chat-tool-link {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--match-accent-ink);
+  background: var(--match-soft);
+  text-decoration: none;
+}
+.mt-chat-actor:focus-visible,
+.mt-chat-tool-link:focus-visible,
+.mt-report-admin:focus-visible {
+  outline: 2px solid var(--match-focus);
+  outline-offset: 2px;
+}
+.mt-chat-forbidden {
+  margin: 0 0 12px;
+  padding: 12px;
+  color: var(--match-warn-ink);
+  background: var(--match-warn-bg);
+  border: 1px solid var(--match-warn-line);
+  border-radius: 12px;
+}
+.mt-chat-forbidden h2 {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+}
+.mt-chat-forbidden p { margin: 0 0 6px; font-size: 0.9rem; line-height: 1.5; }
+.mt-report-wrap { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+.mt-report-panel {
+  padding: 14px;
+  background: var(--match-paper);
+  border: 1px solid var(--match-line);
+  border-radius: 20px;
+}
+.mt-report-title { margin: 0 0 6px; font-size: 1.05rem; color: var(--match-ink); }
+.mt-report-empty { margin: 8px 0 0; font-size: 0.88rem; line-height: 1.5; color: var(--match-sub); }
+.mt-report-admin { width: 100%; margin-top: 8px; }
+.mt-report-list { margin: 10px 0 0; padding: 0; list-style: none; }
+.mt-report-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 0;
+  border-top: 1px solid var(--match-line-soft);
+  font-size: 0.88rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.mt-report-item time { color: var(--match-sub); font-size: 0.78rem; }
