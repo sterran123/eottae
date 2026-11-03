@@ -24,7 +24,10 @@ export default function SiteFooter() {
       </div>
       <div className="shell footer-bottom">
         <span>© 2026 어때? · 팀 프로젝트 계획/시연용</span>
-        <span>실제 회원 데이터는 수집하지 않습니다</span>
+        <span>
+          시연용 예시 데이터로 동작해요. 시연 입력은 이 브라우저에만 남아요 ·{' '}
+          <Link href="/privacy/">개인정보 안내</Link>
+        </span>
       </div>
     </footer>
   );
