@@ -836,6 +836,7 @@
   3. `getInvitationByToken`은 `published` 및 만료일(`expiry > now`) 유효한 청첩장만 반환.
   4. `sanitizeGuest`, `sanitizeRsvp` 추가로 허용 필드만 저장 및 길이 한도 적용.
   5. `href.ts` 신규 생성(`/invitations/new/` 라우트 반영).
+  6. PR #88 2차 AI 리뷰(db52519) 반영: 실존 인물 배제(팀원 실명 대신 '이서윤과 박하람', '한결과 은우', '김구름과 최별' 가상 이름 및 닉네임 하객 사용, 불규칙 토큰 적용), `INVITATION_STATUSES`에 `'revoked'` 추가 및 만료/폐기 시드 추가, `loadInvitationsDemo` 싱글턴 오염 방지(깊은 복사), `themeId` 타입 좁히기(`InvitationThemeId`).
 - [검증] `npm run typecheck` (`tsc --noEmit`) PASS
 - [검증] `npm run build` (`next build`, 23개 정적 페이지 export) PASS
 - [미구현/보류] UI 화면(목록·에디터·미리보기·공개 뼈대)은 타입 PR 머지 후 후속 작업으로 진행. 서버·Supabase 연동 없음(목업 단계 원칙 준수).

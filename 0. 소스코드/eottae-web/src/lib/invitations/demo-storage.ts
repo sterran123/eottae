@@ -4,7 +4,7 @@
 
 import { DEMO_GUESTS, DEMO_INVITATIONS, DEMO_RSVPS } from './demo-data';
 import type { Guest, Invitation, Rsvp } from './types';
-import { isInvitationStatus, isInvitationVisibility, isRsvpResponse } from './types';
+import { isInvitationStatus, isInvitationThemeId, isInvitationVisibility, isRsvpResponse } from './types';
 
 export const INVITATIONS_DEMO_STORAGE_KEY = 'eottae.invitations.demo.v1';
 export const DEMO_INVITATIONS_EVENT = 'eottae-demo-invitations';
@@ -20,18 +20,20 @@ export type InvitationsDemoState = {
   rsvps: Rsvp[];
 };
 
-export const INITIAL_INVITATIONS_DEMO: InvitationsDemoState = {
-  invitations: [...DEMO_INVITATIONS],
-  guests: [...DEMO_GUESTS],
-  rsvps: [...DEMO_RSVPS],
-};
+function getInitialDemoState(): InvitationsDemoState {
+  return {
+    invitations: DEMO_INVITATIONS.map((inv) => ({ ...inv })),
+    guests: DEMO_GUESTS.map((g) => ({ ...g })),
+    rsvps: DEMO_RSVPS.map((r) => ({ ...r })),
+  };
+}
 
 export function isStoredInvitation(value: unknown): value is Invitation {
   if (!value || typeof value !== 'object') return false;
   const row = value as Record<string, unknown>;
   return (
     typeof row.id === 'string' &&
-    row.id.length > 0 &&
+    row.id.trim().length > 0 &&
     row.id.length <= 80 &&
     typeof row.ownerId === 'string' &&
     row.ownerId.length <= 80 &&
@@ -42,7 +44,7 @@ export function isStoredInvitation(value: unknown): value is Invitation {
     row.hostNames.trim().length >= 2 &&
     row.hostNames.length <= 60 &&
     typeof row.weddingDate === 'string' &&
-    row.weddingDate.length > 0 &&
+    row.weddingDate.trim().length > 0 &&
     row.weddingDate.length <= 40 &&
     typeof row.venueLabel === 'string' &&
     row.venueLabel.trim().length >= 2 &&
@@ -50,20 +52,19 @@ export function isStoredInvitation(value: unknown): value is Invitation {
     typeof row.greeting === 'string' &&
     row.greeting.length <= 1000 &&
     typeof row.sharingToken === 'string' &&
-    row.sharingToken.length > 0 &&
+    row.sharingToken.trim().length > 0 &&
     row.sharingToken.length <= 80 &&
     isInvitationVisibility(row.visibility) &&
     (row.expiry === null || (typeof row.expiry === 'string' && row.expiry.length <= 40)) &&
-    typeof row.themeId === 'string' &&
-    row.themeId.length <= 40 &&
+    isInvitationThemeId(row.themeId) &&
     isInvitationStatus(row.status)
   );
 }
 
 function sanitizeInvitation(inv: Invitation): Invitation {
   return {
-    id: inv.id,
-    ownerId: inv.ownerId,
+    id: inv.id.trim(),
+    ownerId: inv.ownerId.trim(),
     title: inv.title.trim(),
     hostNames: inv.hostNames.trim(),
     weddingDate: inv.weddingDate.trim(),
@@ -87,7 +88,7 @@ export function isStoredGuest(value: unknown): value is Guest {
   const row = value as Record<string, unknown>;
   return (
     typeof row.id === 'string' &&
-    row.id.length > 0 &&
+    row.id.trim().length > 0 &&
     row.id.length <= 80 &&
     typeof row.invitationId === 'string' &&
     row.invitationId.length <= 80 &&
@@ -95,15 +96,15 @@ export function isStoredGuest(value: unknown): value is Guest {
     row.displayName.trim().length >= 1 &&
     row.displayName.length <= 30 &&
     typeof row.guestToken === 'string' &&
-    row.guestToken.length > 0 &&
+    row.guestToken.trim().length > 0 &&
     row.guestToken.length <= 80
   );
 }
 
 function sanitizeGuest(guest: Guest): Guest {
   return {
-    id: guest.id,
-    invitationId: guest.invitationId,
+    id: guest.id.trim(),
+    invitationId: guest.invitationId.trim(),
     displayName: guest.displayName.trim(),
     guestToken: guest.guestToken.trim(),
     createdAt: guest.createdAt,
@@ -116,13 +117,15 @@ export function isStoredRsvp(value: unknown): value is Rsvp {
   const row = value as Record<string, unknown>;
   return (
     typeof row.invitationId === 'string' &&
+    row.invitationId.trim().length > 0 &&
     row.invitationId.length <= 80 &&
     typeof row.guestToken === 'string' &&
+    row.guestToken.trim().length > 0 &&
     row.guestToken.length <= 80 &&
     isRsvpResponse(row.response) &&
     typeof row.partySize === 'number' &&
     Number.isInteger(row.partySize) &&
-    row.partySize >= 1 &&
+    row.partySize >= 0 &&
     row.partySize <= 10 &&
     typeof row.note === 'string' &&
     row.note.length <= 300 &&
@@ -133,7 +136,7 @@ export function isStoredRsvp(value: unknown): value is Rsvp {
 
 function sanitizeRsvp(rsvp: Rsvp): Rsvp {
   return {
-    invitationId: rsvp.invitationId,
+    invitationId: rsvp.invitationId.trim(),
     guestToken: rsvp.guestToken.trim(),
     response: rsvp.response,
     partySize: rsvp.partySize,
@@ -143,29 +146,29 @@ function sanitizeRsvp(rsvp: Rsvp): Rsvp {
 }
 
 export function loadInvitationsDemo(): InvitationsDemoState {
-  if (typeof window === 'undefined') return INITIAL_INVITATIONS_DEMO;
+  if (typeof window === 'undefined') return getInitialDemoState();
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return INITIAL_INVITATIONS_DEMO;
+    if (!raw) return getInitialDemoState();
     const parsed: unknown = JSON.parse(raw);
-    if (!parsed || typeof parsed !== 'object') return INITIAL_INVITATIONS_DEMO;
+    if (!parsed || typeof parsed !== 'object') return getInitialDemoState();
     const row = parsed as Partial<InvitationsDemoState>;
 
     const invitations = Array.isArray(row.invitations)
       ? row.invitations.filter(isStoredInvitation).slice(0, MAX_INVITATIONS).map(sanitizeInvitation)
-      : [...DEMO_INVITATIONS];
+      : DEMO_INVITATIONS.map((inv) => ({ ...inv }));
 
     const guests = Array.isArray(row.guests)
       ? row.guests.filter(isStoredGuest).slice(0, MAX_GUESTS).map(sanitizeGuest)
-      : [...DEMO_GUESTS];
+      : DEMO_GUESTS.map((g) => ({ ...g }));
 
     const rsvps = Array.isArray(row.rsvps)
       ? row.rsvps.filter(isStoredRsvp).slice(0, MAX_RSVPS).map(sanitizeRsvp)
-      : [...DEMO_RSVPS];
+      : DEMO_RSVPS.map((r) => ({ ...r }));
 
     return { invitations, guests, rsvps };
   } catch {
-    return INITIAL_INVITATIONS_DEMO;
+    return getInitialDemoState();
   }
 }
 
@@ -232,10 +235,11 @@ export function getInvitationById(id: string): Invitation | undefined {
 }
 
 export function getInvitationByToken(token: string): Invitation | undefined {
-  if (!token) return undefined;
+  if (!token || !token.trim()) return undefined;
   const { invitations } = loadInvitationsDemo();
   return invitations.find((item) => {
     if (item.sharingToken !== token || item.status !== 'published') return false;
+    if (item.visibility === 'private') return false;
     if (item.expiry === null) return true;
     const expiresAt = Date.parse(item.expiry);
     return !Number.isNaN(expiresAt) && expiresAt > Date.now();
@@ -282,8 +286,9 @@ export function regenerateSharingToken(id: string): string | null {
   const target = state.invitations.find((item) => item.id === id);
   if (!target) return null;
 
+  // 불규칙 토큰 생성
   const randSuffix = Math.random().toString(36).substring(2, 10);
-  const nextToken = `sh-reissued-${Date.now().toString(36)}-${randSuffix}`;
+  const nextToken = `sh-${Date.now().toString(36)}-${randSuffix}`;
 
   const nextInvitations = state.invitations.map((item) =>
     item.id === id ? { ...item, sharingToken: nextToken, updatedAt: new Date().toISOString() } : item
@@ -299,7 +304,7 @@ export function getRsvpsForInvitation(invitationId: string): Rsvp[] {
 }
 
 export function getGuestByToken(guestToken: string, invitationId?: string): Guest | undefined {
-  if (!guestToken) return undefined;
+  if (!guestToken || !guestToken.trim()) return undefined;
   const { guests } = loadInvitationsDemo();
   return guests.find(
     (g) => g.guestToken === guestToken && (!invitationId || g.invitationId === invitationId)

@@ -2,7 +2,7 @@
 // DB 논리 모델의 INVITATION · GUEST · RSVP 및 DEMO_THEMES를 화면·데모용으로 정의한다.
 // 서버·Supabase 호출은 하지 않으며 브라우저 localStorage 전용이다.
 
-export const INVITATION_STATUSES = ['draft', 'published', 'expired'] as const;
+export const INVITATION_STATUSES = ['draft', 'published', 'expired', 'revoked'] as const;
 export type InvitationStatus = (typeof INVITATION_STATUSES)[number];
 
 export const INVITATION_VISIBILITIES = ['public', 'unlisted', 'private'] as const;
@@ -32,10 +32,10 @@ export type Invitation = {
   /** 불규칙 공개 공유 토큰 */
   sharingToken: string;
   visibility: InvitationVisibility;
-  /** 보존 만료 시각 (ISO 또는 null) */
+  /** 공개 링크 만료 시각 (ISO 또는 null) */
   expiry: string | null;
   /** DEMO_THEMES 테마 id */
-  themeId: string;
+  themeId: InvitationThemeId;
   status: InvitationStatus;
   /** 이 브라우저의 사용자가 청첩장 소유자인지 여부 */
   viewerIsOwner?: boolean;
@@ -57,7 +57,7 @@ export type Guest = {
   id: string;
   invitationId: string;
   displayName: string;
-  /** 하객 개별 초대 토큰 (RSVP 작성 권한 확인용) */
+  /** 하객 개별 초대 토큰 (RSVP 작성 권한 확인용 불규칙 토큰) */
   guestToken: string;
   createdAt?: string;
   memo?: string;
@@ -71,7 +71,7 @@ export type Rsvp = {
   invitationId: string;
   guestToken: string;
   response: RsvpResponse;
-  /** 참석 인원수 (본인 포함) */
+  /** 참석 인원수 (불참 시 0 가능) */
   partySize: number;
   /** 축하 메시지 또는 전달 메모 */
   note: string;
@@ -94,4 +94,3 @@ export function isRsvpResponse(value: unknown): value is RsvpResponse {
 export function isInvitationThemeId(value: unknown): value is InvitationThemeId {
   return typeof value === 'string' && (INVITATION_THEME_IDS as readonly string[]).includes(value);
 }
-
