@@ -812,3 +812,15 @@
 - [변경] 1. 프로젝트 계획서/plan_v3.md | 진행 단계 3차 줄: 작업지시서 작성 — 목업. 최종 제출은 6번으로 옮김. 다른 진행 단계 줄은 유지
 - [변경] 1. 프로젝트 계획서/실행_결정대기_로그.md | DEC-12. 2026-11-03 결정: 3차 메인 오하율, 목업, 김민기 총괄 모니터링
 - [미실행] 앱 코드 수정, 이슈 생성, typecheck·build·브라우저. 이 세션은 파일 읽기·검색·수정만
+
+## 2026-11-03 INV-001 모바일 청첩장 타입·데이터·스토리지 첫 PR (오하율 작업)
+- [요청] 3차(모바일 청첩장) INV-001 메인 담당. 주한태(#85)·손준혁(#86) 작업의 선행 조건인 `src/lib/invitations/`의 타입(`types.ts`), 예시 데이터(`demo-data.ts`), 브라우저 데모 스토리지(`demo-storage.ts`), URL 헬퍼(`href.ts`)를 작성하고 `clear-demo-device.ts`에 청첩장 데모 키를 등록하는 첫 PR.
+- [AI] Antigravity가 지시서(`3차_작업지시서.md`, `AGENT_오하율_INV_EDITOR.md`), DB 논리모델(INVITATION, GUEST, RSVP), 2차 활동 데모 패턴(`src/lib/activities/`), `clear-demo-device.ts`, `demo-themes.ts`를 분석. `WeddingPlatform`의 청첩장 데이터 구조(신랑신부, 장소, 일시, 인사말 등)를 참고하여 목업 스토리지/타입을 설계.
+- [신규] src/lib/invitations/types.ts | `Invitation`, `Guest`, `Rsvp`, `InvitationStatus`, `InvitationVisibility`, `RsvpResponse`, `InvitationThemeId` 및 타입 가드 정의. 전화번호 없는 개인정보 최소화 준수.
+- [신규] src/lib/invitations/demo-data.ts | 예시 청첩장 3건(내 청첩장 2건, 타인 열람용 1건 — DEMO_THEMES 연동), 예시 하객 4건, 예시 RSVP 3건. 실존 인물·실주소 배제(가상 지역 노을구·달동네·한들시 재사용).
+- [신규] src/lib/invitations/demo-storage.ts | localStorage 키 `eottae.invitations.demo.v1` 기반 CRUD 및 이벤트 구독. `loadInvitationsDemo`, `saveInvitationsDemo`, `resetInvitationsDemo`, `regenerateSharingToken`(INV-002 연동), `submitRsvp`(INV-003 연동) 헬퍼 제공.
+- [신규] src/lib/invitations/href.ts | Next.js 정적 export(`output: 'export'`)를 위한 쿼리 파라미터 기반 라우팅 헬퍼 (`invitationsHref`, `invitationGuestHref`).
+- [변경] src/lib/demo/clear-demo-device.ts | `DEMO_DEVICE_STORAGE_KEYS`에 `INVITATIONS_DEMO_STORAGE_KEY` 추가 및 탈퇴 초기화 이벤트(`DEMO_INVITATIONS_EVENT`) 연동.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS
+- [검증] `npm run build` (`next build`, 23개 정적 페이지 export) PASS
+- [미구현/보류] UI 화면(목록·에디터·미리보기·공개 뼈대)은 타입 PR 머지 후 후속 작업으로 진행. 서버·Supabase 연동 없음(목업 단계 원칙 준수).
