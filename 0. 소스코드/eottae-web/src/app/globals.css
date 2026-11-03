@@ -2302,6 +2302,10 @@ img {
   font-weight: 800;
   text-decoration: underline;
   text-underline-offset: 2px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  max-width: 100%;
 }
 
 .footer-bottom a:hover {
