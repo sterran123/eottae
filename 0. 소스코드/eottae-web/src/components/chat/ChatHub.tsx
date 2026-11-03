@@ -45,9 +45,13 @@ function previewFor(
 ): ChatRoomPreview {
   const viewed = viewRoomForActor(room, actorId);
   const messages = loadVisibleMessages(room.id, actorId);
+  // 삭제로 보이는 저장이 없으면 본문도 빈다. 예시 마지막 문장과 room.unread로 되돌리면 목록만 남는다.
+  if (messages.length === 0) {
+    return { lastMessage: '', timeLabel: '', unread: 0 };
+  }
   const last = messages[messages.length - 1];
   const seedIds = new Set(room.initialMessages.map((message) => message.id));
-  const lastIsSeed = !last || seedIds.has(last.id);
+  const lastIsSeed = seedIds.has(last.id);
   let unread = 0;
   if (!open) {
     if (seen) {
@@ -62,7 +66,7 @@ function previewFor(
     }
   }
   return {
-    lastMessage: last?.body ?? viewed?.initialMessages[viewed.initialMessages.length - 1]?.body ?? '',
+    lastMessage: last.body,
     timeLabel: lastIsSeed ? (viewed?.timeLabel ?? room.timeLabel) : '방금',
     unread: Math.min(99, unread),
   };
@@ -179,12 +183,10 @@ export default function ChatHub() {
     setActiveId(id);
     setVisited((current) => (current.includes(id) ? current : [...current, id]));
     setStoredPreviews((current) => {
-      const room = visibleRooms.find((item) => item.id === id);
-      const base = current?.[id] ?? {
-        lastMessage: room?.initialMessages[room.initialMessages.length - 1]?.body ?? '',
-        timeLabel: room?.timeLabel ?? '',
-        unread: 0,
-      };
+      const room = DEMO_ROOMS.find((item) => item.id === id);
+      const base = current?.[id] ?? (room
+        ? previewFor(room, actor.id, true, seenRef.current[`${actor.id}|${id}`])
+        : { lastMessage: '', timeLabel: '', unread: 0 });
       return { ...(current ?? {}), [id]: { ...base, unread: 0 } };
     });
   }

@@ -16,6 +16,7 @@ import type { ReportRequest } from '@/lib/safety/types';
 import {
   isDemoBlocked,
   removeDemoBlock,
+  safetyDemoEpoch,
   saveDemoBlock,
   saveDemoReport,
   subscribeSafetyDemo,
@@ -202,7 +203,11 @@ export default function ChatRoom({
   }, [actorId, partner.id, createSource]);
 
   useEffect(() => {
+    let epochSeen = safetyDemoEpoch();
     const onSafety = () => {
+      const epoch = safetyDemoEpoch();
+      const wiped = epoch !== epochSeen;
+      epochSeen = epoch;
       const now = isDemoBlocked(actorId, partner.id);
       if (now === blockedRef.current) return;
       if (now) {
@@ -219,6 +224,8 @@ export default function ChatRoom({
       blockedRef.current = false;
       setBlocked(false);
       createSource();
+      // 키 삭제는 차단 목록이 비는 것이지, 이 방에서 해제한 것이 아니다.
+      if (wiped) return;
       pushSystem('차단을 해제했어요. 다시 대화할 수 있어요.');
     };
     return subscribeSafetyDemo(onSafety);

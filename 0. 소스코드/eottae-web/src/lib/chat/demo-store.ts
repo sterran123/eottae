@@ -153,7 +153,11 @@ function seedOf(roomId: string): DemoChatMessage[] {
   }));
 }
 
-/** 방이 비어 있으면 예시 대화를 한 번만 넣는다. */
+/**
+ * 방이 비어 있으면 예시 대화를 넣는다.
+ * 탈퇴로 키가 지워진 뒤 채팅 화면에 다시 들어오면 방 키가 없으므로 예시만 다시 만든다.
+ * 사용자가 보낸 말은 저장에 없으므로 돌아오지 않는다.
+ */
 export function ensureChatSeed() {
   commit((prev) => {
     let changed = false;

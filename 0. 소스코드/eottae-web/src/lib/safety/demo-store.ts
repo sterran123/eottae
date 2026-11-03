@@ -29,6 +29,7 @@ type SafetyState = {
 const EMPTY: SafetyState = { rev: 0, reports: [], blocks: [] };
 let memory: SafetyState = EMPTY;
 let seq = 0;
+let safetyEpoch = 0;
 
 function isShortId(value: unknown): value is string {
   return typeof value === 'string' && value.length > 0 && value.length <= 80;
@@ -106,14 +107,27 @@ function blankSafety(): SafetyState {
   return { rev: 0, reports: [], blocks: [] };
 }
 
+function clearSafetyMemory(): void {
+  // 구독이 여러 개여도 한 번의 키 삭제는 세대를 한 번만 올린다.
+  // 같은 이벤트에서 rememberRemote(null)이 연속으로 불리기 때문이다.
+  const hadRecord = memory.rev !== 0 || memory.reports.length > 0 || memory.blocks.length > 0;
+  memory = blankSafety();
+  if (hadRecord) safetyEpoch += 1;
+}
+
+/** 키 삭제 세대. 채팅은 사용자가 해제한 것과 저장이 비워진 것을 구분한다. */
+export function safetyDemoEpoch(): number {
+  return safetyEpoch;
+}
+
 /** 같은 탭의 탈퇴 데모가 호출한다. 신고와 차단 메모리를 함께 비운다. */
 export function resetSafetyDemo(): void {
-  memory = blankSafety();
+  clearSafetyMemory();
 }
 
 function rememberRemote(state: unknown) {
   if (state == null) {
-    memory = blankSafety();
+    clearSafetyMemory();
     try {
       if (typeof window !== 'undefined' && window.localStorage.getItem(STORAGE_KEY) !== null) {
         window.localStorage.removeItem(STORAGE_KEY);

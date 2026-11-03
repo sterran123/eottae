@@ -18,7 +18,7 @@
 0. 소스코드/eottae-web/.gitignore,202,7710d28a140451e45493d1fd6f52508a4a51133d7fd72b236349d001bde77fb9
 0. 소스코드/eottae-web/AGENTS.md,1371,dfd62088d1b52c3eeb6f9ccb87a62858bb9766b328ae93cd85994f2bb3262587
 0. 소스코드/eottae-web/README.md,7030,85501bb21df690a69f544cc51a733c8738432eb532e1500b24adee796cae8112
-0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md,178462,ac2b380fd976396bf9634472105cd5f09e280a8470f65ea728163fb30d486ab9
+0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md,179486,a3dce00da36c38601ad40f121777626a5de00b5f7051c3797523d91fe08f161f
 0. 소스코드/eottae-web/docs/AI_도구_MCP_권장.md,4206,6ef5f1ba972e9f1d07e1dbddd282ed9c16c3fd132a5301db0a8e0e9cffc2bb2f
 0. 소스코드/eottae-web/docs/AI_에이전트_협업_가이드.md,6263,180d9a55d70be22c9ffa04a4acc113c484a2a19fc71e2410ec6dff1a33487a01
 0. 소스코드/eottae-web/docs/DESIGN_개선_지시서.md,7364,7d34723629b67d6fc6c107846671146dfa18b35250001621174b73afb4da8511
@@ -93,7 +93,7 @@
 0. 소스코드/eottae-web/src/app/not-found.tsx,583,fd2b2c289c9bbbba76d31641b59dc00a283e005b8b19232d706fc838c6155085
 0. 소스코드/eottae-web/src/app/offline/page.tsx,875,f7715c4e5ee547bc8cef2dad96e725cb76ec55562d864245e0abf3aeaeb9917a
 0. 소스코드/eottae-web/src/app/page.tsx,9075,225ba80fbcdfb1f352f7055d2bfb948304678646cdf1ab78371f28737c004d2d
-0. 소스코드/eottae-web/src/app/privacy/page.tsx,4757,d2c2c0f85030d051bab26ca96a531682d4614633856aee34b64e8ce7225359c4
+0. 소스코드/eottae-web/src/app/privacy/page.tsx,4888,cfad92bf2917adb9e1f6b54700773cfa9b45e2360c9706f79660790e88e9c505
 0. 소스코드/eottae-web/src/app/profile/page.tsx,394,a96233ff102e86c28d6773e2c383b464d7db6fbf6f3d4c7d869271ceb42597e0
 0. 소스코드/eottae-web/src/app/safety/page.tsx,2083,b7fff35a33b1c4b90385524e4fa2ae8af97add00ff4b60cf9c60b4dabb6fff6b
 0. 소스코드/eottae-web/src/app/settings/page.tsx,2904,328202031437af1a62ebcfb1ca4b7f1d1dfc211419ddb4e44a74b5bcba5829f1
@@ -118,9 +118,9 @@
 0. 소스코드/eottae-web/src/components/auth/LoginForm.tsx,9073,6b1f75c494aaa8997460438b1a576f02fea7ae459a225967377f05e2b2440041
 0. 소스코드/eottae-web/src/components/auth/SignupForm.tsx,10087,81dfa2642b91ba40a83567e54f99697c82c753e4b2ea636f98e12e4d23daab1d
 0. 소스코드/eottae-web/src/components/auth/SocialLoginButtons.tsx,2928,c3782e517dab8b8f5bab8b7bdd3c553b23863ef577e6017d6c7c9e6c4e9f8761
-0. 소스코드/eottae-web/src/components/chat/ChatHub.tsx,15057,b0727cc069200072cfba8cf212d0b6a470bda12886896bf02d60acb190480d1f
+0. 소스코드/eottae-web/src/components/chat/ChatHub.tsx,15187,1d55720c2be00b8560a445e1c1c29f6b5c420e7af9e1b32e7a41620ecf326f0c
 0. 소스코드/eottae-web/src/components/chat/ChatList.tsx,2392,692d993350f1e521be8e192cd47bfcf7e813bf93aa17c73f4a263845fce6fc2f
-0. 소스코드/eottae-web/src/components/chat/ChatRoom.tsx,15032,0d766f30e1a7787db9b1092a467dd2f7a09ce536d77d72e52c27b4782ce0b4e6
+0. 소스코드/eottae-web/src/components/chat/ChatRoom.tsx,15320,cecfb33f6cb4e0690bc69c3bc9fe5d27d73734d9fe7371ffd139e2bfdc6198c9
 0. 소스코드/eottae-web/src/components/chat/MessageBubble.tsx,2831,200c1a26653cb001a9a618eadc21e0b7c29f08f38751cf662ae81cd1ea9f4019
 0. 소스코드/eottae-web/src/components/chat/MessageComposer.tsx,10389,260d4a05dd8023b5f027e4175b0a2d7c8a0e6ba9dc3b504f7a6a8d4c7b64a34b
 0. 소스코드/eottae-web/src/components/demo/DemoAdultStep.tsx,4805,09bda5c9cd862e219e6f44509c652c3e5fdf8a01dfd2999f47fb2ad6fa5537ea
@@ -145,7 +145,7 @@
 0. 소스코드/eottae-web/src/components/safety/SafetyDemoPanels.tsx,3604,99b13e526d6b331168006c7c0e42b74701fcc60f330741eae99f4f7c0dcc4fb8
 0. 소스코드/eottae-web/src/components/safety/SafetyDialog.tsx,1410,d9d845a1c69955ea61d92795556b2c377e16bdeaa6113ed381de00e18c852ad4
 0. 소스코드/eottae-web/src/components/settings/AccountSettingsCard.tsx,2039,b0ee749a8a6c524d966f0aa80e3c8585eed5a4f84847444800527f6d0ff940a8
-0. 소스코드/eottae-web/src/components/settings/DeleteAccountDemo.tsx,8674,42b2410a24badc3196e15dbddf355572e56448a0eefea03864a05fd8ca3fc0f3
+0. 소스코드/eottae-web/src/components/settings/DeleteAccountDemo.tsx,8832,59a1e18d0f3b26fd44815a32fda7bd4b830aa30e8b4a562c143cb78429b5f4c4
 0. 소스코드/eottae-web/src/components/settings/DemoAdultSettingsStatus.tsx,1473,5070a62ba47e529b27018faf352cea1e56ce9c0b5d3730892b2539fe41fa1f49
 0. 소스코드/eottae-web/src/components/shared/hero-particles.tsx,1948,020d98506513cc451fdb5746034e95602819263d9ec5ec270354a594bfcffc99
 0. 소스코드/eottae-web/src/components/shared/motif-icon.tsx,1988,b7642c9353aab4319178bf46dc47869103f043a63bdc9a5634342762f9de1208
@@ -174,7 +174,7 @@
 0. 소스코드/eottae-web/src/lib/auth/validation.ts,3218,8e87f070fa93d603b4bba7487fe35cf3fe0c3c986c162b6edc42f2c38a06cced
 0. 소스코드/eottae-web/src/lib/chat/chat-service.ts,4061,51c3f10b1dec07f36f570d8f07de26a6157d5200371bff76ec69ab048b38690f
 0. 소스코드/eottae-web/src/lib/chat/demo-data.ts,7096,b36df87579f6c729e43d63d417437ffc4f09b22295a34577ae0bb57278eee415
-0. 소스코드/eottae-web/src/lib/chat/demo-store.ts,7388,04d7702f71242dc6e85e800efc8a68a77127d86d70c5239e321cf50ba5d7dc43
+0. 소스코드/eottae-web/src/lib/chat/demo-store.ts,7581,aeab0fc9461f3ee79a8a51d308ba1f44fbbe3beb8feeb806016bdf0e7035ffc2
 0. 소스코드/eottae-web/src/lib/chat/types.ts,3425,667a30b23fd31c33224dbeebd14242cfe794a624105f2b73b86e9e2ac14dec93
 0. 소스코드/eottae-web/src/lib/demo/clear-demo-device.ts,2649,5a7f32b6e1cf754e327929388a8462c69dba95a8b6ed029d6a5ae856e3bbffa6
 0. 소스코드/eottae-web/src/lib/demo/demo-adult.ts,6039,8694b5570a845794485de4f980b52a9f17f1c5e2ad2376327441891ebe942c07
@@ -187,7 +187,7 @@
 0. 소스코드/eottae-web/src/lib/match/demo-recommendations.ts,7676,179c69aadab43cbc37f5e4bd63555325131fa6a8204ef84218c664f96507fadb
 0. 소스코드/eottae-web/src/lib/match/match-service.ts,35650,e02fa1d0fe682ad9e7d13823dcb6801c1624de17d0af8c1c974f441b54978fe6
 0. 소스코드/eottae-web/src/lib/match/types.ts,17146,3eecb827de46611fb91777018a8f5c9c5c2a49f7195bf292e4c5f4b0de5f278f
-0. 소스코드/eottae-web/src/lib/safety/demo-store.ts,6866,9721c9505dfc54493b228de828f720017849d40f5df06b648a74505ebe9eab4f
+0. 소스코드/eottae-web/src/lib/safety/demo-store.ts,7431,b032d10e882c98dab7cf8c5e4c62a97512e0b51359577570a02137336e96c079
 0. 소스코드/eottae-web/src/lib/safety/types.ts,3232,64f5cc6f13b801e12a69fe1adc99c1562260da00054cd8479def1413854acdff
 0. 소스코드/eottae-web/src/lib/supabase/client.ts,2073,b1ba1d3df7352b505817dcc2b656071a3fddaa3f9220c0c33c07d8a13fd2f96f
 0. 소스코드/eottae-web/src/types/assets.d.ts,414,47455c04822b378ef36ccd29e8f50f5bc11fdf8ab193afd2b1ffae6a366c28e0
