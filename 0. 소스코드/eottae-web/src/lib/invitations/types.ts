@@ -94,3 +94,4 @@ export function isRsvpResponse(value: unknown): value is RsvpResponse {
 export function isInvitationThemeId(value: unknown): value is InvitationThemeId {
   return typeof value === 'string' && (INVITATION_THEME_IDS as readonly string[]).includes(value);
 }
+

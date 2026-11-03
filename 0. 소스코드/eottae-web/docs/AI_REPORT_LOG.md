@@ -813,14 +813,29 @@
 - [변경] 1. 프로젝트 계획서/실행_결정대기_로그.md | DEC-12. 2026-11-03 결정: 3차 메인 오하율, 목업, 김민기 총괄 모니터링
 - [미실행] 앱 코드 수정, 이슈 생성, typecheck·build·브라우저. 이 세션은 파일 읽기·검색·수정만
 
+## 2026-11-03 전체 디자인·사용성 검토 3차 착수 전 (김민기 작업)
+- [요청] 3차 착수 전에 사이트 전체 디자인·사용성·일관성 검토 보고서만 작성. 코드는 고치지 않음. 화면별 좋은 점·개선점(근거 파일:줄, 이유, 고치는 방법, P0/P1/P2, S/M/L, 담당), 공통 패턴 표, 3차 디자인 원칙 5~10줄, 맨 끝 P0·P1 이슈 초안 1~3개. 브라우저를 열 수 없으니 코드·CSS 근거만. DEC-11: 3차까지 목업, 서버·Supabase·새 마이그레이션·Edge Function·외부 API는 범위 밖. 앱 코드(`src/**`)·`package.json`·`FILE_INDEX.csv`·`MANIFEST.sha256`·`supabase/`는 수정하지 않음
+- [AI] 로컬 Grok이 브랜드 가이드, `globals.css` 6테마, `layout.tsx`·헤더·내비, 홈, `/match/**`, `/activities/**`, `/invitations/**`, `/settings`, `/auth/**`, `/privacy`, 공통 버튼·모달·뱃지·더보기·X 닫기, `captions.csv`, 접근성·44px·aria 검색 결과를 읽고 보고서만 작성. 브라우저·명령은 실행하지 않음
+- [변경] `4. 프로젝트 결과 보고서/전체_디자인_검토_3차전.md` | 화면별 검토, 공통 패턴 표, 청첩장 테마와 6테마를 나누는 3차 원칙, P0·P1 이슈 초안 3개
+- [변경] `0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md` | 이 절만 추가. 기존 줄은 유지
+- [미실행] 브라우저 실측, 대비 수치 계산, typecheck·build. 앱 코드는 수정하지 않음. `FILE_INDEX.csv`·`MANIFEST.sha256`는 수정하지 않았고 해시는 다시 계산하지 않음
+- [변경] PR #83 Grok 리뷰(3346a76) 반영: 추천 신고 대화상자는 데모(이 기기·미전송·이 기기 차단)와 live(안전센터 접수·차단)로 나누고 「관리자가 검토합니다」는 넣지 않음. 권장 반영: `DEMO` 라벨은 `RULES.md:13`을 고치기 전에는 빼지 않고 부가 설명만 한글. captions.csv 준비중은 6·7행(5행은 `/match`). 컵케이크 `#c2578e`는 `layout.tsx:67`과 `theme-toggle.tsx:21`. 원칙 5에 시트 제목 `ThemePreviewSection.tsx:171`과 영수증 `232`행의 PayApp 이름 삭제. 812행의 「FILE_INDEX.csv·MANIFEST.sha256는 수정하지 않았고 해시는 다시 계산하지 않음」은 이 커밋과 다름. 두 파일에 검토 문서 행과 이 로그 해시가 들어 있음. 해시 바이트가 파일과 맞는지는 다시 계산하지 않음. 이 반영에서는 그 두 파일과 기존 로그 줄을 고치지 않음. typecheck·build·sha256sum은 실행하지 않음. PR 본문은 이 작업 트리에 없어 「typecheck·build 통과, sha256sum -c 통과」는 빼지 못함.
+
 ## 2026-11-03 INV-001 모바일 청첩장 타입·데이터·스토리지 첫 PR (오하율 작업)
 - [요청] 3차(모바일 청첩장) INV-001 메인 담당. 주한태(#85)·손준혁(#86) 작업의 선행 조건인 `src/lib/invitations/`의 타입(`types.ts`), 예시 데이터(`demo-data.ts`), 브라우저 데모 스토리지(`demo-storage.ts`), URL 헬퍼(`href.ts`)를 작성하고 `clear-demo-device.ts`에 청첩장 데모 키를 등록하는 첫 PR.
 - [AI] Antigravity가 지시서(`3차_작업지시서.md`, `AGENT_오하율_INV_EDITOR.md`), DB 논리모델(INVITATION, GUEST, RSVP), 2차 활동 데모 패턴(`src/lib/activities/`), `clear-demo-device.ts`, `demo-themes.ts`를 분석. `WeddingPlatform`의 청첩장 데이터 구조(신랑신부, 장소, 일시, 인사말 등)를 참고하여 목업 스토리지/타입을 설계.
 - [신규] src/lib/invitations/types.ts | `Invitation`, `Guest`, `Rsvp`, `InvitationStatus`, `InvitationVisibility`, `RsvpResponse`, `InvitationThemeId` 및 타입 가드 정의. 전화번호 없는 개인정보 최소화 준수.
 - [신규] src/lib/invitations/demo-data.ts | 예시 청첩장 3건(내 청첩장 2건, 타인 열람용 1건 — DEMO_THEMES 연동), 예시 하객 4건, 예시 RSVP 3건. 실존 인물·실주소 배제(가상 지역 노을구·달동네·한들시 재사용).
 - [신규] src/lib/invitations/demo-storage.ts | localStorage 키 `eottae.invitations.demo.v1` 기반 CRUD 및 이벤트 구독. `loadInvitationsDemo`, `saveInvitationsDemo`, `resetInvitationsDemo`, `regenerateSharingToken`(INV-002 연동), `submitRsvp`(INV-003 연동) 헬퍼 제공.
-- [신규] src/lib/invitations/href.ts | Next.js 정적 export(`output: 'export'`)를 위한 쿼리 파라미터 기반 라우팅 헬퍼 (`invitationsHref`, `invitationGuestHref`).
+- [신규] src/lib/invitations/href.ts | Next.js 정적 export(`output: 'export'`)를 위한 쿼리 파라미터 기반 라우팅 헬퍼 (`invitationsHref`, `invitationGuestHref`). `view === 'new'`일 때 제안 경로 `/invitations/new/` 반환.
 - [변경] src/lib/demo/clear-demo-device.ts | `DEMO_DEVICE_STORAGE_KEYS`에 `INVITATIONS_DEMO_STORAGE_KEY` 추가 및 탈퇴 초기화 이벤트(`DEMO_INVITATIONS_EVENT`) 연동.
+- [변경] src/components/settings/DeleteAccountDemo.tsx | 탈퇴 안내 목록에 청첩장·하객·RSVP 삭제 항목 추가.
+- [변경] PR #88 AI 코드 리뷰 지적 반영:
+  1. `deleteInvitation` 시 해당 청첩장(`invitationId`)의 하객(guests)과 RSVP(rsvps)도 함께 필터링 삭제.
+  2. `saveInvitation` 및 `submitRsvp`에서 `isStored*` 유효성 검사 수행 후 실패 시 false 반환. `submitRsvp`는 청첩장 존재·`published`·만료일·게스트 토큰 일치 여부 확인.
+  3. `getInvitationByToken`은 `published` 및 만료일(`expiry > now`) 유효한 청첩장만 반환.
+  4. `sanitizeGuest`, `sanitizeRsvp` 추가로 허용 필드만 저장 및 길이 한도 적용.
+  5. `href.ts` 신규 생성(`/invitations/new/` 라우트 반영).
 - [검증] `npm run typecheck` (`tsc --noEmit`) PASS
 - [검증] `npm run build` (`next build`, 23개 정적 페이지 export) PASS
 - [미구현/보류] UI 화면(목록·에디터·미리보기·공개 뼈대)은 타입 PR 머지 후 후속 작업으로 진행. 서버·Supabase 연동 없음(목업 단계 원칙 준수).

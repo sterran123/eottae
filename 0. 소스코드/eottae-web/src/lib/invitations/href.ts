@@ -12,6 +12,10 @@ export type InvitationsQuery = {
  * 청첩장 관리/에디터/미리보기 URL 생성
  */
 export function invitationsHref(query: InvitationsQuery = {}): string {
+  if (query.view === 'new') {
+    return '/invitations/new/';
+  }
+
   const params = new URLSearchParams();
   if (query.view && query.view !== 'list') params.set('view', query.view);
   if (query.edit) params.set('edit', query.edit);

@@ -8,8 +8,8 @@ export const DEMO_INVITATIONS: readonly Invitation[] = [
   {
     id: 'demo-inv-1',
     ownerId: 'user-demo-me',
-    title: '민수와 지원의 결혼식에 초대합니다',
-    hostNames: '신랑 김민수 · 신부 박지원',
+    title: '하율와 수빈의 결혼식에 초대합니다',
+    hostNames: '신랑 오하율 · 신부 채수빈',
     weddingDate: '2026-11-28 14:00',
     venueLabel: '노을구 달빛웨딩홀 2층 그랜드볼룸',
     greeting:
@@ -48,8 +48,8 @@ export const DEMO_INVITATIONS: readonly Invitation[] = [
   {
     id: 'demo-inv-3',
     ownerId: 'user-demo-other',
-    title: '태윤과 하은의 혼례 잔칫날',
-    hostNames: '신랑 최태윤 · 신부 강하은',
+    title: '준혁과 설윤의 혼례 잔칫날',
+    hostNames: '신랑 손준혁 · 신부 김설윤',
     weddingDate: '2027-01-16 11:00',
     venueLabel: '한들시 파도마루 전통연회장',
     greeting:
@@ -130,3 +130,4 @@ export const DEMO_RSVPS: readonly Rsvp[] = [
     respondedAt: '2026-10-24T12:00:00',
   },
 ];
+

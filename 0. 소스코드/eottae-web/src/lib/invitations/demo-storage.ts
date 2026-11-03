@@ -26,7 +26,7 @@ export const INITIAL_INVITATIONS_DEMO: InvitationsDemoState = {
   rsvps: [...DEMO_RSVPS],
 };
 
-function isStoredInvitation(value: unknown): value is Invitation {
+export function isStoredInvitation(value: unknown): value is Invitation {
   if (!value || typeof value !== 'object') return false;
   const row = value as Record<string, unknown>;
   return (
@@ -82,7 +82,7 @@ function sanitizeInvitation(inv: Invitation): Invitation {
   };
 }
 
-function isStoredGuest(value: unknown): value is Guest {
+export function isStoredGuest(value: unknown): value is Guest {
   if (!value || typeof value !== 'object') return false;
   const row = value as Record<string, unknown>;
   return (
@@ -100,7 +100,18 @@ function isStoredGuest(value: unknown): value is Guest {
   );
 }
 
-function isStoredRsvp(value: unknown): value is Rsvp {
+function sanitizeGuest(guest: Guest): Guest {
+  return {
+    id: guest.id,
+    invitationId: guest.invitationId,
+    displayName: guest.displayName.trim(),
+    guestToken: guest.guestToken.trim(),
+    createdAt: guest.createdAt,
+    memo: typeof guest.memo === 'string' ? guest.memo.trim().slice(0, 100) : undefined,
+  };
+}
+
+export function isStoredRsvp(value: unknown): value is Rsvp {
   if (!value || typeof value !== 'object') return false;
   const row = value as Record<string, unknown>;
   return (
@@ -120,6 +131,17 @@ function isStoredRsvp(value: unknown): value is Rsvp {
   );
 }
 
+function sanitizeRsvp(rsvp: Rsvp): Rsvp {
+  return {
+    invitationId: rsvp.invitationId,
+    guestToken: rsvp.guestToken.trim(),
+    response: rsvp.response,
+    partySize: rsvp.partySize,
+    note: rsvp.note.trim().slice(0, 300),
+    respondedAt: rsvp.respondedAt,
+  };
+}
+
 export function loadInvitationsDemo(): InvitationsDemoState {
   if (typeof window === 'undefined') return INITIAL_INVITATIONS_DEMO;
   try {
@@ -134,11 +156,11 @@ export function loadInvitationsDemo(): InvitationsDemoState {
       : [...DEMO_INVITATIONS];
 
     const guests = Array.isArray(row.guests)
-      ? row.guests.filter(isStoredGuest).slice(0, MAX_GUESTS)
+      ? row.guests.filter(isStoredGuest).slice(0, MAX_GUESTS).map(sanitizeGuest)
       : [...DEMO_GUESTS];
 
     const rsvps = Array.isArray(row.rsvps)
-      ? row.rsvps.filter(isStoredRsvp).slice(0, MAX_RSVPS)
+      ? row.rsvps.filter(isStoredRsvp).slice(0, MAX_RSVPS).map(sanitizeRsvp)
       : [...DEMO_RSVPS];
 
     return { invitations, guests, rsvps };
@@ -150,10 +172,25 @@ export function loadInvitationsDemo(): InvitationsDemoState {
 export function saveInvitationsDemo(state: InvitationsDemoState): boolean {
   if (typeof window === 'undefined') return false;
   try {
+    const validInvitations = state.invitations.filter(isStoredInvitation);
+    if (validInvitations.length !== state.invitations.length) return false;
+    const validGuests = state.guests.filter(isStoredGuest);
+    if (validGuests.length !== state.guests.length) return false;
+    const validRsvps = state.rsvps.filter(isStoredRsvp);
+    if (validRsvps.length !== state.rsvps.length) return false;
+
+    if (
+      state.invitations.length > MAX_INVITATIONS ||
+      state.guests.length > MAX_GUESTS ||
+      state.rsvps.length > MAX_RSVPS
+    ) {
+      return false;
+    }
+
     const payload: InvitationsDemoState = {
-      invitations: state.invitations.slice(0, MAX_INVITATIONS).map(sanitizeInvitation),
-      guests: state.guests.filter(isStoredGuest).slice(0, MAX_GUESTS),
-      rsvps: state.rsvps.filter(isStoredRsvp).slice(0, MAX_RSVPS),
+      invitations: validInvitations.map(sanitizeInvitation),
+      guests: validGuests.map(sanitizeGuest),
+      rsvps: validRsvps.map(sanitizeRsvp),
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     window.dispatchEvent(new Event(DEMO_INVITATIONS_EVENT));
@@ -197,10 +234,16 @@ export function getInvitationById(id: string): Invitation | undefined {
 export function getInvitationByToken(token: string): Invitation | undefined {
   if (!token) return undefined;
   const { invitations } = loadInvitationsDemo();
-  return invitations.find((item) => item.sharingToken === token && item.status !== 'expired');
+  return invitations.find((item) => {
+    if (item.sharingToken !== token || item.status !== 'published') return false;
+    if (item.expiry === null) return true;
+    const expiresAt = Date.parse(item.expiry);
+    return !Number.isNaN(expiresAt) && expiresAt > Date.now();
+  });
 }
 
 export function saveInvitation(invitation: Invitation): boolean {
+  if (!isStoredInvitation(invitation)) return false;
   const state = loadInvitationsDemo();
   const index = state.invitations.findIndex((item) => item.id === invitation.id);
   const nextInvitations = [...state.invitations];
@@ -226,7 +269,11 @@ export function deleteInvitation(id: string): boolean {
   const state = loadInvitationsDemo();
   const nextInvitations = state.invitations.filter((item) => item.id !== id);
   if (nextInvitations.length === state.invitations.length) return false;
-  return saveInvitationsDemo({ ...state, invitations: nextInvitations });
+  return saveInvitationsDemo({
+    invitations: nextInvitations,
+    guests: state.guests.filter((item) => item.invitationId !== id),
+    rsvps: state.rsvps.filter((item) => item.invitationId !== id),
+  });
 }
 
 /** 공유 토큰 재발급 (주한태 INV-002 지원용) */
@@ -261,16 +308,23 @@ export function getGuestByToken(guestToken: string, invitationId?: string): Gues
 
 /** RSVP 응답 제출/갱신 (손준혁 INV-003 지원용) */
 export function submitRsvp(rsvp: Rsvp): boolean {
+  if (!isStoredRsvp(rsvp)) return false;
   const state = loadInvitationsDemo();
-  // 동일한 guestToken의 기존 회신이 있으면 갱신, 없으면 추가
-  const existingIndex = state.rsvps.findIndex(
-    (r) => r.invitationId === rsvp.invitationId && r.guestToken === rsvp.guestToken
-  );
-  const nextRsvps = [...state.rsvps];
-  if (existingIndex >= 0) {
-    nextRsvps[existingIndex] = rsvp;
-  } else {
-    nextRsvps.push(rsvp);
+  const invitation = state.invitations.find((item) => item.id === rsvp.invitationId);
+  if (!invitation || invitation.status !== 'published') return false;
+  if (invitation.expiry !== null) {
+    const expiresAt = Date.parse(invitation.expiry);
+    if (Number.isNaN(expiresAt) || expiresAt <= Date.now()) return false;
   }
+  const guestOk = state.guests.some(
+    (item) => item.invitationId === rsvp.invitationId && item.guestToken === rsvp.guestToken
+  );
+  if (!guestOk) return false;
+  const nextRsvps = [...state.rsvps];
+  const index = nextRsvps.findIndex(
+    (item) => item.invitationId === rsvp.invitationId && item.guestToken === rsvp.guestToken
+  );
+  if (index >= 0) nextRsvps[index] = rsvp;
+  else nextRsvps.push(rsvp);
   return saveInvitationsDemo({ ...state, rsvps: nextRsvps });
 }
