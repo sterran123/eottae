@@ -631,13 +631,56 @@
 .act-modal-head {
   display: flex;
   gap: 8px;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
 }
 
 .act-modal-head h2 {
+  flex: 1 1 auto;
+  min-width: 0;
   margin: 0;
+  padding-top: 10px;
   font-size: 1.15rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+.act-modal-close {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.act-modal-close:hover {
+  background: var(--soft);
+  border-color: var(--brand-soft);
+  color: var(--brand-dark);
+}
+
+.act-modal-close:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (max-width: 360px) {
+  .act-modal-head h2 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+  }
 }
 
 .act-icon-btn {

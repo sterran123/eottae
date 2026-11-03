@@ -18,7 +18,7 @@
 0. 소스코드/eottae-web/.gitignore,202,7710d28a140451e45493d1fd6f52508a4a51133d7fd72b236349d001bde77fb9
 0. 소스코드/eottae-web/AGENTS.md,1371,dfd62088d1b52c3eeb6f9ccb87a62858bb9766b328ae93cd85994f2bb3262587
 0. 소스코드/eottae-web/README.md,7030,85501bb21df690a69f544cc51a733c8738432eb532e1500b24adee796cae8112
-0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md,182409,de3d893f7aa40b90c457286a99608b5c28c4b0a286a903c2044bffc820617593
+0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md,185092,0fc90d3a831e8243f39b214365ff3d6a9ae6f229452bcf0ab696d6ca5a02aba0
 0. 소스코드/eottae-web/docs/AI_도구_MCP_권장.md,4206,6ef5f1ba972e9f1d07e1dbddd282ed9c16c3fd132a5301db0a8e0e9cffc2bb2f
 0. 소스코드/eottae-web/docs/AI_에이전트_협업_가이드.md,6263,180d9a55d70be22c9ffa04a4acc113c484a2a19fc71e2410ec6dff1a33487a01
 0. 소스코드/eottae-web/docs/DESIGN_개선_지시서.md,7364,7d34723629b67d6fc6c107846671146dfa18b35250001621174b73afb4da8511
@@ -64,7 +64,7 @@
 0. 소스코드/eottae-web/public/manifest.webmanifest,968,356ea5e3863b86125d371e50db7cc5f0f600c5b91a8bc094f5f2580bf97c8071
 0. 소스코드/eottae-web/public/metadata.json,425,774cdb78ed22a10371182650aebc05dba2d9df3e9258594c31f2b1689c6e3513
 0. 소스코드/eottae-web/public/sw.js,11985,fabdd7802fce666b97e025dd292458d2c7aebbe95ef698aea8b3c2d3ddfddd50
-0. 소스코드/eottae-web/src/app/activities/activities.css,14601,5037bbcbec41f751c56a079b59598e0ca980ace376c541566927a9c29b5426b3
+0. 소스코드/eottae-web/src/app/activities/activities.css,15433,7c7f259692a1e6b69da86e891bae29abeb4182f00b0b108b0e54e40a7002adb7
 0. 소스코드/eottae-web/src/app/activities/new/page.tsx,426,2f753e3309e294973e5c1dcdca9a96e71d656176104016a41e571a9dfcf1a543
 0. 소스코드/eottae-web/src/app/activities/page.tsx,647,7c048dae83b71acd1c48c381c977a72442fbb97c1d25b8d8af947297cbefa276
 0. 소스코드/eottae-web/src/app/api/health/route.ts,299,bc084e902c152bf47adc6ebf838975ce0423f15c4fd763de6b0bef71d783b23f
@@ -104,11 +104,12 @@
 0. 소스코드/eottae-web/src/components/activities/ActivityReactions.tsx,1320,378e3259eca68184b598de724c7212f0361f8b71c9c878a2f6625df406c533a0
 0. 소스코드/eottae-web/src/components/activities/ActivityReportDialog.tsx,4086,3497529621c4eb1f24d46ac086c3ecb07565845342f85d5543ab27cd0fbba36d
 0. 소스코드/eottae-web/src/components/activities/CourseDetail.tsx,6011,38ef00f9fa3b15edfdfd7cd672e90bfba2ec4352c3bdb06a062075ef306f8310
-0. 소스코드/eottae-web/src/components/activities/DemoDialog.tsx,2499,fa9ae9a382bd45e5ff88e4a292b72b8c06bb4931527bb785aba2b201642a7bc7
+0. 소스코드/eottae-web/src/components/activities/DemoDialog.tsx,2494,7fcf39e92f65bfd30b978df74d02cb2edaee9072bfc25b7393bc471591f95abd
 0. 소스코드/eottae-web/src/components/activities/GatheringDetail.tsx,18780,24758652122277bf60033a2dd62b6a4aed8280c5a728877c4aa4299f9024158e
 0. 소스코드/eottae-web/src/components/activities/GatheringManage.tsx,8142,8f1c0b4a7e80a31d0125157a69c43ca006d85f8595746710345916b7273907c6
 0. 소스코드/eottae-web/src/components/activities/GatheringReviews.tsx,5810,332e79da44e7ca9ee1dc90a51320f9d8a13ca29ac7e4eb1a47058e2eea2c04bf
 0. 소스코드/eottae-web/src/components/activities/InfoChecks.tsx,1414,3edcc323a701840c45da31f8ce471a7adf1b31d9afc3e4735486603325a11fa5
+0. 소스코드/eottae-web/src/components/activities/ModalCloseButton.tsx,592,f23af9055889a2e6919b15c04ff08f2027fe6082d0b5d450aa3100c66e1d6a39
 0. 소스코드/eottae-web/src/components/activities/RecruitmentBadges.tsx,816,be4b4669ac9008e76ada28bfc51ad090bbaf239f921ce769a1bb57ec0065415b
 0. 소스코드/eottae-web/src/components/auth/AuthCallback.tsx,5156,9515cbccc69dbd678824d6b8d2bbde69a18fe2df67c3be26ff0118f263fbe8c9
 0. 소스코드/eottae-web/src/components/auth/AuthCard.tsx,1190,adb66c75038486bc599f7495f12874ba6fe4a23fc31a3f4d86edcf0183126f61
