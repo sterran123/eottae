@@ -59,7 +59,7 @@ export default function SettingsPage() {
               </div>
               <div>
                 <dt>3차</dt>
-                <dd>모바일 청첩장은 준비 중이에요.</dd>
+                <dd>3차 · 데모 미리보기. 청첩장 에디터·공유 링크·RSVP는 아직 준비 중이에요.</dd>
               </div>
               <div>
                 <dt>오프라인</dt>

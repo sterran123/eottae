@@ -20,7 +20,7 @@ export default function PrivacyPage() {
 
         <div className="feature-grid">
           <article className="feature">
-            <span>CORE-004</span>
+            <span>회원 탈퇴·데이터 삭제</span>
             <h3>데모 데이터를 지우는 곳</h3>
             <p>
               <b>설정 &gt; 계정 &gt; 회원 탈퇴·데이터 삭제</b>에서 확인 문구를 입력하면 이 브라우저의
