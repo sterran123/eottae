@@ -19,7 +19,14 @@ import {
   QNA_TABS,
   RELATION_TO_CATEGORIES,
 } from '@/lib/match/demo-qna';
-import { matchService, type MatchOperatingMode } from '@/lib/match/match-service';
+import {
+  acknowledgeDemoDraftReload,
+  DEMO_DRAFT_CLEARED_MESSAGE,
+  isDemoDraftCleared,
+  matchService,
+  subscribeDemoDraftCleared,
+  type MatchOperatingMode,
+} from '@/lib/match/match-service';
 import type {
   QnaAnswer,
   QnaCategory,
@@ -50,6 +57,8 @@ export default function ProfileQna({
   const [loadedMode, setLoadedMode] = useState<MatchOperatingMode | null>(null);
   const [qnaLoaded, setQnaLoaded] = useState(false);
   const [loadKey, setLoadKey] = useState(0);
+  const reloadEpoch = useRef(0);
+  const demoModeRef = useRef(false);
 
   // 조회 전에는 빈 맵. 데모 답은 mode === 'demo' 응답 이후에만 채운다.
   const [answers, setAnswers] = useState<Record<string, QnaAnswer>>({});
@@ -65,13 +74,21 @@ export default function ProfileQna({
 
   const relationGoal = relationGoalProp ?? resolvedRelationGoal;
 
+  function discardClearedQna() {
+    reloadEpoch.current += 1;
+    setQnaError(DEMO_DRAFT_CLEARED_MESSAGE);
+    reloadAfterModeChange();
+  }
+
   useEffect(() => {
     let active = true;
+    const epoch = reloadEpoch.current;
     void Promise.all([
       matchService.loadMyQnaAnswers(),
       matchService.loadOnboarding(),
     ]).then(([qnaRes, onbRes]) => {
-      if (!active) return;
+      if (!active || epoch !== reloadEpoch.current) return;
+      demoModeRef.current = qnaRes.context.mode === 'demo';
       setIsDemoMode(qnaRes.context.isDemo && qnaRes.context.mode === 'demo');
       setAnswers(qnaRes.answers);
       setQnaLoaded(true);
@@ -85,16 +102,26 @@ export default function ProfileQna({
         return;
       }
       setLoadedMode(qnaRes.context.mode);
+      if (qnaRes.context.mode === 'demo') {
+        acknowledgeDemoDraftReload('qna');
+      }
       if (qnaRes.context.mode !== 'demo' && qnaRes.context.gateMessage) {
         setQnaError(qnaRes.context.gateMessage);
       } else {
-        setQnaError(null);
+        setQnaError((current) => (current === DEMO_DRAFT_CLEARED_MESSAGE ? current : null));
       }
     });
     return () => {
       active = false;
     };
   }, [relationGoalProp, loadKey]);
+
+  useEffect(() => {
+    return subscribeDemoDraftCleared('qna', () => {
+      if (!demoModeRef.current) return;
+      discardClearedQna();
+    });
+  }, []);
 
   // 스크롤 시 현재 중앙에 위치한 슬라이드 인덱스 추적
   function handleCarouselScroll() {
@@ -188,6 +215,10 @@ export default function ProfileQna({
       setQnaError('문답을 불러온 뒤에 저장해 주세요.');
       return;
     }
+    if (loadedMode === 'demo' && isDemoDraftCleared('qna')) {
+      discardClearedQna();
+      return;
+    }
     const modeAtSave = loadedMode;
     const prev = answers;
     const next = { ...prev, [a.questionId]: a };
@@ -196,6 +227,10 @@ export default function ProfileQna({
     setQnaError(null);
     void matchService.saveMyQnaAnswer(a, prev, modeAtSave).then((res) => {
       if (!res.ok) {
+        if (res.demoDraftCleared) {
+          discardClearedQna();
+          return;
+        }
         setQnaError(res.error.message);
         if (res.mode !== modeAtSave) {
           reloadAfterModeChange();
@@ -210,6 +245,10 @@ export default function ProfileQna({
       setQnaError('문답을 불러온 뒤에 저장해 주세요.');
       return;
     }
+    if (loadedMode === 'demo' && isDemoDraftCleared('qna')) {
+      discardClearedQna();
+      return;
+    }
     const modeAtSave = loadedMode;
     const prev = answers;
     const next = { ...prev };
@@ -219,6 +258,10 @@ export default function ProfileQna({
     setQnaError(null);
     void matchService.deleteMyQnaAnswer(qid, prev, modeAtSave).then((res) => {
       if (!res.ok) {
+        if (res.demoDraftCleared) {
+          discardClearedQna();
+          return;
+        }
         setQnaError(res.error.message);
         if (res.mode !== modeAtSave) {
           reloadAfterModeChange();

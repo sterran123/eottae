@@ -6,7 +6,8 @@ import { isVirtualPerson, type GatheringOps } from './demo-roster';
 import type { Gathering, PollOption } from './types';
 import { isActivityRegion, isGatheringCategory } from './types';
 
-const STORAGE_KEY = 'eottae.activities.demo.v1';
+export const ACTIVITIES_DEMO_STORAGE_KEY = 'eottae.activities.demo.v1';
+const STORAGE_KEY = ACTIVITIES_DEMO_STORAGE_KEY;
 const NOTICE_KEY = 'eottae.activities.demo.notice';
 const MAX_CREATED = 20;
 const LOCAL_DATE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;

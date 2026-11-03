@@ -26,6 +26,7 @@ import {
 } from '@/lib/activities/feedback';
 import { activitiesHref } from '@/lib/activities/href';
 import {
+  ACTIVITIES_DEMO_STORAGE_KEY,
   applyJoin,
   EMPTY_ACTIVITIES_DEMO,
   loadActivitiesDemo,
@@ -90,15 +91,25 @@ export default function ActivitiesDemo() {
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
   useEffect(() => {
-    const loaded = loadActivitiesDemo();
-    storedRef.current = loaded;
-    setStored(loaded);
+    const reload = () => {
+      const loaded = loadActivitiesDemo();
+      storedRef.current = loaded;
+      setStored(loaded);
+    };
+    reload();
     setReady(true);
     const notice = takeActivitiesNotice();
     if (notice) {
       setToast(notice);
       toastTimer.current = window.setTimeout(() => setToast(null), 5000);
     }
+    // 다른 탭의 removeItem은 이 탭에 storage를 낸다. 키가 비거나 바뀌면 메모리를 버리고 다시 읽는다.
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== null && event.key !== ACTIVITIES_DEMO_STORAGE_KEY) return;
+      reload();
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
   }, []);
 
   useEffect(
@@ -115,6 +126,16 @@ export default function ActivitiesDemo() {
   }, []);
 
   const persist = useCallback((recipe: (current: ActivitiesDemoState) => ActivitiesDemoState) => {
+    // 저장 전에 키가 비어 있으면 메모리의 후기·모임·커버를 다시 쓰지 않는다.
+    if (typeof window !== 'undefined') {
+      try {
+        if (window.localStorage.getItem(ACTIVITIES_DEMO_STORAGE_KEY) === null) {
+          storedRef.current = loadActivitiesDemo();
+        }
+      } catch {
+        // 저장소를 못 읽으면 메모리를 비우지 않는다. 이어지는 저장이 실패를 알린다.
+      }
+    }
     const next = recipe(storedRef.current);
     storedRef.current = next;
     setStored(() => next);
