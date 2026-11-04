@@ -11,6 +11,7 @@ import {
   type DemoTheme,
   type DemoThemeReceipt,
 } from '@/lib/demo/demo-themes';
+import ModalCloseButton from '@/components/activities/ModalCloseButton';
 import DemoSheet from '@/components/demo/DemoSheet';
 import '@/components/demo/demo-flow.css';
 
@@ -60,7 +61,7 @@ export default function ThemePreviewSection() {
   useEffect(() => {
     if (!theme || phase === 'review') return;
     const dialog = document.getElementById('demo-pay-title')?.closest('dialog');
-    if (dialog instanceof HTMLDialogElement) dialog.focus();
+    dialog?.querySelector<HTMLElement>('.act-modal-close')?.focus();
   }, [theme, phase]);
 
   useEffect(() => {
@@ -165,10 +166,13 @@ export default function ThemePreviewSection() {
         })}
       </div>
 
-      <DemoSheet open={theme !== null} labelledBy="demo-pay-title" onClose={closeSheet}>
+      <DemoSheet open={theme !== null} labelledBy="demo-pay-title" onClose={closeSheet} headClose>
         {theme && (
           <>
-            <h2 id="demo-pay-title">PayApp 테스트 결제 · 실제 청구 없음</h2>
+            <div className="demo-pay-head">
+              <h2 id="demo-pay-title">모의 결제(데모) · 실제 청구 없음</h2>
+              <ModalCloseButton onClick={closeSheet} />
+            </div>
             <p className="demo-theme-lead">
               {theme.name} · {formatKrw(theme.priceKrw)} (예시). 카드번호는 받지 않아요. 결제 페이지로
               이동하지 않아요.
@@ -229,7 +233,7 @@ export default function ThemePreviewSection() {
                   </div>
                 </dl>
                 <p className="demo-theme-lead">
-                  승인 직후 즉시 취소했습니다. PayApp 테스트 결제이며 실제 청구는 없습니다. 이 브라우저에만
+                  승인 직후 즉시 취소했습니다. 모의 결제(데모)이며 실제 청구는 없습니다. 이 브라우저에만
                   구매한 테마(데모)로 표시합니다.
                 </p>
               </article>
