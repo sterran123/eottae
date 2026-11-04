@@ -12,6 +12,10 @@ export const RSVP_RESPONSES = ['yes', 'no', 'maybe'] as const;
 export type RsvpResponse = (typeof RSVP_RESPONSES)[number];
 
 export const INVITATION_THEME_IDS = [
+  'green-canopy',
+  'the-wedding',
+  'photo-background',
+  'with-love',
   'spring-card',
   'moon-garden',
   'hanji',

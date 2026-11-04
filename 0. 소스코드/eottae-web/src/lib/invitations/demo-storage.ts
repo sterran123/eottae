@@ -251,19 +251,34 @@ export function getInvitationByToken(token: string): Invitation | undefined {
 
 export function saveInvitation(invitation: Invitation): boolean {
   if (!isStoredInvitation(invitation)) return false;
+
+  // TC-015: 쇼케이스 둘러보기 가상 청첩장 또는 비소유자 청첩장 저장 차단
+  if (invitation.id.startsWith('showcase-') || invitation.viewerIsOwner === false) {
+    return false;
+  }
+
   const state = loadInvitationsDemo();
   const index = state.invitations.findIndex((item) => item.id === invitation.id);
   const nextInvitations = [...state.invitations];
   const now = new Date().toISOString();
 
   if (index >= 0) {
+    const existing = state.invitations[index];
+    // TC-015: 소유자만 수정 가능, 비소유자 저장 우회 원천 차단
+    if (existing.viewerIsOwner !== true || (existing.ownerId && existing.ownerId !== 'user-demo-me')) {
+      return false;
+    }
     nextInvitations[index] = {
       ...invitation,
+      ownerId: existing.ownerId,
+      viewerIsOwner: true,
       updatedAt: now,
     };
   } else {
     nextInvitations.unshift({
       ...invitation,
+      ownerId: 'user-demo-me',
+      viewerIsOwner: true,
       createdAt: invitation.createdAt || now,
       updatedAt: now,
     });

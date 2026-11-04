@@ -477,7 +477,7 @@ function InvitationsHubContent() {
       expiry: null,
       themeId: design.themeId,
       status: 'published',
-      viewerIsOwner: true,
+      viewerIsOwner: false,
       layoutStyle: design.layoutStyle,
       bgmPreset: 'romantic',
     });

@@ -1018,3 +1018,14 @@
 - [AI] Antigravity가 해당 5개 파일(InvitationsHub, demo-storage, CardRenderer, PreviewModal, Editor) 수정 후 정적 빌드 테스트 통과.
 - [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
 - [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
+
+
+## 2026-11-05 PR #97 5차 리뷰 지적 4건 해결 (오하율 작업)
+- [요청] PR #97 5차 피드백 4건(쇼케이스 테마 4종 types.ts 등록·비소유자 TC-015 저장 우회 차단·달력 스타일 4종 시각화·D-Day 자정기준 계산) 반영:
+  1) `types.ts`: `INVITATION_THEME_IDS`에 쇼케이스 대표 테마 4종(`green-canopy`, `the-wedding`, `photo-background`, `with-love`)을 등록하여 `demo-storage` 저장 검사 및 모달 저장 시 거절되지 않도록 해결.
+  2) `demo-storage.ts`, `InvitationsHub.tsx`, `InvitationPreviewModal.tsx`: 쇼케이스 가상 청첩장 및 비소유자 청첩장의 저장 시도를 원천 차단(TC-015 가드: `saveInvitation` 내 비소유/쇼케이스 ID 검사, Hub 쇼케이스 `viewerIsOwner: false` 지정, PreviewModal에서 비소유 청첩장 [열람 전용] 뱃지 처리 및 저장 차단).
+  3) `InvitationCardRenderer.tsx`: `calendarStyle` 프롭 및 커스텀 설정을 읽어 4종 달력 스타일(`classic_table`, `heart_stamp`, `box_badge`, `minimal_text`)이 미리보기 및 공개 화면에 확연하게 시각 반영되도록 렌더러 분기 구현.
+  4) `InvitationCardRenderer.tsx`: D-Day 계산을 시/분/초 밀리초 Math.ceil 대신 연-월-일 자정(00:00:00) 기준 날짜 차이(`targetMidnight - todayMidnight`)로 변경하여 예식 당일 오전에도 정상적으로 `D-DAY 오늘`이 표기되도록 수정.
+- [AI] Antigravity가 해당 4개 파일(types, demo-storage, InvitationsHub, PreviewModal, CardRenderer) 수정 후 정적 빌드 테스트 통과.
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)

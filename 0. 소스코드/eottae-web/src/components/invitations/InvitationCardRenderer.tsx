@@ -494,8 +494,11 @@ export default function InvitationCardRenderer({
   let dDayText = 'D-DAY';
   let diffDays = 0;
   try {
-    const diff = parsedDate.getTime() - Date.now();
-    diffDays = Math.ceil(diff / (1000 * 60 * 60 * 24));
+    // 자정(00:00:00) 기준 날짜 차이 계산으로 예식 당일 오전에도 항상 'D-DAY 오늘' 표시
+    const today = new Date();
+    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+    const targetMidnight = new Date(year, month - 1, day).getTime();
+    diffDays = Math.round((targetMidnight - todayMidnight) / (1000 * 60 * 60 * 24));
     if (diffDays === 0) dDayText = 'D-DAY 오늘';
     else if (diffDays > 0) dDayText = `D-${diffDays}`;
     else dDayText = `D+${Math.abs(diffDays)}`;
@@ -1019,6 +1022,8 @@ export default function InvitationCardRenderer({
 
       case 'schedule': {
         const title = custom?.title || '예식 일시 & 달력';
+        const activeCalendarStyle = custom?.calendarStyle || calendarStyle || 'classic_table';
+
         return (
           <section key="schedule" className="inv-content-section" style={sectionStyle}>
             <span className="inv-sub-heading" style={{ color: accent }}>
@@ -1026,7 +1031,25 @@ export default function InvitationCardRenderer({
             </span>
             <h3 className="inv-section-title">{title}</h3>
 
-            <div className="inv-schedule-card">
+            <div className={`inv-schedule-card inv-schedule-card--${activeCalendarStyle}`}>
+              {/* 모던 박스 뱃지 스타일 (box_badge) */}
+              {activeCalendarStyle === 'box_badge' && (
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 14 }}>
+                  <div style={{ padding: '8px 12px', background: 'var(--paper, #ffffff)', border: `2px solid ${accent}`, borderRadius: 8, textAlign: 'center' }}>
+                    <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600 }}>YEAR</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: accent }}>{year}</div>
+                  </div>
+                  <div style={{ padding: '8px 12px', background: 'var(--paper, #ffffff)', border: `2px solid ${accent}`, borderRadius: 8, textAlign: 'center' }}>
+                    <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600 }}>DATE</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: accent }}>{month}월 {day}일</div>
+                  </div>
+                  <div style={{ padding: '8px 12px', background: 'var(--paper, #ffffff)', border: `2px solid ${accent}`, borderRadius: 8, textAlign: 'center' }}>
+                    <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600 }}>TIME</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: accent }}>{ampm} {displayHour}시{minutes > 0 ? ` ${minutes}분` : ''}</div>
+                  </div>
+                </div>
+              )}
+
               <div className="inv-wedding-time-badge">
                 <span className="inv-time-strong">
                   {displayTimeKorean}
@@ -1042,42 +1065,65 @@ export default function InvitationCardRenderer({
                 </span>
               </div>
 
-              {/* 달력 그리드 */}
-              <div className="inv-calendar-wrapper">
-                <div className="inv-cal-header-row">
-                  {['일', '월', '화', '수', '목', '금', '토'].map((dow, idx) => (
-                    <span key={dow} className={idx === 0 ? 'inv-dow--sun' : idx === 6 ? 'inv-dow--sat' : ''}>
-                      {dow}
-                    </span>
-                  ))}
+              {/* 미니멀 텍스트 모드 (minimal_text): 테이블 달력 대신 정갈한 타이포그래피 카드 */}
+              {activeCalendarStyle === 'minimal_text' ? (
+                <div style={{ padding: '24px 16px', textAlign: 'center', background: 'rgba(0,0,0,0.02)', borderRadius: 12, margin: '14px 0' }}>
+                  <div style={{ fontSize: 13, letterSpacing: '0.15em', color: accent, fontWeight: 700, marginBottom: 6 }}>
+                    SAVE THE DATE
+                  </div>
+                  <div style={{ fontSize: 24, fontWeight: 800, fontFamily: 'serif', marginBottom: 8 }}>
+                    {year}. {month < 10 ? `0${month}` : month}. {day < 10 ? `0${day}` : day}
+                  </div>
+                  <div style={{ fontSize: 14, color: 'var(--muted)', fontWeight: 500 }}>
+                    {ampm} {displayHour}시{minutes > 0 ? ` ${minutes}분` : ' 정각'} · {venueTitle}
+                  </div>
+                  <div style={{ marginTop: 12, display: 'inline-block', padding: '4px 12px', background: accent, color: getContrastingTextColor(accent), borderRadius: 20, fontSize: 12, fontWeight: 700 }}>
+                    {dDayText}
+                  </div>
                 </div>
-                <div className="inv-cal-grid">
-                  {calendarWeeks.map((week, wIdx) => (
-                    <div key={wIdx} className="inv-cal-week">
-                      {week.map((d, dIdx) => {
-                        const isWeddingDay = d === day;
-                        return (
-                          <div
-                            key={dIdx}
-                            className={`inv-cal-cell ${isWeddingDay ? 'inv-cal-cell--wedding' : ''}`}
-                            style={
-                              isWeddingDay
-                                ? {
-                                    backgroundColor: accent,
-                                    color: getContrastingTextColor(accent),
-                                  }
-                                : undefined
-                            }
-                          >
-                            {d !== null ? d : ''}
-                            {isWeddingDay && <span className="inv-cal-heart-dot">♥</span>}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ))}
+              ) : (
+                /* 달력 그리드 (classic_table, heart_stamp, box_badge) */
+                <div className={`inv-calendar-wrapper inv-calendar-wrapper--${activeCalendarStyle}`}>
+                  <div className="inv-cal-header-row">
+                    {['일', '월', '화', '수', '목', '금', '토'].map((dow, idx) => (
+                      <span key={dow} className={idx === 0 ? 'inv-dow--sun' : idx === 6 ? 'inv-dow--sat' : ''}>
+                        {dow}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="inv-cal-grid">
+                    {calendarWeeks.map((week, wIdx) => (
+                      <div key={wIdx} className="inv-cal-week">
+                        {week.map((d, dIdx) => {
+                          const isWeddingDay = d === day;
+                          return (
+                            <div
+                              key={dIdx}
+                              className={`inv-cal-cell ${isWeddingDay ? 'inv-cal-cell--wedding' : ''} ${isWeddingDay && activeCalendarStyle === 'heart_stamp' ? 'inv-cal-cell--heart-stamp' : ''}`}
+                              style={
+                                isWeddingDay
+                                  ? {
+                                      backgroundColor: accent,
+                                      color: getContrastingTextColor(accent),
+                                      boxShadow: activeCalendarStyle === 'heart_stamp' ? `0 0 0 3px ${accent}44, 0 4px 10px rgba(0,0,0,0.15)` : undefined,
+                                    }
+                                  : undefined
+                              }
+                            >
+                              {d !== null ? d : ''}
+                              {isWeddingDay && (
+                                <span className="inv-cal-heart-dot" style={{ fontSize: activeCalendarStyle === 'heart_stamp' ? 14 : 10 }}>
+                                  ♥
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </section>
         );

@@ -582,30 +582,50 @@ export default function InvitationPreviewModal({
                 {saveNotice}
               </span>
             )}
-            <button
-              type="button"
-              className="inv-btn-primary"
-              style={{ minHeight: 32, padding: '0 12px', fontSize: 12 }}
-              onClick={() => {
-                const updated: Invitation = {
-                  ...invitation,
-                  greeting: customConfigs.greeting?.body || invitation.greeting,
-                  venueLabel: customConfigs.location?.body || invitation.venueLabel,
-                  themeId: selectedTheme,
-                  layoutStyle: selectedLayout,
-                  bgmPreset: selectedBgm,
-                  sectionOrder: sectionOrder,
-                  updatedAt: new Date().toISOString(),
-                };
-                saveInvitation(updated);
-                if (onSaveSettings) onSaveSettings(updated);
-                setSaveNotice('저장 완료! 공개 화면에 반영되었습니다');
-                setTimeout(() => setSaveNotice(null), 3000);
-              }}
-              title="선택한 테마·레이아웃·BGM·섹션 순서를 브라우저에 저장하여 공개 화면에 즉시 반영합니다"
-            >
-              💾 설정 저장
-            </button>
+            {invitation.viewerIsOwner === true && !invitation.id.startsWith('showcase-') ? (
+              <button
+                type="button"
+                className="inv-btn-primary"
+                style={{ minHeight: 32, padding: '0 12px', fontSize: 12 }}
+                onClick={() => {
+                  const updated: Invitation = {
+                    ...invitation,
+                    greeting: customConfigs.greeting?.body || invitation.greeting,
+                    venueLabel: customConfigs.location?.body || invitation.venueLabel,
+                    themeId: selectedTheme,
+                    layoutStyle: selectedLayout,
+                    bgmPreset: selectedBgm,
+                    sectionOrder: sectionOrder,
+                    updatedAt: new Date().toISOString(),
+                  };
+                  const ok = saveInvitation(updated);
+                  if (ok) {
+                    if (onSaveSettings) onSaveSettings(updated);
+                    setSaveNotice('저장 완료! 공개 화면에 반영되었습니다');
+                  } else {
+                    setSaveNotice('소유자만 고칠 수 있어요 (TC-015 목업)');
+                  }
+                  setTimeout(() => setSaveNotice(null), 3000);
+                }}
+                title="선택한 테마·레이아웃·BGM·섹션 순서를 브라우저에 저장하여 공개 화면에 즉시 반영합니다"
+              >
+                💾 설정 저장
+              </button>
+            ) : (
+              <span
+                style={{
+                  fontSize: 11,
+                  padding: '4px 8px',
+                  borderRadius: 4,
+                  background: 'rgba(0,0,0,0.06)',
+                  color: 'var(--muted)',
+                  border: '1px solid var(--line)',
+                }}
+                title="타인의 청첩장 또는 쇼케이스는 열람 전용입니다 (TC-015)"
+              >
+                👀 열람 전용 (TC-015)
+              </span>
+            )}
             <button
               type="button"
               className="inv-modal-close-btn"
