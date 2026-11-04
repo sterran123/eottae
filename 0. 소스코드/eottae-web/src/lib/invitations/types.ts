@@ -63,6 +63,10 @@ export type Guest = {
   memo?: string;
 };
 
+/** 식사 안내 응답 (INV-003, 입구 페이지 「식사·인원」). 불참 회신에는 쓰지 않는다. */
+export const RSVP_MEALS = ['yes', 'no', 'undecided'] as const;
+export type RsvpMeal = (typeof RSVP_MEALS)[number];
+
 /**
  * 참석 회신 (DB RSVP 모델 대응)
  * 타인에게 회신 목록을 노출하지 않으며 소유자/응답자 본인만 확인
@@ -73,6 +77,8 @@ export type Rsvp = {
   response: RsvpResponse;
   /** 참석 인원수 (불참 시 0 가능) */
   partySize: number;
+  /** 식사 여부 (선택, 불참 시 없음) */
+  meal?: RsvpMeal;
   /** 축하 메시지 또는 전달 메모 */
   note: string;
   /** 회신 시각 (ISO) */
@@ -89,6 +95,10 @@ export function isInvitationVisibility(value: unknown): value is InvitationVisib
 
 export function isRsvpResponse(value: unknown): value is RsvpResponse {
   return typeof value === 'string' && (RSVP_RESPONSES as readonly string[]).includes(value);
+}
+
+export function isRsvpMeal(value: unknown): value is RsvpMeal {
+  return typeof value === 'string' && (RSVP_MEALS as readonly string[]).includes(value);
 }
 
 export function isInvitationThemeId(value: unknown): value is InvitationThemeId {

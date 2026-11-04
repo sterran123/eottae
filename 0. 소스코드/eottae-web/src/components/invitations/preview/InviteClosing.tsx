@@ -2,17 +2,19 @@
 
 import { useId, useState } from 'react';
 import type { FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import type { Invitation } from '@/lib/invitations/types';
 import { invitationPublicUrl } from './invite-asset';
 import { copyInviteText } from './invite-clipboard';
 import InviteStatus from './InviteStatus';
 import type { InvitePreviewContent } from './sample-content';
 
-const RSVP_NOTE = 'RSVP는 준비 중(데모)';
-
-export function InviteRsvp() {
+export function InviteRsvp({ invitation }: { invitation?: Invitation }) {
   const titleId = useId();
-  const [status, setStatus] = useState<string | null>(null);
+  const router = useRouter();
+  const token = invitation?.sharingToken?.trim() || 'k7Qm2pL9xRt4vNw8aB3cYd6e';
+  const guestHref = `/invitations/rsvp/?t=${encodeURIComponent(token)}&g=gt-x8k2m9p1`;
+  const deniedHref = `/invitations/rsvp/?t=${encodeURIComponent(token)}`;
 
   return (
     <section className="invite-section" aria-labelledby={titleId} data-invite-reveal>
@@ -20,16 +22,17 @@ export function InviteRsvp() {
         참석 여부
       </h2>
       <p>참석을 미리 알려 주시면 자리를 준비하는 데 도움이 돼요.</p>
-      <p>회신 내용은 이 데모에서 저장하지 않아요.</p>
+      <p className="invite-note">
+        공개 화면에는 참석 명단과 다른 하객의 회신을 표시하지 않아요. 하객 전용 초대 링크에서만 회신할 수 있어요.
+      </p>
       <div className="invite-row">
-        <button type="button" className="invite-btn" onClick={() => setStatus(RSVP_NOTE)}>
-          참석 불가
+        <button type="button" className="invite-btn" onClick={() => router.push(deniedHref)}>
+          토큰 없는 링크 확인
         </button>
-        <button type="button" className="invite-btn primary" onClick={() => setStatus(RSVP_NOTE)}>
-          참석 가능
+        <button type="button" className="invite-btn primary" onClick={() => router.push(guestHref)}>
+          하객 초대 링크로 회신
         </button>
       </div>
-      <InviteStatus text={status} />
     </section>
   );
 }
