@@ -2,19 +2,31 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import SubpageHero from '@/components/shared/subpage-hero';
 import { MotifIcon } from '@/components/shared/motif-icon';
+import { isSupabaseConfigured } from '@/lib/supabase/client';
+
+const accountSentence = isSupabaseConfigured
+  ? '이메일로 가입하면 계정(이메일·이름·출생 연도)은 서버(Supabase)에 저장돼요. 성인 확인이 끝난 계정의 프로필·취향·관심·신고·차단도 서버에 저장돼요.'
+  : '인증 설정 전에는 이메일 가입·로그인을 하지 않아, 계정을 서버에 만들지 않아요.';
+
+const accountTitle = isSupabaseConfigured
+  ? '데모는 이 기기, 가입 계정은 서버'
+  : '데모는 이 기기, 서버 계정은 없음';
 
 export const metadata: Metadata = {
   title: '개인정보·계정 삭제 안내',
-  description:
-    '시연용 매칭·채팅·데이트·청첩장 데이터는 이 브라우저에만 남습니다. 로그인 계정(이메일 등)이 서버(Supabase)에 저장되는지는 (확인 필요). 설정의 회원 탈퇴는 서버에 탈퇴를 요청하지 않습니다. 신고 이력은 사람 연결만 비우고 본문은 남을 수 있습니다.',
+  description: [
+    '시연용 매칭·채팅·데이트·청첩장 데이터는 이 브라우저에만 남습니다.',
+    accountSentence,
+    '설정의 회원 탈퇴는 서버에 탈퇴를 요청하지 않습니다. 신고 이력은 사람 연결만 비우고 본문은 남을 수 있습니다.',
+  ].join(' '),
 };
 
 export default function PrivacyPage() {
   return (
     <>
       <SubpageHero eyebrow="DATA POLICY" title="개인정보·계정 삭제 안내" motif={<MotifIcon name="lock" size={56} />}>
-        시연용 매칭·채팅·데이트·청첩장 데이터는 이 브라우저에만 남아요. 로그인 계정(이메일 등)이
-        서버(Supabase)에 저장되는지는 (확인 필요). 설정의 회원 탈퇴는 서버에 탈퇴를 요청하지 않아요.
+        시연용 매칭·채팅·데이트·청첩장 데이터는 이 브라우저에만 남아요. {accountSentence} 설정의 회원
+        탈퇴는 서버에 탈퇴를 요청하지 않아요.
       </SubpageHero>
       <section className="shell subpage">
 
@@ -52,10 +64,10 @@ export default function PrivacyPage() {
           </article>
           <article className="feature">
             <span>수집</span>
-            <h3>데모는 이 기기, 로그인 계정은 (확인 필요)</h3>
+            <h3>{accountTitle}</h3>
             <p>
-              시연용 매칭·채팅·데이트·청첩장 데이터는 이 브라우저에만 저장돼요. 로그인 계정(이메일 등)이
-              서버(Supabase)에 저장되는지는 (확인 필요). 안전 정책은 연락처·주소·학교·직장·실시간
+              시연용 매칭·채팅·데이트·청첩장 데이터는 이 브라우저에만 저장돼요. {accountSentence} 안전
+              정책은 연락처·주소·학교·직장·실시간
               위치·정밀 좌표를 기본으로 두지 않고, 채팅 본문·비밀번호·토큰·신분 확인 정보를 로그에
               남기지 않는 방향을 적고 있습니다. 신분증 원본은 시연에서도 받지 않습니다.
             </p>
