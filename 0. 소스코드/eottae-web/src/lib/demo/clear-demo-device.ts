@@ -5,6 +5,7 @@
 import { CHAT_DEMO_EVENT, CHAT_DEMO_STORAGE_KEY, releaseChatDemoAppendSuppress, resetChatDemo } from '@/lib/chat/demo-store';
 import { DEMO_ADULT_EVENT } from '@/lib/demo/demo-adult';
 import { DEMO_THEME_EVENT } from '@/lib/demo/demo-themes';
+import { DEMO_INVITATIONS_EVENT, INVITATIONS_DEMO_STORAGE_KEY } from '@/lib/invitations/demo-storage';
 import { DEMO_MATCH_EVENT } from '@/lib/match/demo-mutual';
 import { resetSafetyDemo, SAFETY_DEMO_EVENT, SAFETY_DEMO_STORAGE_KEY } from '@/lib/safety/demo-store';
 
@@ -22,6 +23,7 @@ export const DEMO_DEVICE_STORAGE_KEYS = [
   'eottae_match_common_declined_v1',
   CHAT_DEMO_STORAGE_KEY,
   SAFETY_DEMO_STORAGE_KEY,
+  INVITATIONS_DEMO_STORAGE_KEY,
 ] as const;
 
 /** 목록의 데모 키가 모두 비었으면 true. 하나라도 남거나 저장소가 막히면 false. 테마 키와 데모 로그인 세션은 지우지 않는다. */
@@ -65,5 +67,6 @@ export function clearDemoDeviceData(): boolean {
   window.dispatchEvent(new Event(DEMO_MATCH_EVENT));
   window.dispatchEvent(new Event(CHAT_DEMO_EVENT));
   window.dispatchEvent(new Event(SAFETY_DEMO_EVENT));
+  window.dispatchEvent(new Event(DEMO_INVITATIONS_EVENT));
   return true;
 }
