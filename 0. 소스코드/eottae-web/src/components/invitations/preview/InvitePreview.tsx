@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useMemo, useRef } from 'react';
+import { useId, useLayoutEffect, useMemo, useRef } from 'react';
 import type { Invitation } from '@/lib/invitations/types';
 import InviteCalendar from './InviteCalendar';
 import { InviteGift, InviteGuestbook, InviteRsvp, InviteShare } from './InviteClosing';
@@ -30,6 +30,29 @@ function sectionKey(spec: InviteSectionSpec): string {
   return spec.kind;
 }
 
+function frameScrollRoot(sheet: HTMLElement): HTMLElement | null {
+  const frame = sheet.closest('.invite-frame');
+  let current: HTMLElement | null = sheet;
+  while (current) {
+    const overflowY = getComputedStyle(current).overflowY;
+    const scrolls =
+      (overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay') &&
+      current.scrollHeight > current.clientHeight + 1;
+    if (scrolls) return current;
+    if (frame && current === frame) break;
+    current = current.parentElement;
+  }
+  return null;
+}
+
+function inView(node: HTMLElement, scrollRoot: HTMLElement | null): boolean {
+  const rect = node.getBoundingClientRect();
+  const box = scrollRoot
+    ? scrollRoot.getBoundingClientRect()
+    : { top: 0, left: 0, right: window.innerWidth, bottom: window.innerHeight };
+  return rect.bottom > box.top && rect.top < box.bottom && rect.right > box.left && rect.left < box.right;
+}
+
 export default function InvitePreview({ invitation, preset = 'full', content }: Props) {
   const emptyId = useId();
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -40,15 +63,26 @@ export default function InvitePreview({ invitation, preset = 'full', content }: 
     invitation.weddingDate.trim().length === 0 &&
     invitation.venueLabel.trim().length === 0;
 
-  useEffect(() => {
+  // 프리셋·테마로 섹션이 다시 그려져도 다시 묶는다. 의존성 배열과 MutationObserver는 쓰지 않는다.
+  useLayoutEffect(() => {
     const root = sheetRef.current;
     if (!root) return;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const nodes = Array.from(root.querySelectorAll<HTMLElement>('[data-reveal]'));
+    const nodes = Array.from(root.querySelectorAll<HTMLElement>('[data-invite-reveal]'));
+    const show = (node: HTMLElement) => node.classList.add('is-visible');
+
     if (reduce || !('IntersectionObserver' in window)) {
-      nodes.forEach((node) => node.classList.add('is-visible'));
+      nodes.forEach(show);
+      root.removeAttribute('data-reveal-ready');
       return;
     }
+
+    const scrollRoot = frameScrollRoot(root);
+    nodes.forEach((node) => {
+      if (inView(node, scrollRoot)) show(node);
+    });
+    root.setAttribute('data-reveal-ready', '');
+
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -57,13 +91,25 @@ export default function InvitePreview({ invitation, preset = 'full', content }: 
           io.unobserve(entry.target);
         });
       },
-      { threshold: 0.12, rootMargin: '0px 0px -8% 0px' },
+      { root: scrollRoot, threshold: 0 },
     );
     nodes.forEach((node) => {
       if (!node.classList.contains('is-visible')) io.observe(node);
     });
-    return () => io.disconnect();
-  }, [preset, invitation.id, invitation.themeId, bare]);
+
+    const timer = window.setTimeout(() => {
+      root.querySelectorAll<HTMLElement>('[data-invite-reveal]').forEach((node) => {
+        if (!node.classList.contains('is-visible')) show(node);
+      });
+      io.disconnect();
+    }, 1500);
+
+    return () => {
+      io.disconnect();
+      window.clearTimeout(timer);
+      root.removeAttribute('data-reveal-ready');
+    };
+  });
 
   const sections = sectionsFor(preset).map((spec) => {
     const key = sectionKey(spec);
@@ -115,7 +161,7 @@ export default function InvitePreview({ invitation, preset = 'full', content }: 
       ) : null}
       <div className="invite-sheet" ref={sheetRef}>
         {bare ? (
-          <section className="invite-section" aria-labelledby={emptyId} data-reveal>
+          <section className="invite-section" aria-labelledby={emptyId} data-invite-reveal>
             <h2 id={emptyId} className="invite-h">
               초대장
             </h2>
