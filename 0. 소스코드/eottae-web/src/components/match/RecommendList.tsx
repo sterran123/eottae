@@ -479,8 +479,10 @@ export default function RecommendList({
             </div>
 
             <p className="mt-report-desc">
-              <strong>{reportingTarget.nickname}</strong> 님의 계정을 신고합니다.<br />
-              접수 즉시 해당 사용자는 차단되며 관리자가 검토합니다.
+              <strong>{reportingTarget.nickname}</strong> 님을 신고합니다.{' '}
+              {isDemoMode
+                ? '이 기기의 내 신고 내역에 남고, 서버로는 보내지 않아요. 상대는 이 기기에서 차단해요.'
+                : '안전센터에 접수되고, 상대는 차단됩니다.'}
             </p>
 
             <div className="mt-report-options">

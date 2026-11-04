@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { OAUTH_PROVIDERS_ENABLED } from '@/lib/auth/config';
 import { authService } from '@/lib/auth/auth-service';
 import type { OAuthProvider } from '@/lib/auth/types';
+import { isSupabaseConfigured } from '@/lib/supabase/client';
 
 const PROVIDERS: { id: OAuthProvider; label: string }[] = [
   { id: 'google', label: 'Google로 계속하기' },
@@ -59,7 +60,9 @@ export default function SocialLoginButtons({ disabled }: { disabled?: boolean })
       })}
       {!OAUTH_PROVIDERS_ENABLED.google && (
         <p id="auth-social-soon" className="auth-field-help">
-          Google 로그인은 준비 중이에요. 지금은 이메일로 가입·로그인해 주세요.
+          {isSupabaseConfigured
+            ? 'Google 로그인은 준비 중이에요. 지금은 이메일로 가입·로그인해 주세요.'
+            : 'Google 로그인은 준비 중이에요. 이메일 가입·로그인은 인증 설정 전에는 쓸 수 없어요.'}
         </p>
       )}
       {error && (
