@@ -43,6 +43,25 @@
   letter-spacing: 0.05em;
 }
 
+/* 사이버펑크 및 다크 테마에서 밝은 브랜드 색상 위의 텍스트 묻힘 방지 */
+[data-theme='cyberpunk'] .inv-badge-chip {
+  color: #0a0a14 !important;
+  font-weight: 800;
+}
+
+[data-theme='dark'] .inv-badge-chip,
+.inv-mode--dark .inv-badge-chip {
+  color: #161423 !important;
+  font-weight: 800;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-badge-chip {
+    color: #161423 !important;
+    font-weight: 800;
+  }
+}
+
 /* 상단 섹션 헤더 & 버튼 */
 .inv-section-header-row {
   display: flex;
@@ -85,6 +104,25 @@
   cursor: pointer;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
   transition: all 0.2s ease;
+}
+
+/* 사이버펑크 및 다크/시스템 다크 테마에서 버튼 글자색 대비 보장 (밝은 브랜드색 배경) */
+[data-theme='cyberpunk'] .inv-btn-primary {
+  color: #0a0a14 !important;
+  font-weight: 700;
+}
+
+[data-theme='dark'] .inv-btn-primary,
+.inv-mode--dark .inv-btn-primary {
+  color: #161423 !important;
+  font-weight: 700;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-btn-primary {
+    color: #161423 !important;
+    font-weight: 700;
+  }
 }
 
 .inv-btn-primary:hover {
@@ -1325,11 +1363,11 @@
   box-sizing: border-box;
 }
 
-/* 반투명 제거: 완전한 솔리드 흰색/다크 모달 본체 (와이드 확장 스튜디오) */
+/* 반투명 제거: 완전한 솔리드 흰색/다크 모달 본체 (와이드 확장 스튜디오 - 테마 토큰 적용) */
 .inv-modal-shell,
 .inv-modal-container {
-  background: #ffffff !important;
-  border: 1px solid #e2e8f0;
+  background: var(--paper, #ffffff) !important;
+  border: 1px solid var(--line, #e2e8f0);
   border-radius: 28px;
   max-width: 1440px !important;
   width: 96vw !important;
@@ -1345,9 +1383,11 @@
 }
 
 [data-theme='dark'] .inv-modal-shell,
-[data-theme='dark'] .inv-modal-container {
-  background: #1e293b !important;
-  border-color: #334155;
+[data-theme='dark'] .inv-modal-container,
+[data-theme='cyberpunk'] .inv-modal-shell,
+[data-theme='cyberpunk'] .inv-modal-container {
+  background: var(--paper, #1e293b) !important;
+  border-color: var(--line, #334155);
 }
 
 .inv-modal-header {
@@ -1355,14 +1395,15 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 28px;
-  background: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
+  background: var(--paper, #ffffff);
+  border-bottom: 1px solid var(--line, #e2e8f0);
   gap: 16px;
 }
 
-[data-theme='dark'] .inv-modal-header {
-  background: #1e293b;
-  border-bottom-color: #334155;
+[data-theme='dark'] .inv-modal-header,
+[data-theme='cyberpunk'] .inv-modal-header {
+  background: var(--paper, #1e293b);
+  border-bottom-color: var(--line, #334155);
 }
 
 .inv-modal-title-area {
@@ -1415,8 +1456,8 @@
 .inv-modal-toolbar {
   width: 460px;
   max-width: 100%;
-  background: #ffffff;
-  border-right: 1px solid #e2e8f0;
+  background: var(--paper, #ffffff);
+  border-right: 1px solid var(--line, #e2e8f0);
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -1424,9 +1465,28 @@
   overflow-y: auto;
 }
 
-[data-theme='dark'] .inv-modal-toolbar {
-  background: #1e293b;
-  border-right-color: #334155;
+[data-theme='dark'] .inv-modal-toolbar,
+[data-theme='cyberpunk'] .inv-modal-toolbar {
+  background: var(--paper, #1e293b);
+  border-right-color: var(--line, #334155);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-modal-shell,
+  :root[data-theme='system'] .inv-modal-container {
+    background: var(--paper, #1e293b) !important;
+    border-color: var(--line, #334155);
+  }
+
+  :root[data-theme='system'] .inv-modal-header {
+    background: var(--paper, #1e293b);
+    border-bottom-color: var(--line, #334155);
+  }
+
+  :root[data-theme='system'] .inv-modal-toolbar {
+    background: var(--paper, #1e293b);
+    border-right-color: var(--line, #334155);
+  }
 }
 
 @media (max-width: 860px) {
@@ -1436,7 +1496,7 @@
     max-width: 100% !important;
     max-height: 280px;
     border-right: none;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--line, #e2e8f0);
     padding: 16px;
   }
 }

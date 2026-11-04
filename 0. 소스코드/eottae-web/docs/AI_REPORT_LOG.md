@@ -1039,3 +1039,14 @@
 - [AI] Antigravity가 해당 3개 파일(invitations.css, InvitationEditor, InvitationCardRenderer) 수정 후 정적 빌드 테스트 통과.
 - [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
 - [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
+
+
+## 2026-11-05 PR #97 7차 리뷰 지적 3건 해결 (오하율 작업)
+- [요청] PR #97 7차 피드백 3건(사이버펑크/시스템 다크 테마 버튼·모달 토큰 적용, venueLabel 보존, 토스트 문구 사실 일치) 반영:
+  1) `invitations.css`: 사이버펑크(`[data-theme='cyberpunk']`) 테마의 밝은 네온 브랜드 배경 위에서 흰색 글자가 묻히던 현상을 해결하기 위해 `.inv-btn-primary`, `.inv-badge-chip` 글자색을 어두운 텍스트(`#0a0a14 !important`)로 지정하고 다크/시스템 다크 테마에서도 충분한 명도 대비를 보장. 또한 `.inv-modal-shell`, `.inv-modal-container`, `.inv-modal-header`, `.inv-modal-toolbar`의 하드코딩 흰색(#ffffff)과 테두리를 테마 토큰(`var(--paper)`, `var(--line)`)으로 전환하여 시스템 다크 및 사이버펑크 모드에서 어두운 배경과 잉크 색상이 완벽히 조화되도록 수정.
+  2) `InvitationPreviewModal.tsx`: 모달의 「설정 저장」 시 `customConfigs.location?.body`(오시는 길 상세 문구)를 청첩장 장소명(`venueLabel`)으로 잘못 덮어써서 예식홀명이 오염되던 버그를 수정하여 `invitation.venueLabel`을 온전히 보존.
+  3) `InvitationPreviewModal.tsx`: 세부 그래픽 옵션(달력 모양, 프레임, 갤러리 모드 등)이 공개 화면에 완전히 전달되지 않는 목업 구조에 맞춰, 저장 완료 토스트 문구를 `"저장 완료! 공개 화면에 반영되었습니다"`에서 `"미리보기 설정이 저장되었습니다"`로 수정하여 사실에 부합하도록 개선.
+- [AI] Antigravity가 해당 2개 파일(invitations.css, InvitationPreviewModal.tsx) 수정 및 보고서 갱신 후 정적 빌드 테스트 통과.
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
+

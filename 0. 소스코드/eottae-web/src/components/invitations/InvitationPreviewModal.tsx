@@ -591,7 +591,7 @@ export default function InvitationPreviewModal({
                   const updated: Invitation = {
                     ...invitation,
                     greeting: customConfigs.greeting?.body || invitation.greeting,
-                    venueLabel: customConfigs.location?.body || invitation.venueLabel,
+                    venueLabel: invitation.venueLabel,
                     themeId: selectedTheme,
                     layoutStyle: selectedLayout,
                     bgmPreset: selectedBgm,
@@ -601,13 +601,13 @@ export default function InvitationPreviewModal({
                   const ok = saveInvitation(updated);
                   if (ok) {
                     if (onSaveSettings) onSaveSettings(updated);
-                    setSaveNotice('저장 완료! 공개 화면에 반영되었습니다');
+                    setSaveNotice('미리보기 설정이 저장되었습니다');
                   } else {
                     setSaveNotice('소유자만 고칠 수 있어요 (TC-015 목업)');
                   }
                   setTimeout(() => setSaveNotice(null), 3000);
                 }}
-                title="선택한 테마·레이아웃·BGM·섹션 순서를 브라우저에 저장하여 공개 화면에 즉시 반영합니다"
+                title="선택한 테마·레이아웃·BGM·섹션 순서 설정을 브라우저에 저장합니다"
               >
                 💾 설정 저장
               </button>
