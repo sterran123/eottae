@@ -86,6 +86,10 @@ export default function MessageComposer({
   }
 
   function handlePhotoUpload(e: ChangeEvent<HTMLInputElement>) {
+    if (textOnly) {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
     const file = e.target.files?.[0];
     if (file) {
       onSend(`📷 [사진 첨부] ${file.name}`);
@@ -132,6 +136,10 @@ export default function MessageComposer({
   // ---- 녹음 완료 및 전송 ----
   function finishRecording() {
     if (!isRecording) return;
+    if (textOnly) {
+      cancelRecording();
+      return;
+    }
     recordingActiveRef.current = false;
     recordingSessionRef.current += 1;
     if (timerRef.current) clearInterval(timerRef.current);
@@ -235,6 +243,7 @@ export default function MessageComposer({
           onChange={handlePhotoUpload}
           tabIndex={-1}
           aria-hidden="true"
+          disabled={disabled || isRecording || textOnly}
         />
         <button
           type="button"

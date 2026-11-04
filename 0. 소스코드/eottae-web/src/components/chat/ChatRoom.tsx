@@ -116,6 +116,8 @@ export default function ChatRoom({
   const [lookupFailed, setLookupFailed] = useState(false);
   const [lookupTick, setLookupTick] = useState(0);
   const [historyLoaded, setHistoryLoaded] = useState(false);
+  const [historyFailed, setHistoryFailed] = useState(false);
+  const [historyTick, setHistoryTick] = useState(0);
 
   const setLiveReadyBoth = useCallback((ready: boolean) => {
     liveReadyRef.current = ready;
@@ -245,19 +247,6 @@ export default function ChatRoom({
           }
           setMessages((prev) => {
             if (prev.some((message) => message.id === incoming.id)) return prev;
-            // 내가 보낸 행의 Realtime 에코: 낙관적 행이 있으면 건너뛴다(곧 서버 id로 바뀐다).
-            // 낙관적 행이 없으면(다른 기기·탭에서 보낸 내 메시지) 서버 id로 붙인다.
-            if (
-              incoming.sender === 'me' &&
-              prev.some(
-                (message) =>
-                  message.sender === 'me' &&
-                  message.status === 'sending' &&
-                  message.body === incoming.body,
-              )
-            ) {
-              return prev;
-            }
             return [...prev, incoming];
           });
         },
@@ -297,20 +286,25 @@ export default function ChatRoom({
   }, [actorId, createSource, isLiveRoom, partner.id, room.id]);
 
   // 실계정 대화방(UUID): RLS 범위 내 과거 메시지 초기 로드.
-  // 배열이면(빈 배열 포함) 서버 기록으로 두고 이 세션에서 생긴 행만 합친다. null(오류·미인증)이면 현재 목록을 유지한다.
+  // 배열이면(빈 배열 포함) 서버 기록으로 두고 이 세션에서 생긴 행만 합친다. null(오류·미인증)이면 입력을 닫고 재시도 UI를 제공한다.
   useEffect(() => {
     if (!isLiveRoom) return;
     let cancelled = false;
     setHistoryLoaded(false);
+    setHistoryFailed(false);
     void fetchConversationMessages(room.id, isUuid(actorId) ? actorId : null).then((loaded) => {
       if (cancelled) return;
-      if (loaded) setMessages((prev) => mergeLiveHistory(prev, loaded));
-      setHistoryLoaded(true);
+      if (loaded) {
+        setMessages((prev) => mergeLiveHistory(prev, loaded));
+        setHistoryLoaded(true);
+      } else {
+        setHistoryFailed(true);
+      }
     });
     return () => {
       cancelled = true;
     };
-  }, [actorId, isLiveRoom, room.id]);
+  }, [actorId, historyTick, isLiveRoom, room.id]);
 
   // 초기 차단 상태 확인 및 데이터 소스 연결
   useEffect(() => {
@@ -414,7 +408,13 @@ export default function ChatRoom({
     if (blockedRef.current) return;
 
     if (!isLiveRoom) {
-      saveDemoBlock(actorId, partner.id);
+      blockedRef.current = true;
+      const saved = saveDemoBlock(actorId, partner.id);
+      if (!saved) {
+        blockedRef.current = false;
+        pushSystem('이 기기에서 차단을 저장하지 못했어요. 잠시 후 다시 시도해 주세요.');
+        return;
+      }
       confirmBlockLock();
       return;
     }
@@ -663,7 +663,7 @@ export default function ChatRoom({
 
       <div className="mt-chat-notice" role="note">
         {isLiveRoom
-          ? '매칭된 상대방과의 1:1 대화방이에요. 상호 존중하며 대화를 나눠 보세요.'
+          ? '매칭된 두 사람의 1:1 대화방이에요. 대화는 서버(public.messages)에 안전하게 저장됩니다.'
           : '데모 화면이에요. 메시지는 이 기기에만 저장되고, 서버로는 전송되지 않아요.'}
       </div>
 
@@ -701,16 +701,33 @@ export default function ChatRoom({
         </div>
       )}
 
+      {isLiveRoom && historyFailed && !blocked && (
+        <div className="mt-chat-blocked-bar" role="status">
+          <span>대화를 불러오지 못했어요</span>
+          <button type="button" onClick={() => setHistoryTick((tick) => tick + 1)}>
+            다시 시도
+          </button>
+        </div>
+      )}
+
       <MessageComposer
         onSend={sendMessage}
-        disabled={blocked || !active || (isLiveRoom && !liveReady)}
+        disabled={
+          blocked ||
+          !active ||
+          (isLiveRoom && (!liveReady || !historyLoaded || historyFailed))
+        }
         disabledReason={
           blocked
             ? '차단한 상대와는 대화할 수 없어요'
-            : isLiveRoom && !liveReady
-              ? lookupFailed
-                ? '차단 상태를 확인한 뒤에 보낼 수 있어요'
-                : '대화방을 준비하고 있어요'
+            : isLiveRoom && (!liveReady || !historyLoaded || historyFailed)
+              ? historyFailed
+                ? '대화를 불러오지 못해 보내기를 닫았어요'
+                : lookupFailed
+                  ? '차단 상태를 확인한 뒤에 보낼 수 있어요'
+                  : !historyLoaded
+                    ? '이전 대화를 불러오고 있어요'
+                    : '대화방을 준비하고 있어요'
               : undefined
         }
         textOnly={isLiveRoom}

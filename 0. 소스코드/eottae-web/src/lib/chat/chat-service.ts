@@ -160,7 +160,7 @@ export function createSupabaseChatDataSource(
   }
 
   let disposed = false;
-  let cachedUserId: string | null = isUuid(options.myUserId) ? options.myUserId : null;
+  let cachedUserId: string | null = null;
 
   // 세션 사용자 id가 확정되기 전에 도착한 Realtime 이벤트는 버리지 않고 큐에 두었다가 id 확정 후 분류한다.
   const queuedRows: MessageRow[] = [];
@@ -173,6 +173,9 @@ export function createSupabaseChatDataSource(
     const { data, error } = await supabase.auth.getUser();
     const uid = data.user?.id ?? null;
     if (!error && isUuid(uid)) {
+      if (options.myUserId && isUuid(options.myUserId) && options.myUserId !== uid) {
+        return null;
+      }
       cachedUserId = uid;
       return uid;
     }
@@ -270,7 +273,10 @@ export function createSupabaseChatDataSource(
 
       void (async () => {
         const senderId = await resolveUserId();
-        if (disposed) return;
+        if (disposed) {
+          callbacks.onMessageFailed?.(messageId);
+          return;
+        }
         if (!senderId) {
           callbacks.onMessageFailed?.(messageId);
           return;
@@ -288,7 +294,10 @@ export function createSupabaseChatDataSource(
           .insert(insertRow)
           .select('id')
           .single();
-        if (disposed) return;
+        if (disposed) {
+          callbacks.onMessageFailed?.(messageId);
+          return;
+        }
 
         if (error) {
           callbacks.onMessageFailed?.(messageId);
@@ -350,11 +359,14 @@ export async function fetchConversationMessagesPage(
     return null;
   }
 
-  let resolvedUserId = isUuid(options.myUserId) ? options.myUserId : null;
-  if (!resolvedUserId) {
-    const { data, error } = await supabase.auth.getUser();
-    const uid = data.user?.id ?? null;
-    if (!error && isUuid(uid)) resolvedUserId = uid;
+  let resolvedUserId: string | null = null;
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  const uid = authData.user?.id ?? null;
+  if (!authError && isUuid(uid)) {
+    if (options.myUserId && isUuid(options.myUserId) && options.myUserId !== uid) {
+      return null;
+    }
+    resolvedUserId = uid;
   }
   if (!resolvedUserId) return null;
 
@@ -373,7 +385,7 @@ export async function fetchConversationMessagesPage(
     // 형식이 틀린 커서는 조회하지 않는다 (필터 문자열 주입 방지).
     if (!parsed) return null;
     query = query.or(
-      `created_at.lt.${parsed.createdAt},and(created_at.eq.${parsed.createdAt},id.lt.${parsed.id})`,
+      `created_at.lt."${parsed.createdAt}",and(created_at.eq."${parsed.createdAt}",id.lt."${parsed.id}")`,
     );
   }
 
