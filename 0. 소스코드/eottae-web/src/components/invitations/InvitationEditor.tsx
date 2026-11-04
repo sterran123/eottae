@@ -555,6 +555,10 @@ export default function InvitationEditor({ initialId }: InvitationEditorProps) {
           if (updated.layoutStyle) setLayoutStyle(updated.layoutStyle);
           if (updated.bgmPreset) setBgmPreset(updated.bgmPreset);
           if (updated.sectionOrder) setSectionOrder(updated.sectionOrder);
+          if (updated.greeting) setGreeting(updated.greeting);
+          if (updated.venueLabel) setVenueLabel(updated.venueLabel);
+          if (updated.notice !== undefined) setNotice(updated.notice);
+          if (updated.contactNote !== undefined) setContactNote(updated.contactNote);
         }}
       />
     </div>

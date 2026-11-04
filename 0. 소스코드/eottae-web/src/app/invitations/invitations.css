@@ -1411,10 +1411,10 @@
   }
 }
 
-/* 좌측 컨트롤러 툴바: 넉넉한 460px 와이드 패널로 글자 꺾임 및 잘림 완전 방지 */
+/* 좌측 컨트롤러 툴바: 360px 모바일 화면 넘침 방지 및 max-width: 100% 반응형 처리 */
 .inv-modal-toolbar {
-  width: 460px !important;
-  min-width: 430px;
+  width: 460px;
+  max-width: 100%;
   background: #ffffff;
   border-right: 1px solid #e2e8f0;
   padding: 24px;
@@ -1431,7 +1431,9 @@
 
 @media (max-width: 860px) {
   .inv-modal-toolbar {
-    width: 100%;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
     max-height: 280px;
     border-right: none;
     border-bottom: 1px solid #e2e8f0;

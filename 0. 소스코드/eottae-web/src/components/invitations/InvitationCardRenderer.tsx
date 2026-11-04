@@ -1470,6 +1470,28 @@ export default function InvitationCardRenderer({
                 </a>
               </div>
 
+              {/* 교통편 & 식사 안내 배너 (notice) */}
+              {invitation.notice?.trim() ? (
+                <div
+                  className="inv-notice-banner"
+                  style={{
+                    padding: '12px 14px',
+                    background: isDarkTheme ? 'rgba(255, 255, 255, 0.08)' : '#f8fafc',
+                    border: isDarkTheme ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid #e2e8f0',
+                    borderRadius: 8,
+                    marginBottom: 14,
+                    fontSize: 12,
+                    lineHeight: 1.5,
+                    textAlign: 'left',
+                  }}
+                >
+                  <strong style={{ color: accent, display: 'block', marginBottom: 3 }}>
+                    🍽️ 식사 &amp; 교통편 안내
+                  </strong>
+                  <span>{invitation.notice}</span>
+                </div>
+              ) : null}
+
               {/* 교통수단 상세 안내 */}
               <div className="inv-transport-guide">
                 <div>

@@ -1029,3 +1029,13 @@
 - [AI] Antigravity가 해당 4개 파일(types, demo-storage, InvitationsHub, PreviewModal, CardRenderer) 수정 후 정적 빌드 테스트 통과.
 - [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
 - [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
+
+
+## 2026-11-05 PR #97 6차 리뷰 지적 3건 해결 (오하율 작업)
+- [요청] PR #97 6차 피드백 3건(360px 모달 툴바 max-width: 100%·모달 인사말/장소 에디터 저장 동기화·에디터 notice 식사/교통편 카드 렌더링) 반영:
+  1) `invitations.css`: `.inv-modal-toolbar`의 고정 `width: 460px !important`, `min-width: 430px`을 `max-width: 100%`로 개선하고, 모바일 미디어쿼리(`max-width: 860px`) 내에서 `width: 100% !important`, `min-width: 0 !important`를 부여하여 360px 모바일 환경에서 툴바가 잘리지 않도록 완벽 해결.
+  2) `InvitationEditor.tsx`: `InvitationPreviewModal`의 `onSaveSettings` 콜백에 `greeting`, `venueLabel`, `notice`, `contactNote` 상태 동기화(`setGreeting`, `setVenueLabel`)를 추가하여 모달에서 수정한 인사말·장소가 에디터 폼 저장 시 옛날 값으로 덮어써지던 버그 해결.
+  3) `InvitationCardRenderer.tsx`: location(오시는 길 & 약도) 섹션 상단에 `invitation.notice` 배너(`🍽️ 식사 & 교통편 안내`)를 추가하여 에디터에서 작성한 교통편 및 식사 안내 문구가 공개 카드 및 미리보기에 완벽하게 렌더링되도록 연결.
+- [AI] Antigravity가 해당 3개 파일(invitations.css, InvitationEditor, InvitationCardRenderer) 수정 후 정적 빌드 테스트 통과.
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
