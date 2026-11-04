@@ -16,12 +16,14 @@ import type {
   ThemeCustomStyle,
 } from '@/lib/invitations/types';
 import { getThemePreset, THEME_MASTER_PRESETS } from '@/lib/invitations/theme-presets';
+import { saveInvitation } from '@/lib/invitations/demo-storage';
 import InvitationCardRenderer from './InvitationCardRenderer';
 
 interface InvitationPreviewModalProps {
   isOpen: boolean;
   onClose: () => void;
   invitation: Invitation;
+  onSaveSettings?: (updated: Invitation) => void;
 }
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '/eottae';
@@ -149,10 +151,22 @@ const SECTION_LABELS: Record<InvitationSectionKey, string> = {
   rsvp_preview: '8. 참석 여부 회신 (RSVP)',
 };
 
+export const ALL_AVAILABLE_SECTIONS: InvitationSectionKey[] = [
+  'greeting',
+  'schedule',
+  'gallery',
+  'guest_snap',
+  'location',
+  'guestbook',
+  'account',
+  'rsvp_preview',
+];
+
 export default function InvitationPreviewModal({
   isOpen,
   onClose,
   invitation,
+  onSaveSettings,
 }: InvitationPreviewModalProps) {
   const initialPreset = getThemePreset(invitation.themeId || 'spring-blossom');
 
@@ -168,6 +182,8 @@ export default function InvitationPreviewModal({
   const [activeEffect, setActiveEffect] = useState<AnimationEffectType>(
     initialPreset.defaultEffect || 'petals'
   );
+
+  const [saveNotice, setSaveNotice] = useState<string | null>(null);
 
   // 모달 진입 시 살짝 반투명 마우스 스크롤 유도 오버레이
   const [isPreviewUnlocked, setIsPreviewUnlocked] = useState<boolean>(false);
@@ -237,16 +253,20 @@ export default function InvitationPreviewModal({
     setSelectedBgm('custom');
   };
 
-  const [sectionOrder, setSectionOrder] = useState<InvitationSectionKey[]>([
-    'greeting',
-    'schedule',
-    'gallery',
-    'guest_snap',
-    'location',
-    'guestbook',
-    'account',
-    'rsvp_preview',
-  ]);
+  const [sectionOrder, setSectionOrder] = useState<InvitationSectionKey[]>(() => {
+    return invitation.sectionOrder && invitation.sectionOrder.length > 0
+      ? invitation.sectionOrder
+      : initialPreset.defaultSectionOrder || [
+          'greeting',
+          'schedule',
+          'gallery',
+          'guest_snap',
+          'location',
+          'guestbook',
+          'account',
+          'rsvp_preview',
+        ];
+  });
 
   // 아코디언 확장 상태
   const [expandedSection, setExpandedSection] = useState<InvitationSectionKey | null>('gallery');
@@ -262,13 +282,13 @@ export default function InvitationPreviewModal({
       title: '예식 일시 & 달력',
       body: '소중한 날, 따뜻한 마음으로 함께해 주세요',
       fontFamily: 'serif',
-      calendarStyle: 'classic_table',
+      calendarStyle: initialPreset.defaultCalendarStyle || 'classic_table',
     },
     gallery: {
       title: '우리의 아름다운 순간 (신랑·신부 공식 화보)',
       body: '함께 걸어온 설레는 시간들을 기록합니다',
-      galleryMode: 'carousel',
-      frameStyle: 'arch',
+      galleryMode: initialPreset.defaultGalleryMode || 'carousel',
+      frameStyle: initialPreset.defaultFrameStyle || 'arch',
     },
     guest_snap: {
       title: '하객 실시간 현장 스냅 (참여형 앨범)',
@@ -431,16 +451,33 @@ export default function InvitationPreviewModal({
     }
   };
 
-  // 모달 오픈 및 대상 청첩장 변경 시 테마 프리셋 즉시 동기화 + 최상단 스크롤
+  // 모달 오픈 및 대상 청첩장 변경 시 테마 프리셋, 레이아웃, BGM, 섹션 순서 즉시 동기화 + 최상단 스크롤
   useEffect(() => {
     if (isOpen) {
+      const p = getThemePreset(invitation.themeId || 'spring-blossom');
       applyTheme((invitation.themeId || 'spring-blossom') as InvitationThemeId);
+      setSelectedLayout(invitation.layoutStyle || p.defaultLayout || 'classic');
+      setSelectedBgm(invitation.bgmPreset || p.defaultBgm || 'romantic');
+      setSectionOrder(
+        invitation.sectionOrder && invitation.sectionOrder.length > 0
+          ? invitation.sectionOrder
+          : p.defaultSectionOrder || [
+              'greeting',
+              'schedule',
+              'gallery',
+              'guest_snap',
+              'location',
+              'guestbook',
+              'account',
+              'rsvp_preview',
+            ]
+      );
       setCustomMainPhoto(null);
       if (phoneScreenRef.current) {
         phoneScreenRef.current.scrollTop = 0;
       }
     }
-  }, [isOpen, invitation.id, invitation.themeId]);
+  }, [isOpen, invitation.id, invitation.themeId, invitation.layoutStyle, invitation.bgmPreset, invitation.sectionOrder]);
 
   // 드래그 앤 드롭 핸들러
   const handleDragStart = (e: React.DragEvent, index: number) => {
@@ -524,14 +561,43 @@ export default function InvitationPreviewModal({
               • 배경색·사진 프레임·레이아웃·BGM 실시간 즉시 반영
             </span>
           </div>
-          <button
-            type="button"
-            className="inv-modal-close-btn"
-            onClick={onClose}
-            aria-label="미리보기 닫기"
-          >
-            ✕
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {saveNotice && (
+              <span style={{ fontSize: 12, color: '#16a34a', fontWeight: 700 }}>
+                {saveNotice}
+              </span>
+            )}
+            <button
+              type="button"
+              className="inv-btn-primary"
+              style={{ minHeight: 32, padding: '0 12px', fontSize: 12 }}
+              onClick={() => {
+                const updated: Invitation = {
+                  ...invitation,
+                  themeId: selectedTheme,
+                  layoutStyle: selectedLayout,
+                  bgmPreset: selectedBgm,
+                  sectionOrder: sectionOrder,
+                  updatedAt: new Date().toISOString(),
+                };
+                saveInvitation(updated);
+                if (onSaveSettings) onSaveSettings(updated);
+                setSaveNotice('저장 완료! 공개 화면에 반영되었습니다');
+                setTimeout(() => setSaveNotice(null), 3000);
+              }}
+              title="선택한 테마·레이아웃·BGM·섹션 순서를 브라우저에 저장하여 공개 화면에 즉시 반영합니다"
+            >
+              💾 설정 저장
+            </button>
+            <button
+              type="button"
+              className="inv-modal-close-btn"
+              onClick={onClose}
+              aria-label="미리보기 닫기"
+            >
+              ✕
+            </button>
+          </div>
         </header>
 
         {/* 본문: 좌측 와이드 툴바 + 우측 고화질 스마트폰 뷰어 */}
@@ -1050,14 +1116,28 @@ export default function InvitationPreviewModal({
                           </span>
                         </div>
 
-                        <button
-                          type="button"
-                          className={`inv-accordion-toggle-btn ${isExpanded ? 'inv-accordion-toggle-btn--active' : ''}`}
-                          onClick={() => toggleAccordion(secKey)}
-                          title={isExpanded ? '접기' : '디자인 커스텀 열기'}
-                        >
-                          {isExpanded ? '닫기 ▲' : '편집 ▼'}
-                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <button
+                            type="button"
+                            className="inv-accordion-toggle-btn"
+                            style={{ fontSize: 11, padding: '2px 6px', color: '#dc2626' }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSectionOrder((prev) => prev.filter((k) => k !== secKey));
+                            }}
+                            title="이 섹션 숨기기 (공개 화면에서 제외)"
+                          >
+                            숨김 ✕
+                          </button>
+                          <button
+                            type="button"
+                            className={`inv-accordion-toggle-btn ${isExpanded ? 'inv-accordion-toggle-btn--active' : ''}`}
+                            onClick={() => toggleAccordion(secKey)}
+                            title={isExpanded ? '접기' : '디자인 커스텀 열기'}
+                          >
+                            {isExpanded ? '닫기 ▲' : '편집 ▼'}
+                          </button>
+                        </div>
                       </div>
 
                       {/* 아코디언 상세 편집 패널 */}
@@ -1089,7 +1169,10 @@ export default function InvitationPreviewModal({
                                     key={cal.id}
                                     type="button"
                                     className={`inv-cal-choice-btn ${calendarStyle === cal.id ? 'inv-cal-choice-btn--active' : ''}`}
-                                    onClick={() => setCalendarStyle(cal.id)}
+                                    onClick={() => {
+                                      setCalendarStyle(cal.id);
+                                      updateCustomField('schedule', 'calendarStyle', cal.id);
+                                    }}
                                   >
                                     {cal.label}
                                   </button>
@@ -1112,7 +1195,10 @@ export default function InvitationPreviewModal({
                                     key={gm.id}
                                     type="button"
                                     className={`inv-gal-mode-btn ${galleryMode === gm.id ? 'inv-gal-mode-btn--active' : ''}`}
-                                    onClick={() => setGalleryMode(gm.id)}
+                                    onClick={() => {
+                                      setGalleryMode(gm.id);
+                                      updateCustomField('gallery', 'galleryMode', gm.id);
+                                    }}
                                   >
                                     {gm.label}
                                   </button>
@@ -1159,6 +1245,28 @@ export default function InvitationPreviewModal({
                     </div>
                   );
                 })}
+
+                {/* 숨겨진 섹션 다시 추가 */}
+                {ALL_AVAILABLE_SECTIONS.filter((s) => !sectionOrder.includes(s)).length > 0 && (
+                  <div style={{ marginTop: 12, padding: '10px 12px', background: '#f8fafc', borderRadius: 8, border: '1px dashed #cbd5e1' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', marginBottom: 6 }}>
+                      숨겨진 섹션 다시 추가
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      {ALL_AVAILABLE_SECTIONS.filter((s) => !sectionOrder.includes(s)).map((hidKey) => (
+                        <button
+                          key={hidKey}
+                          type="button"
+                          className="inv-btn-secondary"
+                          style={{ minHeight: 28, fontSize: 11, padding: '2px 8px' }}
+                          onClick={() => setSectionOrder((prev) => [...prev, hidKey])}
+                        >
+                          + {SECTION_LABELS[hidKey].split('(')[0]?.trim()}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </aside>

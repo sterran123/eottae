@@ -993,3 +993,16 @@
 - [변경] `src/app/invitations/invitations.css`, `ThemeHeroArtworks.tsx`: 주석 내 옛 템플릿 명칭 전수 교체.
 - [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
 - [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
+
+
+## 2026-11-05 PR #97 3차 리뷰 지적 6건 해결 (오하율 작업)
+- [요청] PR #97 3차 피드백 6건(저장값 연결·THEME_ALIASES·섹션순서/토글저장·BGM상태/라벨·contactNote보존·프리셋사진) 반영:
+  1) 에디터 및 테마 프리셋 저장 값이 미리보기 렌더러로 정상 반영되도록 getThemeDefaultPhoto 매핑 확장 및 CardRenderer 프롭 폴백 로직 개선.
+  2) THEME_ALIASES에서 실제 존재하는 프리셋 ID(`botanical-garden`, `cinematic-movie`, `minimal-arch`, `hanok-heritage`)를 덮어쓰던 버그 수정(THEME_MASTER_PRESETS 직접 우선 반환).
+  3) InvitationPreviewModal 섹션 순서 초기값을 invitation.sectionOrder로 정상 로드하고, 상단 헤더에 [설정 저장] 버튼을 추가하여 모달 설정이 로컬스토리지에 즉시 영구 반영되도록 개선.
+  4) 섹션 켜기/끄기(숨김 ✕ / 다시 추가) 기능 구현 및 PreviewModal에서 갤러리/캘린더 모드 변경 시 customConfigs와 상태가 동기화되도록 수정.
+  5) activeBgm 변경 시 재생 상태(none 시 정지) 동기화 및 플로팅 버튼에 현재 BGM 라벨명 표시, tape-card 고정 영문 문구 동적화.
+  6) InvitationEditor에 contactNote 상태 및 폼 입력란 추가, handleSubmit payload에 contactNote 저장 보존.
+- [AI] Antigravity가 해당 4개 파일(theme-presets, CardRenderer, PreviewModal, Editor, Hub) 수정 후 정적 빌드 테스트 통과.
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)

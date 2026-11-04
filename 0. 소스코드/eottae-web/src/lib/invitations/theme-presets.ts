@@ -444,14 +444,11 @@ const THEME_ALIASES: Record<string, string> = {
   'star-table': 'starlight-banquet',
   'sunset-center-line': 'center-line',
   'botanical': 'green-canopy',
-  'botanical-garden': 'green-canopy',
-  'cinematic-movie': 'the-wedding',
-  'minimal-arch': 'photo-background',
-  'hanok-heritage': 'with-love',
 };
 
 export function getThemePreset(themeId?: string): ThemePreset {
   if (!themeId) return THEME_MASTER_PRESETS['wax-seal'];
+  if (THEME_MASTER_PRESETS[themeId]) return THEME_MASTER_PRESETS[themeId];
   const resolved = THEME_ALIASES[themeId] || themeId;
   return THEME_MASTER_PRESETS[resolved] || THEME_MASTER_PRESETS['wax-seal'];
 }

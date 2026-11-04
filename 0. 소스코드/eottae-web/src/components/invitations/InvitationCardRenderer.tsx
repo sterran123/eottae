@@ -95,16 +95,30 @@ const imgNightGarden = `${basePath}/invitations/wedding-night-garden.jpg`;
 const imgHanbok = `${basePath}/invitations/wedding-hanbok.jpg`;
 const imgLuxuryHotel = `${basePath}/invitations/wedding-luxury-hotel.jpg`;
 
+export const BGM_LABEL_MAP: Record<string, string> = {
+  romantic: '축혼 행진곡',
+  piano: '쇼팽 야상곡',
+  acoustic: '어쿠스틱 기타',
+  bach_air: 'G선상의 아리아',
+  canon: '파헬벨 캐논',
+  thousand_years: 'A Thousand Years',
+  spring_waltz: '봄날의 왈츠',
+  none: '무음',
+  custom: '커스텀 BGM',
+};
+
 export function getThemeDefaultPhoto(themeId: string): string {
   switch (themeId) {
     case 'green-canopy':
     case 'botanical-garden':
+    case 'botanical':
     case 'typo-frame':
     case 'script-card':
       return imgGreenCanopy;
     case 'the-wedding':
     case 'cinematic-movie':
     case 'center-line':
+    case 'sunset-center-line':
       return imgSunset;
     case 'photo-background':
     case 'minimal-arch':
@@ -118,13 +132,17 @@ export function getThemeDefaultPhoto(themeId: string): string {
     case 'quiet':
       return imgBenchQuiet;
     case 'spring-blossom':
+    case 'spring-card':
       return imgCherryBlossom;
     case 'moonlight-garden':
+    case 'moon-garden':
       return imgNightGarden;
     case 'traditional-hanji':
     case 'hanok-heritage':
+    case 'hanji':
       return imgHanbok;
     case 'starlight-banquet':
+    case 'star-table':
       return imgLuxuryHotel;
     default:
       return imgStudioPeach;
@@ -139,11 +157,11 @@ export default function InvitationCardRenderer({
   overrideBgm,
   overrideSectionOrder,
   sectionCustomMap = {},
-  activeEffect = 'petals',
-  frameStyle = 'arch',
-  frameColor = '#ffffff',
-  calendarStyle = 'classic_table',
-  galleryMode = 'carousel',
+  activeEffect: propEffect,
+  frameStyle: propFrameStyle,
+  frameColor: propFrameColor,
+  calendarStyle: propCalendarStyle,
+  galleryMode: propGalleryMode,
   customThemeStyle,
   customMainPhoto,
   customBgmUrl,
@@ -156,11 +174,26 @@ export default function InvitationCardRenderer({
   const activeBgm = overrideBgm || invitation.bgmPreset || themePreset.defaultBgm || 'romantic';
   const activeSections = overrideSectionOrder || invitation.sectionOrder || themePreset.defaultSectionOrder;
 
+  const activeEffect = propEffect || themePreset.defaultEffect || 'petals';
+  const frameStyle = propFrameStyle || themePreset.defaultFrameStyle || 'arch';
+  const frameColor = propFrameColor || '#ffffff';
+  const calendarStyle = propCalendarStyle || themePreset.defaultCalendarStyle || 'classic_table';
+  const galleryMode = propGalleryMode || themePreset.defaultGalleryMode || 'carousel';
+
   const [isPlaying, setIsPlaying] = useState<boolean>(activeBgm !== 'none');
   const [groomAccountOpen, setGroomAccountOpen] = useState<boolean>(false);
   const [brideAccountOpen, setBrideAccountOpen] = useState<boolean>(false);
   const [copyNotice, setCopyNotice] = useState<string | null>(null);
   const [envelopeOpened, setEnvelopeOpened] = useState<boolean>(false);
+
+  // activeBgm 변경 시 재생 상태 동기화
+  useEffect(() => {
+    if (activeBgm === 'none' && !customBgmUrl) {
+      setIsPlaying(false);
+    } else {
+      setIsPlaying(true);
+    }
+  }, [activeBgm, customBgmUrl]);
 
   // 1. [갤러리 1: 신랑·신부 공식 웨딩 화보 갤러리]
   const [carouselIdx, setCarouselIdx] = useState<number>(0);
@@ -812,7 +845,7 @@ export default function InvitationCardRenderer({
               </div>
             </div>
             <div className="inv-sig-content" style={{ marginTop: 14 }}>
-              <div className="inv-sig-eng-text">JAEHYUN &amp; HYEJIN ARE GETTING MARRIED</div>
+              <div className="inv-sig-eng-text">WE ARE GETTING MARRIED</div>
               <div className="inv-sig-venue">{venueTitle}</div>
             </div>
           </div>
@@ -1050,7 +1083,7 @@ export default function InvitationCardRenderer({
 
       case 'gallery': {
         const title = custom?.title || '우리의 아름다운 순간 (신랑·신부 공식 화보)';
-        const activeGalMode = custom?.galleryMode || galleryMode;
+        const activeGalMode = galleryMode || custom?.galleryMode || 'carousel';
 
         return (
           <section key="gallery" className="inv-content-section" style={sectionStyle}>
@@ -1701,7 +1734,11 @@ export default function InvitationCardRenderer({
             <div className="inv-bgm-eq__bar" />
             <div className="inv-bgm-eq__bar" />
           </div>
-          <span>{isPlaying ? 'BGM ON' : 'BGM OFF'}</span>
+          <span>
+            {isPlaying
+              ? (customBgmTitle || BGM_LABEL_MAP[activeBgm] || 'BGM ON')
+              : 'BGM OFF'}
+          </span>
         </button>
       )}
 

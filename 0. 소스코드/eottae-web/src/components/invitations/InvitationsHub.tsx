@@ -691,6 +691,10 @@ function InvitationsHubContent() {
           isOpen={Boolean(previewTarget)}
           onClose={() => setPreviewTarget(null)}
           invitation={previewTarget}
+          onSaveSettings={(updated) => {
+            setPreviewTarget(updated);
+            setInvitations((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
+          }}
         />
       )}
     </div>

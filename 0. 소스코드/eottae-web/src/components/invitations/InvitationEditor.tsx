@@ -72,6 +72,7 @@ export default function InvitationEditor({ initialId }: InvitationEditorProps) {
   const [weddingDate, setWeddingDate] = useState<string>('2026-11-28T14:00');
   const [venueLabel, setVenueLabel] = useState<string>('');
   const [notice, setNotice] = useState<string>('');
+  const [contactNote, setContactNote] = useState<string>('');
   const [greeting, setGreeting] = useState<string>('');
   const [themeId, setThemeId] = useState<InvitationThemeId>('spring-card');
   const [layoutStyle, setLayoutStyle] = useState<InvitationLayoutStyle>('classic');
@@ -103,6 +104,7 @@ export default function InvitationEditor({ initialId }: InvitationEditorProps) {
         setWeddingDate(existing.weddingDate.slice(0, 16));
         setVenueLabel(existing.venueLabel);
         setNotice(existing.notice || '');
+        setContactNote(existing.contactNote || '가상 문의 안내: 모바일 청첩장 데모 환경입니다.');
         setGreeting(existing.greeting);
         setThemeId(existing.themeId);
         setLayoutStyle(existing.layoutStyle || 'classic');
@@ -122,6 +124,7 @@ export default function InvitationEditor({ initialId }: InvitationEditorProps) {
       setHostNames('신랑 이서윤 · 신부 박하람');
       setVenueLabel('노을구 달빛웨딩홀 2층 그랜드볼룸');
       setNotice('식사는 연회장에 준비되어 있습니다. 건물 내 3시간 무료 주차 가능합니다.');
+      setContactNote('가상 문의 안내: 모바일 청첩장 데모 환경입니다.');
       setGreeting(
         '서로 마주 보며 다져온 사랑을 이제 한곳을 바라보며 걸어가고자 합니다.\n소중한 걸음으로 축복해 주시면 더없는 기쁨으로 간직하겠습니다.'
       );
@@ -152,6 +155,7 @@ export default function InvitationEditor({ initialId }: InvitationEditorProps) {
     status,
     viewerIsOwner: true,
     notice,
+    contactNote,
   };
 
   const moveSectionUp = (idx: number) => {
@@ -226,6 +230,7 @@ export default function InvitationEditor({ initialId }: InvitationEditorProps) {
       sectionOrder,
       visibility,
       notice: notice.trim(),
+      contactNote: contactNote.trim() || existing?.contactNote || '가상 문의 안내: 모바일 청첩장 데모 환경입니다.',
       updatedAt: new Date().toISOString(),
     };
 
@@ -369,6 +374,17 @@ export default function InvitationEditor({ initialId }: InvitationEditorProps) {
                 onChange={(e) => setNotice(e.target.value)}
                 placeholder="예: 식사는 연회장에 준비되어 있습니다. 지하 1~3층 무료 주차 가능합니다."
               />
+            </div>
+            <div className="inv-field">
+              <label htmlFor="inv-contact-note">가상 문의 및 연락 안내 (contactNote)</label>
+              <input
+                id="inv-contact-note"
+                type="text"
+                value={contactNote}
+                onChange={(e) => setContactNote(e.target.value)}
+                placeholder="예: 가상 문의 안내: 모바일 청첩장 데모 환경입니다."
+              />
+              <span className="inv-field-desc">개인정보 보호를 위해 실제 연락처 대신 데모 안내 문구를 권장합니다.</span>
             </div>
             <div className="inv-field">
               <label htmlFor="inv-greeting">모시는 글 (인사말)</label>
@@ -532,6 +548,12 @@ export default function InvitationEditor({ initialId }: InvitationEditorProps) {
         isOpen={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}
         invitation={previewInvitation}
+        onSaveSettings={(updated) => {
+          setThemeId(updated.themeId);
+          if (updated.layoutStyle) setLayoutStyle(updated.layoutStyle);
+          if (updated.bgmPreset) setBgmPreset(updated.bgmPreset);
+          if (updated.sectionOrder) setSectionOrder(updated.sectionOrder);
+        }}
       />
     </div>
   );
