@@ -80,6 +80,9 @@ function sanitizeInvitation(inv: Invitation): Invitation {
     updatedAt: inv.updatedAt,
     notice: typeof inv.notice === 'string' ? inv.notice.slice(0, 300) : undefined,
     contactNote: typeof inv.contactNote === 'string' ? inv.contactNote.slice(0, 200) : undefined,
+    layoutStyle: inv.layoutStyle && ['classic', 'modern', 'minimal'].includes(inv.layoutStyle) ? inv.layoutStyle : 'classic',
+    bgmPreset: inv.bgmPreset && ['none', 'romantic', 'piano', 'acoustic'].includes(inv.bgmPreset) ? inv.bgmPreset : 'none',
+    sectionOrder: Array.isArray(inv.sectionOrder) ? inv.sectionOrder.slice(0, 8) : undefined,
   };
 }
 

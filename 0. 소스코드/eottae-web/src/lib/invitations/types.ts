@@ -11,8 +11,79 @@ export type InvitationVisibility = (typeof INVITATION_VISIBILITIES)[number];
 export const RSVP_RESPONSES = ['yes', 'no', 'maybe'] as const;
 export type RsvpResponse = (typeof RSVP_RESPONSES)[number];
 
-export const INVITATION_THEME_IDS = ['spring-card', 'moon-garden', 'hanji', 'star-table'] as const;
-export type InvitationThemeId = (typeof INVITATION_THEME_IDS)[number];
+export const INVITATION_THEME_IDS = [
+  'spring-card',
+  'moon-garden',
+  'hanji',
+  'star-table',
+  'wax-seal',
+  'tape-card',
+  'typo-frame',
+  'photo-only',
+  'script-card',
+  'center-line',
+  'cover-a',
+  'quiet',
+  'botanical-garden',
+  'spring-blossom',
+  'moonlight-garden',
+  'traditional-hanji',
+  'starlight-banquet',
+  'minimal-arch',
+  'cinematic-movie',
+  'hanok-heritage',
+] as const;
+export type InvitationThemeId = (typeof INVITATION_THEME_IDS)[number] | string;
+
+export const INVITATION_LAYOUT_STYLES = ['classic', 'modern', 'minimal'] as const;
+export type InvitationLayoutStyle = (typeof INVITATION_LAYOUT_STYLES)[number];
+
+export const INVITATION_BGM_PRESETS = ['none', 'romantic', 'piano', 'acoustic'] as const;
+export type InvitationBgmpreset = (typeof INVITATION_BGM_PRESETS)[number];
+
+export const INVITATION_ANIMATION_EFFECTS = ['petals', 'sparkles', 'snow', 'envelope', 'none'] as const;
+export type AnimationEffectType = (typeof INVITATION_ANIMATION_EFFECTS)[number];
+
+export type SectionFontOption = 'serif' | 'sans' | 'script';
+
+export type PhotoFrameStyle = 'arch' | 'life4cut' | 'polaroid' | 'gold_round' | 'square';
+export type CalendarStyle = 'classic_table' | 'heart_stamp' | 'box_badge' | 'minimal_text';
+export type GalleryViewMode = 'carousel' | 'life4cut_strip' | 'grid3x3';
+
+export interface SectionCustomConfig {
+  title?: string;
+  body?: string;
+  fontFamily?: SectionFontOption;
+  textColor?: string;
+  accentColor?: string;
+  bgColor?: string;
+  frameStyle?: PhotoFrameStyle;
+  frameColor?: string;
+  calendarStyle?: CalendarStyle;
+  galleryMode?: GalleryViewMode;
+}
+
+export type SectionCustomMap = Partial<Record<InvitationSectionKey, SectionCustomConfig>>;
+
+export interface ThemeCustomStyle {
+  bgColor: string;
+  primaryColor: string;
+  textColor: string;
+  accentColor: string;
+  pattern?: string;
+}
+
+export const INVITATION_SECTION_KEYS = [
+  'greeting',
+  'schedule',
+  'location',
+  'gallery',
+  'guestbook',
+  'guest_snap',
+  'account',
+  'rsvp_preview',
+] as const;
+export type InvitationSectionKey = (typeof INVITATION_SECTION_KEYS)[number];
 
 /**
  * 청첩장 엔티티 (DB INVITATION 모델 대응)
@@ -47,6 +118,12 @@ export type Invitation = {
   // 부가 옵션 (에디터/상세 확장용, 가상 정보)
   notice?: string;
   contactNote?: string;
+  /** 레이아웃 형태 (classic: 클래식 스크롤, modern: 모던 카드, minimal: 미니멀 매거진) */
+  layoutStyle?: InvitationLayoutStyle;
+  /** 배경음악 시연 프리셋 */
+  bgmPreset?: InvitationBgmpreset;
+  /** 섹션 순서 커스텀 */
+  sectionOrder?: InvitationSectionKey[];
 };
 
 /**

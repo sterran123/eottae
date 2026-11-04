@@ -24,6 +24,9 @@ export const DEMO_INVITATIONS: readonly Invitation[] = [
     updatedAt: '2026-11-01T15:30:00+09:00',
     notice: '식사는 식장 내 연회장에 정성껏 준비되어 있습니다. 주차는 건물 지하 1~3층 이용 가능합니다.',
     contactNote: '가상 문의 안내: 모바일 청첩장 데모 환경입니다.',
+    layoutStyle: 'classic',
+    bgmPreset: 'romantic',
+    sectionOrder: ['greeting', 'schedule', 'location', 'account', 'rsvp_preview'],
   },
   {
     id: 'demo-inv-2',
@@ -44,6 +47,9 @@ export const DEMO_INVITATIONS: readonly Invitation[] = [
     updatedAt: '2026-11-02T18:20:00+09:00',
     notice: '소규모 스몰 웨딩으로 진행됩니다. 편안한 마음으로 참석해 주세요.',
     contactNote: '가상 문의 안내: 모바일 청첩장 데모 환경입니다.',
+    layoutStyle: 'modern',
+    bgmPreset: 'piano',
+    sectionOrder: ['greeting', 'location', 'schedule', 'account', 'rsvp_preview'],
   },
   {
     id: 'demo-inv-3',
@@ -64,6 +70,9 @@ export const DEMO_INVITATIONS: readonly Invitation[] = [
     updatedAt: '2026-11-01T14:00:00+09:00',
     notice: '전통 혼례 식순으로 진행되며, 식후 피로연이 준비되어 있습니다.',
     contactNote: '타인의 예시 청첩장(열람 전용)입니다.',
+    layoutStyle: 'minimal',
+    bgmPreset: 'acoustic',
+    sectionOrder: ['greeting', 'schedule', 'location', 'rsvp_preview', 'account'],
   },
   {
     id: 'demo-inv-revoked',

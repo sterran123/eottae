@@ -850,3 +850,19 @@
 - [변경] src/app/page.tsx, src/app/settings/page.tsx | 홈 카드 태그를 「3차 · 데모 미리보기」. 설명에 테마 미리보기와 「에디터·공유 링크·RSVP는 아직 준비 중이에요」. 설정 앱 정보 3차 값을 「3차 · 데모 미리보기. 청첩장 에디터·공유 링크·RSVP는 아직 준비 중이에요.」 카드 버튼 「서비스 소개 보기」와 청첩장 히어로 「3차 MVP · 준비 중」은 그대로
 - [미실행] 브라우저에서 푸터 링크·6테마 비활성 버튼 대비·360px, typecheck·build. 이 세션은 파일 읽기·검색·수정만. `auth.css`·`activities.css`의 별도 opacity, 청첩장·추천 신고·로그인 화면, 서버·Supabase, `package.json`, `FILE_INDEX.csv`·`MANIFEST.sha256`는 수정하지 않았고 해시는 다시 계산하지 않음
 - [변경] PR #91 Grok 리뷰(542e9b8) 반영: 푸터를 「시연에서 입력한 내용은 이 브라우저에 남아요. 계정 저장 범위는 개인정보 안내를 봐 주세요.」로 바꿈. 두 번째 문장만 `/privacy/` 링크(`site-footer.tsx`). 권장 반영: `.footer-bottom a`에 `min-height: 44px`·`inline-flex`·세로 가운데(`globals.css`). 보류: `auth.css` `.auth-submit:disabled`와 `activities.css` `.act-page button:disabled`의 opacity(로그인·활동 파일은 이 작업에서 열지 않음. 전역 `.btn:disabled`는 유지). 824·830행은 그대로 둠. `FILE_INDEX.csv`·`MANIFEST.sha256`는 수정하지 않았고 해시는 다시 계산하지 않음. typecheck·build·sha256sum·브라우저 확인은 실행하지 않음. PR 본문은 이 작업 트리에 없어 고치지 않음.
+
+## 2026-11-04 INV-001 모바일 청첩장 에디터·미리보기·공개 하객 뼈대 목업 (오하율 작업)
+- [요청] 3차 메인 청첩장 에디터·미리보기·공개 하객 뼈대 구현(이슈 #84). 사용자 특별 요구로 테마 미리보기 및 미리보기 모달창에서 사용자가 직접 고퀄리티 체험 테스트(4종 테마, 3종 레이아웃, 4종 BGM 프리셋 및 Web Audio 신스 재생, 섹션 순서 위/아래 이동 재배치)를 할 수 있도록 구현. ThemePreviewSection 모의 결제 유지, globals.css 수정 금지, invitations.css 전용 스타일 적용.
+- [AI] Antigravity가 3차 작업지시서, AGENT_오하율_INV_EDITOR.md, types.ts, demo-storage.ts를 바탕으로 청첩장 메인 허브, 에디터 화면(/invitations/new/), 하객 공개 뼈대(/invitations/p/?t=), 인터랙티브 모달 및 카드 렌더러 구현.
+- [신규] src/app/invitations/invitations.css | 청첩장 전용 스타일 (4종 테마 클래스, 3종 레이아웃, 모바일 360px 대응, 터치 타겟 44px, Web Audio BGM 이퀄라이저·LP 회전 애니메이션, prefers-reduced-motion 대응). globals.css 무수정.
+- [신규] src/components/invitations/InvitationCardRenderer.tsx | 4종 테마(spring-card, moon-garden, hanji, star-table) 및 3종 레이아웃(classic, modern, minimal), Web Audio 실시간 BGM 신스 멜로디 시연, 5개 섹션 동적 렌더링, D-Day 계산, 가상 계좌 복사 토글, 손준혁 RSVP 연동 슬롯(id="rsvp-slot").
+- [신규] src/components/invitations/InvitationPreviewModal.tsx | 실시간 스마트폰 뷰포트 목업(노치·스크린 프레임)과 인터랙티브 컨트롤 패널(테마 탭, 레이아웃 탭, BGM 탭, 섹션 순서 ▲/▼ 버튼, Esc 닫기).
+- [신규] src/components/invitations/InvitationEditor.tsx | 청첩장 작성/수정 폼(제목, 성함, 일시, 장소, 인사말, 테마/레이아웃/BGM 선택, 섹션 순서 커스텀, 공개 설정) 및 우측 실시간 모바일 프리뷰 스티키 패널.
+- [신규] src/components/invitations/InvitationsHub.tsx | 내 청첩장 목록 카드 그리드(체험 테스트, 정보 수정, 하객 화면, 링크 복사, 삭제), 3차 MVP 데모 배너, 프리미엄 테마 쇼케이스 및 원클릭 체험 모달 연동.
+- [신규] src/app/invitations/new/page.tsx | 정적 export 대응 에디터 라우트 (신규 작성 및 ?edit=id 수정 지원, Suspense 감쌈).
+- [신규] src/app/invitations/p/page.tsx | 정적 export 대응 하객 공개 열람 뼈대 (?t=sharingToken, 행사 정보 및 RSVP 슬롯 렌더링, 만료/폐기 시 친절한 안내).
+- [변경] src/app/invitations/page.tsx | 청첩장 허브에 InvitationsHub 탑재, 하단 ThemePreviewSection(모의 결제) 100% 보존 유지.
+- [변경] src/lib/invitations/{types.ts, demo-data.ts, demo-storage.ts} | InvitationLayoutStyle, InvitationBgmpreset, InvitationSectionKey 타입 정의 및 예시 데이터/스토리지 sanitize 확장.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` (`next build`, 25개 정적 페이지 export 완료) PASS
+- [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수), RSVP 폼 본문(손준혁 #86), 토큰 재발급 본문(주한태 #85)
