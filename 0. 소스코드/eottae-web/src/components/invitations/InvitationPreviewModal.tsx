@@ -1161,6 +1161,7 @@ export default function InvitationPreviewModal({
               <div
                 ref={phoneScreenRef}
                 className="inv-phone-screen"
+                style={{ backgroundColor: customThemeStyle?.bgColor || '#ffffff' }}
                 onScroll={() => {
                   if (!isPreviewUnlocked) setIsPreviewUnlocked(true);
                 }}

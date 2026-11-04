@@ -316,6 +316,25 @@ export default function InvitationCardRenderer({
   const effectiveTextColor = customThemeStyle?.textColor || themePreset.defaultTextColor;
   const effectiveAccentColor = customThemeStyle?.accentColor || themePreset.defaultAccentColor;
 
+  // [INV-001 고도화] 테마 및 커스텀 배경색의 명도(Luminance)를 정밀 계산하여 다크 테마 판별
+  const isDarkColor = (colorStr?: string): boolean => {
+    if (!colorStr) return false;
+    let hex = colorStr.trim();
+    if (!hex.startsWith('#')) return false;
+    hex = hex.slice(1);
+    if (hex.length === 3) hex = hex.split('').map((c) => c + c).join('');
+    if (hex.length !== 6) return false;
+    const r = parseInt(hex.slice(0, 2), 16);
+    const g = parseInt(hex.slice(2, 4), 16);
+    const b = parseInt(hex.slice(4, 6), 16);
+    const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+    return yiq < 140;
+  };
+
+  const isDarkTheme =
+    isDarkColor(effectiveBgColor) ||
+    ['typo-frame', 'moonlight-garden', 'starlight-banquet', 'cinematic-movie', 'the-wedding'].includes(activeThemeId);
+
   const getSectionStyle = (key: InvitationSectionKey) => {
     const config = sectionCustomMap[key];
     const fontMap = {
@@ -324,9 +343,10 @@ export default function InvitationCardRenderer({
       script: '"Caveat", "Dancing Script", cursive, "Nanum Pen Script", cursive',
     };
     const activeFont = config?.fontFamily || themePreset.defaultFont;
+    const defaultColor = isDarkTheme ? (effectiveTextColor || '#fefae0') : (effectiveTextColor || '#1c1917');
     return {
       fontFamily: fontMap[activeFont],
-      color: config?.textColor || effectiveTextColor,
+      color: config?.textColor || defaultColor,
     };
   };
 
@@ -748,10 +768,11 @@ export default function InvitationCardRenderer({
                                     color: isWeddingDay
                                       ? '#ffffff'
                                       : isSunday
-                                      ? '#e11d48'
+                                      ? (isDarkTheme ? '#fca5a5' : '#dc2626')
                                       : isSaturday
-                                      ? '#2563eb'
-                                      : 'inherit',
+                                      ? (isDarkTheme ? '#93c5fd' : '#2563eb')
+                                      : (isDarkTheme ? '#f8fafc' : '#1f2937'),
+                                    fontWeight: isWeddingDay ? 700 : 500,
                                   }}
                                 >
                                   {cellDay}
@@ -775,7 +796,7 @@ export default function InvitationCardRenderer({
                     <strong style={{ fontSize: 20 }}>{day}일</strong>
                     <span style={{ fontSize: 11, opacity: 0.8 }}>WEDDING</span>
                   </div>
-                  <div style={{ marginTop: 10, fontSize: 13, fontWeight: 600 }}>
+                  <div style={{ marginTop: 10, fontSize: 13, fontWeight: 600, color: isDarkTheme ? '#fefae0' : 'inherit' }}>
                     {month}월의 어느 멋진 날, 두 사람의 시작
                   </div>
                 </div>
@@ -785,15 +806,15 @@ export default function InvitationCardRenderer({
                 <div className="inv-countdown-box-view">
                   <div className="inv-countdown-grid">
                     <div className="inv-count-cell">
-                      <strong>{Math.max(0, diffDays)}</strong>
+                      <strong style={{ color: isDarkTheme ? '#ffffff' : 'inherit' }}>{Math.max(0, diffDays)}</strong>
                       <span>DAYS</span>
                     </div>
                     <div className="inv-count-cell">
-                      <strong>14</strong>
+                      <strong style={{ color: isDarkTheme ? '#ffffff' : 'inherit' }}>14</strong>
                       <span>HOURS</span>
                     </div>
                     <div className="inv-count-cell">
-                      <strong>30</strong>
+                      <strong style={{ color: isDarkTheme ? '#ffffff' : 'inherit' }}>30</strong>
                       <span>MINS</span>
                     </div>
                   </div>
@@ -802,16 +823,16 @@ export default function InvitationCardRenderer({
 
               {activeCalStyle === 'minimal_text' && (
                 <div style={{ padding: '24px 10px', textAlign: 'center' }}>
-                  <div style={{ fontSize: 32, fontFamily: 'serif', fontWeight: 700 }}>
+                  <div style={{ fontSize: 32, fontFamily: 'serif', fontWeight: 700, color: isDarkTheme ? '#fefae0' : '#1c1917' }}>
                     {year}. {month}. {day}
                   </div>
-                  <div style={{ fontSize: 13, letterSpacing: '0.1em', marginTop: 4, opacity: 0.8 }}>
+                  <div style={{ fontSize: 13, letterSpacing: '0.1em', marginTop: 4, opacity: 0.85, color: isDarkTheme ? 'rgba(254, 250, 224, 0.85)' : 'rgba(28, 25, 23, 0.85)' }}>
                     SATURDAY AFTERNOON 2:00 PM
                   </div>
                 </div>
               )}
 
-              <div className="inv-dday-badge" style={{ backgroundColor: accent }}>
+              <div className="inv-dday-badge" style={{ backgroundColor: accent, color: '#ffffff', textShadow: '0 1px 3px rgba(0,0,0,0.35)' }}>
                 <span>{dDayText}</span>
                 <span style={{ fontSize: 11, fontWeight: 500, opacity: 0.85 }}>
                   {custom?.body || '소중한 날, 따뜻한 마음으로 함께해 주세요'}
@@ -1079,9 +1100,9 @@ export default function InvitationCardRenderer({
               <div className="inv-venue-info-card">
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                   <span style={{ fontSize: 20 }}>📍</span>
-                  <strong style={{ fontSize: 14, color: 'var(--ink)' }}>{venueTitle}</strong>
+                  <strong style={{ fontSize: 14, color: isDarkTheme ? '#ffffff' : '#1f2937' }}>{venueTitle}</strong>
                 </div>
-                <div style={{ fontSize: 12, opacity: 0.75, marginTop: 4, textAlign: 'center' }}>
+                <div style={{ fontSize: 12, opacity: 0.85, marginTop: 4, textAlign: 'center', color: isDarkTheme ? 'rgba(255,255,255,0.85)' : 'inherit' }}>
                   {venueAddress}
                 </div>
 
@@ -1287,7 +1308,9 @@ export default function InvitationCardRenderer({
 
   return (
     <div
-      className={`inv-render-canvas inv-theme--${activeThemeId} inv-layout--${activeLayout}`}
+      className={`inv-render-canvas inv-theme--${activeThemeId} inv-layout--${activeLayout} ${
+        isDarkTheme ? 'inv-mode--dark' : 'inv-mode--light'
+      }`}
       style={dynamicBackgroundStyle}
     >
       {/* 복사 완료 토스트 알림 */}
@@ -1349,8 +1372,9 @@ export default function InvitationCardRenderer({
           padding: '30px 20px 40px',
           textAlign: 'center',
           fontSize: 12,
-          opacity: 0.6,
-          borderTop: '1px solid rgba(0,0,0,0.06)',
+          opacity: 0.75,
+          color: isDarkTheme ? 'rgba(255, 255, 255, 0.75)' : 'rgba(0, 0, 0, 0.65)',
+          borderTop: isDarkTheme ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
         {invitation.title}

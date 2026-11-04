@@ -122,28 +122,29 @@
 
 .inv-design-gallery-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px 20px;
   width: 100%;
+  align-items: start;
 }
 
 @media (max-width: 1024px) {
   .inv-design-gallery-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 540px) {
   .inv-design-gallery-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
-/* 1번 이미지의 세로형 모바일 청첩장 커버 카드 */
+/* 1번 이미지의 세로형 모바일 청첩장 커버 카드 (완벽히 통일된 크기 규격) */
 .inv-design-cover-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   gap: 12px;
   cursor: pointer;
   background: transparent;
@@ -151,6 +152,9 @@
   padding: 0;
   text-align: center;
   transition: transform 0.25s ease;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .inv-design-cover-card:hover {
@@ -162,10 +166,11 @@
   border-color: var(--brand);
 }
 
-/* 세로 모바일 비율 (9:15.5 비율, 둥근 모서리, 여백 제로로 풀블리드 사진 지원) */
+/* 세로 모바일 비율 (9:15.5 비율, 16종 모두 완전히 동일한 가로/세로 비율 고정) */
 .inv-cover-viewport {
   width: 100%;
   aspect-ratio: 9 / 15.5;
+  height: auto;
   border-radius: 18px;
   overflow: hidden;
   position: relative;
@@ -178,6 +183,17 @@
   transition: all 0.25s ease;
   user-select: none;
   background: #ffffff;
+  min-width: 0;
+  contain: paint;
+}
+
+.inv-cover-viewport > * {
+  width: 100%;
+  height: 100%;
+  flex: 1 1 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 /* 디자인 카드 하단 레이블 */
@@ -188,6 +204,9 @@
   letter-spacing: -0.01em;
   margin: 0;
   text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* --- 실사 웨딩 포토 기반 커버 스타일 (Pagesisters 급 고퀄리티) --- */
@@ -2368,22 +2387,39 @@
 
 /* 2. Modern: 각 섹션이 둥근 플로팅 카드로 분리! */
 .inv-layout--modern {
-  background: #f1f5f9;
+  background: transparent;
 }
 .inv-layout--modern .inv-hero-wrap {
-  margin: 14px 14px 0;
-  background: #ffffff;
-  border-radius: 24px;
-  padding: 30px 16px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  margin: 0;
+  background: transparent;
+  padding: 0;
 }
 .inv-layout--modern .inv-content-section {
-  background: #ffffff;
-  margin: 14px 14px;
+  margin: 16px 14px;
   border-radius: 22px;
   padding: 28px 18px;
+  box-sizing: border-box;
+  transition: all 0.25s ease;
+}
+
+.inv-layout--modern.inv-mode--light .inv-content-section {
+  background: #ffffff;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
   border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.inv-layout--modern.inv-mode--dark .inv-content-section {
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+}
+
+/* 3. Minimal: 군더더기 없는 미니멀리즘 */
+.inv-layout--minimal .inv-content-section {
+  padding: 32px 18px;
+  border: none;
+  background: transparent;
 }
 
 /* ============================================================
@@ -3871,54 +3907,441 @@
   letter-spacing: 0.05em;
 }
 
-/* --- 테마별 팔레트 --- */
-.inv-theme--spring-card {
-  background: #fff8f9;
-  color: #4a2e35;
-  background-image: radial-gradient(#ffe4e9 1px, transparent 1px);
-  background-size: 20px 20px;
+/* ============================================================
+ * [INV-001 테마 & 모드별 스크롤 완벽 일관성 및 가독성 고도화]
+ * 스크롤을 끝까지 내려도 테마 고유의 분위기와 색감이 끊기지 않고 자연스럽게 이어지며,
+ * 텍스트와 숫자가 100% 명확하게 읽히도록 고대비 명도 보장
+ * ============================================================ */
+
+/* --- 다크 모드 (Dark Themes: typo-frame, the-wedding, moonlight-garden, starlight-banquet, cinematic-movie) --- */
+.inv-mode--dark {
+  color: #f8fafc;
 }
 
-.inv-theme--moon-garden {
-  background: #0b132b;
-  color: #e2e8f0;
+.inv-mode--dark .inv-main-heading {
+  color: #ffffff !important;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
 }
-.inv-theme--moon-garden .inv-greeting-box,
-.inv-theme--moon-garden .inv-calendar-card,
-.inv-theme--moon-garden .inv-location-card,
-.inv-theme--moon-garden .inv-account-tab-btn,
-.inv-theme--moon-garden .inv-account-drawer,
-.inv-theme--moon-garden .inv-rsvp-card {
-  background: rgba(30, 41, 59, 0.85);
-  border-color: rgba(255, 255, 255, 0.1);
+
+.inv-mode--dark .inv-sub-heading {
+  letter-spacing: 0.18em;
+  font-weight: 700;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+.inv-mode--dark.inv-layout--modern .inv-content-section {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.38);
+  color: #f8fafc;
+}
+
+.inv-mode--dark.inv-layout--classic .inv-content-section {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: #f8fafc;
+}
+
+.inv-mode--dark .inv-calendar-card,
+.inv-mode--dark .inv-greeting-box,
+.inv-mode--dark .inv-rsvp-box {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  color: #f8fafc;
+}
+
+.inv-mode--dark .inv-calendar-header {
+  color: #ffffff;
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.inv-mode--dark .inv-calendar-table th {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.inv-mode--dark .inv-calendar-table th:first-child {
+  color: #f87171;
+}
+
+.inv-mode--dark .inv-calendar-table td {
+  color: #f8fafc;
+}
+
+.inv-mode--dark .inv-greeting-poem {
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.inv-mode--dark .inv-family-line {
+  border-top-color: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.inv-mode--dark .inv-family-line strong {
+  color: #ffffff;
+}
+
+.inv-mode--dark .inv-venue-info-card {
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+}
+
+.inv-mode--dark .inv-venue-info-card strong {
+  color: #ffffff !important;
+}
+
+.inv-mode--dark .inv-address-copy-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.inv-mode--dark .inv-address-copy-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.inv-mode--dark .inv-map-link-btn {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.inv-mode--dark .inv-transport-guide {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.inv-mode--dark .inv-transport-guide strong {
+  color: #ffffff;
+}
+
+.inv-mode--dark .inv-account-card {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #f8fafc;
+}
+
+.inv-mode--dark .inv-account-detail {
+  background: rgba(0, 0, 0, 0.38);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.inv-mode--dark .inv-guestbook-card {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.inv-mode--dark .inv-field-input {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.inv-mode--dark .inv-field-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* --- 라이트 모드 (Light Themes: green-canopy, with-love, wax-seal, tape-card, etc.) --- */
+.inv-mode--light {
+  color: #1f2937;
+}
+
+.inv-mode--light .inv-main-heading {
+  color: #111827;
+}
+
+.inv-mode--light.inv-layout--modern .inv-content-section {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+  color: #1f2937;
+}
+
+.inv-mode--light.inv-layout--classic .inv-content-section {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  color: #1f2937;
+}
+
+.inv-mode--light .inv-calendar-card,
+.inv-mode--light .inv-greeting-box,
+.inv-mode--light .inv-rsvp-box {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  color: #1f2937;
+}
+
+.inv-mode--light .inv-calendar-header {
+  color: #1f2937;
+}
+
+.inv-mode--light .inv-calendar-table th {
+  color: #6b7280;
+}
+
+.inv-mode--light .inv-calendar-table td {
+  color: #1f2937;
+}
+
+.inv-mode--light .inv-greeting-poem {
+  color: #374151;
+}
+
+.inv-mode--light .inv-venue-info-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #1f2937;
+}
+
+.inv-mode--light .inv-transport-guide {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #374151;
+}
+
+.inv-mode--light .inv-account-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #1f2937;
+}
+
+.inv-mode--light .inv-account-detail {
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  color: #1f2937;
+}
+
+/* --- 1. 타이포 프레임 (Typo Frame) - 딥 포레스트 그린 에디토리얼 테마 --- */
+.inv-theme--typo-frame {
+  background-color: #1c2710;
+  color: #fefae0;
+}
+
+.inv-theme--typo-frame.inv-layout--modern .inv-content-section {
+  background: rgba(28, 48, 22, 0.88) !important;
+  border: 1px solid rgba(254, 250, 224, 0.2) !important;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+  color: #fefae0;
+}
+
+.inv-theme--typo-frame .inv-main-heading {
+  color: #fefae0 !important;
+}
+
+.inv-theme--typo-frame .inv-sub-heading {
+  color: #dda15e !important;
+}
+
+.inv-theme--typo-frame .inv-calendar-card,
+.inv-theme--typo-frame .inv-greeting-box,
+.inv-theme--typo-frame .inv-rsvp-box {
+  background: rgba(18, 32, 14, 0.72) !important;
+  border: 1px solid rgba(254, 250, 224, 0.18) !important;
+  color: #fefae0 !important;
+}
+
+.inv-theme--typo-frame .inv-calendar-header {
+  color: #fefae0 !important;
+}
+
+.inv-theme--typo-frame .inv-calendar-table th {
+  color: rgba(254, 250, 224, 0.75) !important;
+}
+
+.inv-theme--typo-frame .inv-greeting-poem {
+  color: #fefae0 !important;
+}
+
+.inv-theme--typo-frame .inv-family-line {
+  border-top-color: rgba(254, 250, 224, 0.18);
+  color: rgba(254, 250, 224, 0.9);
+}
+
+.inv-theme--typo-frame .inv-family-line strong {
+  color: #fefae0 !important;
+}
+
+.inv-theme--typo-frame .inv-venue-info-card {
+  background: rgba(18, 32, 14, 0.72) !important;
+  border: 1px solid rgba(254, 250, 224, 0.18) !important;
+  color: #fefae0 !important;
+}
+
+.inv-theme--typo-frame .inv-venue-info-card strong {
+  color: #fefae0 !important;
+}
+
+.inv-theme--typo-frame .inv-transport-guide {
+  background: rgba(18, 32, 14, 0.6) !important;
+  border: 1px solid rgba(254, 250, 224, 0.15) !important;
+  color: #fefae0 !important;
+}
+
+.inv-theme--typo-frame .inv-account-card {
+  background: rgba(18, 32, 14, 0.72) !important;
+  border: 1px solid rgba(254, 250, 224, 0.18) !important;
+  color: #fefae0 !important;
+}
+
+.inv-theme--typo-frame .inv-account-detail {
+  background: rgba(10, 20, 8, 0.8) !important;
+  border-top: 1px solid rgba(254, 250, 224, 0.15) !important;
+  color: #fefae0 !important;
+}
+
+.inv-theme--typo-frame .inv-guestbook-card {
+  background: rgba(18, 32, 14, 0.72) !important;
+  border: 1px solid rgba(254, 250, 224, 0.18) !important;
+  color: #fefae0 !important;
+}
+
+.inv-theme--typo-frame .inv-field-input {
+  background: rgba(10, 20, 8, 0.6) !important;
+  border: 1px solid rgba(254, 250, 224, 0.25) !important;
+  color: #fefae0 !important;
+}
+
+/* --- 2. The Wedding & 시네마틱 무비 (Sunset / Dark Cinema) --- */
+.inv-theme--the-wedding,
+.inv-theme--cinematic-movie {
+  background-color: #09090b;
+  color: #f4f4f5;
+}
+
+.inv-theme--the-wedding.inv-layout--modern .inv-content-section,
+.inv-theme--cinematic-movie.inv-layout--modern .inv-content-section {
+  background: rgba(24, 24, 27, 0.88) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+  color: #f4f4f5;
+}
+
+/* --- 3. 달빛 정원 (Moonlight Garden) - 미드나잇 블루 테마 --- */
+.inv-theme--moonlight-garden {
+  background-color: #0f172a;
   color: #f1f5f9;
 }
 
-.inv-theme--hanji {
-  background: #faf7f2;
-  color: #292524;
-}
-.inv-theme--hanji .inv-greeting-box,
-.inv-theme--hanji .inv-calendar-card,
-.inv-theme--hanji .inv-location-card {
-  background: #ffffff;
-  border: 1px solid #e7e0d6;
-  border-radius: 12px;
+.inv-theme--moonlight-garden.inv-layout--modern .inv-content-section {
+  background: rgba(15, 23, 42, 0.88) !important;
+  border: 1px solid rgba(226, 232, 240, 0.16) !important;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+  color: #f1f5f9;
 }
 
-.inv-theme--star-table {
-  background: #141416;
-  color: #f4f4f5;
+.inv-theme--moonlight-garden .inv-calendar-card,
+.inv-theme--moonlight-garden .inv-greeting-box,
+.inv-theme--moonlight-garden .inv-rsvp-box,
+.inv-theme--moonlight-garden .inv-venue-info-card,
+.inv-theme--moonlight-garden .inv-account-card {
+  background: rgba(30, 41, 59, 0.75) !important;
+  border: 1px solid rgba(226, 232, 240, 0.15) !important;
+  color: #f1f5f9 !important;
 }
-.inv-theme--star-table .inv-greeting-box,
-.inv-theme--star-table .inv-calendar-card,
-.inv-theme--star-table .inv-location-card,
-.inv-theme--star-table .inv-account-tab-btn,
-.inv-theme--star-table .inv-account-drawer,
-.inv-theme--star-table .inv-rsvp-card {
-  background: rgba(39, 39, 42, 0.85);
-  border-color: rgba(255, 255, 255, 0.12);
-  color: #fafafa;
+
+/* --- 4. 별빛 연회 (Starlight Banquet) - 럭셔리 호텔 그랜드볼룸 골드 테마 --- */
+.inv-theme--starlight-banquet {
+  background-color: #18181b;
+  color: #fef08a;
+}
+
+.inv-theme--starlight-banquet.inv-layout--modern .inv-content-section {
+  background: rgba(28, 28, 32, 0.9) !important;
+  border: 1px solid rgba(250, 204, 21, 0.22) !important;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55);
+  color: #fef08a;
+}
+
+.inv-theme--starlight-banquet .inv-calendar-card,
+.inv-theme--starlight-banquet .inv-greeting-box,
+.inv-theme--starlight-banquet .inv-rsvp-box,
+.inv-theme--starlight-banquet .inv-venue-info-card,
+.inv-theme--starlight-banquet .inv-account-card {
+  background: rgba(20, 20, 22, 0.8) !important;
+  border: 1px solid rgba(250, 204, 21, 0.2) !important;
+  color: #fef08a !important;
+}
+
+.inv-theme--starlight-banquet .inv-main-heading {
+  color: #ffffff !important;
+}
+
+/* --- 5. 전통 한지 (Traditional Hanji) --- */
+.inv-theme--traditional-hanji {
+  background-color: #faf7f2;
+  color: #292524;
+}
+
+.inv-theme--traditional-hanji.inv-layout--modern .inv-content-section {
+  background: #ffffff;
+  border: 1px solid #e7e0d6;
+  border-radius: 16px;
+  color: #292524;
+}
+
+/* --- D-Day 배지 및 계좌 아코디언 컴포넌트 --- */
+.inv-dday-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 13px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-top: 8px;
+}
+
+.inv-account-card {
+  border-radius: 14px;
+  overflow: hidden;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.inv-account-row {
+  min-height: 48px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+
+.inv-account-detail {
+  padding: 12px 16px;
+}
+
+.inv-account-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.inv-copy-chip {
+  padding: 5px 12px;
+  border-radius: 12px;
+  background: var(--brand);
+  color: #ffffff;
+  border: none;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.inv-copy-chip:hover {
+  filter: brightness(1.15);
 }
 
 /* 애니메이션 */
