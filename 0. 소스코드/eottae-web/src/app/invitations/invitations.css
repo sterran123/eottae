@@ -264,7 +264,7 @@
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0) 30%, rgba(0, 0, 0, 0.25) 100%);
 }
 
-/* 그린 캐노피 타이포그래피 */
+/* 숲속의 싱그러움 타이포그래피 */
 .inv-cover-top-names {
   display: flex;
   justify-content: space-between;
@@ -394,7 +394,7 @@
   color: #475569;
 }
 
-/* 위드 러브 페이드 카드 */
+/* 사랑을 담아 페이드 카드 */
 .inv-fade-card-cover {
   width: 100%;
   height: 100%;
@@ -447,7 +447,7 @@
   line-height: 1.4;
 }
 
-/* 왁스 씰 실사 봉투 */
+/* 클래식 실링인장 실사 봉투 */
 .inv-wax-envelope-bottom-text {
   margin-top: auto;
   text-align: center;
@@ -474,7 +474,7 @@
   margin-top: 2px;
 }
 
-/* 테이프 카드 폴라로이드 */
+/* 스냅 포토카드 폴라로이드 */
 .inv-tape-card-container {
   width: 100%;
   height: 100%;
@@ -548,7 +548,7 @@
   margin-top: 1px;
 }
 
-/* 타이포 프레임 */
+/* 에디토리얼 프레임 */
 .inv-typo-top-group {
   text-align: center;
   z-index: 2;
@@ -588,7 +588,7 @@
   margin-top: 2px;
 }
 
-/* 스크립트 카드 'Our Day' */
+/* 손글씨 레터 'Our Day' */
 .inv-script-ourday-badge {
   font-size: 32px;
   font-family: 'Playfair Display', Georgia, serif;
@@ -625,7 +625,7 @@
   opacity: 0.75;
 }
 
-/* 센터 라인 */
+/* 노을빛 실루엣 */
 .inv-centerline-top-meta {
   text-align: center;
   z-index: 2;
@@ -680,7 +680,7 @@
   z-index: 2;
 }
 
-/* 커버 A */
+/* 린넨 가든 */
 .inv-cover-a-container {
   width: 100%;
   height: 100%;
@@ -981,7 +981,7 @@
 
 /* --- 8종 커버 프리뷰 테마별 디테일 --- */
 
-/* 1. 왁스 씰 (Wax Seal) */
+/* 1. 클래식 실링인장 (Wax Seal) */
 .inv-cover--wax-seal {
   background: #f7f4ed;
   background-image: radial-gradient(#ece6d8 1px, transparent 1px);
@@ -1013,7 +1013,7 @@
   z-index: 1;
 }
 
-/* 2. 테이프 카드 (Tape Card) */
+/* 2. 스냅 포토카드 (Snap Polaroid) */
 .inv-cover--tape-card {
   background: #f1f3f5;
   color: #212529;
@@ -1041,19 +1041,19 @@
   font-size: 40px;
 }
 
-/* 3. 타이포 프레임 (Typo Frame) */
+/* 3. 에디토리얼 프레임 (Editorial Frame) */
 .inv-cover--typo-frame {
   background: linear-gradient(180deg, #283618 0%, #1c2710 100%);
   color: #fefae0;
 }
 
-/* 4. 포토 온리 (Photo Only) */
+/* 4. 모던 풀스크린 (Full Photo) */
 .inv-cover--photo-only {
   background: linear-gradient(180deg, #fceade 0%, #f7d6c8 100%);
   color: #3d2c29;
 }
 
-/* 5. 스크립트 카드 (Script Card) */
+/* 5. 손글씨 레터 (Script Letter) */
 .inv-cover--script-card {
   background: #ffffff;
   color: #1a1a1a;
@@ -1067,7 +1067,7 @@
   line-height: 1;
 }
 
-/* 6. 센터 라인 (Center Line) */
+/* 6. 노을빛 실루엣 (Center Line) */
 .inv-cover--center-line {
   background: linear-gradient(180deg, #7b9acc 0%, #d4a373 100%);
   color: #ffffff;
@@ -1080,14 +1080,14 @@
   margin: 10px auto;
 }
 
-/* 7. 커버 A (Cover A) */
+/* 7. 린넨 가든 (Linen Garden) */
 .inv-cover--cover-a {
   background: #fafafa;
   color: #262626;
   border: 1px solid #e5e5e5;
 }
 
-/* 8. 콰이어트 (Quiet) */
+/* 8. 고요한 산책 (Quiet) */
 .inv-cover--quiet {
   background: #fbf9f5;
   color: #2b2b2b;
@@ -3314,7 +3314,7 @@
   text-align: center;
 }
 
-/* 1. 왁스 씰 (Wax Seal) */
+/* 1. 클래식 실링인장 (Wax Seal) */
 .inv-hero-sig--wax-seal {
   background: #f8f5ee;
   background-image: radial-gradient(#ece4d4 1.5px, transparent 1.5px);
@@ -3380,7 +3380,7 @@
   letter-spacing: 0.04em;
 }
 
-/* 2. 테이프 카드 (Tape Card) */
+/* 2. 스냅 포토카드 (Snap Polaroid) */
 .inv-hero-sig--tape-card {
   background: #f4f4f5;
   padding: 36px 20px 28px;
@@ -3440,7 +3440,7 @@
   margin-bottom: 4px;
 }
 
-/* 3. 타이포 프레임 (Typo Frame) */
+/* 3. 에디토리얼 프레임 (Editorial Frame) */
 .inv-hero-sig--typo-frame {
   position: relative;
   min-height: 450px;
@@ -3495,7 +3495,7 @@
   margin: 0 auto 16px;
 }
 
-/* 4. 포토 온리 (Photo Only) */
+/* 4. 모던 풀스크린 (Full Photo) */
 .inv-hero-sig--photo-only {
   position: relative;
   min-height: 460px;
@@ -3528,7 +3528,7 @@
   margin-bottom: 6px;
 }
 
-/* 5. 스크립트 카드 (Script Card) */
+/* 5. 손글씨 레터 (Script Letter) */
 .inv-hero-sig--script-card {
   padding: 36px 20px 24px;
   min-height: 440px;
@@ -3557,7 +3557,7 @@
   line-height: 1;
 }
 
-/* 6. 센터 라인 (Center Line) */
+/* 6. 노을빛 실루엣 (Center Line) */
 .inv-hero-sig--center-line {
   position: relative;
   min-height: 450px;
@@ -3632,7 +3632,7 @@
   letter-spacing: 0.12em;
 }
 
-/* 7. 커버 A (Cover A) */
+/* 7. 린넨 가든 (Linen Garden) */
 .inv-hero-sig--cover-a {
   background: #ffffff;
   padding: 24px 20px;
@@ -4147,7 +4147,7 @@
   color: #1f2937;
 }
 
-/* --- 1. 타이포 프레임 (Typo Frame) - 딥 포레스트 그린 에디토리얼 테마 (다크 모드 전용 스코핑) --- */
+/* --- 1. 에디토리얼 프레임 (Editorial Frame) - 딥 포레스트 그린 에디토리얼 테마 (다크 모드 전용 스코핑) --- */
 .inv-mode--dark.inv-theme--typo-frame {
   background-color: #1c2710;
   color: #fefae0;

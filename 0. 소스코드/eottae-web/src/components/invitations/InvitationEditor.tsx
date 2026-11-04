@@ -8,6 +8,7 @@ import type {
   InvitationBgmpreset,
   InvitationLayoutStyle,
   InvitationSectionKey,
+  InvitationStatus,
   InvitationThemeId,
   InvitationVisibility,
 } from '@/lib/invitations/types';
@@ -78,6 +79,10 @@ export default function InvitationEditor({ initialId }: InvitationEditorProps) {
   const [sectionOrder, setSectionOrder] = useState<InvitationSectionKey[]>(DEFAULT_SECTIONS);
   const [visibility, setVisibility] = useState<InvitationVisibility>('public');
   const [sharingToken, setSharingToken] = useState<string>('');
+  const [status, setStatus] = useState<InvitationStatus>('published');
+  const [expiry, setExpiry] = useState<string | null>(null);
+  const [ownerId, setOwnerId] = useState<string>('user-demo-me');
+  const [createdAt, setCreatedAt] = useState<string>('');
 
   const [isPreviewOpen, setIsPreviewOpen] = useState<boolean>(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -105,6 +110,10 @@ export default function InvitationEditor({ initialId }: InvitationEditorProps) {
         setSectionOrder(existing.sectionOrder || DEFAULT_SECTIONS);
         setVisibility(existing.visibility);
         setSharingToken(existing.sharingToken);
+        setStatus(existing.status);
+        setExpiry(existing.expiry);
+        setOwnerId(existing.ownerId);
+        setCreatedAt(existing.createdAt || '');
       }
     } else {
       // 신규 생성 기본값
@@ -117,13 +126,17 @@ export default function InvitationEditor({ initialId }: InvitationEditorProps) {
         '서로 마주 보며 다져온 사랑을 이제 한곳을 바라보며 걸어가고자 합니다.\n소중한 걸음으로 축복해 주시면 더없는 기쁨으로 간직하겠습니다.'
       );
       setSharingToken(`sh-${Math.random().toString(36).substring(2, 12)}`);
+      setStatus('published');
+      setExpiry(null);
+      setOwnerId('user-demo-me');
+      setCreatedAt(new Date().toISOString());
     }
   }, [initialId]);
 
   // 미리보기를 위한 가상 엔티티 구성
   const previewInvitation: Invitation = {
     id: id || 'preview-temp',
-    ownerId: 'user-demo-me',
+    ownerId,
     title: title || '청첩장 제목',
     hostNames: hostNames || '신랑 & 신부',
     weddingDate,
@@ -131,12 +144,12 @@ export default function InvitationEditor({ initialId }: InvitationEditorProps) {
     greeting: greeting || '초대 인사말을 입력해 주세요.',
     sharingToken: sharingToken || 'token-preview',
     visibility,
-    expiry: null,
+    expiry,
     themeId,
     layoutStyle,
     bgmPreset,
     sectionOrder,
-    status: 'published',
+    status,
     viewerIsOwner: true,
     notice,
   };
@@ -194,12 +207,24 @@ export default function InvitationEditor({ initialId }: InvitationEditorProps) {
 
     const existing = initialId ? getInvitationById(initialId) : null;
     const payload: Invitation = {
-      ...(existing || {}),
       ...previewInvitation,
+      id: existing ? existing.id : id,
+      ownerId: existing ? existing.ownerId : ownerId,
+      sharingToken: existing ? existing.sharingToken : sharingToken,
+      status: existing ? existing.status : status,
+      expiry: existing ? existing.expiry : expiry,
+      createdAt: existing ? (existing.createdAt || createdAt) : createdAt,
+      viewerIsOwner: true,
       title: title.trim(),
       hostNames: hostNames.trim(),
+      weddingDate,
       venueLabel: venueLabel.trim(),
       greeting: greeting.trim(),
+      themeId,
+      layoutStyle,
+      bgmPreset,
+      sectionOrder,
+      visibility,
       notice: notice.trim(),
       updatedAt: new Date().toISOString(),
     };

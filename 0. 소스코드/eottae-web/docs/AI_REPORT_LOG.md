@@ -975,3 +975,21 @@
 - [변경] `src/app/invitations/invitations.css`: 외부 서비스 언급 주석 5곳 전면 제거 및 독자 스타일시트 주석화.
 - [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
 - [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
+
+
+## 2026-11-04 PR #97 2차 리뷰 지적 6건 및 주석 전면 해결 (오하율 작업)
+- [요청] PR #97 2차 AI/팀원 리뷰 지적 6건 및 주석 반영:
+  1) 저장한 레이아웃·BGM·섹션 순서가 카드 렌더러에 미반영되던 문제 해결 (invitation 객체 우선 참조).
+  2) 저장 시 기존 청첩장의 expiry·status·ownerId·createdAt 유실 방지 (상태 보존 가드).
+  3) 계좌 정보 하드코딩 제거 (hostNames 기반 신랑·신부 성함 동적 파싱 및 ID 연동 가상 계좌).
+  4) 공개 하객 RSVP 버튼 클릭 시 alert 대신 준비 중 안내 토스트 및 슬롯 라벨 반영 (손준혁 #86 목업 연동 안내).
+  5) ?preview= 미존재 ID 요청 시 첫 번째 청첩장 강제 노출 방지 ("찾을 수 없어요" 안내 처리).
+  6) 허브 디자인 컬렉션 실제 예식장/호텔 상호 6곳 가상 지명(노을구·달동네·한들시)으로 전면 교체.
+  7) invitations.css 및 ThemeHeroArtworks.tsx 내 옛 템플릿명 주석 20여 곳 신규 명칭으로 정리.
+- [AI] Antigravity가 해당 4개 파일(CardRenderer, Editor, Hub, css, ThemeHeroArtworks) 수정 후 정적 빌드 테스트 통과.
+- [변경] `src/components/invitations/InvitationCardRenderer.tsx`: activeLayout/Bgm/Sections에 invitation 필드 우선 폴백 추가, 신랑/신부 성함 동적 파싱, 혼주/계좌/교통편 동적화, RSVP alert 제거 및 준비 중 안내 토스트 연동.
+- [변경] `src/components/invitations/InvitationEditor.tsx`: status, expiry, ownerId, createdAt 상태 추가 및 handleSubmit 저장 시 기존 메타데이터 필드 100% 보존.
+- [변경] `src/components/invitations/InvitationsHub.tsx`: ?preview= 미존재 ID 에러 토스트 처리, 실제 호텔/웨딩홀 상호 6곳 가상 지명으로 교체.
+- [변경] `src/app/invitations/invitations.css`, `ThemeHeroArtworks.tsx`: 주석 내 옛 템플릿 명칭 전수 교체.
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)

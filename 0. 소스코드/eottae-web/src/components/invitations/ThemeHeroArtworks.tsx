@@ -222,7 +222,7 @@ export function BridalCoupleStudioSVG({ className = '' }: { className?: string }
   );
 }
 
-// 4. 노을빛 센터 라인 감성 일러스트 (Sunset Horizon Silhouette)
+// 4. 노을빛 실루엣 감성 일러스트 (Sunset Horizon Silhouette)
 export function BridalCoupleSunsetSVG({ className = '' }: { className?: string }) {
   return (
     <svg
@@ -283,7 +283,7 @@ export function BridalCoupleSunsetSVG({ className = '' }: { className?: string }
   );
 }
 
-// 5. 숲속 타이포 프레임 웨딩 (Forest Green Wedding)
+// 5. 에디토리얼 프레임 웨딩 (Editorial Forest Wedding)
 export function BridalCoupleForestSVG({ className = '' }: { className?: string }) {
   return (
     <svg
@@ -329,7 +329,7 @@ export function BridalCoupleForestSVG({ className = '' }: { className?: string }
   );
 }
 
-// 6. 커버 A 스타일: 밀짚모자 & 린넨 가든 웨딩 (Straw Hat Garden Couple)
+// 6. 린넨 가든 스타일: 밀짚모자 & 가든 웨딩 (Linen Garden Couple)
 export function BridalCoupleGardenHatSVG({ className = '' }: { className?: string }) {
   return (
     <svg

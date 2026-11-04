@@ -152,9 +152,9 @@ export default function InvitationCardRenderer({
   const activeThemeId = overrideTheme || invitation.themeId || 'wax-seal';
   const themePreset = getThemePreset(activeThemeId);
 
-  const activeLayout = overrideLayout || themePreset.defaultLayout || 'classic';
-  const activeBgm = overrideBgm || themePreset.defaultBgm || 'romantic';
-  const activeSections = overrideSectionOrder || themePreset.defaultSectionOrder;
+  const activeLayout = overrideLayout || invitation.layoutStyle || themePreset.defaultLayout || 'classic';
+  const activeBgm = overrideBgm || invitation.bgmPreset || themePreset.defaultBgm || 'romantic';
+  const activeSections = overrideSectionOrder || invitation.sectionOrder || themePreset.defaultSectionOrder;
 
   const [isPlaying, setIsPlaying] = useState<boolean>(activeBgm !== 'none');
   const [groomAccountOpen, setGroomAccountOpen] = useState<boolean>(false);
@@ -489,7 +489,12 @@ export default function InvitationCardRenderer({
 
   const hostNames = invitation.hostNames || '이서윤 · 박하람';
   const venueTitle = invitation.venueLabel || '노을구 달빛웨딩홀 2층 그랜드볼룸';
-  const venueAddress = sectionCustomMap.location?.body || '서울특별시 노을구 달빛로 123 (노을역 3번 출구)';
+  const venueAddress = sectionCustomMap.location?.body || `${venueTitle} (노을역 3번 출구 방향)`;
+
+  // 신랑·신부 성함 동적 파싱
+  const parsedNames = hostNames.split(/[·&,]/).map((s) => s.trim());
+  const groomName = parsedNames[0]?.replace(/^(신랑\s*|groom\s*)/i, '').trim() || '이서윤';
+  const brideName = parsedNames[1]?.replace(/^(신부\s*|bride\s*)/i, '').trim() || '박하람';
 
   // 현재 적용 색상 및 폰트 (WCAG 명도 대비 자동 보정 적용)
   const effectiveBgColor = customThemeStyle?.bgColor || themePreset.defaultBgColor || '#ffffff';
@@ -966,10 +971,10 @@ export default function InvitationCardRenderer({
               <div className="inv-divider-line" />
               <div className="inv-host-names-block">
                 <div>
-                  <strong>이성민 · 김은숙</strong> 의 장남 <strong>이서윤</strong>
+                  <strong>신랑측 혼주</strong> 의 장남 <strong>{groomName}</strong>
                 </div>
                 <div style={{ marginTop: 4 }}>
-                  <strong>박진우 · 정미경</strong> 의 장녀 <strong>박하람</strong>
+                  <strong>신부측 혼주</strong> 의 장녀 <strong>{brideName}</strong>
                 </div>
               </div>
             </div>
@@ -1387,13 +1392,13 @@ export default function InvitationCardRenderer({
               {/* 교통수단 상세 안내 */}
               <div className="inv-transport-guide">
                 <div>
-                  <strong>🚇 지하철:</strong> 노을역 3번 출구 도보 5분
+                  <strong>🚇 지하철 / 대중교통:</strong> 인근 지하철역 도보 5~10분
                 </div>
                 <div>
-                  <strong>🚌 버스:</strong> 달빛웨딩홀 정류장 하차 (간선 101, 지선 7016)
+                  <strong>🚌 버스:</strong> {venueTitle} 인근 정류장 하차
                 </div>
                 <div>
-                  <strong>🚗 자가용 / 주차:</strong> 웨딩홀 건물 지하 1~3층 무료 주차 2시간
+                  <strong>🚗 자가용 / 주차:</strong> 웨딩홀 건물 내 무료 주차 지원
                 </div>
               </div>
             </div>
@@ -1516,15 +1521,20 @@ export default function InvitationCardRenderer({
                   <div className="inv-account-detail">
                     <div className="inv-account-line">
                       <div>
-                        <div style={{ fontSize: 12, fontWeight: 600 }}>신랑 이서윤</div>
+                        <div style={{ fontSize: 12, fontWeight: 600 }}>신랑 {groomName}</div>
                         <div style={{ fontSize: 12, opacity: 0.8, marginTop: 2 }}>
-                          달빛은행 123-456-789012
+                          달빛은행 123-456-{invitation.id.replace(/[^0-9]/g, '').slice(-6) || '789012'}
                         </div>
                       </div>
                       <button
                         type="button"
                         className="inv-copy-chip"
-                        onClick={() => handleCopyText('달빛은행 123-456-789012', '신랑 이서윤 계좌번호가')}
+                        onClick={() =>
+                          handleCopyText(
+                            `달빛은행 123-456-${invitation.id.replace(/[^0-9]/g, '').slice(-6) || '789012'}`,
+                            `신랑 ${groomName} 계좌번호가`
+                          )
+                        }
                       >
                         복사
                       </button>
@@ -1556,15 +1566,20 @@ export default function InvitationCardRenderer({
                   <div className="inv-account-detail">
                     <div className="inv-account-line">
                       <div>
-                        <div style={{ fontSize: 12, fontWeight: 600 }}>신부 박하람</div>
+                        <div style={{ fontSize: 12, fontWeight: 600 }}>신부 {brideName}</div>
                         <div style={{ fontSize: 12, opacity: 0.8, marginTop: 2 }}>
-                          노을은행 987-654-321098
+                          노을은행 987-654-{invitation.id.replace(/[^0-9]/g, '').slice(-6) || '321098'}
                         </div>
                       </div>
                       <button
                         type="button"
                         className="inv-copy-chip"
-                        onClick={() => handleCopyText('노을은행 987-654-321098', '신부 박하람 계좌번호가')}
+                        onClick={() =>
+                          handleCopyText(
+                            `노을은행 987-654-${invitation.id.replace(/[^0-9]/g, '').slice(-6) || '321098'}`,
+                            `신부 ${brideName} 계좌번호가`
+                          )
+                        }
                       >
                         복사
                       </button>
@@ -1601,7 +1616,9 @@ export default function InvitationCardRenderer({
                     backgroundColor: accent,
                     color: getContrastingTextColor(accent),
                   }}
-                  onClick={() => alert('참석 회신 슬롯: 소중한 참석 응답이 등록되었습니다!')}
+                  onClick={() =>
+                    setCopyNotice('RSVP 회신 폼은 현재 준비 중입니다 (손준혁 #86 목업 연동 예정)')
+                  }
                 >
                   🌸 참석합니다
                 </button>
@@ -1609,11 +1626,16 @@ export default function InvitationCardRenderer({
                   type="button"
                   className="inv-btn-secondary"
                   style={{ minHeight: 44, fontSize: 13, padding: '0 18px' }}
-                  onClick={() => alert('마음으로 축하 슬롯: 따뜻한 축하의 마음이 전달되었습니다!')}
+                  onClick={() =>
+                    setCopyNotice('마음으로 축하하기 기능은 현재 준비 중입니다 (손준혁 #86 연동 예정)')
+                  }
                 >
                   💌 마음으로 축하
                 </button>
               </div>
+              <p style={{ fontSize: 11, opacity: 0.65, textAlign: 'center', marginTop: 12 }}>
+                * 손준혁 담당: RSVP 응답 및 접근 제어 목업(#86) 연동 준비 중
+              </p>
             </div>
           </section>
         );

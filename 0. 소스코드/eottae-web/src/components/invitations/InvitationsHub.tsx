@@ -112,7 +112,7 @@ const DESIGN_COLLECTION: DesignCoverItem[] = [
           </div>
           <div className="inv-split-row">
             <span className="inv-split-label">장소 /</span>
-            <span className="inv-split-val">그랜드힐컨벤션 3층 그랜드볼룸</span>
+            <span className="inv-split-val">노을구 달빛웨딩홀 2층 그랜드볼룸</span>
           </div>
         </div>
       </div>
@@ -140,7 +140,7 @@ const DESIGN_COLLECTION: DesignCoverItem[] = [
           <div className="inv-script-with-love">with love</div>
           <div className="inv-fade-info">
             <div>2027년 4월 17일 토요일 오후 2시</div>
-            <div style={{ marginTop: 2 }}>JW 메리어트 호텔 서울</div>
+            <div style={{ marginTop: 2 }}>한들시 숲속의아침 가든볼룸</div>
           </div>
         </div>
       </div>
@@ -161,7 +161,7 @@ const DESIGN_COLLECTION: DesignCoverItem[] = [
       <div className="inv-real-photo-cover" style={{ backgroundImage: `url(${imgWaxEnvelope})`, backgroundPosition: 'center 40%' }}>
         <div className="inv-wax-envelope-bottom-text">
           <div className="inv-wax-calligraphy-names">박서진 &amp; 윤채원</div>
-          <div className="inv-wax-calligraphy-venue">아펠가모 광화문</div>
+          <div className="inv-wax-calligraphy-venue">달동네 루프탑 하우스웨딩홀</div>
           <div className="inv-wax-calligraphy-date">26. 11. 14. Sat 12:30</div>
         </div>
       </div>
@@ -247,7 +247,7 @@ const DESIGN_COLLECTION: DesignCoverItem[] = [
         <div className="inv-script-card-bottom">
           <div className="inv-script-names">황승현 · 한다솜</div>
           <div className="inv-script-date">2027년 5월 15일 토요일 오후 1시</div>
-          <div className="inv-script-venue">아펠가모 선릉</div>
+          <div className="inv-script-venue">노을구 솔바람 가든홀</div>
         </div>
       </div>
     ),
@@ -274,7 +274,7 @@ const DESIGN_COLLECTION: DesignCoverItem[] = [
           <div className="inv-cl-divider" />
           <div className="inv-cl-year">2027</div>
         </div>
-        <div className="inv-centerline-bot-venue">디에이블엣논현 라포레홀</div>
+        <div className="inv-centerline-bot-venue">한들시 별빛아트리움홀</div>
       </div>
     ),
   },
@@ -293,7 +293,7 @@ const DESIGN_COLLECTION: DesignCoverItem[] = [
           <div>
             <strong className="inv-ca-names">이태헌 · 최지은</strong>
             <div className="inv-ca-date-sm">2027년 6월 12일 토요일 오후 1시</div>
-            <div className="inv-ca-venue-sm">그랜드힐컨벤션 3층 그랜드볼룸</div>
+            <div className="inv-ca-venue-sm">노을구 달빛웨딩홀 2층 그랜드볼룸</div>
           </div>
           <span className="inv-ca-script-title">The First Day of Us</span>
         </div>
@@ -426,10 +426,12 @@ function InvitationsHubContent() {
   useEffect(() => {
     if (previewParam && invitations.length > 0) {
       const found =
-        invitations.find((inv) => inv.id === previewParam || inv.sharingToken === previewParam) ||
-        invitations[0];
+        invitations.find((inv) => inv.id === previewParam || inv.sharingToken === previewParam);
       if (found) {
         setPreviewTarget(found);
+      } else {
+        setCopyToast('요청하신 청첩장을 찾을 수 없어요.');
+        setTimeout(() => setCopyToast(null), 3000);
       }
     }
   }, [previewParam, invitations]);
