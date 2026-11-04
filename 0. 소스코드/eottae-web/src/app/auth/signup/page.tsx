@@ -13,7 +13,7 @@ const signupDescription = [
     ? 'Google 계정으로도 가입할 수 있어요.'
     : OAUTH_PROVIDERS_ENABLED.google
       ? 'Google 가입은 인증 설정 전에는 쓸 수 없어요.'
-      : 'Google 로그인은 준비 중이에요.',
+      : 'Google 가입은 준비 중이에요.',
   '만 19세 이상만 가입할 수 있어요.',
 ].join(' ');
 
