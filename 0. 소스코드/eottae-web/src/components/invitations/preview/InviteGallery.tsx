@@ -74,7 +74,7 @@ export default function InviteGallery({ title, galleryKey, photos }: Props) {
   const current = openIndex === null ? null : photos[openIndex];
 
   return (
-    <section className="invite-section" aria-labelledby={titleId} aria-describedby={hintId} data-reveal>
+    <section className="invite-section" aria-labelledby={titleId} aria-describedby={hintId} data-invite-reveal>
       <h2 id={titleId} className="invite-h">
         {title}
       </h2>

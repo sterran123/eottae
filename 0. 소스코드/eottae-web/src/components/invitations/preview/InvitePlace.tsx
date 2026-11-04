@@ -24,7 +24,7 @@ export function InviteVenue({ invitation, venue }: VenueProps) {
   }
 
   return (
-    <section className="invite-section invite-place" aria-labelledby={titleId} data-reveal>
+    <section className="invite-section invite-place" aria-labelledby={titleId} data-invite-reveal>
       <h2 id={titleId} className="invite-h">
         오시는 길
       </h2>
@@ -89,7 +89,7 @@ export function InviteGuide({ guides }: { guides: InvitePreviewContent['guides']
 
   if (!current) {
     return (
-      <section className="invite-section" aria-labelledby={titleId} data-reveal>
+      <section className="invite-section" aria-labelledby={titleId} data-invite-reveal>
         <h2 id={titleId} className="invite-h">
           안내사항
         </h2>
@@ -101,7 +101,7 @@ export function InviteGuide({ guides }: { guides: InvitePreviewContent['guides']
   const panelId = `${titleId}-panel`;
 
   return (
-    <section className="invite-section" aria-labelledby={titleId} data-reveal>
+    <section className="invite-section" aria-labelledby={titleId} data-invite-reveal>
       <h2 id={titleId} className="invite-h">
         안내사항
       </h2>

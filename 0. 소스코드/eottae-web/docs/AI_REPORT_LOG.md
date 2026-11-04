@@ -859,3 +859,5 @@
 - [신규] `src/app/invitations/sample/page.tsx`, `InviteSampleStudio.tsx` | 데모 청첩장 1장. 위에 「데모 · 예시 데이터」, 구성 프리셋 3개·청첩장 테마 4개 라디오. 틀 밖만 앱 테마
 - [변경] `src/app/invitations/page.tsx` | `ThemePreviewSection` 아래에 샘플 미리보기 링크 한 줄. 모의 결제·나머지 문구는 그대로
 - [미실행] 브라우저에서 프리셋·테마·360px 넘침·갤러리·탭·Q&A 키보드·복사·토스트 확인. typecheck·build. 이 세션은 파일 읽기·검색·수정만. 방명록은 이 화면 메모리만이라 `clear-demo-device` 키에 없음. `FILE_INDEX.csv`·`MANIFEST.sha256`는 수정하지 않았고 해시는 다시 계산하지 않음
+- [변경] PR #93 화면 확인 반영: 전역 data-reveal 숨김으로 미리보기가 비어 보이던 문제 — 전용 속성·기본 표시·1.5초 안전장치
+- [변경] PR #93 화면 확인 반영 2: 이미지 width/height 속성 때문에 세로로 늘어나던 커버·갤러리·이야기 사진 비율 고정
