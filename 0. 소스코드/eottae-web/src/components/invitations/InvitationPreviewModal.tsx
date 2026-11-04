@@ -154,36 +154,47 @@ export default function InvitationPreviewModal({
   onClose,
   invitation,
 }: InvitationPreviewModalProps) {
+  const initialPreset = getThemePreset(invitation.themeId || 'spring-blossom');
+
   const [selectedTheme, setSelectedTheme] = useState<InvitationThemeId>(
     invitation.themeId || 'spring-blossom'
   );
   const [selectedLayout, setSelectedLayout] = useState<InvitationLayoutStyle>(
-    invitation.layoutStyle || 'classic'
+    invitation.layoutStyle || initialPreset.defaultLayout || 'classic'
   );
   const [selectedBgm, setSelectedBgm] = useState<InvitationBgmpreset>(
-    invitation.bgmPreset || 'romantic'
+    invitation.bgmPreset || initialPreset.defaultBgm || 'romantic'
   );
-  const [activeEffect, setActiveEffect] = useState<AnimationEffectType>('petals');
+  const [activeEffect, setActiveEffect] = useState<AnimationEffectType>(
+    initialPreset.defaultEffect || 'petals'
+  );
 
   // 모달 진입 시 살짝 반투명 마우스 스크롤 유도 오버레이
   const [isPreviewUnlocked, setIsPreviewUnlocked] = useState<boolean>(false);
 
-  // 사진 프레임 스타일 (5종 + 풀스크린)
-  const [frameStyle, setFrameStyle] = useState<PhotoFrameStyle>('arch');
+  // 섹션 0번 사진 프레임 스타일 (아치형, 감성사진형, 둥근형, 네모형, 인생네컷형, 풀커버형)
+  const [frameStyle, setFrameStyle] = useState<PhotoFrameStyle>(
+    initialPreset.defaultFrameStyle || 'arch'
+  );
   const [frameColor, setFrameColor] = useState<string>('#ffffff');
+  const [heroSectionExpanded, setHeroSectionExpanded] = useState<boolean>(true);
 
   // 캘린더 스타일
-  const [calendarStyle, setCalendarStyle] = useState<CalendarStyle>('classic_table');
+  const [calendarStyle, setCalendarStyle] = useState<CalendarStyle>(
+    initialPreset.defaultCalendarStyle || 'classic_table'
+  );
 
   // 갤러리 뷰 모드
-  const [galleryMode, setGalleryMode] = useState<GalleryViewMode>('carousel');
+  const [galleryMode, setGalleryMode] = useState<GalleryViewMode>(
+    initialPreset.defaultGalleryMode || 'carousel'
+  );
 
-  // 사용자 레포 색상 테마 커스텀 상태 (배경색 실시간 변경)
+  // 사용자 레포 색상 테마 커스텀 상태 (선택 테마 기본 배경/글자색과 즉시 동기화)
   const [customThemeStyle, setCustomThemeStyle] = useState<ThemeCustomStyle>({
-    bgColor: '#ffffff',
-    primaryColor: '#111827',
-    textColor: '#1f2937',
-    accentColor: '#e11d48',
+    bgColor: initialPreset.defaultBgColor || '#ffffff',
+    primaryColor: initialPreset.defaultTextColor || '#111827',
+    textColor: initialPreset.defaultTextColor || '#1f2937',
+    accentColor: initialPreset.defaultAccentColor || '#e11d48',
   });
 
   // 메인 커버 사진 직접 첨부(파일 업로드) & 20대 프리셋 교체 상태
@@ -240,21 +251,17 @@ export default function InvitationPreviewModal({
   // 아코디언 확장 상태
   const [expandedSection, setExpandedSection] = useState<InvitationSectionKey | null>('gallery');
 
-  // 섹션별 세부 커스텀
+  // 섹션별 세부 커스텀 (테마/배경색 변경 시 가독성이 깨지지 않도록 하드코딩 색상 제거)
   const [customConfigs, setCustomConfigs] = useState<SectionCustomMap>({
     greeting: {
       title: '소중한 분들을 초대합니다',
       body: '서로 마주 보며 다져온 사랑을 이제 한곳을 바라보며 걸어가고자 합니다.\n소중한 걸음으로 축복해 주시면 더없는 기쁨으로 간직하겠습니다.',
       fontFamily: 'serif',
-      textColor: '#1f2937',
-      accentColor: '#e11d48',
     },
     schedule: {
       title: '예식 일시 & 달력',
       body: '소중한 날, 따뜻한 마음으로 함께해 주세요',
       fontFamily: 'serif',
-      textColor: '#1f2937',
-      accentColor: '#e11d48',
       calendarStyle: 'classic_table',
     },
     gallery: {
@@ -271,8 +278,6 @@ export default function InvitationPreviewModal({
       title: '오시는 길 & 약도',
       body: '서울특별시 노을구 달빛로 123 (노을역 3번 출구 도보 5분)',
       fontFamily: 'sans',
-      textColor: '#1f2937',
-      accentColor: '#2563eb',
     },
     guestbook: {
       title: '축하의 한마디 (실시간 방명록)',
@@ -282,15 +287,11 @@ export default function InvitationPreviewModal({
       title: '마음 전하실 곳',
       body: '축복해 주시는 따뜻한 마음을 소중히 간직하겠습니다.',
       fontFamily: 'sans',
-      textColor: '#1f2937',
-      accentColor: '#d97706',
     },
     rsvp_preview: {
       title: '참석 여부 회신 (RSVP)',
       body: '원활한 예식 준비와 연회 식사 좌석 안내를 위해 참석 여부를 미리 알려주시면 감사하겠습니다.',
       fontFamily: 'sans',
-      textColor: '#1f2937',
-      accentColor: '#e11d48',
     },
   });
 
@@ -430,12 +431,16 @@ export default function InvitationPreviewModal({
     }
   };
 
-  // 모달 오픈 시 최상단 스크롤
+  // 모달 오픈 및 대상 청첩장 변경 시 테마 프리셋 즉시 동기화 + 최상단 스크롤
   useEffect(() => {
-    if (isOpen && phoneScreenRef.current) {
-      phoneScreenRef.current.scrollTop = 0;
+    if (isOpen) {
+      applyTheme((invitation.themeId || 'spring-blossom') as InvitationThemeId);
+      setCustomMainPhoto(null);
+      if (phoneScreenRef.current) {
+        phoneScreenRef.current.scrollTop = 0;
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, invitation.id, invitation.themeId]);
 
   // 드래그 앤 드롭 핸들러
   const handleDragStart = (e: React.DragEvent, index: number) => {
@@ -630,19 +635,19 @@ export default function InvitationPreviewModal({
                 </div>
               </div>
 
-              {/* [사용자 핵심 요구] 사진 프레임 형태 (5종) & 테두리 색상 선택 */}
+              {/* [사용자 핵심 요구] 사진 프레임 형태 (아치형, 감성사진형, 둥근형, 네모형 등) & 테두리 색상 선택 */}
               <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid #e5e7eb' }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: '#1f2937', display: 'block', marginBottom: 6 }}>
-                  🖼️ 사진 프레임 형태 (5종) &amp; 테두리 색상
+                  🖼️ 섹션 0번 포토 프레임 스타일 (6종) &amp; 테두리 색상
                 </span>
                 <div className="inv-frame-style-grid">
                   {[
-                    { id: 'arch' as PhotoFrameStyle, label: '모던 아치', icon: '🏛️' },
-                    { id: 'life4cut' as PhotoFrameStyle, label: '인생네컷', icon: '🎞️' },
-                    { id: 'polaroid' as PhotoFrameStyle, label: '폴라로이드', icon: '📷' },
-                    { id: 'gold_round' as PhotoFrameStyle, label: '골드 앤틱 타원', icon: '👑' },
-                    { id: 'square' as PhotoFrameStyle, label: '클래식 스퀘어', icon: '🖼️' },
-                    { id: 'full' as PhotoFrameStyle, label: '풀스크린 커버', icon: '📱' },
+                    { id: 'arch' as PhotoFrameStyle, label: '아치형', icon: '🏛️' },
+                    { id: 'polaroid' as PhotoFrameStyle, label: '감성사진형', icon: '📷' },
+                    { id: 'gold_round' as PhotoFrameStyle, label: '둥근형', icon: '⭕' },
+                    { id: 'square' as PhotoFrameStyle, label: '네모형', icon: '🖼️' },
+                    { id: 'life4cut' as PhotoFrameStyle, label: '인생네컷형', icon: '🎞️' },
+                    { id: 'full' as PhotoFrameStyle, label: '풀커버형', icon: '📱' },
                   ].map((fs) => (
                     <button
                       key={fs.id}
@@ -650,6 +655,7 @@ export default function InvitationPreviewModal({
                       className={`inv-frame-card-btn ${frameStyle === fs.id ? 'inv-frame-card-btn--active' : ''}`}
                       onClick={() => {
                         setFrameStyle(fs.id);
+                        setIsPreviewUnlocked(true);
                         if (phoneScreenRef.current) phoneScreenRef.current.scrollTop = 0;
                       }}
                     >
@@ -899,6 +905,109 @@ export default function InvitationPreviewModal({
               </div>
 
               <div className="inv-section-order-list">
+                {/* 0번 고정 섹션: 신랑·신부 메인 웨딩 사진 & 프레임 선택 */}
+                <div className="inv-section-accordion-wrap inv-section-accordion-wrap--hero0">
+                  <div className="inv-section-order-item">
+                    <div
+                      className="inv-drag-handle"
+                      title="최상단 0번 고정 커버 영역"
+                      aria-label="0번 고정 영역"
+                      style={{ color: 'var(--brand)', fontWeight: 800 }}
+                    >
+                      <span className="inv-drag-dots">★</span>
+                    </div>
+
+                    <div
+                      className="inv-section-title-wrap"
+                      onClick={() => setHeroSectionExpanded(!heroSectionExpanded)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') setHeroSectionExpanded(!heroSectionExpanded);
+                      }}
+                    >
+                      <span className="inv-section-name" style={{ fontWeight: 800, color: '#4f46e5' }}>
+                        0. 신랑·신부 메인 웨딩 사진 &amp; 프레임 (아치/감성/둥근/네모)
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      className={`inv-accordion-toggle-btn ${heroSectionExpanded ? 'inv-accordion-toggle-btn--active' : ''}`}
+                      onClick={() => setHeroSectionExpanded(!heroSectionExpanded)}
+                    >
+                      {heroSectionExpanded ? '닫기 ▲' : '프레임 ▼'}
+                    </button>
+                  </div>
+
+                  {heroSectionExpanded && (
+                    <div className="inv-accordion-drawer">
+                      <div className="inv-accordion-field">
+                        <label className="inv-field-label">
+                          프레임 스타일 선택 (클릭 시 우측 상단 0번 영역에 즉시 반영)
+                        </label>
+                        <div className="inv-frame-style-grid">
+                          {[
+                            { id: 'arch' as PhotoFrameStyle, label: '아치형', icon: '🏛️' },
+                            { id: 'polaroid' as PhotoFrameStyle, label: '감성사진형', icon: '📷' },
+                            { id: 'gold_round' as PhotoFrameStyle, label: '둥근형', icon: '⭕' },
+                            { id: 'square' as PhotoFrameStyle, label: '네모형', icon: '🖼️' },
+                            { id: 'life4cut' as PhotoFrameStyle, label: '인생네컷형', icon: '🎞️' },
+                            { id: 'full' as PhotoFrameStyle, label: '풀커버형', icon: '📱' },
+                          ].map((fs) => (
+                            <button
+                              key={fs.id}
+                              type="button"
+                              className={`inv-frame-card-btn ${frameStyle === fs.id ? 'inv-frame-card-btn--active' : ''}`}
+                              onClick={() => {
+                                setFrameStyle(fs.id);
+                                setIsPreviewUnlocked(true);
+                                if (phoneScreenRef.current) phoneScreenRef.current.scrollTop = 0;
+                              }}
+                            >
+                              <span className="inv-frame-card-btn__icon">{fs.icon}</span>
+                              <span className="inv-frame-card-btn__label">{fs.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="inv-accordion-field">
+                        <label className="inv-field-label">프레임 테두리 색상 &amp; 사진 업로드</label>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+                          <div className="inv-frame-color-picker-row">
+                            {[
+                              { color: '#ffffff', label: '화이트' },
+                              { color: '#0f172a', label: '블랙' },
+                              { color: '#fce7f3', label: '핑크' },
+                              { color: '#dcfce7', label: '민트' },
+                              { color: '#fef9c3', label: '옐로우' },
+                              { color: '#d4af37', label: '골드' },
+                            ].map((c) => (
+                              <button
+                                key={c.color}
+                                type="button"
+                                className={`inv-frame-color-dot ${frameColor === c.color ? 'inv-frame-color-dot--active' : ''}`}
+                                style={{ backgroundColor: c.color }}
+                                onClick={() => setFrameColor(c.color)}
+                                title={c.label}
+                              />
+                            ))}
+                          </div>
+                          <button
+                            type="button"
+                            className="inv-btn-secondary"
+                            style={{ minHeight: 30, fontSize: 11, padding: '4px 10px' }}
+                            onClick={() => fileInputRef.current?.click()}
+                          >
+                            📷 내 사진 업로드
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 {sectionOrder.map((secKey, idx) => {
                   const isExpanded = expandedSection === secKey;
                   const isDragging = draggedIndex === idx;

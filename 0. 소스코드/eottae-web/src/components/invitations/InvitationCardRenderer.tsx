@@ -95,6 +95,42 @@ const imgNightGarden = `${basePath}/invitations/wedding-night-garden.jpg`;
 const imgHanbok = `${basePath}/invitations/wedding-hanbok.jpg`;
 const imgLuxuryHotel = `${basePath}/invitations/wedding-luxury-hotel.jpg`;
 
+export function getThemeDefaultPhoto(themeId: string): string {
+  switch (themeId) {
+    case 'green-canopy':
+    case 'botanical-garden':
+    case 'typo-frame':
+    case 'script-card':
+      return imgGreenCanopy;
+    case 'the-wedding':
+    case 'cinematic-movie':
+    case 'center-line':
+      return imgSunset;
+    case 'photo-background':
+    case 'minimal-arch':
+    case 'with-love':
+    case 'photo-only':
+    case 'cover-a':
+    case 'wax-seal':
+      return imgStudioPeach;
+    case 'tape-card':
+      return imgTapeBw;
+    case 'quiet':
+      return imgBenchQuiet;
+    case 'spring-blossom':
+      return imgCherryBlossom;
+    case 'moonlight-garden':
+      return imgNightGarden;
+    case 'traditional-hanji':
+    case 'hanok-heritage':
+      return imgHanbok;
+    case 'starlight-banquet':
+      return imgLuxuryHotel;
+    default:
+      return imgStudioPeach;
+  }
+}
+
 export default function InvitationCardRenderer({
   invitation,
   previewMode = false,
@@ -453,14 +489,14 @@ export default function InvitationCardRenderer({
   const venueTitle = invitation.venueLabel || '노을구 달빛웨딩홀 2층 그랜드볼룸';
   const venueAddress = sectionCustomMap.location?.body || '서울특별시 노을구 달빛로 123 (노을역 3번 출구)';
 
-  // 현재 적용 색상 및 폰트
-  const effectiveBgColor = customThemeStyle?.bgColor || themePreset.defaultBgColor;
-  const effectiveTextColor = customThemeStyle?.textColor || themePreset.defaultTextColor;
-  const effectiveAccentColor = customThemeStyle?.accentColor || themePreset.defaultAccentColor;
+  // 현재 적용 색상 및 폰트 (WCAG 명도 대비 자동 보정 적용)
+  const effectiveBgColor = customThemeStyle?.bgColor || themePreset.defaultBgColor || '#ffffff';
+  const rawThemeTextColor = customThemeStyle?.textColor || themePreset.defaultTextColor || '#1f2937';
+  const rawThemeAccentColor = customThemeStyle?.accentColor || themePreset.defaultAccentColor || '#e11d48';
 
-  const isDarkTheme =
-    isDarkThemeBg(effectiveBgColor) ||
-    ['typo-frame', 'moonlight-garden', 'starlight-banquet', 'cinematic-movie', 'the-wedding'].includes(activeThemeId);
+  const isDarkTheme = isDarkThemeBg(effectiveBgColor);
+  const effectiveTextColor = ensureLegibleColor(rawThemeTextColor, effectiveBgColor, 4.5);
+  const effectiveAccentColor = ensureLegibleColor(rawThemeAccentColor, effectiveBgColor, 3.5);
 
   const getSectionStyle = (key: InvitationSectionKey) => {
     const config = sectionCustomMap[key];
@@ -470,23 +506,27 @@ export default function InvitationCardRenderer({
       script: '"Caveat", "Dancing Script", cursive, "Nanum Pen Script", cursive',
     };
     const activeFont = config?.fontFamily || themePreset.defaultFont;
-    const defaultColor = isDarkTheme ? (effectiveTextColor || '#fefae0') : (effectiveTextColor || '#1c1917');
+    const candidateColor = config?.textColor || effectiveTextColor;
     return {
       fontFamily: fontMap[activeFont],
-      color: config?.textColor || defaultColor,
+      color: ensureLegibleColor(candidateColor, effectiveBgColor, 4.5),
     };
   };
 
   const getSectionAccent = (key: InvitationSectionKey) => {
-    return sectionCustomMap[key]?.accentColor || effectiveAccentColor;
+    const candidateAccent = sectionCustomMap[key]?.accentColor || effectiveAccentColor;
+    return ensureLegibleColor(candidateAccent, effectiveBgColor, 3.5);
   };
 
   // ============================================================
-  // [사용자 핵심 지적 반영] 포토 프레임 5종 렌더러
-  // 아치형, 인생네컷, 폴라로이드, 골드 앤틱 타원, 클래식 스퀘어
+  // [사용자 핵심 지적 반영] 섹션 0번: 신랑·신부 메인 웨딩 사진 포토 프레임 렌더러
+  // 아치형(arch), 감성사진형(polaroid), 둥근형(gold_round), 네모형(square), 인생네컷형(life4cut)
   // ============================================================
   const renderFramedHeroPhoto = (photoUrl: string) => {
     const resolvedUrl = resolveAssetUrl(photoUrl);
+    const captionColor = effectiveTextColor;
+    const subCaptionColor = isDarkTheme ? 'rgba(248, 250, 252, 0.78)' : '#64748b';
+    const cardTextColor = isDarkThemeBg(frameColor || '#ffffff') ? '#f8fafc' : '#1e293b';
 
     switch (frameStyle) {
       case 'arch':
@@ -502,9 +542,9 @@ export default function InvitationCardRenderer({
               <div className="inv-framed-arch-overlay" />
               <div className="inv-framed-arch-badge">SAVE THE DATE</div>
             </div>
-            <div className="inv-framed-caption">
-              <span className="inv-framed-names">{hostNames}</span>
-              <span className="inv-framed-meta">
+            <div className="inv-framed-caption" style={{ color: captionColor }}>
+              <span className="inv-framed-names" style={{ color: captionColor }}>{hostNames}</span>
+              <span className="inv-framed-meta" style={{ color: subCaptionColor }}>
                 {year}. {month < 10 ? `0${month}` : month}. {day < 10 ? `0${day}` : day} · {venueTitle}
               </span>
             </div>
@@ -514,8 +554,13 @@ export default function InvitationCardRenderer({
       case 'life4cut':
         return (
           <div className="inv-framed-life4cut-wrap">
-            <div className="inv-framed-life4cut-strip" style={{ backgroundColor: frameColor }}>
-              <div className="inv-life4cut-top-logo">✦ LIFE 4 CUT · OUR SPECIAL DAY ✦</div>
+            <div
+              className="inv-framed-life4cut-strip"
+              style={{ backgroundColor: frameColor, color: cardTextColor }}
+            >
+              <div className="inv-life4cut-top-logo" style={{ color: cardTextColor }}>
+                ✦ LIFE 4 CUT · OUR SPECIAL DAY ✦
+              </div>
               <div className="inv-life4cut-cells">
                 <div className="inv-life4cut-cell" style={{ backgroundImage: `url(${resolvedUrl})` }} />
                 <div className="inv-life4cut-cell" style={{ backgroundImage: `url(${imgSunset})` }} />
@@ -525,7 +570,7 @@ export default function InvitationCardRenderer({
                   <strong>{hostNames}</strong>
                 </div>
               </div>
-              <div className="inv-life4cut-bottom-watermark">
+              <div className="inv-life4cut-bottom-watermark" style={{ color: cardTextColor }}>
                 <span>{year}. {month < 10 ? `0${month}` : month}. {day < 10 ? `0${day}` : day}</span>
                 <span>WEDDING PHOTOISM</span>
               </div>
@@ -536,15 +581,20 @@ export default function InvitationCardRenderer({
       case 'polaroid':
         return (
           <div className="inv-framed-polaroid-wrap">
-            <div className="inv-framed-polaroid-card" style={{ backgroundColor: frameColor }}>
+            <div
+              className="inv-framed-polaroid-card"
+              style={{ backgroundColor: frameColor, color: cardTextColor }}
+            >
               <div className="inv-polaroid-tape-strip" />
               <div
                 className="inv-polaroid-photo-area"
                 style={{ backgroundImage: `url(${resolvedUrl})` }}
               />
-              <div className="inv-polaroid-footer-text">
-                <div className="inv-polaroid-cursive-title">The First Day of Us</div>
-                <div className="inv-polaroid-names-date">
+              <div className="inv-polaroid-footer-text" style={{ color: cardTextColor }}>
+                <div className="inv-polaroid-cursive-title" style={{ color: cardTextColor }}>
+                  The First Day of Us
+                </div>
+                <div className="inv-polaroid-names-date" style={{ color: cardTextColor }}>
                   <span>{hostNames}</span>
                   <span>{year}. {month}. {day}</span>
                 </div>
@@ -564,10 +614,14 @@ export default function InvitationCardRenderer({
                 />
               </div>
             </div>
-            <div className="inv-framed-caption" style={{ marginTop: 12 }}>
-              <span className="inv-gold-royal-title">OUR WEDDING CELEBRATION</span>
-              <span className="inv-framed-names" style={{ fontFamily: 'serif' }}>{hostNames}</span>
-              <span className="inv-framed-meta">
+            <div className="inv-framed-caption" style={{ marginTop: 12, color: captionColor }}>
+              <span className="inv-gold-royal-title" style={{ color: effectiveAccentColor }}>
+                OUR WEDDING CELEBRATION
+              </span>
+              <span className="inv-framed-names" style={{ fontFamily: 'serif', color: captionColor }}>
+                {hostNames}
+              </span>
+              <span className="inv-framed-meta" style={{ color: subCaptionColor }}>
                 {year}년 {month}월 {day}일 · {venueTitle}
               </span>
             </div>
@@ -589,9 +643,9 @@ export default function InvitationCardRenderer({
                 style={{ backgroundImage: `url(${resolvedUrl})` }}
               />
             </div>
-            <div className="inv-framed-caption">
-              <span className="inv-framed-names">{hostNames}</span>
-              <span className="inv-framed-meta">
+            <div className="inv-framed-caption" style={{ color: captionColor }}>
+              <span className="inv-framed-names" style={{ color: captionColor }}>{hostNames}</span>
+              <span className="inv-framed-meta" style={{ color: subCaptionColor }}>
                 {year}. {month < 10 ? `0${month}` : month}. {day < 10 ? `0${day}` : day} {ampm} {displayHour}시
               </span>
             </div>
@@ -605,13 +659,14 @@ export default function InvitationCardRenderer({
 
   // ============================================================
   // [사용자 핵심 지적 반영] 실사 포토 기반 16종 시그니처 히어로 커버 렌더러
-  // Pagesisters 급 퀄리티 실사 포토 & 타이포그래피 100% 동기화
+  // 테마 카드 인물과 미리보기 모달 인물 100% 일치 보장
   // ============================================================
   const renderSignatureThemeHero = () => {
-    const rawPhoto = customMainPhoto || imgGreenCanopy;
+    const defaultThemePhoto = getThemeDefaultPhoto(activeThemeId);
+    const rawPhoto = customMainPhoto || defaultThemePhoto;
     const heroPhoto = (defaultImg: string) => resolveAssetUrl(customMainPhoto || defaultImg);
 
-    // 사용자가 'full' 이외의 프레임 스타일(아치형, 인생네컷, 폴라로이드, 골드 앤틱 타원, 사각형)을 선택한 경우
+    // 사용자가 'full' 이외의 프레임 스타일(아치형, 감성사진형, 둥근형, 네모형, 인생네컷형)을 선택한 경우
     if (frameStyle && frameStyle !== 'full') {
       return (
         <div className="inv-hero-framed-container">
@@ -620,7 +675,7 @@ export default function InvitationCardRenderer({
       );
     }
 
-    // 기본 'full' 풀스크린 테마별 시그니처 히어로
+    // 기본 'full' 풀커버 테마별 시그니처 히어로 (16종 전 테마 완벽 매핑)
     switch (themePreset.heroType) {
       case 'green-canopy':
       case 'botanical-garden':
@@ -665,6 +720,7 @@ export default function InvitationCardRenderer({
 
       case 'photo-background':
       case 'minimal-arch':
+      case 'cover-a':
         return (
           <div className="inv-hero-sig inv-hero-sig--split">
             <div className="inv-hero-split-photo" style={{ backgroundImage: `url(${heroPhoto(imgStudioPeach)})` }} />
@@ -756,12 +812,13 @@ export default function InvitationCardRenderer({
         );
 
       case 'typo-frame':
+      case 'script-card':
         return (
           <div className="inv-hero-sig inv-hero-sig--photo-full" style={{ backgroundImage: `url(${heroPhoto(imgGreenCanopy)})` }}>
             <div className="inv-real-photo-overlay inv-overlay--forest" />
             <div className="inv-typo-top-group">
-              <div className="inv-typo-sub-lead">THE WEDDING OF</div>
-              <h1 className="inv-typo-headline">결혼합니다</h1>
+              <div className="inv-typo-sub-lead">{themePreset.heroType === 'script-card' ? 'OUR SPECIAL DAY' : 'THE WEDDING OF'}</div>
+              <h1 className="inv-typo-headline">{themePreset.heroType === 'script-card' ? 'Our Day' : '결혼합니다'}</h1>
             </div>
             <div className="inv-sig-content inv-sig-content--floating">
               <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
@@ -773,9 +830,101 @@ export default function InvitationCardRenderer({
           </div>
         );
 
-      case 'photo-only':
+      case 'center-line':
         return (
-          <div className="inv-hero-sig inv-hero-sig--photo-full" style={{ backgroundImage: `url(${heroPhoto(imgStudioPeach)})` }}>
+          <div className="inv-hero-sig inv-hero-sig--photo-full" style={{ backgroundImage: `url(${heroPhoto(imgSunset)})` }}>
+            <div className="inv-real-photo-overlay inv-overlay--sunset" />
+            <div className="inv-cover-top-center-names">SAVE THE DATE</div>
+            <div className="inv-sig-content inv-sig-content--floating">
+              <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
+              <div className="inv-sig-date" style={{ color: '#fed7aa' }}>
+                {year}. {month < 10 ? `0${month}` : month}. {day < 10 ? `0${day}` : day} {ampm} {displayHour}시
+              </div>
+              <div className="inv-sig-venue" style={{ color: 'rgba(255,255,255,0.9)' }}>{venueTitle}</div>
+            </div>
+          </div>
+        );
+
+      case 'quiet':
+        return (
+          <div className="inv-hero-sig inv-hero-sig--photo-full" style={{ backgroundImage: `url(${heroPhoto(imgBenchQuiet)})` }}>
+            <div className="inv-real-photo-overlay inv-overlay--subtle" />
+            <div className="inv-sig-content inv-sig-content--floating">
+              <span className="inv-photo-only-sub">OUR WEDDING DAY</span>
+              <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
+              <div className="inv-sig-date" style={{ color: '#f8fafc' }}>
+                {year}. {month < 10 ? `0${month}` : month}. {day < 10 ? `0${day}` : day} {ampm} {displayHour}시
+              </div>
+              <div className="inv-sig-venue" style={{ color: 'rgba(255,255,255,0.9)' }}>{venueTitle}</div>
+            </div>
+          </div>
+        );
+
+      case 'spring-blossom':
+        return (
+          <div className="inv-hero-sig inv-hero-sig--photo-full" style={{ backgroundImage: `url(${heroPhoto(imgCherryBlossom)})` }}>
+            <div className="inv-real-photo-overlay inv-overlay--cherry" />
+            <div className="inv-cover-top-center-names">SPRING BLOSSOM 🌸</div>
+            <div className="inv-sig-content inv-sig-content--floating">
+              <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
+              <div className="inv-sig-date" style={{ color: '#ffe4e6' }}>
+                {year}년 {month}월 {day}일 {ampm} {displayHour}시
+              </div>
+              <div className="inv-sig-venue" style={{ color: 'rgba(255,255,255,0.92)' }}>{venueTitle}</div>
+            </div>
+          </div>
+        );
+
+      case 'moonlight-garden':
+        return (
+          <div className="inv-hero-sig inv-hero-sig--photo-full" style={{ backgroundImage: `url(${heroPhoto(imgNightGarden)})` }}>
+            <div className="inv-real-photo-overlay inv-overlay--night" />
+            <div className="inv-cover-top-center-names">MOONLIGHT GARDEN 🌙</div>
+            <div className="inv-sig-content inv-sig-content--floating">
+              <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
+              <div className="inv-sig-date" style={{ color: '#fde047' }}>
+                {year}년 {month}월 {day}일 {ampm} {displayHour}시
+              </div>
+              <div className="inv-sig-venue" style={{ color: 'rgba(255,255,255,0.9)' }}>{venueTitle}</div>
+            </div>
+          </div>
+        );
+
+      case 'traditional-hanji':
+      case 'hanok-heritage':
+        return (
+          <div className="inv-hero-sig inv-hero-sig--photo-full" style={{ backgroundImage: `url(${heroPhoto(imgHanbok)})` }}>
+            <div className="inv-real-photo-overlay inv-overlay--subtle" />
+            <div className="inv-cover-top-center-names">백년가약 (百年佳約)</div>
+            <div className="inv-sig-content inv-sig-content--floating">
+              <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
+              <div className="inv-sig-date" style={{ color: '#fef08a' }}>
+                {year}년 {month}월 {day}일 {ampm} {displayHour}시
+              </div>
+              <div className="inv-sig-venue" style={{ color: 'rgba(255,255,255,0.9)' }}>{venueTitle}</div>
+            </div>
+          </div>
+        );
+
+      case 'starlight-banquet':
+        return (
+          <div className="inv-hero-sig inv-hero-sig--photo-full" style={{ backgroundImage: `url(${heroPhoto(imgLuxuryHotel)})` }}>
+            <div className="inv-real-photo-overlay inv-overlay--luxury" />
+            <div className="inv-cover-top-center-names">HOTEL GRAND BALLROOM ✨</div>
+            <div className="inv-sig-content inv-sig-content--floating">
+              <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
+              <div className="inv-sig-date" style={{ color: '#fde047' }}>
+                {year}년 {month}월 {day}일 {ampm} {displayHour}시
+              </div>
+              <div className="inv-sig-venue" style={{ color: 'rgba(255,255,255,0.9)' }}>{venueTitle}</div>
+            </div>
+          </div>
+        );
+
+      case 'photo-only':
+      default:
+        return (
+          <div className="inv-hero-sig inv-hero-sig--photo-full" style={{ backgroundImage: `url(${heroPhoto(defaultThemePhoto)})` }}>
             <div className="inv-real-photo-overlay inv-overlay--subtle" />
             <div className="inv-sig-content inv-sig-content--floating">
               <span className="inv-photo-only-sub">OUR BEGINNING</span>
@@ -784,20 +933,6 @@ export default function InvitationCardRenderer({
                 {year}. {month < 10 ? `0${month}` : month}. {day < 10 ? `0${day}` : day} {ampm} {displayHour}시
               </div>
               <div className="inv-sig-venue" style={{ color: '#cbd5e1' }}>{venueTitle}</div>
-            </div>
-          </div>
-        );
-
-      default:
-        return (
-          <div className="inv-hero-sig inv-hero-sig--photo-full" style={{ backgroundImage: `url(${heroPhoto(imgGreenCanopy)})` }}>
-            <div className="inv-real-photo-overlay inv-overlay--gradient-duo" />
-            <div className="inv-sig-content inv-sig-content--floating">
-              <h3 className="inv-hero-names" style={{ color: '#ffffff' }}>{hostNames}</h3>
-              <div className="inv-hero-date-line" style={{ color: '#fef08a' }}>
-                {year}. {month < 10 ? `0${month}` : month}. {day < 10 ? `0${day}` : day} {ampm} {displayHour}시
-              </div>
-              <div className="inv-hero-venue-line" style={{ color: 'rgba(255,255,255,0.9)' }}>{venueTitle}</div>
             </div>
           </div>
         );

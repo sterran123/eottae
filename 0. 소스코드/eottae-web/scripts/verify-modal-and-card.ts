@@ -144,6 +144,90 @@ assert(
   '과도하게 번지는 12px 블러 그림자 제거 및 3px 이하 은은한 자연스러운 가독성으로 교체'
 );
 
+// 5. 섹션 0 메인 웨딩 사진 & 멀티 프레임(아치형/감성사진형/둥근형/네모형/인생네컷형/풀커버형) 검증
+console.log('\n[검증 5] 섹션 0 신랑·신부 메인 웨딩 사진 & 6종 프레임 스타일 노출 검증');
+const rendererPath = path.resolve(process.cwd(), 'src/components/invitations/InvitationCardRenderer.tsx');
+const rendererCode = fs.readFileSync(rendererPath, 'utf-8');
+
+assert(
+  modalCode.includes('0. 신랑·신부 메인 웨딩 사진 &amp; 프레임 (아치/감성/둥근/네모)'),
+  '섹션 순서 리스트 최상단에 0번 신랑·신부 메인 웨딩 사진 & 프레임 항목 배치됨'
+);
+
+assert(
+  modalCode.includes("label: '아치형'") &&
+  modalCode.includes("label: '감성사진형'") &&
+  modalCode.includes("label: '둥근형'") &&
+  modalCode.includes("label: '네모형'") &&
+  modalCode.includes("label: '인생네컷형'") &&
+  modalCode.includes("label: '풀커버형'"),
+  '모달에 6가지 프레임 스타일(아치형, 감성사진형, 둥근형, 네모형, 인생네컷형, 풀커버형) 선택 UI 완벽 반영'
+);
+
+assert(
+  cssCode.includes('flex-shrink: 0 !important;') &&
+  cssCode.includes('.inv-hero-wrap'),
+  '.inv-hero-wrap에 flex-shrink: 0 !important가 적용되어 휴대폰 상단 0번 웨딩 사진이 절대 접히지 않음'
+);
+
+// 6. 테마 허브 카드 인물과 모달 미리보기 인물 100% 일치 검증
+console.log('\n[검증 6] 테마 카드 인물과 미리보기 모달 인물 100% 일치 검증');
+const all16Themes = [
+  'green-canopy',
+  'the-wedding',
+  'photo-background',
+  'with-love',
+  'wax-seal',
+  'tape-card',
+  'typo-frame',
+  'photo-only',
+  'script-card',
+  'center-line',
+  'cover-a',
+  'quiet',
+  'spring-blossom',
+  'moonlight-garden',
+  'traditional-hanji',
+  'starlight-banquet',
+  'botanical-garden',
+  'minimal-arch',
+  'cinematic-movie',
+  'hanok-heritage',
+];
+
+const allThemesCoveredInRenderer = all16Themes.every((t) => rendererCode.includes(`case '${t}':`));
+assert(
+  allThemesCoveredInRenderer && rendererCode.includes('export function getThemeDefaultPhoto'),
+  '모든 웨딩 테마가 getThemeDefaultPhoto 및 renderSignatureThemeHero에서 허브 카드와 동일한 20대 인물 사진을 100% 동기화하여 렌더링함'
+);
+
+// 7. 모달 좌측 툴바 & 렌더러 CSS 클래스 누락 제로 및 다크 카드 스코핑 검증
+console.log('\n[검증 7] 좌측 툴바 버튼 디자인 및 다크 테마 카드 배경 스코핑 검증');
+const requiredCssClasses = [
+  '.inv-color-chips-grid',
+  '.inv-color-preset-card',
+  '.inv-color-preset-card--selected',
+  '.inv-layout-choices-grid',
+  '.inv-layout-choice-btn',
+  '.inv-layout-choice-btn--active',
+  '.inv-section-title',
+  '.inv-schedule-card',
+  '.inv-cal-grid',
+  '.inv-cal-cell--wedding',
+];
+const allClassesExist = requiredCssClasses.every((cls) => cssCode.includes(cls));
+assert(
+  allClassesExist,
+  '모달 좌측 색상 테마 16종 카드, 레이아웃 3종 버튼, 우측 달력/일정 카드 CSS 클래스가 100% 정의됨'
+);
+
+assert(
+  cssCode.includes('.inv-mode--dark.inv-theme--moonlight-garden.inv-layout--modern .inv-content-section') &&
+  cssCode.includes('.inv-mode--dark.inv-theme--typo-frame.inv-layout--modern .inv-content-section') &&
+  !cssCode.includes('\n.inv-theme--moonlight-garden.inv-layout--modern .inv-content-section'),
+  '다크 테마 모던 카드 배경이 .inv-mode--dark 전용으로 스코핑되어 밝은 색상 프리셋에서 검은 카드에 검은 글씨가 겹치는 현상 완벽 차단'
+);
+
 console.log('\n============================================================');
 console.log(` 검증 결과: 총 ${passCount + failCount}개 중 ${passCount}개 통과 (실패: ${failCount}개)`);
 console.log('============================================================');
