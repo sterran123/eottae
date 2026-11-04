@@ -195,7 +195,8 @@
   background: color-mix(in srgb, var(--ink) 40%, transparent);
 }
 
-/* 결제 시트만. 다이얼로그가 화면을 덮고, 카드는 안쪽 패널이다. 밖 클릭은 다이얼로그 자신을 누른다. */
+/* 결제 시트만. 다이얼로그가 화면을 덮고, 카드는 안쪽 패널이다. 밖 클릭은 다이얼로그 자신을 누른다.
+   display는 [open]에만 둔다. 작성자 규칙의 display는 닫힌 dialog의 display:none보다 우선한다. */
 .demo-flow-sheet.demo-flow-sheet-light {
   inset: 0;
   width: 100%;
@@ -209,9 +210,12 @@
   background: transparent;
   box-shadow: none;
   overflow: hidden;
-  display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.demo-flow-sheet.demo-flow-sheet-light[open] {
+  display: flex;
 }
 
 .demo-flow-sheet-panel {

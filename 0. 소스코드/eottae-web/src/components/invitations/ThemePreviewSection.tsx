@@ -61,7 +61,8 @@ export default function ThemePreviewSection() {
   useEffect(() => {
     if (!theme || phase === 'review') return;
     const dialog = document.getElementById('demo-pay-title')?.closest('dialog');
-    dialog?.querySelector<HTMLElement>('.act-modal-close')?.focus();
+    if (!(dialog instanceof HTMLDialogElement) || !dialog.open) return;
+    dialog.querySelector<HTMLElement>('.act-modal-close')?.focus();
   }, [theme, phase]);
 
   useEffect(() => {
