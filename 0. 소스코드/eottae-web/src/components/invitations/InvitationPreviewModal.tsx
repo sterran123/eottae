@@ -500,14 +500,16 @@ export default function InvitationPreviewModal({
 
   return (
     <div
-      className="inv-modal-overlay"
+      className="inv-modal-backdrop inv-modal-overlay"
+      onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="inv-preview-modal-title"
     >
-      <div className="inv-modal-backdrop" onClick={onClose} />
-
-      <div className="inv-modal-container inv-modal-container--expanded">
+      <div
+        className="inv-modal-shell inv-modal-container inv-modal-container--expanded"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* 상단 헤더 */}
         <header className="inv-modal-header">
           <div className="inv-modal-title-area">

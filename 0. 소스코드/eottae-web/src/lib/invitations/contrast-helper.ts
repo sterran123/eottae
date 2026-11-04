@@ -57,3 +57,4 @@ export function ensureLegibleColor(textColor: string, bgColor: string, minRatio 
   if (ratio >= minRatio) return textColor;
   return getContrastingTextColor(bgColor);
 }
+

@@ -172,7 +172,7 @@
   aspect-ratio: 9 / 15.5;
   height: auto;
   border-radius: 18px;
-  overflow: hidden;
+  overflow: hidden !important;
   position: relative;
   border: 1px solid rgba(0, 0, 0, 0.08);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07);
@@ -182,7 +182,7 @@
   box-sizing: border-box;
   transition: all 0.25s ease;
   user-select: none;
-  background: #ffffff;
+  background: transparent !important;
   min-width: 0;
   contain: paint;
 }
@@ -194,6 +194,7 @@
   min-height: 0;
   box-sizing: border-box;
   overflow: hidden;
+  border-radius: inherit;
 }
 
 /* 디자인 카드 하단 레이블 */
@@ -285,7 +286,7 @@
   color: #ffffff;
   font-family: serif;
   letter-spacing: -0.02em;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
   z-index: 2;
 }
 
@@ -295,7 +296,7 @@
   letter-spacing: 0.1em;
   color: #ffffff;
   opacity: 0.95;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
   z-index: 2;
 }
 
@@ -305,7 +306,7 @@
   font-size: 10px;
   letter-spacing: 0.25em;
   color: #ffffff;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
   z-index: 2;
 }
 
@@ -317,7 +318,7 @@
   font-style: italic;
   font-weight: 700;
   color: #ffffff;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
   letter-spacing: -0.01em;
   z-index: 2;
 }
@@ -329,12 +330,16 @@
   display: flex;
   flex-direction: column;
   background: #ffffff;
+  border-radius: inherit;
+  overflow: hidden;
 }
 
 .inv-split-photo {
   flex: 1;
   background-size: cover;
   background-position: center top;
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
 }
 
 .inv-split-info-box {
@@ -344,6 +349,8 @@
   display: flex;
   flex-direction: column;
   gap: 3px;
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
 }
 
 .inv-split-info-header {
@@ -356,6 +363,7 @@
   font-size: 12px;
   font-weight: 700;
   color: #1e293b;
+  text-shadow: none !important;
 }
 
 .inv-split-sub {
@@ -558,7 +566,7 @@
   font-weight: 800;
   letter-spacing: 0.04em;
   color: #ffffff;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
   margin: 2px 0 0;
 }
 
@@ -678,32 +686,40 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #ffffff;
+  background: #f8fafc;
+  border-radius: inherit;
+  overflow: hidden;
 }
 
 .inv-cover-a-top-bar {
   padding: 10px 12px;
-  border-bottom: 1px solid #f1f5f9;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
   display: flex;
   justify-content: space-between;
   align-items: baseline;
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
 }
 
 .inv-ca-names {
   font-size: 11px;
   font-weight: 700;
   color: #1e293b;
+  text-shadow: none !important;
 }
 
 .inv-ca-date-sm {
   font-size: 8px;
   color: #64748b;
   margin-top: 1px;
+  text-shadow: none !important;
 }
 
 .inv-ca-venue-sm {
   font-size: 8px;
   color: #94a3b8;
+  text-shadow: none !important;
 }
 
 .inv-ca-script-title {
@@ -711,12 +727,16 @@
   font-family: serif;
   font-style: italic;
   color: #94a3b8;
+  text-shadow: none !important;
 }
 
 .inv-cover-a-photo-body {
   flex: 1;
+  width: 100%;
   background-size: cover;
   background-position: center;
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
 }
 
 /* 콰이어트 */
@@ -728,6 +748,8 @@
   flex-direction: column;
   padding: 16px 12px 12px;
   box-sizing: border-box;
+  border-radius: inherit;
+  overflow: hidden;
 }
 
 .inv-quiet-top-text {
@@ -783,7 +805,7 @@
   font-size: 18px;
   font-weight: 700;
   color: #ffffff;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
   z-index: 2;
 }
 
@@ -1199,7 +1221,8 @@
   opacity: 0;
   transition: opacity 0.2s ease;
   z-index: 10;
-  border-radius: 20px;
+  border-radius: inherit !important;
+  pointer-events: auto;
 }
 
 .inv-design-cover-card:hover .inv-cover-hover-overlay {
@@ -1288,20 +1311,23 @@
  * [3번 이미지 반투명 버그 완전 제거] 솔리드 모달 & 스튜디오 뷰포트
  * ============================================================ */
 
-.inv-modal-backdrop {
+.inv-modal-backdrop,
+.inv-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.7);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: rgba(15, 23, 42, 0.75);
+  z-index: 9999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   padding: 24px;
   animation: inv-fade-in 0.2s ease-out;
+  box-sizing: border-box;
 }
 
 /* 반투명 제거: 완전한 솔리드 흰색/다크 모달 본체 (와이드 확장 스튜디오) */
-.inv-modal-shell {
+.inv-modal-shell,
+.inv-modal-container {
   background: #ffffff !important;
   border: 1px solid #e2e8f0;
   border-radius: 28px;
@@ -1309,15 +1335,17 @@
   width: 96vw !important;
   height: 95vh !important;
   max-height: 980px !important;
-  display: flex;
-  flex-direction: column;
+  display: flex !important;
+  flex-direction: column !important;
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
   overflow: hidden;
   position: relative;
   animation: inv-scale-up 0.2s ease-out;
+  box-sizing: border-box;
 }
 
-[data-theme='dark'] .inv-modal-shell {
+[data-theme='dark'] .inv-modal-shell,
+[data-theme='dark'] .inv-modal-container {
   background: #1e293b !important;
   border-color: #334155;
 }
@@ -3454,7 +3482,7 @@
   font-family: serif;
   color: #ffffff;
   margin: 0 0 12px;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 
 .inv-typo-divider {
@@ -3920,7 +3948,7 @@
 
 .inv-mode--dark .inv-main-heading {
   color: #ffffff !important;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 .inv-mode--dark .inv-sub-heading {
@@ -4760,7 +4788,7 @@
   font-weight: 600;
   margin: 0;
   line-height: 1.4;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 /* 이미지 양 끝단에 플로팅되는 둥근 네비게이션 버튼 */
@@ -4885,18 +4913,34 @@
   font-weight: 500 !important;
 }
 
-.inv-sig-names,
+/* [사용자 요구사항] 부자연스러운 텍스트 그림자 완전 제거 및 고해상도 타이포그래피 정돈 */
 .inv-ca-names,
+.inv-ca-date-sm,
+.inv-ca-venue-sm,
+.inv-ca-script-title,
 .inv-split-names,
+.inv-split-date,
+.inv-split-venue,
 .inv-quiet-names,
-.inv-typo-headline,
-.inv-cover-center-korean-cursive {
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.65) !important;
+.inv-quiet-sub,
+.inv-quiet-date,
+.inv-cover-label,
+.inv-cover-a-names,
+.inv-cover-a-venue,
+.inv-cover-a-date {
+  text-shadow: none !important;
 }
 
-.inv-sig-date,
-.inv-sig-venue {
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6) !important;
+/* 포토 풀 커버 화보에서만 자연스럽고 은은한 가독성 그림자 지원 */
+.inv-hero-sig--photo-full .inv-sig-names,
+.inv-cover-center-korean-cursive,
+.inv-cover-center-script-huge {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+.inv-hero-sig--photo-full .inv-sig-date,
+.inv-hero-sig--photo-full .inv-sig-venue {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 /* ============================================================
