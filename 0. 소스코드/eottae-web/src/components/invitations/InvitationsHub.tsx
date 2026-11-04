@@ -12,17 +12,6 @@ import {
 import { invitationGuestHref } from '@/lib/invitations/href';
 import { getThemePreset } from '@/lib/invitations/theme-presets';
 import InvitationPreviewModal from './InvitationPreviewModal';
-import {
-  WaxSealBadgeSVG,
-  MaskingTapeSVG,
-  BridalCoupleStudioSVG,
-  BridalCoupleSunsetSVG,
-  BridalCoupleForestSVG,
-  BridalCoupleGardenHatSVG,
-  BridalCoupleBenchSVG,
-  BridalCoupleHanbokSVG,
-  BridalCoupleBallroomSVG,
-} from './ThemeHeroArtworks';
 
 type ThemeCategory = 'all' | 'photo' | 'typo' | 'emotional' | 'heritage';
 
