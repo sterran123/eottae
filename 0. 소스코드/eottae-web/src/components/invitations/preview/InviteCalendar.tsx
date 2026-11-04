@@ -36,7 +36,7 @@ export default function InviteCalendar({ invitation }: Props) {
   const countdown = days === null ? null : countdownCopy(days);
 
   return (
-    <section className="invite-section" aria-labelledby={titleId} data-reveal>
+    <section className="invite-section" aria-labelledby={titleId} data-invite-reveal>
       <h2 id={titleId} className="invite-h">
         {title}
       </h2>

@@ -6,7 +6,7 @@ import type { InviteOrderIcon, InvitePreviewContent } from './sample-content';
 export function InviteStory({ story }: { story: InvitePreviewContent['story'] }) {
   const titleId = useId();
   return (
-    <section className="invite-section" aria-labelledby={titleId} data-reveal>
+    <section className="invite-section" aria-labelledby={titleId} data-invite-reveal>
       <h2 id={titleId} className="invite-h">
         우리의 이야기
       </h2>
@@ -35,7 +35,7 @@ export function InviteStory({ story }: { story: InvitePreviewContent['story'] })
 export function InviteFaq({ faq }: { faq: InvitePreviewContent['faq'] }) {
   const titleId = useId();
   return (
-    <section className="invite-section" aria-labelledby={titleId} data-reveal>
+    <section className="invite-section" aria-labelledby={titleId} data-invite-reveal>
       <h2 id={titleId} className="invite-h">
         질문과 답
       </h2>
@@ -97,7 +97,7 @@ function OrderIcon({ name }: { name: InviteOrderIcon }) {
 export function InviteOrder({ order }: { order: InvitePreviewContent['order'] }) {
   const titleId = useId();
   return (
-    <section className="invite-section" aria-labelledby={titleId} data-reveal>
+    <section className="invite-section" aria-labelledby={titleId} data-invite-reveal>
       <h2 id={titleId} className="invite-h">
         예식 순서
       </h2>

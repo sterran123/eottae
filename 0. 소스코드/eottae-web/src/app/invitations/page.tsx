@@ -32,7 +32,7 @@ export default function InvitationsPage() {
       </SubpageHero>
 
       <section className="shell subpage">
-        {/* 청첩장 메인 허브 (목록, 새 청첩장, 실시간 테마 체험 모달) */}
+        {/* 청첩장 메인 허브 (목록, 새 청첩장, 실시간 테마 체험 모달, ?preview=<id> 지원) */}
         <InvitationsHub />
 
         {/* 3차 주요 기능 소개 (내 청첩장 관리 섹션과 확실하게 분리) */}
@@ -53,6 +53,8 @@ export default function InvitationsPage() {
 
         {/* 테마 모의 결제 섹션 (기존 기능 100% 보존 유지) */}
         <ThemePreviewSection />
+
+        <p><Link className="btn outline" href="/invitations/sample/">샘플 청첩장 미리보기</Link></p>
 
         <aside className="warn">
           <strong>3차 모바일 청첩장 목업 안내</strong>

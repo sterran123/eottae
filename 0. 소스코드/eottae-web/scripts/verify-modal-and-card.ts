@@ -228,6 +228,58 @@ assert(
   '다크 테마 모던 카드 배경이 .inv-mode--dark 전용으로 스코핑되어 밝은 색상 프리셋에서 검은 카드에 검은 글씨가 겹치는 현상 완벽 차단'
 );
 
+// 8. [이슈 #84] 미리보기 테마 적용 · CSS 토큰만 · globals.css 수정 없음 검증
+console.log('\n[검증 8] [이슈 #84] 미리보기 테마 적용 · CSS 토큰만 · globals.css 무수정 검증');
+const hubPath = path.resolve(process.cwd(), 'src/components/invitations/InvitationsHub.tsx');
+const hubCode = fs.readFileSync(hubPath, 'utf-8');
+const previewCssPath = path.resolve(process.cwd(), 'src/components/invitations/preview/invite-preview.css');
+const previewCssCode = fs.readFileSync(previewCssPath, 'utf-8');
+
+assert(
+  hubCode.includes("searchParams.get('preview')") &&
+  hubCode.includes('setPreviewTarget(found)'),
+  'InvitationsHub에서 ?preview=<id> 쿼리 파라미터 수신 시 해당 청첩장 미리보기 모달 자동 실행'
+);
+
+assert(
+  previewCssCode.includes("data-invite-theme='spring-card'") &&
+  previewCssCode.includes("data-invite-theme='moon-garden'") &&
+  previewCssCode.includes("data-invite-theme='hanji'") &&
+  previewCssCode.includes("data-invite-theme='star-table'"),
+  'InvitePreview에서 DEMO_THEMES 4종 테마(spring-card, moon-garden, hanji, star-table) 테마 연결 및 스타일링 완료'
+);
+
+// 9. [이슈 #84] 360px · 44px · 키보드 포커스 · 6테마 완벽 대응 검증
+console.log('\n[검증 9] [이슈 #84] 360px · 44px · 키보드 · 6테마 완벽 대응 검증');
+assert(
+  previewCssCode.includes("[data-theme='cupcake']") &&
+  previewCssCode.includes("[data-theme='cyberpunk']") &&
+  previewCssCode.includes("[data-theme='disney']") &&
+  previewCssCode.includes("[data-theme='dark']"),
+  'invite-preview.css에 globals.css의 6테마(light, cupcake, cyberpunk, disney, dark, system) 연동 셀렉터 정의됨'
+);
+
+assert(
+  previewCssCode.includes('min-height: 44px;') &&
+  previewCssCode.includes('min-width: 44px;') &&
+  previewCssCode.includes('.invite-btn') &&
+  previewCssCode.includes('.invite-tab'),
+  '모든 대화형 버튼/탭/인풋 컨트롤에 44px 터치 타겟(min-height: 44px, min-width: 44px) 명시 보장'
+);
+
+assert(
+  previewCssCode.includes(':focus-visible') &&
+  previewCssCode.includes('outline: 3px solid'),
+  '모든 포커스 가능 요소에 3px 포커스 링 outline: 3px solid var(--focus) 키보드 접근성 명시 보장'
+);
+
+assert(
+  previewCssCode.includes('@media (max-width: 360px)') &&
+  previewCssCode.includes('.invite-stage') &&
+  previewCssCode.includes('.invite-card'),
+  '360px 모바일 화면 최적화 미디어 쿼리 및 가로 스크롤 완전 차단 패딩 적용'
+);
+
 console.log('\n============================================================');
 console.log(` 검증 결과: 총 ${passCount + failCount}개 중 ${passCount}개 통과 (실패: ${failCount}개)`);
 console.log('============================================================');

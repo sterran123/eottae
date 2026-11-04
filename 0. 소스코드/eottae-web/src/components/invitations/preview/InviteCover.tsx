@@ -16,7 +16,7 @@ export function InviteCover({ invitation, content }: CoverProps) {
   const line = formatWeddingLine(invitation.weddingDate, invitation.venueLabel);
 
   return (
-    <section className="invite-section invite-cover" aria-labelledby={titleId} data-reveal>
+    <section className="invite-section invite-cover" aria-labelledby={titleId} data-invite-reveal>
       <img
         className="invite-cover-photo"
         src={content.cover.src}
@@ -51,7 +51,7 @@ export function InviteGreeting({ invitation, content }: GreetingProps) {
   const parents = content.parents;
 
   return (
-    <section className="invite-section" aria-labelledby={titleId} data-reveal>
+    <section className="invite-section" aria-labelledby={titleId} data-invite-reveal>
       <h2 id={titleId} className="invite-h">
         인사말
       </h2>

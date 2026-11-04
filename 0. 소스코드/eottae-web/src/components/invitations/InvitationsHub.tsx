@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import type { Invitation, InvitationThemeId, InvitationLayoutStyle } from '@/lib/invitations/types';
 import {
   loadInvitationsDemo,
@@ -410,7 +411,10 @@ const DESIGN_COLLECTION: DesignCoverItem[] = [
   },
 ];
 
-export default function InvitationsHub() {
+function InvitationsHubContent() {
+  const searchParams = useSearchParams();
+  const previewParam = searchParams.get('preview');
+
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [previewTarget, setPreviewTarget] = useState<Invitation | null>(null);
   const [copyToast, setCopyToast] = useState<string | null>(null);
@@ -426,6 +430,18 @@ export default function InvitationsHub() {
     const unsubscribe = subscribeInvitationsDemo(refresh);
     return () => unsubscribe();
   }, []);
+
+  // [INV-001] ?preview=<id> 쿼리 파라미터 수신 시 해당 청첩장 미리보기 모달 자동 실행
+  useEffect(() => {
+    if (previewParam && invitations.length > 0) {
+      const found =
+        invitations.find((inv) => inv.id === previewParam || inv.sharingToken === previewParam) ||
+        invitations[0];
+      if (found) {
+        setPreviewTarget(found);
+      }
+    }
+  }, [previewParam, invitations]);
 
   const handleCopyLink = (token: string) => {
     const url = `${window.location.origin}${invitationGuestHref(token)}`;
@@ -674,5 +690,13 @@ export default function InvitationsHub() {
         />
       )}
     </div>
+  );
+}
+
+export default function InvitationsHub() {
+  return (
+    <Suspense fallback={<div className="inv-hub" style={{ minHeight: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>청첩장 스튜디오 준비 중...</div>}>
+      <InvitationsHubContent />
+    </Suspense>
   );
 }
