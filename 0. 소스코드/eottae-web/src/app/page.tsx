@@ -21,19 +21,20 @@ const cards: ServiceCardProps[] = [
     index: '02',
     title: '데이트·소모임',
     english: 'ACTIVITIES',
-    tag: '2차 · 준비 중',
+    tag: '2차 · 데모 체험',
+    live: true,
     desc: '데이트 코스, 소모임, 취미 활동과 참석·일정 관리.',
-    href: '/activities',
+    href: '/activities/',
     color: 'blue',
     motif: 'spark',
-    cta: '서비스 소개 보기',
+    cta: '데모 둘러보기',
   },
   {
     index: '03',
     title: '모바일 청첩장',
     english: 'INVITATIONS',
-    tag: '3차 · 준비 중',
-    desc: '모바일 청첩장 제작, 결혼식 안내, 참석 응답과 초대장 공유.',
+    tag: '3차 · 데모 미리보기',
+    desc: '모바일 청첩장 테마를 미리 볼 수 있어요. 에디터·공유 링크·RSVP는 아직 준비 중이에요.',
     href: '/invitations',
     color: 'pink',
     motif: 'mail',
@@ -86,8 +87,8 @@ export default function Home() {
             </a>
           </div>
           <div className="notice">
-            팀 프로젝트 1차 MVP — 매칭 화면은 데모 데이터로 체험할 수 있고, 실제 회원 매칭·대화는
-            로그인·성인 인증 구현 후 열립니다.
+            팀 프로젝트 중간 점검 — 매칭과 데이트·소모임은 데모 데이터로 체험할 수 있어요. 실제 회원
+            매칭·대화는 로그인·성인 인증 후, 모임 참가는 서버 연동 후 열립니다.
           </div>
         </div>
       </section>
@@ -180,9 +181,10 @@ export default function Home() {
           <details>
             <summary>제 데이터는 어떻게 삭제하나요?</summary>
             <p>
-              현재는 계정 자체가 없어 저장되는 개인 데이터도 없습니다. 로그인 도입 후 설정 →
-              계정 → 회원 탈퇴·데이터 삭제 경로를 제공할 예정이며, 자세한 내용은{' '}
-              <Link href="/privacy">개인정보·계정 삭제 안내</Link>에서 확인할 수 있습니다.
+              시연에서 입력한 데이터는 이 기기 브라우저에만 남아요. 설정 → 계정 → 회원 탈퇴·데이터
+              삭제에서 확인 문구를 입력하면 그 데모 기록을 지울 수 있어요. 실제 계정은 삭제하지
+              않아요. 자세한 내용은 <Link href="/privacy">개인정보·계정 삭제 안내</Link>에서 확인할 수
+              있습니다.
             </p>
           </details>
         </div>

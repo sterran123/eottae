@@ -3,11 +3,31 @@
 // src/components/settings/AccountSettingsCard.tsx
 // 설정 화면 02번 계정 카드 — useAuth 상태 연동 및 로그인/비로그인 분기
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth/use-auth';
+import { matchService } from '@/lib/match/match-service';
+import DemoAdultSettingsStatus from '@/components/settings/DemoAdultSettingsStatus';
+import DeleteAccountDemo from '@/components/settings/DeleteAccountDemo';
 
 export default function AccountSettingsCard() {
   const auth = useAuth();
+  const [showDemoAdult, setShowDemoAdult] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    void matchService.resolveAccessContext().then(
+      (context) => {
+        if (active) setShowDemoAdult(context.mode === 'demo');
+      },
+      () => {
+        if (active) setShowDemoAdult(false);
+      },
+    );
+    return () => {
+      active = false;
+    };
+  }, [auth.status]);
 
   return (
     <article className="feature settings-card">
@@ -36,20 +56,8 @@ export default function AccountSettingsCard() {
           </div>
         </>
       )}
-      <div className="settings-actions">
-        <button
-          type="button"
-          className="btn outline"
-          disabled
-          aria-disabled="true"
-          aria-describedby="settings-delete-note"
-        >
-          회원 탈퇴·데이터 삭제
-        </button>
-      </div>
-      <p className="settings-note" id="settings-delete-note">
-        계정 및 데이터 삭제 기능은 준비 중이에요 (CORE-004 미구현)
-      </p>
+      {showDemoAdult ? <DemoAdultSettingsStatus /> : null}
+      <DeleteAccountDemo />
     </article>
   );
 }

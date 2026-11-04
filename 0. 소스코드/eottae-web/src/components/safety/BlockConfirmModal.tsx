@@ -53,7 +53,7 @@ export default function BlockConfirmModal({
             서버 연동 후에는 서로의 추천 목록에서도 제외될 예정이에요.
           </p>
         )}
-        <p className="mt-safety-demo">DEMO · 실제 차단 처리는 서버 연동 후 적용돼요.</p>
+        <p className="mt-safety-demo">데모 · 이 기기의 채팅에서 바로 막혀요. 서버 차단은 아직 없어요.</p>
         <div className="mt-safety-actions">
           <button type="submit" value="cancel" className="mt-safety-btn">
             취소

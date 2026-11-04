@@ -24,7 +24,14 @@ import {
   type DistanceIconType,
   type DistancePreference,
 } from '@/lib/match/demo-data';
-import { matchService, type MatchOperatingMode } from '@/lib/match/match-service';
+import {
+  acknowledgeDemoDraftReload,
+  DEMO_DRAFT_CLEARED_MESSAGE,
+  isDemoDraftCleared,
+  matchService,
+  subscribeDemoDraftCleared,
+  type MatchOperatingMode,
+} from '@/lib/match/match-service';
 import {
   INTEREST_RULES,
   validateOnboardingDraft,
@@ -142,6 +149,8 @@ export default function OnboardingForm({
   const [loadKey, setLoadKey] = useState(0);
   const userEditedRef = useRef(false);
   const replaceOnLoadRef = useRef(false);
+  const reloadEpoch = useRef(0);
+  const demoModeRef = useRef(false);
   const [savedSnapshot, setSavedSnapshot] = useState<OnboardingDraft | null>(null);
 
   const [myMbti, setMyMbti] = useState<MyMbti | null>(null);
@@ -250,20 +259,40 @@ export default function OnboardingForm({
     }
   };
 
+  function reloadClearedOnboarding() {
+    reloadEpoch.current += 1;
+    replaceOnLoadRef.current = true;
+    setLoadedMode(null);
+    setServerError(DEMO_DRAFT_CLEARED_MESSAGE);
+    setLoadKey((key) => key + 1);
+  }
+
   // 마운트 시 세션·저장된 온보딩 설정(Supabase 또는 로컬 저장본) 불러오기.
   // 모드가 바뀌어 다시 부를 때는 메모리의 초안을 버리고 조회 결과만 채운다.
   useEffect(() => {
     let active = true;
+    const epoch = reloadEpoch.current;
     const replaceEdits = replaceOnLoadRef.current;
     replaceOnLoadRef.current = false;
     void matchService.loadOnboarding().then((result) => {
-      if (!active) return;
+      if (!active || epoch !== reloadEpoch.current) return;
+      demoModeRef.current = result.context.mode === 'demo';
       ingestOnboardingRef.current(result, replaceEdits);
+      if (result.context.mode === 'demo' && !result.loadError) {
+        acknowledgeDemoDraftReload('onboarding');
+      }
     });
     return () => {
       active = false;
     };
   }, [identityProp, loadKey]);
+
+  useEffect(() => {
+    return subscribeDemoDraftCleared('onboarding', () => {
+      if (!demoModeRef.current) return;
+      reloadClearedOnboarding();
+    });
+  }, []);
 
   const identity = identityProp ?? resolvedIdentity;
 
@@ -378,6 +407,12 @@ export default function OnboardingForm({
       return;
     }
 
+    if (loadedMode === 'demo' && isDemoDraftCleared('onboarding')) {
+      reloadClearedOnboarding();
+      scrollErrorIntoView();
+      return;
+    }
+
     if (onSubmit) {
       onSubmit(currentDraft);
       return;
@@ -402,6 +437,10 @@ export default function OnboardingForm({
     if (!res.ok) {
       setServerError(res.error.message);
       scrollErrorIntoView();
+      if (res.demoDraftCleared) {
+        reloadClearedOnboarding();
+        return;
+      }
       if (res.mode !== modeAtSave) {
         setLoadedMode(null);
         replaceOnLoadRef.current = true;

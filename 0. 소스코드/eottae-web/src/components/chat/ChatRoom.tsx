@@ -3,18 +3,15 @@
 // ============================================================
 //  저장 경로: src/components/chat/ChatRoom.tsx
 //  담당: 손준혁 · MATCH-007
-//  역할: 채팅방 컨테이너 — 헤더, 메시지 목록(자동 스크롤), 입력창.
-//        전송은 로컬 state 데모: sending → (400ms) → sent, 이어서 상대 자동 응답.
-//
-//  [경계] 실제 서버 연동(주한태 API/RLS)·실시간 구독은 별도 설계 리뷰 후 착수.
-//         아래 sendMessage 내부가 API 호출로 교체될 지점이다.
-//  [MATCH-008] 헤더 더보기 메뉴 → 차단/신고. 차단 시 입력·전송·자동응답 즉시 정지(TC-009).
+//  역할: 채팅방. 보내기 확인과 자동응답은 setTimeout 데모를 유지한다.
+//        내가 보낸 말은 이 브라우저 기록으로 남고, 다른 탭에 전달된다.
+//  [MATCH-008] 차단하면 보내기를 바로 막고, 그 이후 상대 말은 받지 않는다.
 // ============================================================
 
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import {
   createChatDataSource,
-  fetchConversationMessages,
+  fetchConversationMessages, 
   isSupabaseChatConfigured,
   type ChatDataSource,
 } from '@/lib/chat/chat-service';
@@ -27,14 +24,31 @@ import MessageBubble from './MessageBubble';
 import MessageComposer from './MessageComposer';
 
 let seq = 0;
-const nextId = () => `local-${Date.now()}-${seq++}`;
+const nextId = (actorId: string) => `local-${actorId}-${Date.now()}-${seq++}`;
+
+function mergeMessages(prev: ChatMessage[], stored: ChatMessage[]): ChatMessage[] {
+  const storedIds = new Set(stored.map((message) => message.id));
+  const extra = prev.filter(
+    (message) =>
+      !storedIds.has(message.id) &&
+      (message.sender === 'system' || message.status === 'failed' || message.status === 'sending'),
+  );
+  const status = new Map(prev.map((message) => [message.id, message.status]));
+  const base = stored.map((message) =>
+    status.get(message.id) === 'sending' ? { ...message, status: 'sending' as const } : message,
+  );
+  return [...base, ...extra].sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
+}
 
 interface ChatRoomProps {
   room: ChatRoomInfo;
+  actorId: string;
   /** 패널이 열려 있는지 — 닫힌 채 유지되는 방은 스크롤 보정을 건너뛴다 */
   active: boolean;
   /** 추천 카드의 "가볍게 물어보기"로 진입했을 때 즉시 보낼 질문 */
   initialQuestion?: string | null;
+  /** 질문을 처리한 뒤 호출한다. 주소의 q는 부모가 지운다. */
+  onQuestionConsumed?: () => void;
   onClose: () => void;
   /** 새 메시지가 붙을 때마다 목록 미리보기 갱신용으로 알린다 */
   onLastMessage?: (roomId: string, message: ChatMessage) => void;
@@ -42,47 +56,59 @@ interface ChatRoomProps {
 
 export default function ChatRoom({
   room,
+  actorId,
   active,
   initialQuestion,
+  onQuestionConsumed,
   onClose,
   onLastMessage,
 }: ChatRoomProps) {
   const menuId = useId();
   const partner = room.partner;
-  const hasHandledQuestion = useRef(false);
+  const questionToken = useRef<string | null>(null);
 
   const [messages, setMessages] = useState<ChatMessage[]>(room.initialMessages);
+  const [hydrated, setHydrated] = useState(false);
   const [typing, setTyping] = useState(false);
   const listEndRef = useRef<HTMLLIElement>(null);
   const dataSourceRef = useRef<ChatDataSource | null>(null);
+  const pendingRef = useRef<Map<string, { body: string; createdAt: string }>>(new Map());
 
-  // ---- MATCH-008 안전 기능 ----
   const [blocked, setBlocked] = useState(false);
-  // 타이머 콜백이 최신 차단 상태를 보도록 ref로도 보관
   const blockedRef = useRef(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [blockOpen, setBlockOpen] = useState(false);
-  // 확인 모달이 차단용인지 해제용인지 — 열 때 정해 두어 확정 직후 문구가 바뀌지 않게 한다.
   const [confirmMode, setConfirmMode] = useState<'block' | 'unblock'>('block');
   const [reportOpen, setReportOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuBtnRef = useRef<HTMLButtonElement>(null);
 
-  // 새 메시지·입력중 표시마다 맨 아래로 스크롤 (패널이 열려 있을 때만 의미가 있다)
   useEffect(() => {
     if (active) listEndRef.current?.scrollIntoView({ block: 'end' });
   }, [messages, typing, active]);
 
-  // 마지막 메시지가 바뀌면 목록 미리보기에 알림 (초기 메시지는 목록이 이미 알고 있다)
-  const lastNotifiedId = useRef(room.initialMessages[room.initialMessages.length - 1]?.id);
+  const lastNotifiedId = useRef<string | null>(null);
   useEffect(() => {
     const last = messages[messages.length - 1];
-    if (!last || last.id === lastNotifiedId.current) return;
+    if (!last || last.sender !== 'system' || last.id === lastNotifiedId.current) return;
     lastNotifiedId.current = last.id;
     onLastMessage?.(room.id, last);
   }, [messages, room.id, onLastMessage]);
 
-  // 데이터 소스 연결 및 언마운트 시 대기 중 타이머/구독 정리
+  const pushSystem = useCallback((body: string) => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: nextId(actorId),
+        senderId: '',
+        sender: 'system',
+        body,
+        createdAt: new Date().toISOString(),
+        status: 'sent',
+      },
+    ]);
+  }, [actorId]);
+
   const createSource = useCallback(() => {
     dataSourceRef.current?.dispose();
     dataSourceRef.current = createChatDataSource(
@@ -109,11 +135,18 @@ export default function ChatRoom({
   }, [room.id]);
 
   useEffect(() => {
+    if (isDemoBlocked(actorId, partner.id)) {
+      blockedRef.current = true;
+      setBlocked(true);
+      return;
+    }
+    blockedRef.current = false;
+    setBlocked(false);
     createSource();
     return () => {
       dataSourceRef.current?.dispose();
     };
-  }, [createSource]);
+  }, [actorId, partner.id, createSource]);
 
   // 실제 Supabase 대화방(UUID)인 경우 RLS 범위 내 과거 메시지 초기 로드
   useEffect(() => {
@@ -145,9 +178,11 @@ export default function ChatRoom({
   const confirmBlockLock = useCallback(() => {
     blockedRef.current = true;
     setBlocked(true);
+    saveDemoBlock(actorId, partner.id);
     dataSourceRef.current?.dispose();
+    setTyping(false);
     setMessages((prev) =>
-      prev.map((m) => (m.status === 'sending' ? { ...m, status: 'failed' } : m)),
+      prev.map((message) => (message.status === 'sending' ? { ...message, status: 'failed' } : message)),
     );
     pushSystem(`${partner.nickname}님을 차단했어요. 더 이상 대화할 수 없어요.`);
   }, [pushSystem, partner.nickname]);
@@ -181,9 +216,10 @@ export default function ChatRoom({
     if (!blockedRef.current) return;
     blockedRef.current = false;
     setBlocked(false);
+    removeDemoBlock(actorId, partner.id);
     createSource();
     pushSystem('차단을 해제했어요. 다시 대화할 수 있어요.');
-  }, [createSource, pushSystem]);
+  }, [actorId, partner.id, createSource, pushSystem]);
 
   function handleReportSubmit(req: ReportRequest) {
     // [보안 / DB_논리모델_전체3단계.md:41] 신고 사유 본문(req.description)은 콘솔·로그에 남기지 않는다.
@@ -205,13 +241,11 @@ export default function ChatRoom({
     });
   }
 
-  // 차단/해제 확인 모달 열기 (해제도 실수 방지를 위해 항상 확인을 거친다)
   function openBlockConfirm() {
     setConfirmMode(blockedRef.current ? 'unblock' : 'block');
     setBlockOpen(true);
   }
 
-  // 모달이 닫히면 메뉴 항목이 이미 사라져 포커스가 갈 곳을 잃으므로 트리거로 복귀
   function closeBlockConfirm() {
     setBlockOpen(false);
     menuBtnRef.current?.focus();
@@ -221,7 +255,6 @@ export default function ChatRoom({
     menuBtnRef.current?.focus();
   }
 
-  // 더보기 메뉴: 바깥 클릭·Esc로 닫고, Esc일 때 트리거로 포커스 복귀
   useEffect(() => {
     if (!menuOpen) return;
     const onPointerDown = (e: PointerEvent) => {
@@ -242,22 +275,28 @@ export default function ChatRoom({
   }, [menuOpen]);
 
   const sendMessage = useCallback((body: string) => {
-    if (blockedRef.current) return; // 차단 중에는 어떤 경로로도 전송 금지
-    const id = nextId();
+    if (blockedRef.current || isDemoBlocked(actorId, partner.id)) return;
+    const id = nextId(actorId);
+    const createdAt = new Date().toISOString();
+    pendingRef.current.set(id, { body, createdAt });
     setMessages((prev) => [
       ...prev,
-      { id, sender: 'me', body, createdAt: new Date().toISOString(), status: 'sending' },
+      { id, senderId: actorId, sender: 'me', body, createdAt, status: 'sending' },
     ]);
     dataSourceRef.current?.sendMessage(id, body);
-  }, []);
+  }, [actorId, partner.id]);
 
-  // 추천 카드에서 "가볍게 물어보기" 버튼 클릭하여 진입한 경우, 해당 질문을 즉시 전송
   useEffect(() => {
-    if (initialQuestion && !hasHandledQuestion.current) {
-      hasHandledQuestion.current = true;
-      sendMessage(initialQuestion);
-    }
-  }, [initialQuestion, sendMessage]);
+    if (!hydrated || !initialQuestion) return;
+    const token = `${room.id}|${actorId}|${initialQuestion}`;
+    if (questionToken.current === token) return;
+    questionToken.current = token;
+    const already = loadVisibleMessages(room.id, actorId).some(
+      (message) => message.senderId === actorId && message.body === initialQuestion,
+    );
+    if (!already) sendMessage(initialQuestion);
+    onQuestionConsumed?.();
+  }, [hydrated, initialQuestion, room.id, actorId, sendMessage, onQuestionConsumed]);
 
   return (
     <section className="mt-chat" aria-label={`${partner.nickname}님과의 1:1 채팅`}>
@@ -268,7 +307,7 @@ export default function ChatRoom({
         <div className="mt-chat-head-text">
           <h2 className="mt-chat-title">{partner.nickname}</h2>
           <span className="mt-chat-demo">
-            {blocked ? '차단됨 · ' : ''}DEMO · 실제 채팅이 아니에요
+            {blocked ? '차단됨 · ' : ''}데모 · 이 브라우저 안에서만 대화해요
           </span>
         </div>
 
@@ -280,7 +319,7 @@ export default function ChatRoom({
             aria-label="더보기 메뉴"
             aria-expanded={menuOpen}
             aria-controls={menuId}
-            onClick={() => setMenuOpen((o) => !o)}
+            onClick={() => setMenuOpen((open) => !open)}
           >
             <span aria-hidden="true">⋯</span>
           </button>
@@ -323,13 +362,12 @@ export default function ChatRoom({
       </header>
 
       <div className="mt-chat-notice" role="note">
-        체험용 화면입니다. 로그인·성인 확인·실시간 서버 연동은 아직 구현되지 않았고, 입력한
-        메시지는 저장되거나 전송되지 않습니다.
+        데모 화면이에요. 메시지는 이 기기에만 저장되고, 서버로는 전송되지 않아요.
       </div>
 
       <ul className="mt-chat-list" aria-live="polite" aria-label="메시지 목록">
-        {messages.map((m) => (
-          <MessageBubble key={m.id} message={m} />
+        {messages.map((message) => (
+          <MessageBubble key={message.id} message={message} />
         ))}
         {typing && (
           <li className="mt-chat-row is-partner" aria-label="상대가 입력 중">

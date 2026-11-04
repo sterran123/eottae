@@ -5,8 +5,8 @@
 //        - Supabase 환경변수(NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY)가
 //          없거나 백엔드 연동 전에는 데모 데이터 소스(createDemoChatDataSource)로 동작해
 //          GitHub Pages 정적 배포 사이트가 깨지지 않도록 보장한다 (ADR-005).
-//        - 추후 주한태 PR(Supabase Auth·0003_match_core.sql) 머지 후 Supabase Realtime
-//          구현체를 같은 ChatDataSource 인터페이스로 연결한다.
+//        탭 사이 전달은 demo-store(BroadcastChannel)가 맡고, 이 파일은
+//        보내기 확인·자동응답 setTimeout만 유지한다. 네트워크는 호출하지 않는다.
 // ============================================================
 
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase/client';
@@ -58,6 +58,7 @@ export interface ChatDataSource {
  */
 export function createDemoChatDataSource(
   callbacks: ChatDataSourceCallbacks,
+  partnerId: string,
 ): ChatDataSource {
   const timers: Array<ReturnType<typeof setTimeout>> = [];
   let replyIdx = 0;
@@ -90,6 +91,7 @@ export function createDemoChatDataSource(
         callbacks.onTypingChange(pendingReplies > 0);
         callbacks.onIncomingMessage({
           id: nextDemoReplyId(),
+          senderId: partnerId,
           sender: 'partner',
           body: replyBody,
           createdAt: new Date().toISOString(),

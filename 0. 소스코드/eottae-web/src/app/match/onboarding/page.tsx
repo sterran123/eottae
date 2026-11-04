@@ -3,13 +3,14 @@
 //  담당: 오하율 · MATCH-001 (취향/가치관 입력)
 //  역할: 온보딩 라우트 진입점. /eottae/match/onboarding/
 //
-//  [경계] 실제로는 이 페이지 진입 전에 로그인·성인인증(주한태)이
-//         완료돼야 한다. 1차 DEMO 단계에서는 게이트 없이 폼만 노출하며,
-//         상단 안내로 미구현 상태를 솔직히 표시한다 (RULES 6).
+//  [경계] live만 폼을 연다. unverified는 사유만 보여 주고 시연 버튼은 두지 않는다.
+//         데모는 NEXT_PUBLIC_DEMO_ADULT_BYPASS가 '1'이고 시연 확인이 유효할 때만 연다.
+//         온보딩 폼은 생년월일을 저장하지 않는다. 앞선 시연 확인만 만 나이를 판정하고 원본은 남기지 않는다.
 // ============================================================
 
 import type { Metadata } from 'next';
 import OnboardingForm from '@/components/match/OnboardingForm';
+import DemoEntryGuard from '@/components/demo/DemoEntryGuard';
 import './match-onboarding.css';
 
 export const metadata: Metadata = {
@@ -20,7 +21,9 @@ export const metadata: Metadata = {
 export default function MatchOnboardingPage() {
   return (
     <div className="mt-onb-page">
-      <OnboardingForm />
+      <DemoEntryGuard area="onboarding">
+        <OnboardingForm />
+      </DemoEntryGuard>
     </div>
   );
 }

@@ -5,7 +5,7 @@
 //  담당: 손준혁 · MATCH-008
 //  역할: 신고 접수 모달 — 사유 선택(필수) → 상세 입력 → (선택)동시 차단 → 완료 안내.
 //  [정직성] DEMO이므로 서버 접수·검토 일정을 약속하는 문구를 쓰지 않는다 (RULES 6).
-//  [개인정보] 신고 내용은 state에만 두고 로그/저장하지 않는다.
+//  [개인정보] 신고는 이 기기 데모 기록에만 남고 서버로 보내지 않는다.
 // ============================================================
 
 import { useEffect, useId, useState, type FormEvent } from 'react';
@@ -77,8 +77,8 @@ export default function ReportModal({
             신고 내용을 확인했어요
           </h2>
           <p className="mt-safety-text">
-            {alsoBlock ? `${partnerName}님은 차단되었어요. ` : ''}
-            지금은 체험(DEMO) 화면이라 신고가 실제로 접수되거나 저장되지는 않아요.
+            {alsoBlock ? `${partnerName}님은 이 기기에서 차단되었어요. ` : ''}
+            이 기기의 내 신고 내역에 남았어요. 서버로는 보내지 않아요.
           </p>
           <div className="mt-safety-actions">
             <button type="submit" className="mt-safety-btn is-primary">
@@ -144,7 +144,7 @@ export default function ReportModal({
           <p className="mt-safety-error" role="alert">
             {error}
           </p>
-          <p className="mt-safety-demo">DEMO · 제출해도 서버로 전송되지 않아요.</p>
+          <p className="mt-safety-demo">데모 · 서버로 보내지 않고 이 기기에만 남아요.</p>
 
           <div className="mt-safety-actions">
             <button type="button" className="mt-safety-btn" onClick={onClose}>

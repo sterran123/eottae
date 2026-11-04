@@ -1,8 +1,9 @@
 // ============================================================
 //  저장 경로: src/lib/match/match-service.ts
 //  담당: 오하율 · MATCH-001/002/009 (매칭 데이터 소스 · Supabase 백엔드 연동)
-//  역할: 온보딩(`profiles`·`profile_interests`), 추천(`get_recommendations`),
-//        관심 표현(`likes`), 문답(`profile_qna_answers`)의
+//  역할: 온보딩(`save_onboarding`, 조회는 `profiles`·`user_interests`),
+//        추천(`get_recommendations`), 관심 표현(`record_like_decision`),
+//        문답(`save_answers`, 조회는 `profile_answers`)의
 //        Supabase 호출과 데모 폴백을 분리하는 데이터 서비스 계층.
 //        공통 질문 거절은 `common_question_answers`를 호출하지 않고,
 //        데모(키 없음 또는 세션 없음)에서만 localStorage에 둔다.
@@ -16,16 +17,27 @@
 //  3. 성인 인증이 완료된 로그인 세션에서는 화면의 DEMO 배지/문구를 숨기고
 //     실제 Supabase 테이블·RPC와 통신한다.
 //  4. 실계정(live/unverified)은 온보딩·문답·공통 질문 거절을 localStorage에 남기지 않는다.
-//     데모(키 미설정·세션 없음)만 로컬 초안을 쓴다. 로그인 세션이 있으면 기존 키를 지운다.
+//     데모(키 미설정·세션 없음)만 로컬 초안을 쓴다. 로그인 세션이 있으면 기존 키와
+//     시연 성인 확인 키(eottae_demo_adult_v1)를 지운다.
 // ============================================================
 
 import { authService } from '@/lib/auth/auth-service';
 import type { MyAccount } from '@/lib/auth/types';
+import { clearDemoAdult } from '@/lib/demo/demo-adult';
+import { clearDemoSession } from '@/lib/demo/demo-session';
+import { DEMO_SELF } from '@/lib/chat/demo-data';
+import { saveDemoBlock, saveDemoReport } from '@/lib/safety/demo-store';
 import type { BlockRequest, ReportCategory, ReportRequest } from '@/lib/safety/types';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase/client';
 import { DEMO_IDENTITY, VALID_INTEREST_IDS } from './demo-data';
+import { applyDemoMutualState, recordDemoLike } from './demo-mutual';
 import { DEMO_MY_ANSWERS } from './demo-qna';
-import { DEMO_ACORN, DEMO_RECOMMENDATIONS } from './demo-recommendations';
+import {
+  DEMO_ACORN,
+  demoPartnerReturnsInterest,
+  DEMO_RECOMMENDATIONS,
+  demoRecommendationView,
+} from './demo-recommendations';
 import {
   toOnboardingDraft,
   toQnaAnswer,
@@ -65,7 +77,7 @@ export interface MatchAccessContext {
 
 export type MatchServiceResult<T> =
   | { ok: true; mode: MatchOperatingMode; data: T }
-  | { ok: false; mode: MatchOperatingMode; error: ApiError['error'] };
+  | { ok: false; mode: MatchOperatingMode; error: ApiError['error']; demoDraftCleared?: boolean };
 
 function isAdultVerificationActive(account: MyAccount): boolean {
   // 0002 is_active_adult(): ACTIVE가 아니면 성인으로 보지 않는다.
@@ -96,6 +108,8 @@ function clearSignedInMatchCache(): void {
   } catch {
     // 저장소 접근이 막혀도 실계정 경로는 캐시를 읽지 않는다.
   }
+  clearDemoAdult();
+  clearDemoSession();
 }
 
 function gateError(context: MatchAccessContext): ApiError['error'] | null {
@@ -135,13 +149,150 @@ function readLocalJson<T>(key: string): T | null {
   }
 }
 
-function writeLocalJson<T>(key: string, value: T): void {
-  if (typeof window === 'undefined') return;
+function writeLocalJson<T>(key: string, value: T): boolean {
+  if (typeof window === 'undefined') return false;
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
+    return true;
   } catch {
     // 저장소 용량·사생활 보호 모드 제한 시 무시
+    return false;
   }
+}
+
+export type DemoDraftSlot = 'onboarding' | 'qna' | 'commonDeclined';
+
+const DEMO_DRAFT_KEYS: Record<DemoDraftSlot, string> = {
+  onboarding: STORAGE_ONBOARDING_KEY,
+  qna: STORAGE_QNA_KEY,
+  commonDeclined: STORAGE_COMMON_DECLINED_KEY,
+};
+
+/** 다른 탭이 데모 키를 비운 뒤, 열린 화면이 메모리 초안을 다시 쓰지 않게 막는다. */
+const demoWriteBlocked = new Set<string>();
+/** 이 탭이 마지막으로 읽었을 때 키가 있었는지. 이벤트를 놓쳐도 빈 키에 초안을 되돌리지 않는다. */
+const demoKeyWasPresent = new Map<string, boolean>();
+let demoDraftEpoch = 0;
+let demoDraftWatchInstalled = false;
+
+export const DEMO_DRAFT_CLEARED_MESSAGE =
+  '다른 탭에서 이 브라우저의 데모 데이터를 지웠어요. 저장하지 않고 다시 불러왔어요.';
+
+function watchDemoDraftKeys(): void {
+  if (demoDraftWatchInstalled || typeof window === 'undefined') return;
+  demoDraftWatchInstalled = true;
+  window.addEventListener('storage', (event: StorageEvent) => {
+    const all = Object.values(DEMO_DRAFT_KEYS);
+    const keys =
+      event.key === null ? all : all.includes(event.key) ? [event.key] : [];
+    if (keys.length === 0) return;
+    // 값이 바뀐 것이 아니라 비워진 경우만. 첫 저장은 막지 않는다.
+    if (event.key !== null && event.newValue !== null) return;
+    demoDraftEpoch += 1;
+    for (const key of keys) demoWriteBlocked.add(key);
+  });
+}
+
+function noteDemoKey(key: string): void {
+  if (demoWriteBlocked.has(key)) return;
+  if (typeof window === 'undefined') {
+    demoKeyWasPresent.set(key, false);
+    return;
+  }
+  try {
+    demoKeyWasPresent.set(key, window.localStorage.getItem(key) !== null);
+  } catch {
+    demoKeyWasPresent.set(key, false);
+  }
+}
+
+function demoDraftKeyCleared(key: string): boolean {
+  watchDemoDraftKeys();
+  if (demoWriteBlocked.has(key)) return true;
+  if (demoKeyWasPresent.get(key) !== true) return false;
+  if (typeof window === 'undefined') return false;
+  try {
+    if (window.localStorage.getItem(key) !== null) return false;
+  } catch {
+    demoWriteBlocked.add(key);
+    return true;
+  }
+  demoWriteBlocked.add(key);
+  return true;
+}
+
+function currentDemoDraftEpoch(): number {
+  watchDemoDraftKeys();
+  return demoDraftEpoch;
+}
+
+function readDemoRaw(key: string): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 저장을 시작한 뒤 키가 바뀌거나 비면 false.
+ * await 중에 들어온 storage 이벤트보다 먼저 이어져도, 시작 시점의 원문과 다르면 메모리를 쓰지 않는다.
+ * 용량 실패는 다른 탭의 삭제와 구분하고, 그 경우 키를 본 것으로 표시하지 않는다.
+ */
+function writeDemoJson<T>(key: string, value: T, epochAtStart: number, rawAtStart: string | null): boolean {
+  if (
+    epochAtStart !== demoDraftEpoch
+    || readDemoRaw(key) !== rawAtStart
+    || demoDraftKeyCleared(key)
+  ) {
+    return false;
+  }
+  if (writeLocalJson(key, value)) demoKeyWasPresent.set(key, true);
+  return true;
+}
+
+function clearedDemoResult<T>(mode: MatchOperatingMode): MatchServiceResult<T> {
+  return {
+    ok: false,
+    mode,
+    demoDraftCleared: true,
+    error: { code: 'NETWORK_ERROR', message: DEMO_DRAFT_CLEARED_MESSAGE },
+  };
+}
+
+/** 다른 탭이 이 데모 키를 비웠으면 true. 저장 전에 호출해 메모리 초안을 버린다. */
+export function isDemoDraftCleared(slot: DemoDraftSlot): boolean {
+  return demoDraftKeyCleared(DEMO_DRAFT_KEYS[slot]);
+}
+
+/** 다시 읽은 결과를 화면에 넣은 뒤 호출한다. 그 다음 저장은 새 입력만 쓴다. */
+export function acknowledgeDemoDraftReload(slot: DemoDraftSlot): void {
+  const key = DEMO_DRAFT_KEYS[slot];
+  demoWriteBlocked.delete(key);
+  if (typeof window === 'undefined') {
+    demoKeyWasPresent.set(key, false);
+    return;
+  }
+  try {
+    demoKeyWasPresent.set(key, window.localStorage.getItem(key) !== null);
+  } catch {
+    demoKeyWasPresent.set(key, false);
+  }
+}
+
+/** 해당 키가 비워지면 onCleared. 같은 탭의 removeItem은 storage를 내지 않는다. */
+export function subscribeDemoDraftCleared(slot: DemoDraftSlot, onCleared: () => void): () => void {
+  watchDemoDraftKeys();
+  if (typeof window === 'undefined') return () => {};
+  const key = DEMO_DRAFT_KEYS[slot];
+  const onStorage = (event: StorageEvent) => {
+    if (event.key !== null && event.key !== key) return;
+    if (event.key !== null && event.newValue !== null) return;
+    onCleared();
+  };
+  window.addEventListener('storage', onStorage);
+  return () => window.removeEventListener('storage', onStorage);
 }
 
 /**
@@ -159,47 +310,73 @@ export function mapUiReasonToReportCategory(reason: string): ReportCategory {
 type MatchSupabase = NonNullable<ReturnType<typeof getSupabase>>;
 
 /**
- * 관심사를 비우지 않은 채로 교체한다.
- * 새 id를 먼저 넣고, 빠진 id만 지운다. 조회·삽입·삭제 중 하나라도 실패하면 사유 문자열을 반환한다.
+ * `save_answers`는 넘긴 문항만 덮어쓰고, 배열에 없는 기존 답은 지우지 않는다.
+ * 지울 문항만 `removed: true`로 보낸다.
+ * 조회가 일부만 성공한 뒤 한 문항을 저장하거나 지워도 나머지 답은 남는다.
+ * 서버 행이 0건인 첫 저장은 그 문항만 들어간다.
  */
-async function syncProfileInterests(
+async function replaceProfileAnswers(
   supabase: MatchSupabase,
-  userId: string,
-  interestIds: string[],
+  next: Record<string, QnaAnswer>,
+  failMessage: string,
+  removeQuestionIds: readonly string[] = [],
 ): Promise<string | null> {
-  const fail = '관심사 저장 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.';
-  const { data: existing, error: readErr } = await supabase
-    .from('profile_interests')
-    .select('interest_id')
-    .eq('user_id', userId);
-  if (readErr) return fail;
+  const remove = new Set(removeQuestionIds);
+  const payload: Array<{
+    questionId: string;
+    optionId: string | null;
+    customText: string | null;
+    declined: boolean;
+    removed?: boolean;
+  }> = [];
 
-  const existingIds = new Set(
-    (existing ?? []).map((row) => String((row as { interest_id: string }).interest_id)),
-  );
-  const desired = new Set(interestIds);
-  const toInsert = interestIds.filter((id) => !existingIds.has(id));
-  const toDelete = [...existingIds].filter((id) => !desired.has(id));
-
-  if (toInsert.length > 0) {
-    const rows: ProfileInterestRow[] = toInsert.map((interestId) => ({
-      user_id: userId,
-      interest_id: interestId,
-    }));
-    const { error: insErr } = await supabase.from('profile_interests').insert(rows);
-    if (insErr) return fail;
+  for (const answer of Object.values(next)) {
+    if (remove.has(answer.questionId)) continue;
+    payload.push({
+      questionId: answer.questionId,
+      optionId: answer.optionId,
+      customText: answer.customText ?? null,
+      declined: false,
+    });
+  }
+  for (const questionId of remove) {
+    payload.push({
+      questionId,
+      optionId: null,
+      customText: null,
+      declined: false,
+      removed: true,
+    });
   }
 
-  if (toDelete.length > 0) {
-    const { error: delErr } = await supabase
-      .from('profile_interests')
-      .delete()
-      .eq('user_id', userId)
-      .in('interest_id', toDelete);
-    if (delErr) return fail;
+  const { error: rpcError } = await supabase.rpc('save_answers', { p_answers: payload });
+  return rpcError ? failMessage : null;
+}
+
+function readRecommendationPage(data: unknown): {
+  items: RecommendationRow[];
+  nextCursor: string | null;
+} | null {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
+  const payload = data as { items?: unknown; next_cursor?: unknown };
+  if (!Array.isArray(payload.items)) return null;
+
+  const items: RecommendationRow[] = [];
+  for (const raw of payload.items) {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+    const record = raw as { user_id?: unknown; age?: unknown };
+    if (typeof record.user_id !== 'string' || record.user_id.length === 0) return null;
+    // 출생연도가 없으면 서버가 age: null을 준다. 그 행만 건너뛰고 페이지는 유지한다.
+    if (record.age === null) continue;
+    if (typeof record.age !== 'number' || !Number.isFinite(record.age)) return null;
+    items.push(raw as RecommendationRow);
   }
 
-  return null;
+  const nextCursor =
+    typeof payload.next_cursor === 'string' && payload.next_cursor.length > 0
+      ? payload.next_cursor
+      : null;
+  return { items, nextCursor };
 }
 
 export const matchService = {
@@ -207,6 +384,7 @@ export const matchService = {
    * 현재 매칭 모듈의 동작 모드(데모 폴백 vs 성인 인증 완료 실데이터 vs 성인 미인증 차단)를 판정한다.
    */
   async resolveAccessContext(): Promise<MatchAccessContext> {
+    watchDemoDraftKeys();
     const supabase = getSupabase();
     if (!isSupabaseConfigured || !supabase) {
       return {
@@ -281,7 +459,7 @@ export const matchService = {
   },
 
   /**
-   * 저장된 온보딩 설정(`profiles` + `profile_interests` 또는 데모 로컬 저장본)을 불러온다.
+   * 저장된 온보딩 설정(`profiles` + `user_interests` 또는 데모 로컬 저장본)을 불러온다.
    */
   async loadOnboarding(): Promise<{
     context: MatchAccessContext;
@@ -300,12 +478,12 @@ export const matchService = {
         supabase
           .from('profiles')
           .select(
-            'user_id, nickname, bio, mbti, avoid_mbti, target_preference, relation_goal, preferred_distance, photo_visibility, profile_status, updated_at',
+            'user_id, bio, mbti, avoid_mbti, target_preference, relation_goal, preferred_distance, photo_visibility, profile_status',
           )
           .eq('user_id', userId)
           .maybeSingle(),
         supabase
-          .from('profile_interests')
+          .from('user_interests')
           .select('user_id, interest_id')
           .eq('user_id', userId),
       ]);
@@ -337,18 +515,21 @@ export const matchService = {
     }
 
     const cached = readLocalJson<OnboardingDraft>(STORAGE_ONBOARDING_KEY);
+    noteDemoKey(STORAGE_ONBOARDING_KEY);
     return { context, draft: cached };
   },
 
   /**
    * 온보딩 취향·공개범위를 검증하고 저장한다 (MATCH-001, TC-005).
    * - 성인 미인증 로그인 상태(`unverified`)에서는 fail-closed로 거부한다.
-   * - `live` 모드에서는 `public.profiles` upsert 및 `public.profile_interests` 동기화를 수행한다.
+   * - `live` 모드에서는 RPC `save_onboarding`만 호출한다. profiles·user_interests 직접 쓰기는 없다.
    */
   async saveOnboarding(
     draft: OnboardingDraft,
     expectedMode: MatchOperatingMode,
   ): Promise<MatchServiceResult<SaveOnboardingRequest>> {
+    const draftEpoch = currentDemoDraftEpoch();
+    const onboardingRaw = readDemoRaw(STORAGE_ONBOARDING_KEY);
     const context = await this.resolveAccessContext();
     const changed = modeChangedError(context, expectedMode);
     if (changed) {
@@ -382,21 +563,15 @@ export const matchService = {
 
     const supabase = getSupabase();
     if (context.mode === 'live' && context.account && supabase) {
-      const userId = context.account.id;
-      const { error: profileErr } = await supabase.from('profiles').upsert(
-        {
-          user_id: userId,
-          nickname: context.account.nickname,
-          mbti: req.myMbti,
-          avoid_mbti: req.avoidMbti,
-          target_preference: req.targetPreference,
-          relation_goal: req.relationGoal,
-          preferred_distance: req.preferredDistance,
-          photo_visibility: req.photoVisibility,
-          profile_status: 'ACTIVE',
-        },
-        { onConflict: 'user_id' },
-      );
+      const { error: profileErr } = await supabase.rpc('save_onboarding', {
+        p_my_mbti: req.myMbti,
+        p_avoid_mbti: req.avoidMbti,
+        p_target_preference: req.targetPreference,
+        p_relation_goal: req.relationGoal,
+        p_interest_ids: req.interestIds,
+        p_preferred_distance: req.preferredDistance,
+        p_photo_visibility: req.photoVisibility,
+      });
 
       if (profileErr) {
         return {
@@ -409,24 +584,13 @@ export const matchService = {
         };
       }
 
-      const interestError = await syncProfileInterests(
-        supabase,
-        userId,
-        req.interestIds,
-      );
-      if (interestError) {
-        return {
-          ok: false,
-          mode: 'live',
-          error: { code: 'NETWORK_ERROR', message: interestError },
-        };
-      }
-
       return { ok: true, mode: 'live', data: req };
     }
 
     if (context.mode === 'demo') {
-      writeLocalJson(STORAGE_ONBOARDING_KEY, req);
+      if (!writeDemoJson(STORAGE_ONBOARDING_KEY, req, draftEpoch, onboardingRaw)) {
+        return clearedDemoResult(context.mode);
+      }
       return { ok: true, mode: 'demo', data: req };
     }
 
@@ -474,18 +638,17 @@ export const matchService = {
       const { data, error } = await supabase.rpc('get_recommendations', {
         p_cursor: cursor,
       });
+      const page = !error ? readRecommendationPage(data) : null;
 
-      if (!error && Array.isArray(data)) {
-        const items = (data as RecommendationRow[]).map((row) =>
-          toRecommendProfile(row),
-        );
+      if (page) {
+        const items = page.items.map((row) => toRecommendProfile(row));
         return {
           ok: true,
           mode: 'live',
           context,
           data: {
             items,
-            nextCursor: null,
+            nextCursor: page.nextCursor,
             acorn: { acorn: null },
           },
         };
@@ -514,12 +677,13 @@ export const matchService = {
       };
     }
 
+    const visible = demoRecommendationView().items;
     return {
       ok: true,
       mode: 'demo',
       context,
       data: {
-        items: DEMO_RECOMMENDATIONS,
+        items: applyDemoMutualState(visible),
         nextCursor: null,
         acorn: DEMO_ACORN,
       },
@@ -585,15 +749,20 @@ export const matchService = {
     }
 
     if (context.mode === 'demo') {
+      const recorded = recordDemoLike(
+        targetId,
+        decision,
+        demoPartnerReturnsInterest(targetId),
+      );
       return {
         ok: true,
         mode: 'demo',
         data: {
           targetId,
           decision,
-          matched: false,
-          matchId: null,
-          conversationId: null,
+          matched: recorded.matched,
+          matchId: recorded.matchId,
+          conversationId: recorded.conversationId,
         },
       };
     }
@@ -630,9 +799,9 @@ export const matchService = {
       const { error } = await supabase.from('blocks').upsert(
         {
           blocker_id: context.account.id,
-          blocked_id: req.blockedUserId,
+          blocked_user_id: req.blockedUserId,
         },
-        { onConflict: 'blocker_id,blocked_id' },
+        { onConflict: 'blocker_id,blocked_user_id', ignoreDuplicates: true },
       );
       if (error) {
         return {
@@ -648,6 +817,7 @@ export const matchService = {
     }
 
     if (context.mode === 'demo') {
+      saveDemoBlock(DEMO_SELF.id, req.blockedUserId);
       return { ok: true, mode: 'demo', data: undefined };
     }
     return {
@@ -676,11 +846,12 @@ export const matchService = {
     const supabase = getSupabase();
 
     if (context.mode === 'live' && context.account && supabase) {
+      const detail = req.description.trim();
       const { error: reportErr } = await supabase.from('reports').insert({
         reporter_id: context.account.id,
         reported_user_id: req.reportedUserId,
         category: req.category,
-        description: req.description.slice(0, 200),
+        description: detail.length > 0 ? detail.slice(0, 200) : null,
       });
 
       if (reportErr) {
@@ -698,9 +869,9 @@ export const matchService = {
         const { error: blockErr } = await supabase.from('blocks').upsert(
           {
             blocker_id: context.account.id,
-            blocked_id: req.reportedUserId,
+            blocked_user_id: req.reportedUserId,
           },
-          { onConflict: 'blocker_id,blocked_id' },
+          { onConflict: 'blocker_id,blocked_user_id', ignoreDuplicates: true },
         );
         if (blockErr) {
           return {
@@ -717,6 +888,15 @@ export const matchService = {
     }
 
     if (context.mode === 'demo') {
+      const nickname = DEMO_RECOMMENDATIONS.find((item) => item.id === req.reportedUserId)?.nickname ?? '상대';
+      saveDemoReport({
+        reporterId: DEMO_SELF.id,
+        targetId: req.reportedUserId,
+        nickname,
+        category: req.category,
+        description: req.description,
+      });
+      if (req.alsoBlock) saveDemoBlock(DEMO_SELF.id, req.reportedUserId);
       return { ok: true, mode: 'demo', data: undefined };
     }
     return {
@@ -742,8 +922,8 @@ export const matchService = {
         return { context, answers: {} };
       }
       const { data, error } = await supabase
-        .from('profile_qna_answers')
-        .select('user_id, question_id, option_id, custom_text, updated_at')
+        .from('profile_answers')
+        .select('user_id, question_id, option_id, custom_text, declined')
         .eq('user_id', context.account.id);
 
       if (error || !Array.isArray(data)) {
@@ -754,13 +934,15 @@ export const matchService = {
         };
       }
       const map: Record<string, QnaAnswer> = {};
-      for (const row of data as ProfileQnaAnswerRow[]) {
+      for (const row of data as (ProfileQnaAnswerRow & { declined?: boolean })[]) {
+        if (row.declined) continue;
         const parsed = toQnaAnswer(row);
         map[parsed.questionId] = parsed;
       }
       return { context, answers: map };
     }
 
+    noteDemoKey(STORAGE_QNA_KEY);
     const cached = readLocalJson<Record<string, QnaAnswer>>(STORAGE_QNA_KEY);
     if (cached) {
       return { context, answers: cached };
@@ -785,6 +967,8 @@ export const matchService = {
     currentAnswers: Record<string, QnaAnswer>,
     expectedMode: MatchOperatingMode,
   ): Promise<MatchServiceResult<Record<string, QnaAnswer>>> {
+    const draftEpoch = currentDemoDraftEpoch();
+    const qnaRaw = readDemoRaw(STORAGE_QNA_KEY);
     const next = { ...currentAnswers, [answer.questionId]: answer };
     const context = await this.resolveAccessContext();
     const changed = modeChangedError(context, expectedMode);
@@ -798,30 +982,25 @@ export const matchService = {
 
     const supabase = getSupabase();
     if (context.mode === 'live' && context.account && supabase) {
-      const { error } = await supabase.from('profile_qna_answers').upsert(
-        {
-          user_id: context.account.id,
-          question_id: answer.questionId,
-          option_id: answer.optionId,
-          custom_text: answer.customText ?? null,
-        },
-        { onConflict: 'user_id,question_id' },
+      const saveError = await replaceProfileAnswers(
+        supabase,
+        next,
+        '문답 저장 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.',
       );
-      if (error) {
+      if (saveError) {
         return {
           ok: false,
           mode: 'live',
-          error: {
-            code: 'NETWORK_ERROR',
-            message: '문답 저장 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.',
-          },
+          error: { code: 'NETWORK_ERROR', message: saveError },
         };
       }
       return { ok: true, mode: 'live', data: next };
     }
 
     if (context.mode === 'demo') {
-      writeLocalJson(STORAGE_QNA_KEY, next);
+      if (!writeDemoJson(STORAGE_QNA_KEY, next, draftEpoch, qnaRaw)) {
+        return clearedDemoResult(context.mode);
+      }
       return { ok: true, mode: 'demo', data: next };
     }
 
@@ -843,6 +1022,8 @@ export const matchService = {
     currentAnswers: Record<string, QnaAnswer>,
     expectedMode: MatchOperatingMode,
   ): Promise<MatchServiceResult<Record<string, QnaAnswer>>> {
+    const draftEpoch = currentDemoDraftEpoch();
+    const qnaRaw = readDemoRaw(STORAGE_QNA_KEY);
     const next = { ...currentAnswers };
     delete next[questionId];
 
@@ -858,26 +1039,26 @@ export const matchService = {
 
     const supabase = getSupabase();
     if (context.mode === 'live' && context.account && supabase) {
-      const { error } = await supabase
-        .from('profile_qna_answers')
-        .delete()
-        .eq('user_id', context.account.id)
-        .eq('question_id', questionId);
-      if (error) {
+      const deleteError = await replaceProfileAnswers(
+        supabase,
+        next,
+        '문답 삭제 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.',
+        [questionId],
+      );
+      if (deleteError) {
         return {
           ok: false,
           mode: 'live',
-          error: {
-            code: 'NETWORK_ERROR',
-            message: '문답 삭제 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.',
-          },
+          error: { code: 'NETWORK_ERROR', message: deleteError },
         };
       }
       return { ok: true, mode: 'live', data: next };
     }
 
     if (context.mode === 'demo') {
-      writeLocalJson(STORAGE_QNA_KEY, next);
+      if (!writeDemoJson(STORAGE_QNA_KEY, next, draftEpoch, qnaRaw)) {
+        return clearedDemoResult(context.mode);
+      }
       return { ok: true, mode: 'demo', data: next };
     }
 
@@ -896,15 +1077,24 @@ export const matchService = {
    */
   loadDeclinedCommonQuestions(mode: MatchOperatingMode): string[] {
     if (mode !== 'demo') return [];
+    watchDemoDraftKeys();
+    noteDemoKey(STORAGE_COMMON_DECLINED_KEY);
     return readLocalJson<string[]>(STORAGE_COMMON_DECLINED_KEY) ?? [];
   },
 
   /**
    * 공통 질문 거절 목록을 저장한다 (MATCH-009). 데모가 아니면 쓰지 않는다.
    */
-  saveDeclinedCommonQuestions(questionIds: string[], mode: MatchOperatingMode): void {
-    if (mode !== 'demo') return;
-    writeLocalJson(STORAGE_COMMON_DECLINED_KEY, Array.from(new Set(questionIds)));
+  saveDeclinedCommonQuestions(questionIds: string[], mode: MatchOperatingMode): boolean {
+    if (mode !== 'demo') return false;
+    const draftEpoch = currentDemoDraftEpoch();
+    const declinedRaw = readDemoRaw(STORAGE_COMMON_DECLINED_KEY);
+    return writeDemoJson(
+      STORAGE_COMMON_DECLINED_KEY,
+      Array.from(new Set(questionIds)),
+      draftEpoch,
+      declinedRaw,
+    );
   },
 };
 

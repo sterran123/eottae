@@ -1,24 +1,47 @@
 // ============================================================
 //  저장 경로: src/lib/chat/types.ts
 //  담당: 손준혁 · MATCH-007 (실시간 1:1 채팅)
-//  역할: 채팅 UI DTO 및 Supabase `public.messages` 테이블 행(MessageRow) 매퍼.
-//        ADR-005 결정에 따라 DB 행 구조와 화면 렌더링 모델을 분리하고,
-//        `toChatMessage(row, myId)`로 변환한다.
+//  역할: 채팅 화면 DTO. match/types.ts와 같이 화면은 camelCase, 행은 snake_case.
+//        사람 표기는 id·nickname, 시각은 ISO 8601 (`created_at` → `createdAt`).
+//        데모는 이 브라우저에만 남기고 서버를 호출하지 않는다.
 // ============================================================
 
 /** 'system' = 차단/해제 등 안내 문구 (MATCH-008) */
 export type MessageSender = 'me' | 'partner' | 'system';
 
-/** 전송 상태 — 클라이언트 전용 상태. 데모·낙관적 전송에서는 sending → sent, 차단·오류 시 failed 로 전이한다. */
+/** 전송 상태 — 클라이언트 전용. 데모에서는 sending → sent, 차단·오류 시 failed. */
 export type MessageStatus = 'sending' | 'sent' | 'failed';
+
+/** 화면 상대. RecommendProfile과 같이 id·nickname. */
+export interface ChatPartner {
+  id: string;
+  nickname: string;
+}
 
 export interface ChatMessage {
   id: string;
+  /** 보낸 사람 id. 시스템 안내는 ''. match 화면 id와 같은 표기. */
+  senderId: string;
   sender: MessageSender;
+  body: string;
+  /** ISO 8601. match 행 `created_at`의 화면 이름. */
+  createdAt: string;
+  status: MessageStatus;
+}
+
+/**
+ * 데모 저장용 메시지. 두 탭이 같은 기록을 본다.
+ * `autoForActorId`가 있으면 그 데모 사용자 화면의 자동응답만이다.
+ */
+export interface DemoChatMessage {
+  id: string;
+  conversationId: string;
+  senderId: string;
   body: string;
   /** ISO 8601 */
   createdAt: string;
   status: MessageStatus;
+  autoForActorId?: string;
 }
 
 /**
@@ -54,7 +77,7 @@ export interface MessageRow {
   conversation_id: string;
   sender_id: string;
   body: string;
-  /** ISO 8601 (timestamptz) */
+  /** ISO 8601 */
   created_at: string;
   /** 논리 삭제 상태 (DB_논리모델_전체3단계.md:31). 기본 조회는 삭제되지 않은 행만 대상 */
   soft_delete_state?: 'VISIBLE' | 'DELETED' | string | null;
@@ -73,18 +96,16 @@ export interface MessagesCursorPage {
   nextCursor: string | null;
 }
 
-/**
- * DB `public.messages` 행을 화면 렌더링용 `ChatMessage`로 변환한다.
- * `sender_id === myId`이면 `'me'`, 아니면 `'partner'`로 판정하며,
- * `status`는 클라이언트에서만 쓰는 값이므로 기본값 `'sent'`를 부여한다.
- */
+/** 행을 화면 메시지로 바꾼다. `deleted`는 null. `sender_id === myId`이면 내가 보낸 말이다. */
 export function toChatMessage(
   row: MessageRow,
   myId: string,
   status: MessageStatus = 'sent',
-): ChatMessage {
+): ChatMessage | null {
+  if (row.soft_delete_state === 'deleted') return null;
   return {
     id: row.id,
+    senderId: row.sender_id,
     sender: row.sender_id === myId ? 'me' : 'partner',
     body: row.body,
     createdAt: row.created_at,
@@ -92,25 +113,31 @@ export function toChatMessage(
   };
 }
 
-export interface ChatPartner {
-  id: string;
-  nickname: string;
+/** 데모 저장 메시지를 이 탭 시점으로 바꾼다. */
+export function toChatMessageFromDemo(row: DemoChatMessage, myId: string): ChatMessage {
+  return {
+    id: row.id,
+    senderId: row.senderId,
+    sender: row.senderId === myId ? 'me' : 'partner',
+    body: row.body,
+    createdAt: row.createdAt,
+    status: row.status,
+  };
 }
 
 /**
- * 채팅방 목록 1건 (MATCH-007 목록 뷰). 서버 연동 시 `conversations` 조회 응답과 매핑.
- * [ADR-003 / ADR-005 보안] 실제 서버 연동 시 대화방 목록과 메시지 열람은
- * match 구성원 본인 확인 및 차단 여부를 Postgres RLS 정책으로 강제 필터링해야 한다.
+ * 채팅방 1건. `members`가 match 구성원이고, `partner`는 지금 탭에서 보는 상대다.
  */
 export interface ChatRoomInfo {
   id: string;
   partner: ChatPartner;
+  /** 두 명. id·nickname은 추천 프로필과 같다. */
+  members: readonly [ChatPartner, ChatPartner];
   initialMessages: ChatMessage[];
-  /** 목록에 표시할 초기 시각 문구 — 시간대·현재 시각에 따라 SSG/hydration이 어긋나지 않도록 고정 문구 사용 */
+  /** 목록 시각. 현재 시각을 쓰지 않아 서버 HTML과 어긋나지 않는다. */
   timeLabel: string;
-  /** 목록에 표시할 초기 안 읽은 메시지 수 */
   unread: number;
 }
 
-/** 메시지 본문 최대 길이 (DB `check (char_length(body) between 1 and 500)` 와 동일) */
+/** 메시지 본문 최대 길이 */
 export const MAX_MESSAGE_LENGTH = 500;

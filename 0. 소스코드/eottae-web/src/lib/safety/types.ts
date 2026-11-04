@@ -1,13 +1,11 @@
 // ============================================================
 //  저장 경로: src/lib/safety/types.ts
 //  담당: 손준혁 · MATCH-008 (신고/차단)
-//  역할: 신고·차단 UI 및 Supabase `public.reports`·`public.blocks` 연동용 DTO.
-//        `ReportCategory` 값은 DB `reports.category` CHECK 제약(`'abuse'|'sexual'|'scam'|'other'`)과
-//        1:1로 일치한다 (ADR-005).
-//  [경계] 실제 접수·운영 대기열·권한 분리는 Postgres RLS로 강제한다.
+//  역할: 신고·차단 화면 DTO. match/types.ts와 같이 화면은 id·nickname·createdAt,
+//        행은 snake_case `created_at`. 데모는 이 기기에만 남긴다.
 // ============================================================
 
-/** Supabase `public.reports.category` CHECK 제약 값과 동일 */
+/** 신고 사유. 화면 값과 행 값이 같다. */
 export type ReportCategory = 'abuse' | 'sexual' | 'scam' | 'other';
 
 export const REPORT_CATEGORIES: ReadonlyArray<{
@@ -21,15 +19,17 @@ export const REPORT_CATEGORIES: ReadonlyArray<{
   { id: 'other', label: '기타', hint: '위에 해당하지 않아요 (직접 적어주세요)' },
 ];
 
-/** 상세 사유 최대 길이 (DB `check (char_length(description) <= 200)` 와 동일) */
+/** 상세 사유 최대 길이 */
 export const MAX_REPORT_DETAIL_LENGTH = 200;
 
-/** `public.reports` insert 및 신고 제출 요청 DTO */
+export type ReportStatus = 'open' | 'closed';
+
+/** 신고 제출 값. 대상 id는 match 화면 id와 같은 표기다. */
 export interface ReportRequest {
   reportedUserId: string;
   category: ReportCategory;
   description: string;
-  /** 신고와 함께 차단(`public.blocks` 동시 insert) 여부 */
+  /** 신고와 함께 차단할지 */
   alsoBlock: boolean;
 }
 

@@ -758,9 +758,11 @@ img {
   color: var(--brand-dark);
 }
 
+/* 투명도를 곱하면 --muted가 카드 배경과 섞여 6테마에서 AA 밑으로 떨어진다.
+   설정 카드와 같이 글자·테두리 토큰과 커서로만 비활성을 나타낸다. */
 .btn[aria-disabled='true'],
 .btn:disabled {
-  opacity: 0.55;
+  opacity: 1;
   cursor: not-allowed;
   border-style: dashed;
   border-color: var(--line);
@@ -1514,7 +1516,7 @@ img {
   justify-content: center;
 }
 
-/* 전역 비활성 버튼은 opacity 0.55라 --muted 대비가 AA 밑으로 떨어진다. 설정에서는 색만으로 구분. */
+/* 전역 .btn:disabled와 같다. 투명도 대신 --muted·--line·not-allowed. */
 .settings-card .btn:disabled {
   opacity: 1;
   color: var(--muted);
@@ -1549,6 +1551,109 @@ img {
   .settings-facts div {
     grid-template-columns: 1fr;
   }
+}
+
+.settings-delete {
+  min-width: 0;
+}
+
+.settings-delete-form,
+.settings-delete-done {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+  min-width: 0;
+}
+
+.settings-delete-form h3,
+.settings-delete-done h3 {
+  margin: 0;
+  font-size: 16px;
+  letter-spacing: -0.03em;
+}
+
+.settings-delete-done:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.settings-delete .settings-demo-flag {
+  display: inline-block;
+  justify-self: start;
+  margin: 0;
+  padding: 4px 11px;
+  border-radius: 99px;
+  background: var(--chip-bg);
+  color: var(--chip-ink);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.settings-delete-list {
+  margin: 0;
+  padding-left: 1.15em;
+  display: grid;
+  gap: 6px;
+}
+
+.settings-delete-list li {
+  color: var(--muted);
+}
+
+.settings-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 0;
+  color: var(--ink);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.settings-check input {
+  width: 22px;
+  height: 22px;
+  margin: 2px 0 0;
+  flex-shrink: 0;
+  accent-color: var(--brand);
+}
+
+.settings-phrase {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.settings-phrase input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 16px;
+  font-family: inherit;
+}
+
+.settings-phrase input[aria-invalid='true'] {
+  border-color: var(--warn-ink);
+}
+
+.settings-delete .settings-delete-error {
+  margin: 0;
+  color: var(--warn-ink);
+  font-weight: 700;
+}
+
+.settings-delete .settings-actions .btn {
+  min-width: 0;
+  max-width: 100%;
+  text-align: center;
 }
 
 /* 설정 테마 — 헤더 select와 같은 6개. 라벨 전체가 44px 터치 영역 */
@@ -2190,6 +2295,21 @@ img {
   padding-bottom: 28px;
   border-top: 1px dashed var(--line);
   font-size: 12px;
+}
+
+.footer-bottom a {
+  color: var(--ink);
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  max-width: 100%;
+}
+
+.footer-bottom a:hover {
+  color: var(--brand);
 }
 
 /* ---------- 반응형 ---------- */

@@ -15,8 +15,15 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
+  listDemoMatches,
+  subscribeDemoMatches,
+  type DemoMatchRecord,
+} from '@/lib/match/demo-mutual';
+import {
   DEMO_ACORN,
+  DEMO_EXCLUSION_LABELS,
   DEMO_RECOMMENDATIONS,
+  demoRecommendationView,
 } from '@/lib/match/demo-recommendations';
 import {
   mapUiReasonToReportCategory,
@@ -69,6 +76,8 @@ export default function RecommendList({
   const noticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reportDialogRef = useRef<HTMLDivElement>(null);
   const reportLockRef = useRef(false);
+  const likeLockRef = useRef(new Set<string>());
+  const [demoMatches, setDemoMatches] = useState<DemoMatchRecord[]>([]);
 
   function showNotice(msg: string, ms = 3500) {
     if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
@@ -84,6 +93,15 @@ export default function RecommendList({
       if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (!isDemoMode) return;
+    setDemoMatches(listDemoMatches());
+    return subscribeDemoMatches(() => {
+      setDemoMatches(listDemoMatches());
+      setListEpoch((n) => n + 1);
+    });
+  }, [isDemoMode]);
 
   useEffect(() => {
     if (statusProp) return;
@@ -202,38 +220,48 @@ export default function RecommendList({
       showNotice('추천을 불러온 뒤에 다시 시도해 주세요.');
       return;
     }
+    if (likeLockRef.current.has(id)) return;
+    likeLockRef.current.add(id);
     const modeAtSave = loadedMode;
-    const res = await matchService.sendLikeDecision(id, 'yes', modeAtSave);
-    if (!res.ok) {
-      showNotice(res.error.message);
-      if (res.mode !== modeAtSave) reloadAfterModeChange();
-      return;
-    }
+    try {
+      const res = await matchService.sendLikeDecision(id, 'yes', modeAtSave);
+      if (!res.ok) {
+        showNotice(res.error.message);
+        if (res.mode !== modeAtSave) reloadAfterModeChange();
+        return;
+      }
 
-    if (res.data.matched) {
+      if (res.data.matched) {
+        setSourceItems((prev) =>
+          prev.map((item) =>
+            item.id === id
+              ? { ...item, relation: 'mutual', photo: 'revealed' }
+              : item,
+          ),
+        );
+        showNotice(
+          isDemoMode
+            ? `서로 관심이 통했어요. 데모 상대가 관심을 돌려줬어요. 매칭 1건 · ${res.data.matchId}`
+            : '서로 관심이 통했어요! 이제 1:1 대화가 열렸습니다.',
+        );
+        return;
+      }
+
       setSourceItems((prev) =>
         prev.map((item) =>
-          item.id === id
-            ? { ...item, relation: 'mutual', photo: 'revealed' }
+          item.id === id && item.relation === 'none'
+            ? { ...item, relation: 'liked_by_me' }
             : item,
         ),
       );
-      showNotice('서로 관심이 통했어요! 이제 1:1 대화가 열렸습니다.');
-      return;
+      showNotice(
+        isDemoMode
+          ? '관심을 보냈어요. 상대도 관심을 누르면 대화가 열려요. (데모)'
+          : '관심을 보냈어요. 상대도 관심을 누르면 대화가 열려요.',
+      );
+    } finally {
+      likeLockRef.current.delete(id);
     }
-
-    setSourceItems((prev) =>
-      prev.map((item) =>
-        item.id === id && item.relation === 'none'
-          ? { ...item, relation: 'liked_by_me' }
-          : item,
-      ),
-    );
-    showNotice(
-      isDemoMode
-        ? '관심을 보냈어요. 상대도 관심을 누르면 대화가 열려요. (DEMO)'
-        : '관심을 보냈어요. 상대도 관심을 누르면 대화가 열려요.',
-    );
   }
 
   function handlePreview() {
@@ -308,7 +336,9 @@ export default function RecommendList({
     setEtcDetail('');
 
     showNotice(
-      `'${target.nickname}' 님에 대한 신고(${finalReason})가 안전센터에 접수되었습니다. 상대방은 즉시 차단되었습니다.`,
+      res.mode === 'demo'
+        ? `'${target.nickname}' 님에 대한 신고(${finalReason})는 이 기기의 내 신고 내역에 남았어요. 서버로는 보내지 않아요. 상대는 이 기기에서 차단되었어요.`
+        : `'${target.nickname}' 님에 대한 신고(${finalReason})가 안전센터에 접수되었습니다. 상대방은 즉시 차단되었습니다.`,
       4000,
     );
   }
@@ -347,6 +377,10 @@ export default function RecommendList({
           {acorn.acorn != null && <span>{acorn.acorn}</span>}
         </button>
       </header>
+
+      {isDemoMode && (effectiveStatus === 'ready' || effectiveStatus === 'empty') && (
+        <DemoFilterNote items={sourceItems} matches={demoMatches} />
+      )}
 
       {notice && (
         <p className="mt-rec-list__notice" role="status">
@@ -521,6 +555,43 @@ export default function RecommendList({
         </div>
       )}
     </section>
+  );
+}
+
+function DemoFilterNote({
+  items,
+  matches,
+}: {
+  items: RecommendProfile[];
+  matches: DemoMatchRecord[];
+}) {
+  const view = demoRecommendationView();
+  const excludedText = view.excluded
+    .map((row) => {
+      const label = DEMO_EXCLUSION_LABELS[row.reason];
+      if (row.reason === 'minor') return `${label} ${row.nickname}·만 ${row.age}세`;
+      return `${label} ${row.nickname}`;
+    })
+    .join(' · ');
+  const matchText = matches
+    .map((record) => {
+      const name = items.find((item) => item.id === record.targetId)?.nickname ?? '상대';
+      return `${name} ${record.matchId}`;
+    })
+    .join(' · ');
+
+  return (
+    <div className="mt-rec-list__excluded" role="status">
+      <p>
+        제외된 수 {view.excludedCount}명(데모) — {excludedText}
+      </p>
+      <p>이 예시는 추천 카드에 나오지 않아요. 차단은 매칭 데모 데이터의 표시예요.</p>
+      <p>
+        저장된 데모 매칭 {matches.length}건 (상대마다 1건)
+        {matchText ? ` · ${matchText}` : ''}
+      </p>
+      <p>바다에게 관심을 보내면 데모 상대가 관심을 돌려줘요. 연타·새로고침·다른 탭에도 같은 매칭 번호예요.</p>
+    </div>
   );
 }
 
