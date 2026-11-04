@@ -105,3 +105,41 @@ export interface ChatRoomInfo {
 
 /** 메시지 본문 최대 길이 */
 export const MAX_MESSAGE_LENGTH = 500;
+
+/**
+ * 공통 API/RLS 에러 응답 규격 (API_계약_초안.md §공통 규격).
+ * 형태: `{"error": {"code": string, "message": string, "requestId"?: string}}`
+ */
+export interface ApiErrorDetail {
+  code: string;
+  message: string;
+  requestId?: string;
+}
+
+export interface ApiErrorResponse {
+  error: ApiErrorDetail;
+}
+
+/**
+ * 주어진 문자열이 표준 UUID(v1~v5) 형식인지 판별한다.
+ * 데모 ID(`demo-room-1`, `demo-partner-1`, `rec_bada` 등)와 실제 Supabase UUID(`auth.uid()`, `conversations.id`)를 구분한다.
+ */
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function isUuid(value: string | null | undefined): value is string {
+  return typeof value === 'string' && UUID_REGEX.test(value);
+}
+
+/** `public.messages` INSERT 요청 행 DTO (API_계약_초안.md:47-50) */
+export interface MessageInsertRow {
+  conversation_id: string;
+  sender_id: string;
+  body: string;
+}
+
+/** 커서 기반 메시지 목록 페이지 응답 DTO (API_계약_초안.md:45). `nextCursor`는 `created_at|id` 쌍이다. */
+export interface MessagesCursorPage {
+  items: ChatMessage[];
+  nextCursor: string | null;
+}
+

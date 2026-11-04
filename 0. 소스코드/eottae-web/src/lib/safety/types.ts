@@ -108,3 +108,56 @@ export function toBlockView(row: BlockRow): BlockView {
     createdAt: row.created_at,
   };
 }
+
+/**
+ * Supabase `public.reports` INSERT 행 타입 (0003_match_core.sql:299-310).
+ * - `reporter_id`: 신고자 UUID (`auth.uid()` === `public.users.id`)
+ * - `reported_user_id`: 피신고자 UUID
+ * - `category`: `'abuse' | 'sexual' | 'scam' | 'other'`
+ * - `description`: `null` 또는 1~200자 (빈 문자열 금지, 로그·콘솔 출력 금지 — DB_논리모델_전체3단계.md:41)
+ */
+export interface ReportInsertRow {
+  reporter_id: string;
+  reported_user_id: string;
+  category: ReportCategory;
+  description: string | null;
+}
+
+/** 신고 접수 성공 응답 DTO (`API_계약_초안.md:56` — `201 {reportId}`) */
+export interface ReportCreatedResponse {
+  reportId: string;
+}
+
+/**
+ * 화면 `ReportRequest` DTO를 DB `public.reports` INSERT 행으로 변환한다.
+ * 본문(`description`)은 앞뒤 공백을 제거하고 200자로 제한하며, 빈 문자열은 DB CHECK 제약을 위해 `null`로 변환한다.
+ */
+export function toReportInsertRow(req: ReportRequest, reporterId: string): ReportInsertRow {
+  const detail = req.description.trim().slice(0, MAX_REPORT_DETAIL_LENGTH);
+  return {
+    reporter_id: reporterId,
+    reported_user_id: req.reportedUserId,
+    category: req.category,
+    description: detail.length > 0 ? detail : null,
+  };
+}
+
+/**
+ * Supabase `public.blocks` INSERT 행 타입 (0003_match_core.sql:288-295, API_계약_초안.md:44).
+ * UNIQUE PK: `(blocker_id, blocked_user_id)`
+ */
+export interface BlockInsertRow {
+  blocker_id: string;
+  blocked_user_id: string;
+}
+
+/**
+ * 화면 `BlockRequest` DTO를 DB `public.blocks` INSERT 행으로 변환한다.
+ */
+export function toBlockInsertRow(req: BlockRequest, blockerUserId: string): BlockInsertRow {
+  return {
+    blocker_id: blockerUserId,
+    blocked_user_id: req.blockedUserId,
+  };
+}
+
