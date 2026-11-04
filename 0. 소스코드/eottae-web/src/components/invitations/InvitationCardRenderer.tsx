@@ -449,8 +449,10 @@ export default function InvitationCardRenderer({
   const year = parsedDate.getFullYear() || 2026;
   const month = parsedDate.getMonth() + 1 || 11;
   const day = parsedDate.getDate() || 28;
-  const hours = parsedDate.getHours() || 14;
-  const minutes = parsedDate.getMinutes() || 0;
+  const rawHours = parsedDate.getHours();
+  const hours = Number.isNaN(rawHours) ? 14 : rawHours;
+  const rawMinutes = parsedDate.getMinutes();
+  const minutes = Number.isNaN(rawMinutes) ? 0 : rawMinutes;
   const ampm = hours >= 12 ? '오후' : '오전';
   const displayHour = hours % 12 || 12;
 
@@ -1632,6 +1634,7 @@ export default function InvitationCardRenderer({
       className={`inv-render-canvas inv-theme--${activeThemeId} inv-layout--${activeLayout} ${
         isDarkTheme ? 'inv-mode--dark' : 'inv-mode--light'
       }`}
+      data-invite-theme={activeThemeId}
       style={dynamicBackgroundStyle}
     >
       {/* 사용자 음원 오디오 태그 */}

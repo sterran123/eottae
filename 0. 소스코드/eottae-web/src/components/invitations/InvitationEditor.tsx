@@ -82,11 +82,16 @@ export default function InvitationEditor({ initialId }: InvitationEditorProps) {
   const [isPreviewOpen, setIsPreviewOpen] = useState<boolean>(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
+  const [notOwner, setNotOwner] = useState<boolean>(false);
 
   useEffect(() => {
     if (initialId) {
       const existing = getInvitationById(initialId);
       if (existing) {
+        if (existing.viewerIsOwner !== true) {
+          setNotOwner(true);
+          return;
+        }
         setId(existing.id);
         setTitle(existing.title);
         setHostNames(existing.hostNames);
@@ -179,7 +184,17 @@ export default function InvitationEditor({ initialId }: InvitationEditorProps) {
       return;
     }
 
+    if (initialId) {
+      const existing = getInvitationById(initialId);
+      if (existing && existing.viewerIsOwner !== true) {
+        setFormError('소유자만 고칠 수 있어요 (TC-015 목업)');
+        return;
+      }
+    }
+
+    const existing = initialId ? getInvitationById(initialId) : null;
     const payload: Invitation = {
+      ...(existing || {}),
       ...previewInvitation,
       title: title.trim(),
       hostNames: hostNames.trim(),
@@ -200,6 +215,23 @@ export default function InvitationEditor({ initialId }: InvitationEditorProps) {
       router.push('/invitations/');
     }, 1200);
   };
+
+  if (notOwner) {
+    return (
+      <div className="shell subpage" style={{ padding: '60px 20px', textAlign: 'center' }}>
+        <div style={{ fontSize: 44, marginBottom: 16 }}>🔒</div>
+        <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 8px 0', color: 'var(--ink)' }}>
+          소유자만 고칠 수 있어요
+        </h2>
+        <p style={{ fontSize: 14, color: 'var(--muted)', margin: '0 0 24px 0', lineHeight: 1.6 }}>
+          이 청첩장의 작성자 본인 계정으로만 내용을 수정하거나 설정을 변경할 수 있습니다 (TC-015 목업).
+        </p>
+        <Link href="/invitations/" className="inv-btn-primary">
+          청첩장 목록으로 돌아가기
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="inv-editor-shell">

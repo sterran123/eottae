@@ -944,3 +944,22 @@
 - [검증] `npx tsx scripts/verify-theme-contrast.ts` PASS (16종 테마 및 16종 색상 프리셋 WCAG 2.1 92개 항목 100% 통과)
 - [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
 - [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수), RSVP 폼 본문(손준혁 #86), 토큰 재발급 본문(주한태 #85)
+
+## 2026-11-04 이슈 #84 전체 체크리스트 최종 완비 및 해결 (오하율 작업)
+- [요청] 이슈 #84 체크리스트 전수 점검 및 미완료 항목 해결:
+  1) 예시 청첩장 수 2~3개 조건 준수 (4건 -> 3건 축소).
+  2) `/invitations/` 데모 뱃지 표준 문구(「데모 데이터로 동작하는 3차 미리보기」) 반영.
+  3) 편집 `/invitations/?edit=` 경로 지원 및 소유자(`viewerIsOwner`) 전용 검증 차단 로직(TC-015 목업).
+  4) 공개 하객 페이지 `/invitations/p/?t=`의 `robots: { index: false, follow: false }` metadata 레이아웃 신설, 토큰 유효성 검증 엄격화, 하객 토큰 배지 비노출, 검색엔진 미노출 안내 문구 반영.
+  5) 카드 렌더러 `data-invite-theme` 속성 부여 및 시간 계산 보정.
+  6) 클립보드 링크 복사 시 `basePath` 누락 방지.
+- [AI] Antigravity가 이슈 #84 본문 및 3차 작업지시서 기준을 분석하여 체크리스트 12개 항목을 100% 만족하도록 수정.
+- [신규] `src/app/invitations/p/layout.tsx` | 하객 초대 페이지 전용 noindex 레이아웃(`robots: { index: false, follow: false }`).
+- [변경] `src/lib/invitations/demo-data.ts` | 예시 청첩장 3건(`demo-inv-1`, `demo-inv-2`, `demo-inv-3`)으로 조정하여 2~3개 제한 준수. 가상 이름(이서윤·박하람, 최도현·강은우, 정시우·윤아린) 및 가상 장소만 유지.
+- [변경] `src/app/invitations/p/page.tsx` | `getInvitationByToken`을 통해 유효한(만료/폐기/private 배제) 청첩장만 조회하도록 엄격화, 하객 토큰 배지 비노출, 검색엔진 미노출 안내 배너 추가.
+- [변경] `src/components/invitations/InvitationEditor.tsx` | 비소유자 접근 시 `notOwner` 에러 화면(`소유자만 고칠 수 있어요 (TC-015 목업)`) 및 `handleSubmit` 차단 가드 추가, 기존 메타데이터 필드 보존.
+- [변경] `src/components/invitations/InvitationsHub.tsx` | 데모 뱃지 텍스트를 `데모 데이터로 동작하는 3차 미리보기`로 변경, `useSearchParams` 기반 `?edit=` 수신 시 `InvitationEditor` 인라인 렌더링, 소유자일 때만 "정보 수정" 버튼 노출 및 `/invitations/?edit=${inv.id}` 링크 연결, 링크 복사 시 `NEXT_PUBLIC_BASE_PATH` 반영.
+- [변경] `src/app/invitations/page.tsx` | SubpageHero 상태 라벨을 `데모 데이터로 동작하는 3차 미리보기`로 일치.
+- [변경] `src/components/invitations/InvitationCardRenderer.tsx` | `data-invite-theme={activeThemeId}` 속성 추가, 0시 시간 파싱 보정.
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수), RSVP 폼 본문(손준혁 #86), 토큰 재발급 본문(주한태 #85)

@@ -23,7 +23,7 @@ export default function InvitationsPage() {
     <>
       <SubpageHero
         eyebrow="MODULE 03 · INVITATIONS"
-        status={{ label: '3차 MVP · 데모 미리보기' }}
+        status={{ label: '데모 데이터로 동작하는 3차 미리보기' }}
         title="모바일 청첩장, 우리만의 특별한 초대"
         motif={<MotifIcon name="mail" size={56} />}
       >

@@ -12,6 +12,7 @@ import {
 import { invitationGuestHref } from '@/lib/invitations/href';
 import { getThemePreset } from '@/lib/invitations/theme-presets';
 import InvitationPreviewModal from './InvitationPreviewModal';
+import InvitationEditor from './InvitationEditor';
 
 type ThemeCategory = 'all' | 'photo' | 'typo' | 'emotional' | 'heritage';
 
@@ -403,6 +404,7 @@ const DESIGN_COLLECTION: DesignCoverItem[] = [
 function InvitationsHubContent() {
   const searchParams = useSearchParams();
   const previewParam = searchParams.get('preview');
+  const editParam = searchParams.get('edit');
 
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [previewTarget, setPreviewTarget] = useState<Invitation | null>(null);
@@ -433,13 +435,22 @@ function InvitationsHubContent() {
   }, [previewParam, invitations]);
 
   const handleCopyLink = (token: string) => {
-    const url = `${window.location.origin}${invitationGuestHref(token)}`;
+    const base = process.env.NEXT_PUBLIC_BASE_PATH || '';
+    const url = `${window.location.origin}${base}${invitationGuestHref(token)}`;
     if (navigator.clipboard) {
       void navigator.clipboard.writeText(url);
     }
     setCopyToast('하객 초대 링크가 복사되었습니다.');
     setTimeout(() => setCopyToast(null), 3000);
   };
+
+  if (editParam) {
+    return (
+      <div className="inv-hub">
+        <InvitationEditor initialId={editParam} />
+      </div>
+    );
+  }
 
   const handleDelete = (id: string, title: string) => {
     if (confirm(`'${title}' 청첩장을 삭제하시겠습니까? (이 브라우저 데모에서만 삭제됩니다)`)) {
@@ -484,10 +495,10 @@ function InvitationsHubContent() {
 
   return (
     <div className="inv-hub">
-      {/* 1. 상단 데모 뱃지 배너 */}
+      {/* 1. 상단 데모 뱃지 배너 (작업지시서 표준 문구) */}
       <div className="inv-badge-banner">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span className="inv-badge-chip">3차 MVP 데모</span>
+          <span className="inv-badge-chip">데모 데이터로 동작하는 3차 미리보기</span>
           <span>
             페이지시스터즈(pagesisters.cc) 감성 고퀄리티 모바일 청첩장 플랫폼입니다. 실시간 체험 테스트에서 드래그 순서 변경, 아코디언 편집, 웨딩 애니메이션을 자유롭게 확인하실 수 있습니다.
           </span>
@@ -639,9 +650,11 @@ function InvitationsHubContent() {
                     <span>📱</span>
                     <span>체험 테스트</span>
                   </button>
-                  <Link href={`/invitations/new/?edit=${inv.id}`} className="inv-btn-secondary" style={{ minHeight: 40, fontSize: 13 }}>
-                    정보 수정
-                  </Link>
+                  {inv.viewerIsOwner && (
+                    <Link href={`/invitations/?edit=${inv.id}`} className="inv-btn-secondary" style={{ minHeight: 40, fontSize: 13 }}>
+                      정보 수정
+                    </Link>
+                  )}
                   <Link href={guestUrl} className="inv-btn-secondary" style={{ minHeight: 40, fontSize: 13 }} target="_blank">
                     하객 화면
                   </Link>

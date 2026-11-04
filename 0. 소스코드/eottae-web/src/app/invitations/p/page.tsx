@@ -21,16 +21,9 @@ function GuestInvitationContent() {
       setLoaded(true);
       return;
     }
-    // 토큰으로 청첩장 조회
+    // 토큰으로 유효한 청첩장 조회 (상태·만료일·공개범위 검증 통과한 항목만 반환)
     const found = getInvitationByToken(token);
-    if (found) {
-      setInvitation(found);
-    } else {
-      // 데모 편의: demo-data의 sharingToken과 일치하는 항목 확인
-      const state = loadInvitationsDemo();
-      const match = state.invitations.find((item) => item.sharingToken === token);
-      if (match) setInvitation(match);
-    }
+    setInvitation(found ?? null);
     setLoaded(true);
   }, [token]);
 
@@ -62,7 +55,7 @@ function GuestInvitationContent() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'var(--bg)', minHeight: '100vh' }}>
-      {/* 상단 하객 열람 안내 띠 */}
+      {/* 상단 하객 열람 안내 띠 (검색엔진 미노출 robots: noindex + 하객 명단 비공개) */}
       <div style={{
         width: '100%',
         background: 'var(--card)',
@@ -76,13 +69,11 @@ function GuestInvitationContent() {
         flexWrap: 'wrap',
         gap: 8,
       }}>
-        <span>💌 초대받은 하객 열람 화면입니다 (가상 예식 정보)</span>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {guestToken && (
-            <span style={{ fontSize: 11, background: 'var(--bg)', padding: '2px 6px', borderRadius: 4 }}>
-              하객 토큰 확인됨
-            </span>
-          )}
+        <span>💌 초대받은 하객 열람 화면입니다 (가상 예식 정보 · 검색엔진에 노출되지 않음)</span>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <span style={{ fontSize: 11, background: 'var(--bg)', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--line)' }}>
+            robots: noindex
+          </span>
           <Link href="/invitations/" style={{ color: 'var(--brand)', textDecoration: 'none', fontWeight: 600 }}>
             허브로 가기 →
           </Link>
