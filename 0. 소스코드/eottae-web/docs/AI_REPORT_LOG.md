@@ -859,6 +859,8 @@
 - [신규] `src/app/invitations/sample/page.tsx`, `InviteSampleStudio.tsx` | 데모 청첩장 1장. 위에 「데모 · 예시 데이터」, 구성 프리셋 3개·청첩장 테마 4개 라디오. 틀 밖만 앱 테마
 - [변경] `src/app/invitations/page.tsx` | `ThemePreviewSection` 아래에 샘플 미리보기 링크 한 줄. 모의 결제·나머지 문구는 그대로
 - [미실행] 브라우저에서 프리셋·테마·360px 넘침·갤러리·탭·Q&A 키보드·복사·토스트 확인. typecheck·build. 이 세션은 파일 읽기·검색·수정만. 방명록은 이 화면 메모리만이라 `clear-demo-device` 키에 없음. `FILE_INDEX.csv`·`MANIFEST.sha256`는 수정하지 않았고 해시는 다시 계산하지 않음
+- [변경] PR #93 화면 확인 반영: 전역 data-reveal 숨김으로 미리보기가 비어 보이던 문제 — 전용 속성·기본 표시·1.5초 안전장치
+- [변경] PR #93 화면 확인 반영 2: 이미지 width/height 속성 때문에 세로로 늘어나던 커버·갤러리·이야기 사진 비율 고정
 
 ## 2026-11-04 테마 모의 결제 시트 X 닫기·문구 (김민기 작업)
 - [요청] 이슈 #87(INV-004) 테마 모의 결제. 결제 시트 머리에 2차와 같은 X 닫기(44×44px, `aria-label="닫기"`, Esc·바깥 클릭·포커스 복귀). 시트 제목·영수증에서 결제 대행사 이름을 빼고 「모의 결제(데모)」. 테스트 결제→승인→즉시 취소, 카드번호 없음, 실제 청구 없음, 영수증 localStorage, 예시 금액은 유지. 저장 키 `eottae_demo_theme_purchases_v1`이 `eottae.invitations.demo.v1`와 섞이지 않는지 확인. 6테마·360px·44px·포커스 링. 목업(DEC-11). 서버·Supabase·외부 결제·`package.json`·`FILE_INDEX.csv`·`MANIFEST.sha256`·`supabase/` 금지. `src/app/invitations/page.tsx`, `src/app/invitations/**`, `src/components/invitations/preview/**`, 에디터·카드 렌더러·미리보기 모달·허브, `src/lib/invitations/**`는 수정하지 않음. 명령 실행 없음
