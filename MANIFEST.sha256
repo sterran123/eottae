@@ -17,7 +17,7 @@ f215d3e323380b4e75764c6bfbcab5b4c7b59b4009ed7102f4b9075fc1301a69  .github/workfl
 7710d28a140451e45493d1fd6f52508a4a51133d7fd72b236349d001bde77fb9  0. 소스코드/eottae-web/.gitignore
 dfd62088d1b52c3eeb6f9ccb87a62858bb9766b328ae93cd85994f2bb3262587  0. 소스코드/eottae-web/AGENTS.md
 85501bb21df690a69f544cc51a733c8738432eb532e1500b24adee796cae8112  0. 소스코드/eottae-web/README.md
-3185aa7910c4cccd9faca0baf8948d0e18a5cbf7632d7c0f912b40d58c6d2d92  0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md
+bcc7b42fcfddba917c0c7e922f03b94535c8db5ea7d4503ff79fd411c333ce9a  0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md
 6ef5f1ba972e9f1d07e1dbddd282ed9c16c3fd132a5301db0a8e0e9cffc2bb2f  0. 소스코드/eottae-web/docs/AI_도구_MCP_권장.md
 180d9a55d70be22c9ffa04a4acc113c484a2a19fc71e2410ec6dff1a33487a01  0. 소스코드/eottae-web/docs/AI_에이전트_협업_가이드.md
 7d34723629b67d6fc6c107846671146dfa18b35250001621174b73afb4da8511  0. 소스코드/eottae-web/docs/DESIGN_개선_지시서.md
@@ -139,11 +139,11 @@ cecfb33f6cb4e0690bc69c3bc9fe5d27d73734d9fe7371ffd139e2bfdc6198c9  0. 소스코�
 9af025a998421da4ea9bc779798cec7632a5375e4abd78616784380a4c4a8893  0. 소스코드/eottae-web/src/components/demo/DemoEntryGuard.tsx
 45cd594f1e10dda4817d3adf1e126ba31b740e575563f96c86757e22d0a32dd3  0. 소스코드/eottae-web/src/components/demo/DemoLoginNotice.tsx
 bea1c2501b06cd7f2e195438c34b5217b174516b57f7e120f4a5d5830464585f  0. 소스코드/eottae-web/src/components/demo/DemoProfileScreen.tsx
-4d95102e2b93143e04c9148093b6304963f601e4c277ad2685302d7f6d8ac9fd  0. 소스코드/eottae-web/src/components/demo/DemoSheet.tsx
+1331acd0d032c60309f155f6da751d21a6853ff419d783a882cc5cba9e91fc0c  0. 소스코드/eottae-web/src/components/demo/DemoSheet.tsx
 c7ca70c92e8940943f9ed289516350d3a7da20b38f4a8b40ffd926152ee80469  0. 소스코드/eottae-web/src/components/demo/MatchDemoEntry.tsx
 023bba0a953070bca42dd91721204070934f5e579bce71d88a851263fb301ba5  0. 소스코드/eottae-web/src/components/demo/MatchHomeGate.tsx
-4f57537fc8e9ccb0c7d7ef22f92e01ff9701dde0becc5f9d8e06429dd86dc930  0. 소스코드/eottae-web/src/components/demo/demo-flow.css
-1d3d4e1145a82526d074a8d9c3767adf225d13305f8f9fb128964b7e6dd0e195  0. 소스코드/eottae-web/src/components/invitations/ThemePreviewSection.tsx
+a1b2e4fa7e725d726d651f52d1517617046312063180312705abdbc8d58cf92b  0. 소스코드/eottae-web/src/components/demo/demo-flow.css
+8414802fc3d9b0830e8de9034fdb58c9481c82d3956f48b17ed53eb40b5a9a4e  0. 소스코드/eottae-web/src/components/invitations/ThemePreviewSection.tsx
 9173e678094b1e2eb1186b605073469f203d0077b3643f06845e1093df42c605  0. 소스코드/eottae-web/src/components/invitations/preview/InviteCalendar.tsx
 78b3d84926299d8b29f8c5cd06bf8ff71741d638887b4899dd70a647eb2e281a  0. 소스코드/eottae-web/src/components/invitations/preview/InviteClosing.tsx
 0dd1b25ffec5f201708c1e3bdc02e26e4c32dd350565a46e4bdfae981b23bc8f  0. 소스코드/eottae-web/src/components/invitations/preview/InviteCover.tsx
