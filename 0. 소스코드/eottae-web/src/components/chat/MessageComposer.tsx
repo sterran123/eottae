@@ -13,12 +13,18 @@ interface MessageComposerProps {
   onSend: (body: string) => void;
   disabled?: boolean;
   disabledReason?: string;
+  /**
+   * 텍스트만 보낼 수 있는 방(실계정). 사진·음성 버튼은 파일명·고정 문구를 본문으로 보내는 데모라서,
+   * 스토리지(`chat-media`) 업로드가 연결되기 전에는 서버 방에서 막는다.
+   */
+  textOnly?: boolean;
 }
 
 export default function MessageComposer({
   onSend,
   disabled = false,
   disabledReason,
+  textOnly = false,
 }: MessageComposerProps) {
   const inputId = useId();
   const [value, setValue] = useState('');
@@ -80,6 +86,10 @@ export default function MessageComposer({
   }
 
   function handlePhotoUpload(e: ChangeEvent<HTMLInputElement>) {
+    if (textOnly) {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
     const file = e.target.files?.[0];
     if (file) {
       onSend(`📷 [사진 첨부] ${file.name}`);
@@ -126,6 +136,10 @@ export default function MessageComposer({
   // ---- 녹음 완료 및 전송 ----
   function finishRecording() {
     if (!isRecording) return;
+    if (textOnly) {
+      cancelRecording();
+      return;
+    }
     recordingActiveRef.current = false;
     recordingSessionRef.current += 1;
     if (timerRef.current) clearInterval(timerRef.current);
@@ -229,12 +243,14 @@ export default function MessageComposer({
           onChange={handlePhotoUpload}
           tabIndex={-1}
           aria-hidden="true"
+          disabled={disabled || isRecording || textOnly}
         />
         <button
           type="button"
           className="mt-chat-media-btn"
           aria-label="사진 첨부"
-          disabled={disabled || isRecording}
+          title={textOnly ? '실시간 대화방에서는 아직 글만 보낼 수 있어요' : undefined}
+          disabled={disabled || isRecording || textOnly}
           onClick={() => fileInputRef.current?.click()}
         >
           <svg
@@ -256,7 +272,8 @@ export default function MessageComposer({
           type="button"
           className={`mt-chat-media-btn ${isRecording ? 'is-recording' : ''}`}
           aria-label={isRecording ? '음성 녹음 완료 및 전송' : '음성 메모 녹음'}
-          disabled={disabled}
+          title={textOnly ? '실시간 대화방에서는 아직 글만 보낼 수 있어요' : undefined}
+          disabled={disabled || textOnly}
           onClick={handleMicClick}
         >
           {isRecording ? (
