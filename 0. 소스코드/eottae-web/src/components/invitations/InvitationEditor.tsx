@@ -91,6 +91,7 @@ export default function InvitationEditor({ initialId }: InvitationEditorProps) {
   const [notOwner, setNotOwner] = useState<boolean>(false);
 
   useEffect(() => {
+    setNotOwner(false);
     if (initialId) {
       const existing = getInvitationById(initialId);
       if (existing) {
@@ -98,6 +99,7 @@ export default function InvitationEditor({ initialId }: InvitationEditorProps) {
           setNotOwner(true);
           return;
         }
+        setNotOwner(false);
         setId(existing.id);
         setTitle(existing.title);
         setHostNames(existing.hostNames);

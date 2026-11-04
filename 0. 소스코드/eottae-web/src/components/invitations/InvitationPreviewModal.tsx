@@ -275,7 +275,9 @@ export default function InvitationPreviewModal({
   const [customConfigs, setCustomConfigs] = useState<SectionCustomMap>({
     greeting: {
       title: '소중한 분들을 초대합니다',
-      body: '서로 마주 보며 다져온 사랑을 이제 한곳을 바라보며 걸어가고자 합니다.\n소중한 걸음으로 축복해 주시면 더없는 기쁨으로 간직하겠습니다.',
+      body:
+        invitation.greeting ||
+        '서로 마주 보며 다져온 사랑을 이제 한곳을 바라보며 걸어가고자 합니다.\n소중한 걸음으로 축복해 주시면 더없는 기쁨으로 간직하겠습니다.',
       fontFamily: 'serif',
     },
     schedule: {
@@ -296,7 +298,9 @@ export default function InvitationPreviewModal({
     },
     location: {
       title: '오시는 길 & 약도',
-      body: '서울특별시 노을구 달빛로 123 (노을역 3번 출구 도보 5분)',
+      body:
+        invitation.venueLabel ||
+        '서울특별시 노을구 달빛로 123 (노을역 3번 출구 도보 5분)',
       fontFamily: 'sans',
     },
     guestbook: {
@@ -473,6 +477,17 @@ export default function InvitationPreviewModal({
             ]
       );
       setCustomMainPhoto(null);
+      setCustomConfigs((prev) => ({
+        ...prev,
+        greeting: {
+          ...prev.greeting,
+          body: invitation.greeting || prev.greeting?.body,
+        },
+        location: {
+          ...prev.location,
+          body: invitation.venueLabel || prev.location?.body,
+        },
+      }));
       if (phoneScreenRef.current) {
         phoneScreenRef.current.scrollTop = 0;
       }
@@ -574,6 +589,8 @@ export default function InvitationPreviewModal({
               onClick={() => {
                 const updated: Invitation = {
                   ...invitation,
+                  greeting: customConfigs.greeting?.body || invitation.greeting,
+                  venueLabel: customConfigs.location?.body || invitation.venueLabel,
                   themeId: selectedTheme,
                   layoutStyle: selectedLayout,
                   bgmPreset: selectedBgm,

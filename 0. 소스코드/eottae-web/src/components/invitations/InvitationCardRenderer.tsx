@@ -488,6 +488,8 @@ export default function InvitationCardRenderer({
   const minutes = Number.isNaN(rawMinutes) ? 0 : rawMinutes;
   const ampm = hours >= 12 ? '오후' : '오전';
   const displayHour = hours % 12 || 12;
+  const displayTimeKorean = `${year}년 ${month}월 ${day}일 ${ampm} ${displayHour}시${minutes > 0 ? ` ${minutes}분` : ' 정각'}`;
+  const displayTimeDot = `${year}. ${month < 10 ? `0${month}` : month}. ${day < 10 ? `0${day}` : day} ${ampm} ${displayHour}시${minutes > 0 ? ` ${minutes}분` : ''}`;
 
   let dDayText = 'D-DAY';
   let diffDays = 0;
@@ -686,7 +688,7 @@ export default function InvitationCardRenderer({
             <div className="inv-framed-caption" style={{ color: captionColor }}>
               <span className="inv-framed-names" style={{ color: captionColor }}>{hostNames}</span>
               <span className="inv-framed-meta" style={{ color: subCaptionColor }}>
-                {year}. {month < 10 ? `0${month}` : month}. {day < 10 ? `0${day}` : day} {ampm} {displayHour}시
+                {displayTimeDot}
               </span>
             </div>
           </div>
@@ -734,7 +736,7 @@ export default function InvitationCardRenderer({
             <div className="inv-sig-content inv-sig-content--floating">
               <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
               <div className="inv-sig-date" style={{ color: '#fef08a' }}>
-                {year}년 {month}월 {day}일 {ampm} {displayHour}시
+                {displayTimeKorean}
               </div>
               <div className="inv-sig-venue" style={{ color: 'rgba(255,255,255,0.9)' }}>{venueTitle}</div>
             </div>
@@ -751,7 +753,7 @@ export default function InvitationCardRenderer({
             <div className="inv-sig-content inv-sig-content--floating">
               <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
               <div className="inv-sig-date" style={{ color: '#fed7aa' }}>
-                {year}. {month < 10 ? `0${month}` : month}. {day < 10 ? `0${day}` : day} {ampm} {displayHour}시
+                {displayTimeDot}
               </div>
               <div className="inv-sig-venue" style={{ color: 'rgba(255,255,255,0.85)' }}>{venueTitle}</div>
             </div>
@@ -772,7 +774,7 @@ export default function InvitationCardRenderer({
               <div className="inv-split-divider" />
               <div className="inv-split-row">
                 <span className="inv-split-label">일시 /</span>
-                <span className="inv-split-val">{year}년 {month}월 {day}일 {ampm} {displayHour}시</span>
+                <span className="inv-split-val">{displayTimeKorean}</span>
               </div>
               <div className="inv-split-row">
                 <span className="inv-split-label">장소 /</span>
@@ -796,7 +798,7 @@ export default function InvitationCardRenderer({
               <div className="inv-script-with-love">with love</div>
               <h2 className="inv-sig-names" style={{ fontFamily: 'serif', marginTop: 6 }}>{hostNames}</h2>
               <div className="inv-sig-date">
-                {year}년 {month}월 {day}일 {ampm} {displayHour}시
+                {displayTimeKorean}
               </div>
               <div className="inv-sig-venue">{venueTitle}</div>
             </div>
@@ -824,7 +826,7 @@ export default function InvitationCardRenderer({
               <div className="inv-wax-calligraphy-names">{hostNames}</div>
               <div className="inv-wax-calligraphy-venue">{venueTitle}</div>
               <div className="inv-wax-calligraphy-date">
-                {year}. {month < 10 ? `0${month}` : month}. {day < 10 ? `0${day}` : day} {ampm} {displayHour}시
+                {displayTimeDot}
               </div>
             </div>
           </div>
@@ -863,7 +865,7 @@ export default function InvitationCardRenderer({
             <div className="inv-sig-content inv-sig-content--floating">
               <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
               <div className="inv-sig-date" style={{ color: '#fefae0' }}>
-                {year}년 {month}월 {day}일 {ampm} {displayHour}시
+                {displayTimeKorean}
               </div>
               <div className="inv-sig-venue" style={{ color: 'rgba(255,255,255,0.9)' }}>{venueTitle}</div>
             </div>
@@ -878,7 +880,7 @@ export default function InvitationCardRenderer({
             <div className="inv-sig-content inv-sig-content--floating">
               <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
               <div className="inv-sig-date" style={{ color: '#fed7aa' }}>
-                {year}. {month < 10 ? `0${month}` : month}. {day < 10 ? `0${day}` : day} {ampm} {displayHour}시
+                {displayTimeDot}
               </div>
               <div className="inv-sig-venue" style={{ color: 'rgba(255,255,255,0.9)' }}>{venueTitle}</div>
             </div>
@@ -893,7 +895,7 @@ export default function InvitationCardRenderer({
               <span className="inv-photo-only-sub">OUR WEDDING DAY</span>
               <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
               <div className="inv-sig-date" style={{ color: '#f8fafc' }}>
-                {year}. {month < 10 ? `0${month}` : month}. {day < 10 ? `0${day}` : day} {ampm} {displayHour}시
+                {displayTimeDot}
               </div>
               <div className="inv-sig-venue" style={{ color: 'rgba(255,255,255,0.9)' }}>{venueTitle}</div>
             </div>
@@ -908,7 +910,7 @@ export default function InvitationCardRenderer({
             <div className="inv-sig-content inv-sig-content--floating">
               <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
               <div className="inv-sig-date" style={{ color: '#ffe4e6' }}>
-                {year}년 {month}월 {day}일 {ampm} {displayHour}시
+                {displayTimeKorean}
               </div>
               <div className="inv-sig-venue" style={{ color: 'rgba(255,255,255,0.92)' }}>{venueTitle}</div>
             </div>
@@ -923,7 +925,7 @@ export default function InvitationCardRenderer({
             <div className="inv-sig-content inv-sig-content--floating">
               <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
               <div className="inv-sig-date" style={{ color: '#fde047' }}>
-                {year}년 {month}월 {day}일 {ampm} {displayHour}시
+                {displayTimeKorean}
               </div>
               <div className="inv-sig-venue" style={{ color: 'rgba(255,255,255,0.9)' }}>{venueTitle}</div>
             </div>
@@ -939,7 +941,7 @@ export default function InvitationCardRenderer({
             <div className="inv-sig-content inv-sig-content--floating">
               <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
               <div className="inv-sig-date" style={{ color: '#fef08a' }}>
-                {year}년 {month}월 {day}일 {ampm} {displayHour}시
+                {displayTimeKorean}
               </div>
               <div className="inv-sig-venue" style={{ color: 'rgba(255,255,255,0.9)' }}>{venueTitle}</div>
             </div>
@@ -954,7 +956,7 @@ export default function InvitationCardRenderer({
             <div className="inv-sig-content inv-sig-content--floating">
               <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
               <div className="inv-sig-date" style={{ color: '#fde047' }}>
-                {year}년 {month}월 {day}일 {ampm} {displayHour}시
+                {displayTimeKorean}
               </div>
               <div className="inv-sig-venue" style={{ color: 'rgba(255,255,255,0.9)' }}>{venueTitle}</div>
             </div>
@@ -970,7 +972,7 @@ export default function InvitationCardRenderer({
               <span className="inv-photo-only-sub">OUR BEGINNING</span>
               <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
               <div className="inv-sig-date" style={{ color: '#f8fafc' }}>
-                {year}. {month < 10 ? `0${month}` : month}. {day < 10 ? `0${day}` : day} {ampm} {displayHour}시
+                {displayTimeDot}
               </div>
               <div className="inv-sig-venue" style={{ color: '#cbd5e1' }}>{venueTitle}</div>
             </div>
@@ -1027,7 +1029,7 @@ export default function InvitationCardRenderer({
             <div className="inv-schedule-card">
               <div className="inv-wedding-time-badge">
                 <span className="inv-time-strong">
-                  {year}년 {month}월 {day}일 {ampm} {displayHour}시 정각
+                  {displayTimeKorean}
                 </span>
                 <span
                   className="inv-dday-badge"

@@ -462,8 +462,9 @@ function InvitationsHubContent() {
   };
 
   const handleOpenDesignPreview = (design: DesignCoverItem) => {
-    const base = invitations[0] || {
-      id: 'demo-sample',
+    // 테마 쇼케이스 전용 독립 가상 청첩장 엔티티 (첫 번째 청첩장 id·토큰 오염 방지)
+    setPreviewTarget({
+      id: `showcase-${design.id}`,
       ownerId: 'user-demo-me',
       title: `${design.name} 모바일 청첩장`,
       hostNames: design.hostNames,
@@ -471,7 +472,7 @@ function InvitationsHubContent() {
       venueLabel: '노을구 달빛웨딩홀 2층 그랜드볼룸',
       greeting:
         '서로 마주 보며 다져온 사랑을 이제 한곳을 바라보며 걸어가고자 합니다.\n소중한 걸음으로 축복해 주시면 더없는 기쁨으로 간직하겠습니다.',
-      sharingToken: 'k7Qm2pL9xRt4vNw8aB3cYd6e',
+      sharingToken: `token-showcase-${design.id}`,
       visibility: 'public',
       expiry: null,
       themeId: design.themeId,
@@ -479,14 +480,6 @@ function InvitationsHubContent() {
       viewerIsOwner: true,
       layoutStyle: design.layoutStyle,
       bgmPreset: 'romantic',
-    };
-
-    setPreviewTarget({
-      ...base,
-      title: `${design.name} 모바일 청첩장`,
-      hostNames: design.hostNames,
-      themeId: design.themeId,
-      layoutStyle: design.layoutStyle,
     });
   };
 

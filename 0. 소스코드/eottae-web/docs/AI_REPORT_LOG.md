@@ -1006,3 +1006,15 @@
 - [AI] Antigravity가 해당 4개 파일(theme-presets, CardRenderer, PreviewModal, Editor, Hub) 수정 후 정적 빌드 테스트 통과.
 - [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
 - [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
+
+
+## 2026-11-05 PR #97 4차 리뷰 지적 5건 해결 (오하율 작업)
+- [요청] PR #97 4차 피드백 5건(쇼케이스 고유ID·BGM 새 프리셋 sanitize·시간 분단위 미표시·모달 인사말/장소 공개화면 미연계·비소유자 notOwner 리셋) 반영:
+  1) `InvitationsHub.tsx`: 테마 쇼케이스 "실시간 체험" 클릭 시 첫 번째 청첩장(`invitations[0]`) 오염을 방지하고 디자인별 고유 ID(`showcase-${design.id}`) 및 개별 토큰 부여.
+  2) `demo-storage.ts`: `sanitizeInvitation`에서 `INVITATION_BGM_PRESETS` 전체 9종을 온전히 허용하도록 화이트리스트 확장(bach_air, canon, thousand_years, spring_waltz 등 보존).
+  3) `InvitationCardRenderer.tsx`: `minutes` 변수를 온전히 사용하여 정각이 아닐 경우 "N시 M분"으로 렌더링되도록 `displayTimeKorean` 및 `displayTimeDot` 헬퍼 적용.
+  4) `InvitationPreviewModal.tsx`: 모달 오픈 시 `customConfigs`의 greeting/location을 `invitation` 원본과 동기화하고, 모달 설정 저장 시 인사말과 장소 안내를 `invitation` 필드에 반영하여 공개 화면에 즉시 전달.
+  5) `InvitationEditor.tsx`: `useEffect` 및 신규/소유 청첩장 전환 시 `setNotOwner(false)`를 명시적으로 호출하여 이전 비소유 열람 상태가 유지되던 버그 해결.
+- [AI] Antigravity가 해당 5개 파일(InvitationsHub, demo-storage, CardRenderer, PreviewModal, Editor) 수정 후 정적 빌드 테스트 통과.
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
