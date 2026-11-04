@@ -222,7 +222,7 @@ export default function InvitationCardRenderer({
   const [comments, setComments] = useState<GuestComment[]>([
     {
       id: 'c1',
-      author: '민지 (절친)',
+      author: '소율 (절친)',
       message: '서윤아 하람아 결혼 너무너무 축하해! 세상에서 제일 행복한 부부가 되길 🌸',
       date: '방금 전',
       avatar: '👭',
@@ -709,7 +709,7 @@ export default function InvitationCardRenderer({
           <div className="inv-hero-sig inv-hero-sig--photo-full" style={{ backgroundImage: `url(${heroPhoto(imgSunset)})` }}>
             <div className="inv-real-photo-overlay inv-overlay--sunset" />
             <div className="inv-cover-top-center-names">THE WEDDING OF</div>
-            <div className="inv-cover-center-script-huge">The Wedding</div>
+            <div className="inv-cover-center-script-huge">Our Wedding</div>
             <div className="inv-sig-content inv-sig-content--floating">
               <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
               <div className="inv-sig-date" style={{ color: '#fed7aa' }}>

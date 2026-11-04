@@ -78,7 +78,7 @@ const COLOR_THEME_PRESETS = [
   { id: 'slate', name: 'Slate', bg: '#F8FAFC', primary: '#475569', text: '#0f172a', accent: '#94A3B8' },
 ];
 
-// 20대 세련된 신랑신부 비주얼 프리셋 사진 컬렉션 (Pagesisters 급 퀄리티, basePath 완벽 연동)
+// 20대 세련된 신랑신부 비주얼 프리셋 사진 컬렉션 (basePath 연동)
 const PRESET_COUPLE_PHOTOS = [
   {
     id: 'studio-peach',
@@ -89,7 +89,7 @@ const PRESET_COUPLE_PHOTOS = [
   },
   {
     id: 'green-canopy',
-    label: '그린 캐노피',
+    label: '숲속의 싱그러움',
     tag: '내추럴 가든',
     url: `${basePath}/invitations/wedding-green-canopy.jpg`,
     desc: '야외 플라워 아치 아래 환하게 웃는 20대 신랑신부',
@@ -117,7 +117,7 @@ const PRESET_COUPLE_PHOTOS = [
   },
   {
     id: 'bench-quiet',
-    label: '콰이어트 벤치',
+    label: '고요한 산책',
     tag: '세련된 미니멀',
     url: `${basePath}/invitations/wedding-bench-quiet.jpg`,
     desc: '정갈한 원목 벤치에 나란히 앉은 20대 커플',

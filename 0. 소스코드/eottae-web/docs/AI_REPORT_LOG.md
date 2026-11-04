@@ -963,3 +963,15 @@
 - [변경] `src/components/invitations/InvitationCardRenderer.tsx` | `data-invite-theme={activeThemeId}` 속성 추가, 0시 시간 파싱 보정.
 - [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
 - [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수), RSVP 폼 본문(손준혁 #86), 토큰 재발급 본문(주한태 #85)
+
+## 2026-11-04 외부 서비스 명칭·템플릿명·샘플 커플 전면 독자 브랜드화 (오하율 작업)
+- [요청] PR #97 리뷰 피드백 반영: 외부 특정 서비스(pagesisters 등) 상표/URL 노출 방지, 기존 템플릿 명칭(그린 캐노피, The Wedding, 위드 러브 등) 및 샘플 커플(한영준·곽지은, 재하·민지 등)을 순수 창작/가상 명칭으로 전면 변경. 주석 내 "1:1 완벽 재현", "Pagesisters 급" 등 참조 잔재 제거.
+- [AI] Antigravity가 소스 전체를 전수 검색하여 UI 텍스트, 코드 주석, 프리셋 이름, 커플 명칭을 어때? 고유 감성 브랜드 명칭으로 교체.
+- [변경] `src/components/invitations/InvitationsHub.tsx`: 16종 디자인 컬렉션 템플릿 명칭 및 커플 이름 변경(숲속의 싱그러움, 우리 둘의 서약, 사랑을 담아, 클래식 실링인장, 스냅 포토카드, 에디토리얼 프레임, 모던 풀스크린, 손글씨 레터, 노을빛 실루엣, 린넨 가든, 고요한 산책 등 / 이시우·정유린, 박서진·윤채원, 김도윤·송하은), 상단 데모 뱃지 설명문 독자 브랜드화.
+- [변경] `src/lib/invitations/theme-presets.ts`: 프리셋 `name` 12종 허브 명칭과 일치하도록 변경.
+- [변경] `src/components/invitations/InvitationPreviewModal.tsx`: 사진 프리셋 라벨 및 주석 정리.
+- [변경] `src/components/invitations/InvitationCardRenderer.tsx`: 방명록 예시 작성자('소율 (절친)') 및 영문 타이포('Our Wedding') 변경.
+- [변경] `src/components/invitations/ThemeHeroArtworks.tsx`: 주석 및 aria-label('클래식 실링 인장 각인') 정리.
+- [변경] `src/app/invitations/invitations.css`: 외부 서비스 언급 주석 5곳 전면 제거 및 독자 스타일시트 주석화.
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)

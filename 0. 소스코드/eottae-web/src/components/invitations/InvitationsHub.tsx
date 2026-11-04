@@ -42,12 +42,12 @@ const imgNightGarden = `${basePath}/invitations/wedding-night-garden.jpg`;
 const imgHanbok = `${basePath}/invitations/wedding-hanbok.jpg`;
 const imgLuxuryHotel = `${basePath}/invitations/wedding-luxury-hotel.jpg`;
 
-// pagesisters.cc 퀄리티 실사 포토 기반 16가지 프리미엄 디자인 컬렉션
+// 어때? 프리미엄 감성 모바일 청첩장 16가지 디자인 컬렉션
 const DESIGN_COLLECTION: DesignCoverItem[] = [
   // 1열: 최신 웨딩 트렌드 (실사 포토/타이포)
   {
     id: 'green-canopy',
-    name: '그린 캐노피',
+    name: '숲속의 싱그러움',
     category: 'photo',
     themeId: 'green-canopy',
     layoutStyle: 'classic',
@@ -72,25 +72,25 @@ const DESIGN_COLLECTION: DesignCoverItem[] = [
   },
   {
     id: 'the-wedding',
-    name: 'The Wedding',
+    name: '우리 둘의 서약',
     category: 'photo',
     themeId: 'the-wedding',
     layoutStyle: 'modern',
     coverClass: 'inv-cover--the-wedding',
     tag: 'CINEMA',
-    hostNames: '이재하 · 권민지',
+    hostNames: '이시우 · 정유린',
     renderCover: () => (
       <div className="inv-real-photo-cover" style={{ backgroundImage: `url(${imgSunset})` }}>
         <div className="inv-real-photo-overlay inv-overlay--sunset" />
-        <div className="inv-cover-top-center-names">JAEHA &amp; MINJI</div>
-        <div className="inv-cover-center-script-huge">The Wedding</div>
+        <div className="inv-cover-top-center-names">SIWOO &amp; YURIN</div>
+        <div className="inv-cover-center-script-huge">Our Wedding</div>
         <div className="inv-cover-bottom-date">2027.11.13</div>
       </div>
     ),
   },
   {
     id: 'photo-background',
-    name: '배경 사진',
+    name: '모던 스플릿',
     category: 'photo',
     themeId: 'photo-background',
     layoutStyle: 'minimal',
@@ -120,7 +120,7 @@ const DESIGN_COLLECTION: DesignCoverItem[] = [
   },
   {
     id: 'with-love',
-    name: '위드 러브',
+    name: '사랑을 담아',
     category: 'emotional',
     themeId: 'with-love',
     layoutStyle: 'classic',
@@ -150,17 +150,17 @@ const DESIGN_COLLECTION: DesignCoverItem[] = [
   // 2열: 감성 & 시그니처 텍스처
   {
     id: 'wax-seal',
-    name: '왁스 씰',
+    name: '클래식 실링인장',
     category: 'heritage',
     themeId: 'wax-seal',
     layoutStyle: 'classic',
     coverClass: 'inv-cover--wax-seal',
     tag: 'SIGNATURE',
-    hostNames: '홍현준 · 이민지',
+    hostNames: '박서진 · 윤채원',
     renderCover: () => (
       <div className="inv-real-photo-cover" style={{ backgroundImage: `url(${imgWaxEnvelope})`, backgroundPosition: 'center 40%' }}>
         <div className="inv-wax-envelope-bottom-text">
-          <div className="inv-wax-calligraphy-names">홍현준 &amp; 이민지</div>
+          <div className="inv-wax-calligraphy-names">박서진 &amp; 윤채원</div>
           <div className="inv-wax-calligraphy-venue">아펠가모 광화문</div>
           <div className="inv-wax-calligraphy-date">26. 11. 14. Sat 12:30</div>
         </div>
@@ -169,7 +169,7 @@ const DESIGN_COLLECTION: DesignCoverItem[] = [
   },
   {
     id: 'tape-card',
-    name: '테이프 카드',
+    name: '스냅 포토카드',
     category: 'emotional',
     themeId: 'tape-card',
     layoutStyle: 'minimal',
@@ -193,7 +193,7 @@ const DESIGN_COLLECTION: DesignCoverItem[] = [
   },
   {
     id: 'typo-frame',
-    name: '타이포 프레임',
+    name: '에디토리얼 프레임',
     category: 'typo',
     themeId: 'typo-frame',
     layoutStyle: 'modern',
@@ -216,7 +216,7 @@ const DESIGN_COLLECTION: DesignCoverItem[] = [
   },
   {
     id: 'photo-only',
-    name: '포토 온리',
+    name: '모던 풀스크린',
     category: 'photo',
     themeId: 'photo-only',
     layoutStyle: 'classic',
@@ -233,7 +233,7 @@ const DESIGN_COLLECTION: DesignCoverItem[] = [
   // 3열: 에디토리얼 & 매거진
   {
     id: 'script-card',
-    name: '스크립트 카드',
+    name: '손글씨 레터',
     category: 'emotional',
     themeId: 'script-card',
     layoutStyle: 'minimal',
@@ -254,7 +254,7 @@ const DESIGN_COLLECTION: DesignCoverItem[] = [
   },
   {
     id: 'center-line',
-    name: '센터 라인',
+    name: '노을빛 실루엣',
     category: 'typo',
     themeId: 'center-line',
     layoutStyle: 'modern',
@@ -280,7 +280,7 @@ const DESIGN_COLLECTION: DesignCoverItem[] = [
   },
   {
     id: 'cover-a',
-    name: '커버 A',
+    name: '린넨 가든',
     category: 'photo',
     themeId: 'cover-a',
     layoutStyle: 'classic',
@@ -303,18 +303,18 @@ const DESIGN_COLLECTION: DesignCoverItem[] = [
   },
   {
     id: 'quiet',
-    name: '콰이어트',
+    name: '고요한 산책',
     category: 'typo',
     themeId: 'quiet',
     layoutStyle: 'minimal',
     coverClass: 'inv-cover--quiet',
     tag: 'MINIMAL',
-    hostNames: '한영준 · 곽지은',
+    hostNames: '김도윤 · 송하은',
     renderCover: () => (
       <div className="inv-quiet-container">
         <div className="inv-quiet-top-text">
           <span className="inv-quiet-label">OUR WEDDING DAY</span>
-          <div className="inv-quiet-names">한영준 ♥ 곽지은</div>
+          <div className="inv-quiet-names">김도윤 ♥ 송하은</div>
         </div>
         <div className="inv-quiet-photo-wrap" style={{ backgroundImage: `url(${imgBenchQuiet})` }} />
         <div className="inv-quiet-bot-venue">온기동 가든하우스</div>
@@ -500,7 +500,7 @@ function InvitationsHubContent() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span className="inv-badge-chip">데모 데이터로 동작하는 3차 미리보기</span>
           <span>
-            페이지시스터즈(pagesisters.cc) 감성 고퀄리티 모바일 청첩장 플랫폼입니다. 실시간 체험 테스트에서 드래그 순서 변경, 아코디언 편집, 웨딩 애니메이션을 자유롭게 확인하실 수 있습니다.
+            어때? 3차 모바일 청첩장 데모 스튜디오입니다. 실시간 체험 테스트에서 테마 선택, 드래그 순서 변경, 아코디언 편집, 웨딩 애니메이션을 자유롭게 확인하실 수 있습니다.
           </span>
         </div>
       </div>
@@ -523,7 +523,7 @@ function InvitationsHubContent() {
       )}
 
       {/* ============================================================
-       * 2. 페이지시스터즈 급 디자인 쇼케이스 컬렉션 (16개 테마 + 카테고리 탭)
+       * 2. 어때? 프리미엄 디자인 쇼케이스 컬렉션 (16개 테마 + 카테고리 탭)
        * ============================================================ */}
       <section>
         <div className="inv-section-header-row">

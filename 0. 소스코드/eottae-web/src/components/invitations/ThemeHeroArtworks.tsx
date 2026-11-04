@@ -3,7 +3,7 @@
 import React from 'react';
 
 // ============================================================
-// 페이지시스터즈(Pagesisters) 급 프리미엄 테마 시그니처 SVG 아트워크
+// 어때? 프리미엄 테마 시그니처 SVG 아트워크
 // ============================================================
 
 // 1. 클래식 3D 실링 왁스 인장 (붉은 왁스 씰 + 골드 각인)
@@ -16,7 +16,7 @@ export function WaxSealBadgeSVG({ size = 68 }: { size?: number }) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className="inv-wax-seal-svg"
-      aria-label="클래식 왁스 씰 각인"
+      aria-label="클래식 실링 인장 각인"
     >
       <defs>
         <radialGradient id="wax-grad" cx="40%" cy="38%" r="60%">

@@ -37,7 +37,7 @@ export interface ThemePreset {
 export const THEME_MASTER_PRESETS: Record<string, ThemePreset> = {
   'green-canopy': {
     id: 'green-canopy' as InvitationThemeId,
-    name: '그린 캐노피',
+    name: '숲속의 싱그러움',
     sub: '싱그러운 야외 숲속 캐노피 가든',
     icon: '🌿',
     tag: 'SIGNATURE',
@@ -57,7 +57,7 @@ export const THEME_MASTER_PRESETS: Record<string, ThemePreset> = {
   },
   'the-wedding': {
     id: 'the-wedding' as InvitationThemeId,
-    name: 'The Wedding',
+    name: '우리 둘의 서약',
     sub: '노을빛 강변 시네마틱 로맨스',
     icon: '🌅',
     tag: 'CINEMA',
@@ -77,7 +77,7 @@ export const THEME_MASTER_PRESETS: Record<string, ThemePreset> = {
   },
   'photo-background': {
     id: 'photo-background' as InvitationThemeId,
-    name: '배경 사진',
+    name: '모던 스플릿',
     sub: '모던 스튜디오 정갈한 인포 박스',
     icon: '📷',
     tag: 'STUDIO',
@@ -97,7 +97,7 @@ export const THEME_MASTER_PRESETS: Record<string, ThemePreset> = {
   },
   'with-love': {
     id: 'with-love' as InvitationThemeId,
-    name: '위드 러브',
+    name: '사랑을 담아',
     sub: '소프트 페이드 핑크빛 캘리그라피',
     icon: '🌸',
     tag: 'ROMANTIC',
@@ -117,7 +117,7 @@ export const THEME_MASTER_PRESETS: Record<string, ThemePreset> = {
   },
   'wax-seal': {
     id: 'wax-seal',
-    name: '왁스 씰',
+    name: '클래식 실링인장',
     sub: '클래식 편지봉투 실링왁스',
     icon: '💌',
     tag: 'BEST',
@@ -137,7 +137,7 @@ export const THEME_MASTER_PRESETS: Record<string, ThemePreset> = {
   },
   'tape-card': {
     id: 'tape-card',
-    name: '테이프 카드',
+    name: '스냅 포토카드',
     sub: '감성 폴라로이드 마스킹 테이프',
     icon: '📷',
     tag: 'NEW',
@@ -157,7 +157,7 @@ export const THEME_MASTER_PRESETS: Record<string, ThemePreset> = {
   },
   'typo-frame': {
     id: 'typo-frame',
-    name: '타이포 프레임',
+    name: '에디토리얼 프레임',
     sub: '대담하고 세련된 세리프 폰트',
     icon: '🌲',
     tag: 'POPULAR',
@@ -177,7 +177,7 @@ export const THEME_MASTER_PRESETS: Record<string, ThemePreset> = {
   },
   'photo-only': {
     id: 'photo-only',
-    name: '포토 온리',
+    name: '모던 풀스크린',
     sub: '풀스크린 웨딩 매거진 커버',
     icon: '💐',
     tag: 'STUDIO',
@@ -197,7 +197,7 @@ export const THEME_MASTER_PRESETS: Record<string, ThemePreset> = {
   },
   'script-card': {
     id: 'script-card',
-    name: '스크립트 카드',
+    name: '손글씨 레터',
     sub: '흘림체 영문 캘리그라피',
     icon: '🥂',
     tag: 'ROMANTIC',
@@ -217,7 +217,7 @@ export const THEME_MASTER_PRESETS: Record<string, ThemePreset> = {
   },
   'center-line': {
     id: 'center-line',
-    name: '센터 라인',
+    name: '노을빛 실루엣',
     sub: '감성 노을빛 중앙선 분할',
     icon: '🌅',
     tag: 'MODERN',
@@ -237,7 +237,7 @@ export const THEME_MASTER_PRESETS: Record<string, ThemePreset> = {
   },
   'cover-a': {
     id: 'cover-a',
-    name: '커버 A',
+    name: '린넨 가든',
     sub: '싱그러운 야외 가든 스냅',
     icon: '🌿',
     tag: 'GARDEN',
@@ -257,7 +257,7 @@ export const THEME_MASTER_PRESETS: Record<string, ThemePreset> = {
   },
   'quiet': {
     id: 'quiet',
-    name: '콰이어트',
+    name: '고요한 산책',
     sub: '차분하고 정갈한 아이보리',
     icon: '🕊️',
     tag: 'MINIMAL',
