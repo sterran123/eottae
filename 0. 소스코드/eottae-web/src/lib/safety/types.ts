@@ -33,35 +33,94 @@ export interface ReportRequest {
   alsoBlock: boolean;
 }
 
-/**
- * `public.blocks` insert 및 차단 요청 DTO (MATCH-008).
- * `blocker_user_id`는 RLS(`blocker_user_id = auth.uid()`)로 강제하므로 클라이언트는 차단 대상 ID만 지정한다.
- */
+/** 차단 제출 값. `blockedUserId`는 상대 id다. */
 export interface BlockRequest {
   blockedUserId: string;
 }
 
-/** 신고 처리 상태 (DB_논리모델_전체3단계.md:33 `reports.status`) */
-export type ReportStatus = 'PENDING' | 'REVIEWED' | 'RESOLVED' | 'DISMISSED';
+/** 신고 행. 화면으로 바꿀 때는 `toReportHistoryItem`. */
+export interface ReportRow {
+  id: string;
+  reporter_id: string | null;
+  reported_user_id: string | null;
+  category: ReportCategory;
+  description: string | null;
+  status: ReportStatus;
+  /** ISO 8601 */
+  created_at: string;
+}
 
 /**
- * Supabase `public.reports` INSERT 행 타입 (DB_논리모델_전체3단계.md:33, API_계약_초안.md:54-58).
+ * 내 신고 내역·관리 큐에 보이는 신고.
+ * 대상은 id·nickname, 시각은 `createdAt` (행의 `created_at`).
+ */
+export interface ReportHistoryItem {
+  id: string;
+  reporterId: string;
+  targetId: string;
+  nickname: string;
+  category: ReportCategory;
+  description: string;
+  /** ISO 8601 */
+  createdAt: string;
+  status: ReportStatus;
+}
+
+/** 차단 행. */
+export interface BlockRow {
+  blocker_id: string;
+  blocked_user_id: string;
+  /** ISO 8601 */
+  created_at: string;
+}
+
+/** 화면용 차단. */
+export interface BlockView {
+  blockerId: string;
+  blockedId: string;
+  /** ISO 8601 */
+  createdAt: string;
+}
+
+/** 신고 행을 화면 항목으로 바꾼다. 닉네임은 행에 없으므로 화면 데이터에서 붙인다. */
+export function toReportHistoryItem(
+  row: ReportRow,
+  nickname: string,
+  reporterId: string,
+): ReportHistoryItem {
+  return {
+    id: row.id,
+    reporterId,
+    targetId: row.reported_user_id ?? '',
+    nickname,
+    category: row.category,
+    description: row.description ?? '',
+    createdAt: row.created_at,
+    status: row.status,
+  };
+}
+
+/** 차단 행을 화면 값으로 바꾼다. */
+export function toBlockView(row: BlockRow): BlockView {
+  return {
+    blockerId: row.blocker_id,
+    blockedId: row.blocked_user_id,
+    createdAt: row.created_at,
+  };
+}
+
+/**
+ * Supabase `public.reports` INSERT 행 타입 (0003_match_core.sql:299-310).
  * - `reporter_id`: 신고자 UUID (`auth.uid()` === `public.users.id`)
  * - `reported_user_id`: 피신고자 UUID
  * - `category`: `'abuse' | 'sexual' | 'scam' | 'other'`
- * - `description`: 최대 200자 (로그·콘솔 출력 금지 — DB_논리모델_전체3단계.md:41)
+ * - `description`: `null` 또는 1~200자 (빈 문자열 금지, 로그·콘솔 출력 금지 — DB_논리모델_전체3단계.md:41)
  */
 export interface ReportInsertRow {
   reporter_id: string;
   reported_user_id: string;
   category: ReportCategory;
-  description: string;
-}
-
-export interface ReportRow extends ReportInsertRow {
-  id: string;
-  status: ReportStatus;
-  created_at: string;
+  description: string | null;
 }
 
 /** 신고 접수 성공 응답 DTO (`API_계약_초안.md:56` — `201 {reportId}`) */
@@ -71,29 +130,25 @@ export interface ReportCreatedResponse {
 
 /**
  * 화면 `ReportRequest` DTO를 DB `public.reports` INSERT 행으로 변환한다.
- * 본문(`description`)은 앞뒤 공백을 제거하고 `MAX_REPORT_DETAIL_LENGTH`(200자)로 제한한다.
+ * 본문(`description`)은 앞뒤 공백을 제거하고 200자로 제한하며, 빈 문자열은 DB CHECK 제약을 위해 `null`로 변환한다.
  */
 export function toReportInsertRow(req: ReportRequest, reporterId: string): ReportInsertRow {
+  const detail = req.description.trim().slice(0, MAX_REPORT_DETAIL_LENGTH);
   return {
     reporter_id: reporterId,
     reported_user_id: req.reportedUserId,
     category: req.category,
-    description: req.description.trim().slice(0, MAX_REPORT_DETAIL_LENGTH),
+    description: detail.length > 0 ? detail : null,
   };
 }
 
 /**
- * Supabase `public.blocks` INSERT 행 타입 (DB_논리모델_전체3단계.md:32, API_계약_초안.md:60-63).
- * UNIQUE 제약: `(blocker_user_id, blocked_user_id)` (0003 스키마 확정 시 컬럼명 매핑 일원화 지점)
+ * Supabase `public.blocks` INSERT 행 타입 (0003_match_core.sql:288-295, API_계약_초안.md:44).
+ * UNIQUE PK: `(blocker_id, blocked_user_id)`
  */
 export interface BlockInsertRow {
-  blocker_user_id: string;
+  blocker_id: string;
   blocked_user_id: string;
-}
-
-export interface BlockRow extends BlockInsertRow {
-  id?: string;
-  blocked_at: string;
 }
 
 /**
@@ -101,7 +156,8 @@ export interface BlockRow extends BlockInsertRow {
  */
 export function toBlockInsertRow(req: BlockRequest, blockerUserId: string): BlockInsertRow {
   return {
-    blocker_user_id: blockerUserId,
+    blocker_id: blockerUserId,
     blocked_user_id: req.blockedUserId,
   };
 }
+

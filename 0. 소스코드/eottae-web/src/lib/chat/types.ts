@@ -45,32 +45,9 @@ export interface DemoChatMessage {
 }
 
 /**
- * 공통 API/RLS 에러 응답 규격 (API_계약_초안.md §공통 규격).
- * 형태: `{"error": {"code": string, "message": string, "requestId"?: string}}`
- */
-export interface ApiErrorDetail {
-  code: string;
-  message: string;
-  requestId?: string;
-}
-
-export interface ApiErrorResponse {
-  error: ApiErrorDetail;
-}
-
-/**
- * 주어진 문자열이 표준 UUID(v1~v5) 형식인지 판별한다.
- * 데모 ID(`demo-room-1`, `demo-partner-1`, `rec_bada` 등)와 실제 Supabase UUID(`auth.uid()`, `conversations.id`)를 구분한다.
- */
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-export function isUuid(value: string | null | undefined): value is string {
-  return typeof value === 'string' && UUID_REGEX.test(value);
-}
-
-/**
- * Supabase `public.messages` 테이블 행 타입 (ADR-005, MATCH-007, DB_논리모델_전체3단계.md:31).
- * RLS 정책에 따라 활성 match 구성원이고 상호 미차단·성인 인증 완료(ACTIVE) 계정일 때만 select/insert가 허용된다.
+ * 메시지 행. 화면으로 바꿀 때는 `toChatMessage`.
+ * 데모 저장은 이 행을 서버에 쓰지 않는다.
+ * `soft_delete_state`가 `deleted`인 행은 화면에 넣지 않는다.
  */
 export interface MessageRow {
   id: string;
@@ -79,21 +56,8 @@ export interface MessageRow {
   body: string;
   /** ISO 8601 */
   created_at: string;
-  /** 논리 삭제 상태 (DB_논리모델_전체3단계.md:31). 기본 조회는 삭제되지 않은 행만 대상 */
-  soft_delete_state?: 'VISIBLE' | 'DELETED' | string | null;
-}
-
-/** `public.messages` INSERT 요청 행 DTO (API_계약_초안.md:47-50) */
-export interface MessageInsertRow {
-  conversation_id: string;
-  sender_id: string;
-  body: string;
-}
-
-/** 커서 기반 메시지 목록 페이지 응답 DTO (API_계약_초안.md:45) */
-export interface MessagesCursorPage {
-  items: ChatMessage[];
-  nextCursor: string | null;
+  /** 0003 `messages.soft_delete_state`. 없으면 visible로 본다. */
+  soft_delete_state?: 'visible' | 'deleted';
 }
 
 /** 행을 화면 메시지로 바꾼다. `deleted`는 null. `sender_id === myId`이면 내가 보낸 말이다. */
@@ -141,3 +105,41 @@ export interface ChatRoomInfo {
 
 /** 메시지 본문 최대 길이 */
 export const MAX_MESSAGE_LENGTH = 500;
+
+/**
+ * 공통 API/RLS 에러 응답 규격 (API_계약_초안.md §공통 규격).
+ * 형태: `{"error": {"code": string, "message": string, "requestId"?: string}}`
+ */
+export interface ApiErrorDetail {
+  code: string;
+  message: string;
+  requestId?: string;
+}
+
+export interface ApiErrorResponse {
+  error: ApiErrorDetail;
+}
+
+/**
+ * 주어진 문자열이 표준 UUID(v1~v5) 형식인지 판별한다.
+ * 데모 ID(`demo-room-1`, `demo-partner-1`, `rec_bada` 등)와 실제 Supabase UUID(`auth.uid()`, `conversations.id`)를 구분한다.
+ */
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function isUuid(value: string | null | undefined): value is string {
+  return typeof value === 'string' && UUID_REGEX.test(value);
+}
+
+/** `public.messages` INSERT 요청 행 DTO (API_계약_초안.md:47-50) */
+export interface MessageInsertRow {
+  conversation_id: string;
+  sender_id: string;
+  body: string;
+}
+
+/** 커서 기반 메시지 목록 페이지 응답 DTO (API_계약_초안.md:45) */
+export interface MessagesCursorPage {
+  items: ChatMessage[];
+  nextCursor: string | null;
+}
+

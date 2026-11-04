@@ -1,12 +1,12 @@
 // ============================================================
 //  저장 경로: src/lib/chat/chat-service.ts
 //  담당: 손준혁 · MATCH-007 (실시간 1:1 채팅 데이터 소스 분리)
-//  역할: ChatRoom 컴포넌트에서 setTimeout 데모 응답 로직을 분리한 데이터 소스 계층.
+//  역할: ChatRoom 컴포넌트에서 setTimeout 데모 응답 로직과 Supabase Realtime 연동 로직을 분리한 데이터 소스 계층.
 //        - Supabase 환경변수(NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY)가
-//          없거나 백엔드 연동 전에는 데모 데이터 소스(createDemoChatDataSource)로 동작해
+//          없거나 데모 대화방(`!isUuid`)에서는 데모 데이터 소스(createDemoChatDataSource)로 동작해
 //          GitHub Pages 정적 배포 사이트가 깨지지 않도록 보장한다 (ADR-005).
-//        탭 사이 전달은 demo-store(BroadcastChannel)가 맡고, 이 파일은
-//        보내기 확인·자동응답 setTimeout만 유지한다. 네트워크는 호출하지 않는다.
+//        - 데모 탭 사이 전달은 demo-store(BroadcastChannel)가 맡고, 실계정 UUID 대화방은
+//          Supabase `public.messages` INSERT 및 Realtime(postgres_changes) 구독으로 동작한다.
 // ============================================================
 
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase/client';
@@ -18,6 +18,7 @@ import {
   type ChatMessage,
   type MessageInsertRow,
   type MessageRow,
+  type MessagesCursorPage,
 } from './types';
 
 let demoReplySeq = 0;
@@ -113,15 +114,16 @@ export function createDemoChatDataSource(
 export interface SupabaseChatDataSourceOptions {
   /** `public.conversations.id` (UUID). 데모 방 ID(`demo-room-*`)인 경우 자동으로 데모 데이터 소스로 폴백한다. */
   conversationId: string;
-  /** 현재 로그인한 사용자 UUID (`auth.uid()` === `public.users.id`). 생략 시 세션에서 조회한다. */
+  /** 상대방 ID (`ChatPartner.id`). 데모 폴백 시 자동응답 `senderId`로 사용한다. */
+  partnerId: string;
+  /** 현재 로그인한 사용자 UUID (`auth.uid()` === `public.users.id`). 생략 시 `auth.getUser()`로 조회한다. */
   myUserId?: string | null;
 }
 
 /**
  * Supabase `public.messages` + Realtime(Postgres Changes) 기반 채팅 데이터 소스 (MATCH-007, ADR-005).
  * - `src/lib/supabase/client.ts`의 `getSupabase()`를 재사용하며 별도 클라이언트를 생성하지 않는다.
- * - 환경변수가 없거나 `conversationId`가 UUID가 아니면(`demo-room-*` 등) 즉시 `createDemoChatDataSource`로 폴백해
- *   정적 빌드 및 데모 화면이 깨지지 않도록 보장한다.
+ * - 환경변수가 없거나 `conversationId`가 UUID가 아니면(`demo-room-*` 등) 즉시 `createDemoChatDataSource`로 폴백한다.
  * - `sendMessage`: `public.messages` INSERT 성공 시 `onMessageSent`, RLS 거부(차단·비구성원 등) 또는 오류 시 `onMessageFailed` 호출.
  * - Realtime 구독: 해당 `conversation_id`의 `INSERT` 이벤트를 수신해 상대방 메시지를 `toChatMessage`로 변환 후 `onIncomingMessage`에 전달.
  * - `dispose()`: 차단(`TC-009`) 또는 언마운트 시 Realtime 채널 구독을 즉시 해제한다.
@@ -132,10 +134,10 @@ export function createSupabaseChatDataSource(
   callbacks: ChatDataSourceCallbacks,
 ): ChatDataSource {
   const supabase = getSupabase();
-  const { conversationId } = options;
+  const { conversationId, partnerId } = options;
 
   if (!supabase || !isUuid(conversationId)) {
-    return createDemoChatDataSource(callbacks);
+    return createDemoChatDataSource(callbacks, partnerId);
   }
 
   let disposed = false;
@@ -144,8 +146,8 @@ export function createSupabaseChatDataSource(
   async function resolveUserId(): Promise<string | null> {
     if (cachedUserId) return cachedUserId;
     if (!supabase) return null;
-    const { data, error } = await supabase.auth.getSession();
-    const uid = data.session?.user?.id ?? null;
+    const { data, error } = await supabase.auth.getUser();
+    const uid = data.user?.id ?? null;
     if (!error && isUuid(uid)) {
       cachedUserId = uid;
       return uid;
@@ -153,7 +155,6 @@ export function createSupabaseChatDataSource(
     return null;
   }
 
-  // 초기 세션 사용자 ID 비동기 확보
   void resolveUserId();
 
   const channel = supabase
@@ -179,29 +180,30 @@ export function createSupabaseChatDataSource(
         ) {
           return;
         }
-        // 논리 삭제된 행은 표시하지 않는다 (DB_논리모델_전체3단계.md:31)
-        if (row.soft_delete_state && row.soft_delete_state !== 'VISIBLE') {
+        // 논리 삭제된 행('deleted')은 표시하지 않는다 (0003_match_core.sql:329)
+        if (row.soft_delete_state === 'deleted') {
           return;
         }
         void resolveUserId().then((myId) => {
-          if (disposed) return;
+          // 세션 사용자 ID가 확정되지 않았거나 이미 해제되었으면 오분류 방지를 위해 건너뛴다.
+          if (disposed || !myId) return;
           // 내가 보낸 메시지는 낙관적 전송(sendMessage)으로 이미 목록에 있으므로 중복 추가하지 않는다.
-          if (myId && row.sender_id === myId) return;
-          callbacks.onTypingChange(false);
-          callbacks.onIncomingMessage(
-            toChatMessage(
-              {
-                id: row.id!,
-                conversation_id: row.conversation_id!,
-                sender_id: row.sender_id!,
-                body: row.body!,
-                created_at: row.created_at!,
-                soft_delete_state: row.soft_delete_state,
-              },
-              myId ?? '',
-              'sent',
-            ),
+          if (row.sender_id === myId) return;
+          const mapped = toChatMessage(
+            {
+              id: row.id!,
+              conversation_id: row.conversation_id!,
+              sender_id: row.sender_id!,
+              body: row.body!,
+              created_at: row.created_at!,
+              soft_delete_state: row.soft_delete_state,
+            },
+            myId,
+            'sent',
           );
+          if (!mapped) return;
+          callbacks.onTypingChange(false);
+          callbacks.onIncomingMessage(mapped);
         });
       },
     )
@@ -258,7 +260,7 @@ export function createSupabaseChatDataSource(
 /**
  * 환경변수 및 `conversationId`(UUID 여부)에 따라 적절한 `ChatDataSource`를 반환하는 통합 팩토리.
  * - `isSupabaseConfigured && isUuid(conversationId)`일 때만 Supabase 데이터 소스를 생성하고,
- *   그 외에는 항상 `createDemoChatDataSource`를 반환한다.
+ *   그 외에는 항상 `createDemoChatDataSource(callbacks, options.partnerId)`를 반환한다.
  */
 export function createChatDataSource(
   options: SupabaseChatDataSourceOptions,
@@ -267,44 +269,71 @@ export function createChatDataSource(
   if (isSupabaseConfigured && isUuid(options.conversationId)) {
     return createSupabaseChatDataSource(options, callbacks);
   }
-  return createDemoChatDataSource(callbacks);
+  return createDemoChatDataSource(callbacks, options.partnerId);
+}
+
+/**
+ * 특정 대화방(`conversationId`)의 메시지를 커서 기반으로 최신순 페이지 조회한 뒤 화면 시간순(오름차순)으로 반환한다.
+ * - 데모 대화방이거나 환경변수가 없으면 `null`을 반환한다.
+ */
+export async function fetchConversationMessagesPage(
+  conversationId: string,
+  options: { cursor?: string | null; myUserId?: string | null; limit?: number } = {},
+): Promise<MessagesCursorPage | null> {
+  const supabase = getSupabase();
+  if (!supabase || !isUuid(conversationId)) {
+    return null;
+  }
+
+  let resolvedUserId = isUuid(options.myUserId) ? options.myUserId : null;
+  if (!resolvedUserId) {
+    const { data, error } = await supabase.auth.getUser();
+    const uid = data.user?.id ?? null;
+    if (!error && isUuid(uid)) resolvedUserId = uid;
+  }
+  if (!resolvedUserId) return null;
+
+  const pageSize = Math.min(Math.max(options.limit ?? 50, 1), 100);
+  let query = supabase
+    .from('messages')
+    .select('id, conversation_id, sender_id, body, created_at, soft_delete_state')
+    .eq('conversation_id', conversationId)
+    .neq('soft_delete_state', 'deleted')
+    .order('created_at', { ascending: false })
+    .limit(pageSize + 1);
+
+  if (options.cursor) {
+    query = query.lt('created_at', options.cursor);
+  }
+
+  const { data, error } = await query;
+  if (error || !data) {
+    return null;
+  }
+
+  const rows = data as MessageRow[];
+  const hasMore = rows.length > pageSize;
+  const slice = hasMore ? rows.slice(0, pageSize) : rows;
+  const nextCursor = hasMore ? slice[slice.length - 1]?.created_at ?? null : null;
+
+  // 최신순으로 가져온 페이지를 화면 렌더링용 시간순(오름차순)으로 뒤집고 null을 걸러낸다.
+  const items = slice
+    .slice()
+    .reverse()
+    .map((row) => toChatMessage(row, resolvedUserId, 'sent'))
+    .filter((msg): msg is ChatMessage => msg !== null);
+
+  return { items, nextCursor };
 }
 
 /**
  * 특정 대화방(`conversationId`)의 최근 메시지를 RLS 범위 내에서 조회해 화면용 `ChatMessage[]`로 반환한다.
- * - 데모 대화방이거나 환경변수가 없으면 `null`을 반환해 기존 `room.initialMessages`를 그대로 유지한다.
  */
 export async function fetchConversationMessages(
   conversationId: string,
   myUserId?: string | null,
   limit = 50,
 ): Promise<ChatMessage[] | null> {
-  const supabase = getSupabase();
-  if (!supabase || !isUuid(conversationId)) {
-    return null;
-  }
-
-  let resolvedUserId = isUuid(myUserId) ? myUserId : null;
-  if (!resolvedUserId) {
-    const { data } = await supabase.auth.getSession();
-    const uid = data.session?.user?.id ?? null;
-    if (isUuid(uid)) resolvedUserId = uid;
-  }
-  if (!resolvedUserId) return null;
-
-  const { data, error } = await supabase
-    .from('messages')
-    .select('id, conversation_id, sender_id, body, created_at, soft_delete_state')
-    .eq('conversation_id', conversationId)
-    .order('created_at', { ascending: true })
-    .limit(limit);
-
-  if (error || !data) {
-    return null;
-  }
-
-  return (data as MessageRow[])
-    .filter((row) => !row.soft_delete_state || row.soft_delete_state === 'VISIBLE')
-    .map((row) => toChatMessage(row, resolvedUserId, 'sent'));
+  const page = await fetchConversationMessagesPage(conversationId, { myUserId, limit });
+  return page ? page.items : null;
 }
-

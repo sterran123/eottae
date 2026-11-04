@@ -3,23 +3,46 @@
 // ============================================================
 //  저장 경로: src/components/chat/ChatRoom.tsx
 //  담당: 손준혁 · MATCH-007
-//  역할: 채팅방. 보내기 확인과 자동응답은 setTimeout 데모를 유지한다.
-//        내가 보낸 말은 이 브라우저 기록으로 남고, 다른 탭에 전달된다.
+//  역할: 채팅방.
+//        - 데모 대화방(`!isLiveRoom`): 보내기 확인·자동응답 setTimeout 데모와
+//          `demo-store`(BroadcastChannel) 기반 두 탭 전달을 그대로 유지한다.
+//        - 실계정 대화방(`isLiveRoom`): `createSupabaseChatDataSource`를 통해
+//          `public.messages` INSERT·Realtime 구독을 수행한다.
 //  [MATCH-008] 차단하면 보내기를 바로 막고, 그 이후 상대 말은 받지 않는다.
+//              실계정 대화방에서는 `public.blocks` INSERT/DELETE 성공 후에만 잠금/해제를 확정한다.
 // ============================================================
 
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import {
   createChatDataSource,
-  fetchConversationMessages, 
+  fetchConversationMessages,
   isSupabaseChatConfigured,
   type ChatDataSource,
 } from '@/lib/chat/chat-service';
+import {
+  appendDemoMessage,
+  chatDemoEpoch,
+  loadVisibleMessages,
+  subscribeChatDemo,
+} from '@/lib/chat/demo-store';
 import { isUuid, type ChatMessage, type ChatRoomInfo } from '@/lib/chat/types';
-import { submitBlock, submitReport } from '@/lib/safety/safety-service';
+import {
+  checkIsBlockedOnServer,
+  removeServerBlock,
+  submitBlock,
+  submitReport,
+} from '@/lib/safety/safety-service';
 import type { BlockRequest, ReportRequest } from '@/lib/safety/types';
+import {
+  isDemoBlocked,
+  removeDemoBlock,
+  safetyDemoEpoch,
+  saveDemoBlock,
+  saveDemoReport,
+  subscribeSafetyDemo,
+} from '@/lib/safety/demo-store';
 import BlockConfirmModal from '@/components/safety/BlockConfirmModal';
-import ReportModal from '@/components/safety/ReportModal';
+import ReportModal, { type ReportSubmitOutcome } from '@/components/safety/ReportModal';
 import MessageBubble from './MessageBubble';
 import MessageComposer from './MessageComposer';
 
@@ -65,6 +88,7 @@ export default function ChatRoom({
 }: ChatRoomProps) {
   const menuId = useId();
   const partner = room.partner;
+  const isLiveRoom = isSupabaseChatConfigured() && isUuid(room.id) && isUuid(partner.id);
   const questionToken = useRef<string | null>(null);
 
   const [messages, setMessages] = useState<ChatMessage[]>(room.initialMessages);
@@ -87,158 +111,318 @@ export default function ChatRoom({
     if (active) listEndRef.current?.scrollIntoView({ block: 'end' });
   }, [messages, typing, active]);
 
-  const lastNotifiedId = useRef<string | null>(null);
+  const lastNotifiedId = useRef<string | null>(
+    room.initialMessages[room.initialMessages.length - 1]?.id ?? null,
+  );
   useEffect(() => {
     const last = messages[messages.length - 1];
-    if (!last || last.sender !== 'system' || last.id === lastNotifiedId.current) return;
+    if (!last || last.id === lastNotifiedId.current) return;
+    // 데모 방은 일반 메시지를 demo-store 구독(ChatHub)이 이미 반영하므로 시스템 안내만 알리고,
+    // 실계정(isLiveRoom) 방은 모든 새 메시지를 부모 미리보기에 알린다.
+    if (!isLiveRoom && last.sender !== 'system') return;
     lastNotifiedId.current = last.id;
     onLastMessage?.(room.id, last);
-  }, [messages, room.id, onLastMessage]);
+  }, [isLiveRoom, messages, room.id, onLastMessage]);
 
-  const pushSystem = useCallback((body: string) => {
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: nextId(actorId),
-        senderId: '',
-        sender: 'system',
-        body,
-        createdAt: new Date().toISOString(),
-        status: 'sent',
-      },
-    ]);
-  }, [actorId]);
+  const pushSystem = useCallback(
+    (body: string) => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: nextId(actorId),
+          senderId: '',
+          sender: 'system',
+          body,
+          createdAt: new Date().toISOString(),
+          status: 'sent',
+        },
+      ]);
+    },
+    [actorId],
+  );
 
   const createSource = useCallback(() => {
     dataSourceRef.current?.dispose();
     dataSourceRef.current = createChatDataSource(
-      { conversationId: room.id },
+      {
+        conversationId: room.id,
+        partnerId: partner.id,
+        myUserId: isUuid(actorId) ? actorId : null,
+      },
       {
         onMessageSent: (messageId) => {
+          if (blockedRef.current) {
+            setMessages((prev) =>
+              prev.map((message) =>
+                message.id === messageId ? { ...message, status: 'failed' } : message,
+              ),
+            );
+            return;
+          }
+          const pending = pendingRef.current.get(messageId);
+          pendingRef.current.delete(messageId);
+          if (!isLiveRoom && pending) {
+            const saved = appendDemoMessage({
+              id: messageId,
+              conversationId: room.id,
+              senderId: actorId,
+              body: pending.body,
+              createdAt: pending.createdAt,
+              status: 'sent',
+            });
+            if (!saved) {
+              setMessages((prev) =>
+                prev.map((message) =>
+                  message.id === messageId ? { ...message, status: 'failed' } : message,
+                ),
+              );
+              return;
+            }
+          }
           setMessages((prev) =>
-            prev.map((m) => (m.id === messageId ? { ...m, status: 'sent' } : m)),
+            prev.map((message) =>
+              message.id === messageId ? { ...message, status: 'sent' } : message,
+            ),
           );
         },
         onMessageFailed: (messageId) => {
+          pendingRef.current.delete(messageId);
           setMessages((prev) =>
-            prev.map((m) => (m.id === messageId ? { ...m, status: 'failed' } : m)),
+            prev.map((message) =>
+              message.id === messageId ? { ...message, status: 'failed' } : message,
+            ),
           );
         },
         onTypingChange: (isTyping) => {
-          setTyping(isTyping);
+          setTyping(blockedRef.current ? false : isTyping);
         },
         onIncomingMessage: (incoming) => {
-          setMessages((prev) => [...prev, incoming]);
+          if (blockedRef.current) return;
+          if (!isLiveRoom) {
+            appendDemoMessage({
+              id: `auto-${actorId}-${incoming.id}`,
+              conversationId: room.id,
+              senderId: partner.id,
+              body: incoming.body,
+              createdAt: incoming.createdAt,
+              status: 'sent',
+              autoForActorId: actorId,
+            });
+            return;
+          }
+          setMessages((prev) =>
+            prev.some((m) => m.id === incoming.id) ? prev : [...prev, incoming],
+          );
         },
       },
     );
-  }, [room.id]);
+  }, [actorId, isLiveRoom, partner.id, room.id]);
 
+  // 데모 방: demo-store 조회·구독 및 초기화 세대 동기화
+  const chatEpochRef = useRef<number | null>(null);
   useEffect(() => {
-    if (isDemoBlocked(actorId, partner.id)) {
-      blockedRef.current = true;
-      setBlocked(true);
+    if (isLiveRoom) {
+      setHydrated(true);
       return;
     }
-    blockedRef.current = false;
-    setBlocked(false);
-    createSource();
-    return () => {
-      dataSourceRef.current?.dispose();
+    const reload = () => {
+      const epoch = chatDemoEpoch();
+      const cleared = chatEpochRef.current !== null && epoch !== chatEpochRef.current;
+      chatEpochRef.current = epoch;
+      if (cleared) {
+        pendingRef.current.clear();
+        setTyping(false);
+        dataSourceRef.current?.dispose();
+        dataSourceRef.current = null;
+        if (!blockedRef.current && !isDemoBlocked(actorId, partner.id)) createSource();
+      }
+      const stored = loadVisibleMessages(room.id, actorId);
+      setMessages((prev) => (cleared ? stored : mergeMessages(prev, stored)));
     };
-  }, [actorId, partner.id, createSource]);
+    reload();
+    setHydrated(true);
+    const offChat = subscribeChatDemo(reload);
+    const offSafety = subscribeSafetyDemo(reload);
+    return () => {
+      offChat();
+      offSafety();
+    };
+  }, [actorId, createSource, isLiveRoom, partner.id, room.id]);
 
-  // 실제 Supabase 대화방(UUID)인 경우 RLS 범위 내 과거 메시지 초기 로드
+  // 실계정 대화방(UUID): RLS 범위 내 과거 메시지 초기 로드 (빈 배열이면 초기 메시지를 지우지 않는다)
   useEffect(() => {
-    if (!isSupabaseChatConfigured() || !isUuid(room.id)) return;
+    if (!isLiveRoom) return;
     let cancelled = false;
-    void fetchConversationMessages(room.id).then((loaded) => {
-      if (!cancelled && loaded) {
+    void fetchConversationMessages(room.id, isUuid(actorId) ? actorId : null).then((loaded) => {
+      if (!cancelled && loaded && loaded.length > 0) {
         setMessages(loaded);
       }
     });
     return () => {
       cancelled = true;
     };
-  }, [room.id]);
+  }, [actorId, isLiveRoom, room.id]);
 
-  const pushSystem = useCallback((body: string) => {
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: nextId(),
-        sender: 'system',
-        body,
-        createdAt: new Date().toISOString(),
-        status: 'sent',
-      },
-    ]);
-  }, []);
+  // 초기 차단 상태 확인 및 데이터 소스 연결
+  useEffect(() => {
+    if (!isLiveRoom) {
+      if (isDemoBlocked(actorId, partner.id)) {
+        blockedRef.current = true;
+        setBlocked(true);
+        return;
+      }
+      blockedRef.current = false;
+      setBlocked(false);
+      createSource();
+      return () => {
+        dataSourceRef.current?.dispose();
+      };
+    }
+
+    let cancelled = false;
+    void checkIsBlockedOnServer(partner.id).then((serverBlocked) => {
+      if (cancelled) return;
+      if (serverBlocked) {
+        blockedRef.current = true;
+        setBlocked(true);
+        dataSourceRef.current?.dispose();
+        return;
+      }
+      blockedRef.current = false;
+      setBlocked(false);
+      createSource();
+    });
+
+    return () => {
+      cancelled = true;
+      dataSourceRef.current?.dispose();
+    };
+  }, [actorId, createSource, isLiveRoom, partner.id]);
+
+  // 데모 방: 다른 탭이나 설정에서 차단 상태가 바뀌었을 때 동기화
+  useEffect(() => {
+    if (isLiveRoom) return;
+    let epochSeen = safetyDemoEpoch();
+    const onSafety = () => {
+      const epoch = safetyDemoEpoch();
+      const wiped = epoch !== epochSeen;
+      epochSeen = epoch;
+      const now = isDemoBlocked(actorId, partner.id);
+      if (now === blockedRef.current) return;
+      if (now) {
+        blockedRef.current = true;
+        setBlocked(true);
+        dataSourceRef.current?.dispose();
+        setTyping(false);
+        setMessages((prev) =>
+          prev.map((message) =>
+            message.status === 'sending' ? { ...message, status: 'failed' } : message,
+          ),
+        );
+        pushSystem(`${partner.nickname}님을 차단했어요. 더 이상 대화할 수 없어요.`);
+        return;
+      }
+      blockedRef.current = false;
+      setBlocked(false);
+      createSource();
+      // 키 삭제는 차단 목록이 비는 것이지, 이 방에서 해제한 것이 아니다.
+      if (wiped) return;
+      pushSystem('차단을 해제했어요. 다시 대화할 수 있어요.');
+    };
+    return subscribeSafetyDemo(onSafety);
+  }, [actorId, createSource, isLiveRoom, partner.id, partner.nickname, pushSystem]);
 
   const confirmBlockLock = useCallback(() => {
     blockedRef.current = true;
     setBlocked(true);
-    saveDemoBlock(actorId, partner.id);
     dataSourceRef.current?.dispose();
     setTyping(false);
     setMessages((prev) =>
-      prev.map((message) => (message.status === 'sending' ? { ...message, status: 'failed' } : message)),
+      prev.map((message) =>
+        message.status === 'sending' ? { ...message, status: 'failed' } : message,
+      ),
     );
     pushSystem(`${partner.nickname}님을 차단했어요. 더 이상 대화할 수 없어요.`);
-  }, [pushSystem, partner.nickname]);
+  }, [partner.nickname, pushSystem]);
 
-  // 차단 적용:
-  // - 데모 방/상대일 때는 즉시 잠금 및 구독/타이머 해제(TC-009).
-  // - 실제 Supabase 상대(UUID)일 때는 `public.blocks` INSERT가 성공한 뒤에만 잠금·시스템 문구를 확정하고
-  //   구독을 회수하며, 실패 시 잠금을 확정하지 않고 실패 안내를 표시한다.
   const applyBlock = useCallback(() => {
     if (blockedRef.current) return;
-    const req: BlockRequest = { blockedUserId: partner.id };
 
-    if (!isSupabaseChatConfigured() || !isUuid(partner.id)) {
+    if (!isLiveRoom) {
+      saveDemoBlock(actorId, partner.id);
       confirmBlockLock();
       return;
     }
 
+    const req: BlockRequest = { blockedUserId: partner.id };
     void submitBlock(req).then((res) => {
       if (blockedRef.current) return;
-      if (!res.ok) {
+      if (!res.ok || res.mode !== 'supabase') {
         pushSystem(
-          res.error?.message ?? '차단 요청을 서버에 반영하지 못했어요. 잠시 후 다시 시도해 주세요.',
+          res.error?.message ??
+            '차단 요청을 서버에 반영하지 못했어요. 잠시 후 다시 시도해 주세요.',
         );
         return;
       }
       confirmBlockLock();
     });
-  }, [confirmBlockLock, partner.id, pushSystem]);
+  }, [actorId, confirmBlockLock, isLiveRoom, partner.id, pushSystem]);
 
   const releaseBlock = useCallback(() => {
     if (!blockedRef.current) return;
-    blockedRef.current = false;
-    setBlocked(false);
-    removeDemoBlock(actorId, partner.id);
-    createSource();
-    pushSystem('차단을 해제했어요. 다시 대화할 수 있어요.');
-  }, [actorId, partner.id, createSource, pushSystem]);
 
-  function handleReportSubmit(req: ReportRequest) {
-    // [보안 / DB_논리모델_전체3단계.md:41] 신고 사유 본문(req.description)은 콘솔·로그에 남기지 않는다.
-    if (!isSupabaseChatConfigured() || !isUuid(req.reportedUserId)) {
-      if (req.alsoBlock) applyBlock();
+    if (!isLiveRoom) {
+      blockedRef.current = false;
+      setBlocked(false);
+      removeDemoBlock(actorId, partner.id);
+      createSource();
+      pushSystem('차단을 해제했어요. 다시 대화할 수 있어요.');
       return;
     }
 
-    void submitReport(req).then((res) => {
-      if (!res.ok) {
+    void removeServerBlock(partner.id).then((res) => {
+      if (!blockedRef.current) return;
+      if (!res.ok || res.mode !== 'supabase') {
         pushSystem(
-          res.error?.message ?? '신고 접수를 완료하지 못했어요. 잠시 후 다시 시도해 주세요.',
+          res.error?.message ??
+            '차단 해제를 서버에 반영하지 못했어요. 잠시 후 다시 시도해 주세요.',
         );
         return;
       }
-      if (req.alsoBlock) {
-        applyBlock();
-      }
+      blockedRef.current = false;
+      setBlocked(false);
+      createSource();
+      pushSystem('차단을 해제했어요. 다시 대화할 수 있어요.');
     });
+  }, [actorId, createSource, isLiveRoom, partner.id, pushSystem]);
+
+  async function handleReportSubmit(req: ReportRequest): Promise<ReportSubmitOutcome> {
+    if (!isLiveRoom) {
+      saveDemoReport({
+        reporterId: actorId,
+        targetId: partner.id,
+        nickname: partner.nickname,
+        category: req.category,
+        description: req.description,
+      });
+      if (req.alsoBlock) applyBlock();
+      return { ok: true, mode: 'demo' };
+    }
+
+    const res = await submitReport(req);
+    if (!res.ok || res.mode !== 'supabase') {
+      return {
+        ok: false,
+        mode: 'supabase',
+        errorMessage:
+          res.error?.message ?? '신고 접수를 완료하지 못했어요. 잠시 후 다시 시도해 주세요.',
+      };
+    }
+
+    if (req.alsoBlock) {
+      applyBlock();
+    }
+    return { ok: true, mode: 'supabase' };
   }
 
   function openBlockConfirm() {
@@ -274,29 +458,44 @@ export default function ChatRoom({
     };
   }, [menuOpen]);
 
-  const sendMessage = useCallback((body: string) => {
-    if (blockedRef.current || isDemoBlocked(actorId, partner.id)) return;
-    const id = nextId(actorId);
-    const createdAt = new Date().toISOString();
-    pendingRef.current.set(id, { body, createdAt });
-    setMessages((prev) => [
-      ...prev,
-      { id, senderId: actorId, sender: 'me', body, createdAt, status: 'sending' },
-    ]);
-    dataSourceRef.current?.sendMessage(id, body);
-  }, [actorId, partner.id]);
+  const sendMessage = useCallback(
+    (body: string) => {
+      if (blockedRef.current) return;
+      if (!isLiveRoom && isDemoBlocked(actorId, partner.id)) return;
+      const id = nextId(actorId);
+      const createdAt = new Date().toISOString();
+      pendingRef.current.set(id, { body, createdAt });
+      setMessages((prev) => [
+        ...prev,
+        { id, senderId: actorId, sender: 'me', body, createdAt, status: 'sending' },
+      ]);
+      dataSourceRef.current?.sendMessage(id, body);
+    },
+    [actorId, isLiveRoom, partner.id],
+  );
 
   useEffect(() => {
     if (!hydrated || !initialQuestion) return;
     const token = `${room.id}|${actorId}|${initialQuestion}`;
     if (questionToken.current === token) return;
     questionToken.current = token;
-    const already = loadVisibleMessages(room.id, actorId).some(
-      (message) => message.senderId === actorId && message.body === initialQuestion,
-    );
+    const already = isLiveRoom
+      ? messages.some((message) => message.sender === 'me' && message.body === initialQuestion)
+      : loadVisibleMessages(room.id, actorId).some(
+          (message) => message.senderId === actorId && message.body === initialQuestion,
+        );
     if (!already) sendMessage(initialQuestion);
     onQuestionConsumed?.();
-  }, [hydrated, initialQuestion, room.id, actorId, sendMessage, onQuestionConsumed]);
+  }, [
+    actorId,
+    hydrated,
+    initialQuestion,
+    isLiveRoom,
+    messages,
+    onQuestionConsumed,
+    room.id,
+    sendMessage,
+  ]);
 
   return (
     <section className="mt-chat" aria-label={`${partner.nickname}님과의 1:1 채팅`}>
@@ -307,7 +506,8 @@ export default function ChatRoom({
         <div className="mt-chat-head-text">
           <h2 className="mt-chat-title">{partner.nickname}</h2>
           <span className="mt-chat-demo">
-            {blocked ? '차단됨 · ' : ''}데모 · 이 브라우저 안에서만 대화해요
+            {blocked ? '차단됨 · ' : ''}
+            {isLiveRoom ? '실시간 1:1 대화' : '데모 · 이 브라우저 안에서만 대화해요'}
           </span>
         </div>
 
@@ -362,7 +562,9 @@ export default function ChatRoom({
       </header>
 
       <div className="mt-chat-notice" role="note">
-        데모 화면이에요. 메시지는 이 기기에만 저장되고, 서버로는 전송되지 않아요.
+        {isLiveRoom
+          ? '매칭된 상대방과의 1:1 대화방이에요. 상호 존중하며 대화를 나눠 보세요.'
+          : '데모 화면이에요. 메시지는 이 기기에만 저장되고, 서버로는 전송되지 않아요.'}
       </div>
 
       <ul className="mt-chat-list" aria-live="polite" aria-label="메시지 목록">
@@ -407,6 +609,7 @@ export default function ChatRoom({
         open={reportOpen}
         partnerId={partner.id}
         partnerName={partner.nickname}
+        liveMode={isLiveRoom}
         onSubmit={handleReportSubmit}
         onClose={closeReport}
       />
