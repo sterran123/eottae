@@ -42,6 +42,8 @@ export default function InvitationsPage() {
 
         <ThemePreviewSection />
 
+        <p><Link className="btn outline" href="/invitations/sample/">샘플 청첩장 미리보기</Link></p>
+
         <aside className="warn">
           <strong>현재는 서비스 입구와 계획 안내만 제공합니다</strong>
           <p>
