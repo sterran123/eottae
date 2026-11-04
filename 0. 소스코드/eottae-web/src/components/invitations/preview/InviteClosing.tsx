@@ -15,7 +15,7 @@ export function InviteRsvp() {
   const [status, setStatus] = useState<string | null>(null);
 
   return (
-    <section className="invite-section" aria-labelledby={titleId} data-reveal>
+    <section className="invite-section" aria-labelledby={titleId} data-invite-reveal>
       <h2 id={titleId} className="invite-h">
         참석 여부
       </h2>
@@ -46,7 +46,7 @@ export function InviteGift({ accounts }: { accounts: InvitePreviewContent['accou
   }
 
   return (
-    <section className="invite-section" aria-labelledby={titleId} data-reveal>
+    <section className="invite-section" aria-labelledby={titleId} data-invite-reveal>
       <h2 id={titleId} className="invite-h">
         마음 전하기
       </h2>
@@ -107,7 +107,7 @@ export function InviteGuestbook({ seed }: { seed: InvitePreviewContent['guestboo
   }
 
   return (
-    <section className="invite-section" aria-labelledby={titleId} data-reveal>
+    <section className="invite-section" aria-labelledby={titleId} data-invite-reveal>
       <h2 id={titleId} className="invite-h">
         방명록
       </h2>
@@ -171,7 +171,7 @@ export function InviteShare({ invitation }: { invitation: Invitation }) {
   }
 
   return (
-    <section className="invite-section" aria-labelledby={titleId} data-reveal>
+    <section className="invite-section" aria-labelledby={titleId} data-invite-reveal>
       <h2 id={titleId} className="invite-h">
         공유
       </h2>

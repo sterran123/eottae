@@ -220,6 +220,13 @@
   line-height: 1.7;
 }
 
+/* width·height 속성이 높이를 px로 남기면 aspect-ratio가 무시된다. */
+.invite-frame img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
 .invite-frame ::selection {
   background: var(--invite-soft);
   color: var(--invite-ink);
@@ -243,12 +250,23 @@
   outline-offset: 2px;
 }
 
-.invite-frame [data-reveal] {
+/* 전역 [data-reveal]은 opacity:0이라 쓰지 않는다. 기본은 보이고, JS가 루트에
+   data-reveal-ready를 붙였을 때만 아직 안 보인 블록을 숨긴다. */
+[data-invite-reveal] {
+  opacity: 1;
   transform: none;
-  transition: opacity 0.5s ease;
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s ease;
 }
 
-.invite-frame [data-reveal].is-visible {
+.invite-sheet[data-reveal-ready] [data-invite-reveal]:not(.is-visible) {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.invite-sheet[data-reveal-ready] [data-invite-reveal].is-visible {
+  opacity: 1;
   transform: none;
 }
 
@@ -268,6 +286,8 @@
 .invite-cover-photo {
   display: block;
   width: 100%;
+  max-width: 100%;
+  height: auto;
   aspect-ratio: 3 / 4;
   object-fit: cover;
   background: var(--invite-soft);
@@ -368,6 +388,7 @@
 .invite-film {
   display: flex;
   gap: 12px;
+  min-width: 0;
   max-width: 100%;
   margin: 0;
   padding: 4px 2px 12px;
@@ -381,36 +402,39 @@
 
 .invite-film li {
   flex: 0 0 72%;
+  /* 4:5 높이가 70vh를 넘지 않도록 슬라이드 폭을 같이 줄인다. */
+  max-width: calc(70vh * 4 / 5);
   min-width: 0;
+  min-height: 0;
   scroll-snap-align: center;
 }
 
 .invite-photo {
   display: block;
   width: 100%;
+  min-width: 0;
   margin: 0;
   padding: 0;
   border: 0;
   border-radius: 16px;
-  background: transparent;
+  aspect-ratio: 4 / 5;
+  max-height: 70vh;
+  overflow: clip;
+  background: var(--invite-soft);
   color: inherit;
   cursor: pointer;
 }
 
-.invite-photo img,
-.invite-story-photo img,
-.invite-map,
-.invite-lightbox img {
+.invite-photo img {
   display: block;
   width: 100%;
   max-width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 5;
+  max-height: 70vh;
   object-fit: cover;
-  background: var(--invite-soft);
-}
-
-.invite-photo img {
-  aspect-ratio: 3 / 4;
   border-radius: 16px;
+  background: var(--invite-soft);
 }
 
 .invite-btn {
@@ -569,7 +593,10 @@
 
 .invite-story {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 28px;
+  min-width: 0;
+  max-width: 100%;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -580,15 +607,39 @@
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   gap: 14px;
   align-items: center;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .invite-story-item:nth-child(even) .invite-story-photo {
   order: 2;
 }
 
-.invite-story-photo img {
+.invite-story-photo {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
   aspect-ratio: 4 / 3;
+  overflow: clip;
   border-radius: 16px;
+  background: var(--invite-soft);
+}
+
+.invite-story-copy {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.invite-story-photo img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 16px;
+  background: var(--invite-soft);
 }
 
 .invite-when {
@@ -710,9 +761,15 @@
 }
 
 .invite-map {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
   aspect-ratio: 800 / 520;
+  object-fit: cover;
   margin: 12px 0;
   border-radius: 16px;
+  background: var(--invite-soft);
 }
 
 .invite-directions {
@@ -879,9 +936,12 @@
 }
 
 .invite-lightbox img {
+  width: 100%;
+  height: auto;
   max-height: calc(100dvh - 220px);
   object-fit: contain;
   border-radius: 12px;
+  background: var(--invite-soft);
 }
 
 .invite-lightbox-caption {
@@ -914,6 +974,13 @@
   .invite-story-item:nth-child(even) .invite-story-photo {
     order: 0;
   }
+
+  .invite-story-photo,
+  .invite-story-copy {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
 }
 
 @media (max-width: 360px) {
@@ -934,11 +1001,19 @@
   .invite-story-item:nth-child(even) .invite-story-photo {
     order: 0;
   }
+
+  .invite-story-photo,
+  .invite-story-copy {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .invite-frame [data-reveal],
-  .invite-frame [data-reveal].is-visible {
+  .invite-sheet[data-reveal-ready] [data-invite-reveal]:not(.is-visible),
+  [data-invite-reveal],
+  [data-invite-reveal].is-visible {
     opacity: 1;
     transform: none;
     transition: none;
