@@ -20,6 +20,9 @@ import SafetyDialog from './SafetyDialog';
 export interface ReportSubmitOutcome {
   ok: boolean;
   mode?: 'demo' | 'supabase';
+  /** 실계정: 함께 요청한 차단까지 서버에 반영됐을 때만 true. 완료 문구의 차단 안내는 이 값을 따른다. */
+  blocked?: boolean;
+  /** 실패 메시지(ok=false), 또는 신고는 접수됐지만 차단이 반영되지 않았을 때의 안내(ok=true). */
   errorMessage?: string;
 }
 
@@ -52,6 +55,8 @@ export default function ReportModal({
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [doneMode, setDoneMode] = useState<'demo' | 'supabase'>('demo');
+  const [doneBlocked, setDoneBlocked] = useState(false);
+  const [doneNote, setDoneNote] = useState('');
   const [error, setError] = useState('');
 
   // 열릴 때마다 폼 초기화
@@ -63,6 +68,8 @@ export default function ReportModal({
       setSubmitting(false);
       setDone(false);
       setDoneMode(liveMode ? 'supabase' : 'demo');
+      setDoneBlocked(false);
+      setDoneNote('');
       setError('');
     }
   }, [open, liveMode]);
@@ -102,6 +109,15 @@ export default function ReportModal({
             ? 'supabase'
             : 'demo';
       setDoneMode(resolvedMode);
+      // 실계정은 서버에 차단이 반영됐다고 확인된 경우에만 완료 문구에 차단을 적는다.
+      setDoneBlocked(
+        resolvedMode === 'supabase'
+          ? Boolean(outcome && typeof outcome === 'object' && outcome.blocked)
+          : alsoBlock,
+      );
+      setDoneNote(
+        outcome && typeof outcome === 'object' && outcome.errorMessage ? outcome.errorMessage : '',
+      );
       setDone(true);
     } finally {
       setSubmitting(false);
@@ -118,16 +134,21 @@ export default function ReportModal({
           <p className="mt-safety-text">
             {doneMode === 'supabase' ? (
               <>
-                {alsoBlock ? `${partnerName}님과의 대화를 차단 처리했어요. ` : ''}
+                {doneBlocked ? `${partnerName}님과의 대화를 차단 처리했어요. ` : ''}
                 안전센터에 신고가 접수되었어요.
               </>
             ) : (
               <>
-                {alsoBlock ? `${partnerName}님은 이 기기에서 차단되었어요. ` : ''}
+                {doneBlocked ? `${partnerName}님은 이 기기에서 차단되었어요. ` : ''}
                 이 기기의 내 신고 내역에 남았어요. 서버로는 보내지 않아요.
               </>
             )}
           </p>
+          {doneNote && (
+            <p className="mt-safety-error" role="alert">
+              {doneNote}
+            </p>
+          )}
           <div className="mt-safety-actions">
             <button type="submit" className="mt-safety-btn is-primary">
               확인

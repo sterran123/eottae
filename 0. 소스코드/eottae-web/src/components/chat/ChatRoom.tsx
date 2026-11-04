@@ -16,7 +16,7 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import {
   createChatDataSource,
   fetchConversationMessages,
-  isSupabaseChatConfigured,
+  isLiveChatRoom,
   type ChatDataSource,
 } from '@/lib/chat/chat-service';
 import {
@@ -63,6 +63,17 @@ function mergeMessages(prev: ChatMessage[], stored: ChatMessage[]): ChatMessage[
   return [...base, ...extra].sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
 }
 
+/**
+ * 실계정 방: 서버에서 조회한 기록(빈 배열 포함)을 기준으로 두고,
+ * 조회가 끝나기 전에 생긴 낙관적 전송·Realtime 수신·시스템 안내는 지우지 않고 합친다.
+ * 이 방의 상태는 예시 메시지로 시작하지 않으므로, 서버 기록에 없는 행은 모두 이 세션에서 생긴 행이다.
+ */
+function mergeLiveHistory(prev: ChatMessage[], loaded: ChatMessage[]): ChatMessage[] {
+  const ids = new Set(loaded.map((message) => message.id));
+  const keep = prev.filter((message) => !ids.has(message.id));
+  return [...loaded, ...keep].sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
+}
+
 interface ChatRoomProps {
   room: ChatRoomInfo;
   actorId: string;
@@ -88,15 +99,28 @@ export default function ChatRoom({
 }: ChatRoomProps) {
   const menuId = useId();
   const partner = room.partner;
-  const isLiveRoom = isSupabaseChatConfigured() && isUuid(room.id) && isUuid(partner.id);
+  const isLiveRoom = isLiveChatRoom(room.id, partner.id);
   const questionToken = useRef<string | null>(null);
 
-  const [messages, setMessages] = useState<ChatMessage[]>(room.initialMessages);
+  // 실계정 방은 예시 메시지로 시작하지 않는다 — 화면에는 서버 기록만 보인다.
+  const [messages, setMessages] = useState<ChatMessage[]>(isLiveRoom ? [] : room.initialMessages);
   const [hydrated, setHydrated] = useState(false);
   const [typing, setTyping] = useState(false);
   const listEndRef = useRef<HTMLLIElement>(null);
   const dataSourceRef = useRef<ChatDataSource | null>(null);
   const pendingRef = useRef<Map<string, { body: string; createdAt: string }>>(new Map());
+
+  // 실계정 방: 서버 차단 조회가 끝나 데이터 소스가 생긴 뒤에만 보내기를 연다.
+  const [liveReady, setLiveReady] = useState(false);
+  const liveReadyRef = useRef(false);
+  const [lookupFailed, setLookupFailed] = useState(false);
+  const [lookupTick, setLookupTick] = useState(0);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+
+  const setLiveReadyBoth = useCallback((ready: boolean) => {
+    liveReadyRef.current = ready;
+    setLiveReady(ready);
+  }, []);
 
   const [blocked, setBlocked] = useState(false);
   const blockedRef = useRef(false);
@@ -150,7 +174,7 @@ export default function ChatRoom({
         myUserId: isUuid(actorId) ? actorId : null,
       },
       {
-        onMessageSent: (messageId) => {
+        onMessageSent: (messageId, serverId) => {
           if (blockedRef.current) {
             setMessages((prev) =>
               prev.map((message) =>
@@ -179,11 +203,20 @@ export default function ChatRoom({
               return;
             }
           }
-          setMessages((prev) =>
-            prev.map((message) =>
+          setMessages((prev) => {
+            // 실계정: 낙관적 로컬 id를 서버 행 id로 바꾼다. 재조회·Realtime으로 이미 같은 서버 행이 있으면 로컬 행만 뺀다.
+            if (isLiveRoom && serverId && serverId !== messageId) {
+              if (prev.some((message) => message.id === serverId)) {
+                return prev.filter((message) => message.id !== messageId);
+              }
+              return prev.map((message) =>
+                message.id === messageId ? { ...message, id: serverId, status: 'sent' } : message,
+              );
+            }
+            return prev.map((message) =>
               message.id === messageId ? { ...message, status: 'sent' } : message,
-            ),
-          );
+            );
+          });
         },
         onMessageFailed: (messageId) => {
           pendingRef.current.delete(messageId);
@@ -210,9 +243,23 @@ export default function ChatRoom({
             });
             return;
           }
-          setMessages((prev) =>
-            prev.some((m) => m.id === incoming.id) ? prev : [...prev, incoming],
-          );
+          setMessages((prev) => {
+            if (prev.some((message) => message.id === incoming.id)) return prev;
+            // 내가 보낸 행의 Realtime 에코: 낙관적 행이 있으면 건너뛴다(곧 서버 id로 바뀐다).
+            // 낙관적 행이 없으면(다른 기기·탭에서 보낸 내 메시지) 서버 id로 붙인다.
+            if (
+              incoming.sender === 'me' &&
+              prev.some(
+                (message) =>
+                  message.sender === 'me' &&
+                  message.status === 'sending' &&
+                  message.body === incoming.body,
+              )
+            ) {
+              return prev;
+            }
+            return [...prev, incoming];
+          });
         },
       },
     );
@@ -249,14 +296,16 @@ export default function ChatRoom({
     };
   }, [actorId, createSource, isLiveRoom, partner.id, room.id]);
 
-  // 실계정 대화방(UUID): RLS 범위 내 과거 메시지 초기 로드 (빈 배열이면 초기 메시지를 지우지 않는다)
+  // 실계정 대화방(UUID): RLS 범위 내 과거 메시지 초기 로드.
+  // 배열이면(빈 배열 포함) 서버 기록으로 두고 이 세션에서 생긴 행만 합친다. null(오류·미인증)이면 현재 목록을 유지한다.
   useEffect(() => {
     if (!isLiveRoom) return;
     let cancelled = false;
+    setHistoryLoaded(false);
     void fetchConversationMessages(room.id, isUuid(actorId) ? actorId : null).then((loaded) => {
-      if (!cancelled && loaded && loaded.length > 0) {
-        setMessages(loaded);
-      }
+      if (cancelled) return;
+      if (loaded) setMessages((prev) => mergeLiveHistory(prev, loaded));
+      setHistoryLoaded(true);
     });
     return () => {
       cancelled = true;
@@ -279,25 +328,41 @@ export default function ChatRoom({
       };
     }
 
+    // 실계정: 조회가 끝나기 전에는 보내기를 열지 않는다 (데이터 소스가 없어 메시지가 sending에 머무는 창을 없앤다).
     let cancelled = false;
-    void checkIsBlockedOnServer(partner.id).then((serverBlocked) => {
+    setLiveReadyBoth(false);
+    setLookupFailed(false);
+    void checkIsBlockedOnServer(partner.id).then((status) => {
       if (cancelled) return;
-      if (serverBlocked) {
+      if (status === 'blocked') {
         blockedRef.current = true;
         setBlocked(true);
         dataSourceRef.current?.dispose();
+        dataSourceRef.current = null;
+        setMessages((prev) =>
+          prev.map((message) =>
+            message.status === 'sending' ? { ...message, status: 'failed' } : message,
+          ),
+        );
+        return;
+      }
+      if (status === 'unknown') {
+        // 확인하지 못한 것을 미차단으로 간주하지 않는다. 입력은 닫아 두고 다시 시도할 수 있게 한다.
+        setLookupFailed(true);
         return;
       }
       blockedRef.current = false;
       setBlocked(false);
       createSource();
+      setLiveReadyBoth(true);
     });
 
     return () => {
       cancelled = true;
       dataSourceRef.current?.dispose();
+      dataSourceRef.current = null;
     };
-  }, [actorId, createSource, isLiveRoom, partner.id]);
+  }, [actorId, createSource, isLiveRoom, lookupTick, partner.id, setLiveReadyBoth]);
 
   // 데모 방: 다른 탭이나 설정에서 차단 상태가 바뀌었을 때 동기화
   useEffect(() => {
@@ -392,9 +457,10 @@ export default function ChatRoom({
       blockedRef.current = false;
       setBlocked(false);
       createSource();
+      setLiveReadyBoth(true);
       pushSystem('차단을 해제했어요. 다시 대화할 수 있어요.');
     });
-  }, [actorId, createSource, isLiveRoom, partner.id, pushSystem]);
+  }, [actorId, createSource, isLiveRoom, partner.id, pushSystem, setLiveReadyBoth]);
 
   async function handleReportSubmit(req: ReportRequest): Promise<ReportSubmitOutcome> {
     if (!isLiveRoom) {
@@ -419,10 +485,23 @@ export default function ChatRoom({
       };
     }
 
-    if (req.alsoBlock) {
-      applyBlock();
+    if (!req.alsoBlock) {
+      return { ok: true, mode: 'supabase', blocked: false };
     }
-    return { ok: true, mode: 'supabase' };
+
+    // 신고와 함께 차단: 서버 차단까지 끝난 뒤에만 「차단 처리했어요」를 안내하고 채팅을 잠근다.
+    const block = await submitBlock({ blockedUserId: partner.id });
+    if (!block.ok || block.mode !== 'supabase') {
+      return {
+        ok: true,
+        mode: 'supabase',
+        blocked: false,
+        errorMessage:
+          '신고는 접수되었어요. 차단은 서버에 반영되지 않았어요. 잠시 후 다시 시도해 주세요.',
+      };
+    }
+    if (!blockedRef.current) confirmBlockLock();
+    return { ok: true, mode: 'supabase', blocked: true };
   }
 
   function openBlockConfirm() {
@@ -462,20 +541,38 @@ export default function ChatRoom({
     (body: string) => {
       if (blockedRef.current) return;
       if (!isLiveRoom && isDemoBlocked(actorId, partner.id)) return;
+      // 실계정은 차단 조회가 끝나 데이터 소스가 생긴 뒤에만 보낸다 (입력도 그때까지 disabled).
+      if (isLiveRoom && !liveReadyRef.current) return;
       const id = nextId(actorId);
       const createdAt = new Date().toISOString();
+      const source = dataSourceRef.current;
       pendingRef.current.set(id, { body, createdAt });
       setMessages((prev) => [
         ...prev,
-        { id, senderId: actorId, sender: 'me', body, createdAt, status: 'sending' },
+        {
+          id,
+          senderId: actorId,
+          sender: 'me',
+          body,
+          createdAt,
+          status: source ? 'sending' : 'failed',
+        },
       ]);
-      dataSourceRef.current?.sendMessage(id, body);
+      if (!source) {
+        // 데이터 소스가 없으면 sending에 머물지 않고 바로 실패로 보인다.
+        pendingRef.current.delete(id);
+        return;
+      }
+      source.sendMessage(id, body);
     },
     [actorId, isLiveRoom, partner.id],
   );
 
   useEffect(() => {
     if (!hydrated || !initialQuestion) return;
+    // 실계정은 차단 조회·데이터 소스·기록 로드가 끝난 뒤에 보낸다. 그 전에는 질문을 소모하지 않는다.
+    // 차단으로 판정되면 보내지 않고 소모한다.
+    if (isLiveRoom && !blocked && !(liveReady && historyLoaded)) return;
     const token = `${room.id}|${actorId}|${initialQuestion}`;
     if (questionToken.current === token) return;
     questionToken.current = token;
@@ -488,9 +585,12 @@ export default function ChatRoom({
     onQuestionConsumed?.();
   }, [
     actorId,
+    blocked,
+    historyLoaded,
     hydrated,
     initialQuestion,
     isLiveRoom,
+    liveReady,
     messages,
     onQuestionConsumed,
     room.id,
@@ -592,16 +692,35 @@ export default function ChatRoom({
         </div>
       )}
 
+      {isLiveRoom && lookupFailed && !blocked && (
+        <div className="mt-chat-blocked-bar" role="status">
+          <span>차단 상태를 확인하지 못해 보내기를 잠시 닫았어요</span>
+          <button type="button" onClick={() => setLookupTick((tick) => tick + 1)}>
+            다시 확인
+          </button>
+        </div>
+      )}
+
       <MessageComposer
         onSend={sendMessage}
-        disabled={blocked || !active}
-        disabledReason={blocked ? '차단한 상대와는 대화할 수 없어요' : undefined}
+        disabled={blocked || !active || (isLiveRoom && !liveReady)}
+        disabledReason={
+          blocked
+            ? '차단한 상대와는 대화할 수 없어요'
+            : isLiveRoom && !liveReady
+              ? lookupFailed
+                ? '차단 상태를 확인한 뒤에 보낼 수 있어요'
+                : '대화방을 준비하고 있어요'
+              : undefined
+        }
+        textOnly={isLiveRoom}
       />
 
       <BlockConfirmModal
         open={blockOpen}
         mode={confirmMode}
         partnerName={partner.nickname}
+        liveMode={isLiveRoom}
         onConfirm={confirmMode === 'unblock' ? releaseBlock : applyBlock}
         onClose={closeBlockConfirm}
       />

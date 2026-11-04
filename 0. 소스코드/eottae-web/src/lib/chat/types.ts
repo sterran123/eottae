@@ -137,7 +137,7 @@ export interface MessageInsertRow {
   body: string;
 }
 
-/** 커서 기반 메시지 목록 페이지 응답 DTO (API_계약_초안.md:45) */
+/** 커서 기반 메시지 목록 페이지 응답 DTO (API_계약_초안.md:45). `nextCursor`는 `created_at|id` 쌍이다. */
 export interface MessagesCursorPage {
   items: ChatMessage[];
   nextCursor: string | null;

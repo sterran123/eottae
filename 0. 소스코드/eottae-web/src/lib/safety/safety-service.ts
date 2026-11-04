@@ -17,8 +17,17 @@ import {
   toBlockInsertRow,
   toReportInsertRow,
   type BlockRequest,
+  type ReportCreatedResponse,
   type ReportRequest,
 } from './types';
+
+/**
+ * 서버 차단 조회 결과.
+ * - 'blocked': 내가 상대를 차단한 행이 있다.
+ * - 'clear'  : 조회에 성공했고 내가 건 차단이 없다 (데모 상대·환경변수 없음 포함).
+ * - 'unknown': 세션 없음·네트워크·RLS 오류 등으로 확인하지 못했다. 미차단으로 간주하면 안 된다.
+ */
+export type ServerBlockStatus = 'blocked' | 'clear' | 'unknown';
 
 export interface SafetyActionResult {
   ok: boolean;
@@ -43,15 +52,18 @@ async function resolveAuthenticatedUserId(): Promise<string | null> {
 }
 
 /**
- * 실계정 상대(`partnerId`가 UUID)가 현재 사용자에 의해 서버(`public.blocks`)에서 차단된 상태인지 조회한다.
- * 새로고침 후にも 서버 차단 잠금 상태를 복원하기 위해 사용한다.
+ * 실계정 상대(`partnerId`가 UUID)를 현재 사용자가 서버(`public.blocks`)에서 차단했는지 조회한다.
+ * 새로고침 후에도 서버 차단 잠금 상태를 복원하기 위해 사용한다.
+ * - 조회 실패와 미차단을 구분한다 (`'unknown'` vs `'clear'`).
+ * - `blocks_select_own` RLS 때문에 `blocker_id = 나`인 행만 보인다. 상대가 나를 차단한 경우는 여기서 알 수 없고,
+ *   그때의 송수신 거부는 `messages` RLS(`caller_can_use_conversation`, 양방향 blocks)가 맡는다.
  */
-export async function checkIsBlockedOnServer(partnerId: string): Promise<boolean> {
+export async function checkIsBlockedOnServer(partnerId: string): Promise<ServerBlockStatus> {
   const supabase = getSupabase();
-  if (!supabase || !isUuid(partnerId)) return false;
+  if (!supabase || !isUuid(partnerId)) return 'clear';
 
   const blockerId = await resolveAuthenticatedUserId();
-  if (!blockerId) return false;
+  if (!blockerId) return 'unknown';
 
   const { data, error } = await supabase
     .from('blocks')
@@ -60,8 +72,8 @@ export async function checkIsBlockedOnServer(partnerId: string): Promise<boolean
     .eq('blocked_user_id', partnerId)
     .maybeSingle();
 
-  if (error || !data) return false;
-  return true;
+  if (error) return 'unknown';
+  return data ? 'blocked' : 'clear';
 }
 
 /**
@@ -131,21 +143,27 @@ export async function removeServerBlock(blockedUserId: string): Promise<SafetyAc
     };
   }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('blocks')
     .delete()
     .eq('blocker_id', blockerId)
-    .eq('blocked_user_id', blockedUserId);
+    .eq('blocked_user_id', blockedUserId)
+    .select('blocked_user_id');
 
-  if (error) {
-    return {
-      ok: false,
-      mode: 'supabase',
-      error: buildError(
-        error.code || 'BLOCK_DELETE_FAILED',
-        '차단 해제를 서버에 반영하지 못했어요. 잠시 후 다시 시도해 주세요.',
-      ),
-    };
+  const failure: SafetyActionResult = {
+    ok: false,
+    mode: 'supabase',
+    error: buildError(
+      error?.code || 'BLOCK_DELETE_FAILED',
+      '차단 해제를 서버에 반영하지 못했어요. 잠시 후 다시 시도해 주세요.',
+    ),
+  };
+  if (error) return failure;
+
+  // RLS 등으로 삭제 건수가 0이면 해제됐다고 단정하지 않는다. 서버에 이미 차단이 없을 때만 멱등 성공으로 본다.
+  if (!data || data.length === 0) {
+    const status = await checkIsBlockedOnServer(blockedUserId);
+    if (status !== 'clear') return failure;
   }
 
   return { ok: true, mode: 'supabase' };
@@ -180,21 +198,24 @@ export async function submitReport(req: ReportRequest): Promise<SafetyActionResu
   }
 
   const row = toReportInsertRow(req, reporterId);
-  const { error } = await supabase.from('reports').insert(row);
+  const { data, error } = await supabase.from('reports').insert(row).select('id').single();
 
-  if (error) {
+  if (error || !data) {
     return {
       ok: false,
       mode: 'supabase',
       error: buildError(
-        error.code || 'REPORT_INSERT_FAILED',
+        error?.code || 'REPORT_INSERT_FAILED',
         '신고 접수를 완료하지 못했어요. 잠시 후 다시 시도해 주세요.',
       ),
     };
   }
 
+  // API_계약_초안.md: 201 { reportId }
+  const created: ReportCreatedResponse = { reportId: String((data as { id: unknown }).id) };
   return {
     ok: true,
     mode: 'supabase',
+    reportId: created.reportId,
   };
 }

@@ -24,6 +24,12 @@ import {
 let demoReplySeq = 0;
 const nextDemoReplyId = () => `demo-reply-${Date.now()}-${demoReplySeq++}`;
 
+/** 세션 사용자 id 확정 전 Realtime 이벤트를 쌓아 두는 최대 개수 */
+const MAX_QUEUED_ROWS = 50;
+/** 세션 사용자 id 조회 재시도 간격·횟수 */
+const USER_RESOLVE_RETRY_MS = 1500;
+const MAX_USER_RESOLVE_RETRIES = 5;
+
 /**
  * Supabase 공개 환경변수가 설정되어 있는지 확인한다.
  * `src/lib/supabase/client.ts`의 `isSupabaseConfigured`를 재사용해 단일 진입점을 유지한다.
@@ -33,9 +39,21 @@ export function isSupabaseChatConfigured(): boolean {
   return isSupabaseConfigured;
 }
 
+/**
+ * 실계정(Supabase) 대화방 판정 — 화면(`ChatRoom`)과 데이터 소스 팩토리가 같은 기준을 쓰도록 한 곳에 둔다.
+ * 공개 키가 있고 방 id·상대 id가 모두 UUID일 때만 `public.messages`에 쓰고 Realtime을 구독한다.
+ * 그 외에는 화면 문구와 실제 동작이 모두 데모(이 기기 안에서만)다.
+ */
+export function isLiveChatRoom(conversationId: string, partnerId: string): boolean {
+  return isSupabaseConfigured && isUuid(conversationId) && isUuid(partnerId);
+}
+
 export interface ChatDataSourceCallbacks {
-  /** 내 메시지가 서버(또는 데모 타이머)에서 전송 완료 처리되었을 때 */
-  onMessageSent: (messageId: string) => void;
+  /**
+   * 내 메시지가 서버(또는 데모 타이머)에서 전송 완료 처리되었을 때.
+   * 실계정은 INSERT된 서버 행 id를 함께 넘겨, 화면이 낙관적 로컬 id를 서버 id로 바꿀 수 있게 한다.
+   */
+  onMessageSent: (messageId: string, serverId?: string) => void;
   /** 내 메시지 전송이 실패했을 때 */
   onMessageFailed?: (messageId: string) => void;
   /** 상대방 '입력 중' 상태가 바뀔 때 */
@@ -136,12 +154,18 @@ export function createSupabaseChatDataSource(
   const supabase = getSupabase();
   const { conversationId, partnerId } = options;
 
-  if (!supabase || !isUuid(conversationId)) {
+  // 화면(isLiveChatRoom)과 같은 기준: 방 id·상대 id가 모두 UUID일 때만 서버로 간다.
+  if (!supabase || !isUuid(conversationId) || !isUuid(partnerId)) {
     return createDemoChatDataSource(callbacks, partnerId);
   }
 
   let disposed = false;
   let cachedUserId: string | null = isUuid(options.myUserId) ? options.myUserId : null;
+
+  // 세션 사용자 id가 확정되기 전에 도착한 Realtime 이벤트는 버리지 않고 큐에 두었다가 id 확정 후 분류한다.
+  const queuedRows: MessageRow[] = [];
+  let userRetryCount = 0;
+  let userRetryTimer: ReturnType<typeof setTimeout> | null = null;
 
   async function resolveUserId(): Promise<string | null> {
     if (cachedUserId) return cachedUserId;
@@ -155,7 +179,36 @@ export function createSupabaseChatDataSource(
     return null;
   }
 
-  void resolveUserId();
+  function deliver(row: MessageRow, myId: string) {
+    if (disposed) return;
+    const mapped = toChatMessage(row, myId, 'sent');
+    if (!mapped) return;
+    // 내가 보낸 행도 전달한다. 화면이 낙관적 행이 있으면 건너뛰고, 없으면(다른 기기·탭 전송) 서버 id로 붙인다.
+    if (mapped.sender === 'partner') callbacks.onTypingChange(false);
+    callbacks.onIncomingMessage(mapped);
+  }
+
+  function ensureUserThenFlush() {
+    void resolveUserId().then((myId) => {
+      if (disposed) return;
+      if (myId) {
+        while (queuedRows.length > 0) {
+          const row = queuedRows.shift();
+          if (row) deliver(row, myId);
+        }
+        return;
+      }
+      if (userRetryCount < MAX_USER_RESOLVE_RETRIES && !userRetryTimer) {
+        userRetryCount += 1;
+        userRetryTimer = setTimeout(() => {
+          userRetryTimer = null;
+          ensureUserThenFlush();
+        }, USER_RESOLVE_RETRY_MS);
+      }
+    });
+  }
+
+  ensureUserThenFlush();
 
   const channel = supabase
     .channel(`chat:conversation:${conversationId}`)
@@ -184,27 +237,20 @@ export function createSupabaseChatDataSource(
         if (row.soft_delete_state === 'deleted') {
           return;
         }
-        void resolveUserId().then((myId) => {
-          // 세션 사용자 ID가 확정되지 않았거나 이미 해제되었으면 오분류 방지를 위해 건너뛴다.
-          if (disposed || !myId) return;
-          // 내가 보낸 메시지는 낙관적 전송(sendMessage)으로 이미 목록에 있으므로 중복 추가하지 않는다.
-          if (row.sender_id === myId) return;
-          const mapped = toChatMessage(
-            {
-              id: row.id!,
-              conversation_id: row.conversation_id!,
-              sender_id: row.sender_id!,
-              body: row.body!,
-              created_at: row.created_at!,
-              soft_delete_state: row.soft_delete_state,
-            },
-            myId,
-            'sent',
-          );
-          if (!mapped) return;
-          callbacks.onTypingChange(false);
-          callbacks.onIncomingMessage(mapped);
-        });
+        const valid: MessageRow = {
+          id: row.id,
+          conversation_id: row.conversation_id,
+          sender_id: row.sender_id,
+          body: row.body,
+          created_at: row.created_at,
+          soft_delete_state: row.soft_delete_state,
+        };
+        if (cachedUserId) {
+          deliver(valid, cachedUserId);
+          return;
+        }
+        if (queuedRows.length < MAX_QUEUED_ROWS) queuedRows.push(valid);
+        ensureUserThenFlush();
       },
     )
     .subscribe();
@@ -236,7 +282,12 @@ export function createSupabaseChatDataSource(
           body: trimmed,
         };
 
-        const { error } = await supabase.from('messages').insert(insertRow);
+        // 서버 행 id를 돌려받아 화면의 낙관적 로컬 id를 바꾼다 (Realtime·재조회 중복 방지).
+        const { data, error } = await supabase
+          .from('messages')
+          .insert(insertRow)
+          .select('id')
+          .single();
         if (disposed) return;
 
         if (error) {
@@ -244,13 +295,17 @@ export function createSupabaseChatDataSource(
           return;
         }
 
-        callbacks.onMessageSent(messageId);
+        const serverId = (data as { id?: unknown } | null)?.id;
+        callbacks.onMessageSent(messageId, typeof serverId === 'string' ? serverId : undefined);
       })();
     },
 
     dispose() {
       if (disposed) return;
       disposed = true;
+      if (userRetryTimer) clearTimeout(userRetryTimer);
+      userRetryTimer = null;
+      queuedRows.length = 0;
       callbacks.onTypingChange(false);
       void supabase.removeChannel(channel);
     },
@@ -258,23 +313,33 @@ export function createSupabaseChatDataSource(
 }
 
 /**
- * 환경변수 및 `conversationId`(UUID 여부)에 따라 적절한 `ChatDataSource`를 반환하는 통합 팩토리.
- * - `isSupabaseConfigured && isUuid(conversationId)`일 때만 Supabase 데이터 소스를 생성하고,
+ * 환경변수 및 방·상대 id(UUID 여부)에 따라 적절한 `ChatDataSource`를 반환하는 통합 팩토리.
+ * - `isLiveChatRoom(conversationId, partnerId)`일 때만 Supabase 데이터 소스를 생성하고,
  *   그 외에는 항상 `createDemoChatDataSource(callbacks, options.partnerId)`를 반환한다.
  */
 export function createChatDataSource(
   options: SupabaseChatDataSourceOptions,
   callbacks: ChatDataSourceCallbacks,
 ): ChatDataSource {
-  if (isSupabaseConfigured && isUuid(options.conversationId)) {
+  if (isLiveChatRoom(options.conversationId, options.partnerId)) {
     return createSupabaseChatDataSource(options, callbacks);
   }
   return createDemoChatDataSource(callbacks, options.partnerId);
 }
 
+/** 커서: `created_at|id`. 같은 timestamptz가 페이지 경계에 걸려도 id로 순서를 확정한다. */
+const CURSOR_PATTERN = /^([0-9T:.+\-Z]+)\|([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
+
+function parseCursor(cursor: string | null | undefined): { createdAt: string; id: string } | null {
+  if (!cursor) return null;
+  const match = CURSOR_PATTERN.exec(cursor);
+  return match ? { createdAt: match[1], id: match[2] } : null;
+}
+
 /**
  * 특정 대화방(`conversationId`)의 메시지를 커서 기반으로 최신순 페이지 조회한 뒤 화면 시간순(오름차순)으로 반환한다.
  * - 데모 대화방이거나 환경변수가 없으면 `null`을 반환한다.
+ * - 커서는 `(created_at, id)` 쌍이라 같은 시각의 메시지가 페이지 경계에서 빠지지 않는다.
  */
 export async function fetchConversationMessagesPage(
   conversationId: string,
@@ -300,10 +365,16 @@ export async function fetchConversationMessagesPage(
     .eq('conversation_id', conversationId)
     .neq('soft_delete_state', 'deleted')
     .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
     .limit(pageSize + 1);
 
   if (options.cursor) {
-    query = query.lt('created_at', options.cursor);
+    const parsed = parseCursor(options.cursor);
+    // 형식이 틀린 커서는 조회하지 않는다 (필터 문자열 주입 방지).
+    if (!parsed) return null;
+    query = query.or(
+      `created_at.lt.${parsed.createdAt},and(created_at.eq.${parsed.createdAt},id.lt.${parsed.id})`,
+    );
   }
 
   const { data, error } = await query;
@@ -314,7 +385,8 @@ export async function fetchConversationMessagesPage(
   const rows = data as MessageRow[];
   const hasMore = rows.length > pageSize;
   const slice = hasMore ? rows.slice(0, pageSize) : rows;
-  const nextCursor = hasMore ? slice[slice.length - 1]?.created_at ?? null : null;
+  const oldest = slice[slice.length - 1];
+  const nextCursor = hasMore && oldest ? `${oldest.created_at}|${oldest.id}` : null;
 
   // 최신순으로 가져온 페이지를 화면 렌더링용 시간순(오름차순)으로 뒤집고 null을 걸러낸다.
   const items = slice
