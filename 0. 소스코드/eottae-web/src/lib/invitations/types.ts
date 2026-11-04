@@ -38,7 +38,17 @@ export type InvitationThemeId = (typeof INVITATION_THEME_IDS)[number] | string;
 export const INVITATION_LAYOUT_STYLES = ['classic', 'modern', 'minimal'] as const;
 export type InvitationLayoutStyle = (typeof INVITATION_LAYOUT_STYLES)[number];
 
-export const INVITATION_BGM_PRESETS = ['none', 'romantic', 'piano', 'acoustic'] as const;
+export const INVITATION_BGM_PRESETS = [
+  'none',
+  'romantic',
+  'piano',
+  'acoustic',
+  'bach_air',
+  'canon',
+  'thousand_years',
+  'spring_waltz',
+  'custom',
+] as const;
 export type InvitationBgmpreset = (typeof INVITATION_BGM_PRESETS)[number];
 
 export const INVITATION_ANIMATION_EFFECTS = ['petals', 'sparkles', 'snow', 'envelope', 'none'] as const;
@@ -46,7 +56,7 @@ export type AnimationEffectType = (typeof INVITATION_ANIMATION_EFFECTS)[number];
 
 export type SectionFontOption = 'serif' | 'sans' | 'script';
 
-export type PhotoFrameStyle = 'arch' | 'life4cut' | 'polaroid' | 'gold_round' | 'square';
+export type PhotoFrameStyle = 'arch' | 'life4cut' | 'polaroid' | 'gold_round' | 'square' | 'full';
 export type CalendarStyle = 'classic_table' | 'heart_stamp' | 'box_badge' | 'minimal_text';
 export type GalleryViewMode = 'carousel' | 'life4cut_strip' | 'grid3x3';
 

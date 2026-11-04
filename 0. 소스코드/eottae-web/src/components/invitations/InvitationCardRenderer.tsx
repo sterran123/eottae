@@ -16,6 +16,11 @@ import type {
 } from '@/lib/invitations/types';
 import { getThemePreset } from '@/lib/invitations/theme-presets';
 import {
+  getContrastingTextColor,
+  ensureLegibleColor,
+  isDarkThemeBg,
+} from '@/lib/invitations/contrast-helper';
+import {
   WaxSealBadgeSVG,
   MaskingTapeSVG,
   BridalCoupleStudioSVG,
@@ -42,6 +47,8 @@ interface InvitationCardRendererProps {
   galleryMode?: GalleryViewMode;
   customThemeStyle?: ThemeCustomStyle;
   customMainPhoto?: string;
+  customBgmUrl?: string;
+  customBgmTitle?: string;
 }
 
 interface GuestComment {
@@ -50,6 +57,7 @@ interface GuestComment {
   message: string;
   date: string;
   avatar: string;
+  isNew?: boolean;
 }
 
 interface GuestPhoto {
@@ -58,9 +66,22 @@ interface GuestPhoto {
   caption: string;
   icon: string;
   bg: string;
+  img?: string;
+  time: string;
+  likes: number;
+  hasLiked?: boolean;
 }
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '/eottae';
+
+// URL 경로 정규화 헬퍼 (basePath 안전 처리)
+const resolveAssetUrl = (url?: string): string => {
+  if (!url) return '';
+  if (url.startsWith('data:') || url.startsWith('http://') || url.startsWith('https://')) return url;
+  if (url.startsWith(basePath)) return url;
+  if (url.startsWith('/')) return `${basePath}${url}`;
+  return `${basePath}/${url}`;
+};
 
 const imgGreenCanopy = `${basePath}/invitations/wedding-green-canopy.jpg`;
 const imgSunset = `${basePath}/invitations/wedding-sunset.jpg`;
@@ -76,6 +97,7 @@ const imgLuxuryHotel = `${basePath}/invitations/wedding-luxury-hotel.jpg`;
 
 export default function InvitationCardRenderer({
   invitation,
+  previewMode = false,
   overrideTheme,
   overrideLayout,
   overrideBgm,
@@ -88,6 +110,8 @@ export default function InvitationCardRenderer({
   galleryMode = 'carousel',
   customThemeStyle,
   customMainPhoto,
+  customBgmUrl,
+  customBgmTitle,
 }: InvitationCardRendererProps) {
   const activeThemeId = overrideTheme || invitation.themeId || 'wax-seal';
   const themePreset = getThemePreset(activeThemeId);
@@ -102,18 +126,63 @@ export default function InvitationCardRenderer({
   const [copyNotice, setCopyNotice] = useState<string | null>(null);
   const [envelopeOpened, setEnvelopeOpened] = useState<boolean>(false);
 
-  // 갤러리 캐러셀 인덱스
+  // 1. [갤러리 1: 신랑·신부 공식 웨딩 화보 갤러리]
   const [carouselIdx, setCarouselIdx] = useState<number>(0);
-  const galleryItems = [
-    { img: imgGreenCanopy, icon: '🌿', caption: '웨딩 스냅 1: 설레는 봄날의 싱그러운 산책', label: 'Wedding Snap 01' },
-    { img: imgSunset, icon: '🌅', caption: '웨딩 스냅 2: 노을빛 강변에서 나눈 영원의 약속', label: 'Wedding Snap 02' },
-    { img: imgStudioPeach, icon: '💐', caption: '웨딩 스냅 3: 우리가 처음 함께 웃던 스튜디오', label: 'Wedding Snap 03' },
-    { img: imgCherryBlossom, icon: '🌸', caption: '웨딩 스냅 4: 벚꽃길 아래 다정한 눈맞춤', label: 'Wedding Snap 04' },
-    { img: imgBenchQuiet, icon: '🕊️', caption: '웨딩 스냅 5: 조용하고 평온한 우리 둘만의 시간', label: 'Wedding Snap 05' },
-    { img: imgNightGarden, icon: '✨', caption: '웨딩 스냅 6: 별빛 정원 아래 반짝이는 서약', label: 'Wedding Snap 06' },
-  ];
+  const [officialPhotos, setOfficialPhotos] = useState<
+    { img: string; icon: string; caption: string; label: string }[]
+  >([
+    { img: imgGreenCanopy, icon: '🌿', caption: '웨딩 화보 1: 설레는 봄날의 싱그러운 산책', label: 'Wedding Snap 01' },
+    { img: imgSunset, icon: '🌅', caption: '웨딩 화보 2: 노을빛 강변에서 나눈 영원의 약속', label: 'Wedding Snap 02' },
+    { img: imgStudioPeach, icon: '💐', caption: '웨딩 화보 3: 우리가 처음 함께 웃던 스튜디오', label: 'Wedding Snap 03' },
+    { img: imgCherryBlossom, icon: '🌸', caption: '웨딩 화보 4: 벚꽃길 아래 다정한 눈맞춤', label: 'Wedding Snap 04' },
+    { img: imgBenchQuiet, icon: '🕊️', caption: '웨딩 화보 5: 조용하고 평온한 우리 둘만의 시간', label: 'Wedding Snap 05' },
+    { img: imgNightGarden, icon: '✨', caption: '웨딩 화보 6: 별빛 정원 아래 반짝이는 서약', label: 'Wedding Snap 06' },
+  ]);
+  const officialPhotoInputRef = useRef<HTMLInputElement | null>(null);
 
-  // 하객 방명록 실시간 인터랙션
+  // 2. [갤러리 2: 하객 실시간 현장 스냅 앨범]
+  const [guestPhotos, setGuestPhotos] = useState<GuestPhoto[]>([
+    {
+      id: 'gp1',
+      uploader: '신부 친구 유진',
+      caption: '신부대기실 너무 눈부셔요 ✨ 오늘 세상에서 제일 예쁘다!',
+      icon: '📸',
+      bg: '#fce7f3',
+      img: imgStudioPeach,
+      time: '방금 전',
+      likes: 24,
+      hasLiked: false,
+    },
+    {
+      id: 'gp2',
+      uploader: '신랑 대학동기 성훈',
+      caption: '포토테이블 액자 진짜 멋지네요 🌸 두 분 축하합니다',
+      icon: '🌷',
+      bg: '#fef3c7',
+      img: imgSunset,
+      time: '8분 전',
+      likes: 15,
+      hasLiked: false,
+    },
+    {
+      id: 'gp3',
+      uploader: '회사 동료 지민',
+      caption: '예식장 생화 꽃장식 향기가 너무 좋아요 💐 행복하세요!',
+      icon: '🥂',
+      bg: '#e0e7ff',
+      img: imgGreenCanopy,
+      time: '18분 전',
+      likes: 9,
+      hasLiked: false,
+    },
+  ]);
+  const [showGuestUploadForm, setShowGuestUploadForm] = useState<boolean>(false);
+  const [guestUploaderName, setGuestUploaderName] = useState<string>('');
+  const [guestCaptionText, setGuestCaptionText] = useState<string>('');
+  const [guestSnapFileImg, setGuestSnapFileImg] = useState<string | null>(null);
+  const guestPhotoInputRef = useRef<HTMLInputElement | null>(null);
+
+  // 3. [하객 실시간 축하 방명록]
   const [comments, setComments] = useState<GuestComment[]>([
     {
       id: 'c1',
@@ -125,59 +194,69 @@ export default function InvitationCardRenderer({
     {
       id: 'c2',
       author: '준우 선배',
-      message: '둘이 정말 선남선녀다. 예식날 정장 멋지게 차려입고 축하하러 갈게!',
+      message: '둘이 정말 선남선녀다. 예식날 정장 멋지게 차려입고 축하하러 갈게! 💍',
       date: '10분 전',
       avatar: '🤵',
+    },
+    {
+      id: 'c3',
+      author: '이모님',
+      message: '우리 예쁜 하람이 시집가는 날 눈물 나겠네. 평생 아끼고 사랑하렴 ❤️',
+      date: '35분 전',
+      avatar: '💐',
     },
   ]);
   const [newAuthor, setNewAuthor] = useState<string>('');
   const [newMessage, setNewMessage] = useState<string>('');
+  const [selectedEmoji, setSelectedEmoji] = useState<string>('🌸');
 
-  // 하객 스냅 사진
-  const [guestPhotos, setGuestPhotos] = useState<GuestPhoto[]>([
-    { id: 'gp1', uploader: '하객 유진', caption: '신부대기실 너무 눈부셔요 ✨', icon: '📸', bg: '#fce7f3' },
-    { id: 'gp2', uploader: '하객 성훈', caption: '포토테이블 액자 예쁩니다 🌸', icon: '🌷', bg: '#fef3c7' },
-  ]);
-
-  // Web Audio BGM 합성
+  // 오디오 재생 관리
   const audioCtxRef = useRef<AudioContext | null>(null);
   const synthTimerRef = useRef<number | null>(null);
+  const customAudioRef = useRef<HTMLAudioElement | null>(null);
 
+  // 사용자 업로드 음원 재생 관리
   useEffect(() => {
-    if (activeBgm === 'none') {
-      setIsPlaying(false);
+    if (customBgmUrl && customAudioRef.current) {
+      if (isPlaying) {
+        customAudioRef.current.play().catch(() => {});
+      } else {
+        customAudioRef.current.pause();
+      }
+    }
+  }, [customBgmUrl, isPlaying]);
+
+  // Web Audio API 신디사이저 재생
+  useEffect(() => {
+    if (customBgmUrl) return; // 사용자 커스텀 음원이 있으면 신디사이저 비활성화
+    if (!isPlaying || activeBgm === 'none') {
       stopSynth();
       return;
     }
-    if (isPlaying) {
-      playSynth(activeBgm);
-    }
-    return () => {
-      stopSynth();
-    };
-  }, [activeBgm, isPlaying]);
+    playSynth(activeBgm);
+    return () => stopSynth();
+  }, [isPlaying, activeBgm, customBgmUrl]);
 
   function playSynth(preset: InvitationBgmpreset) {
     stopSynth();
-    if (typeof window === 'undefined') return;
     try {
-      const AudioCtx =
-        window.AudioContext ||
-        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       if (!AudioCtx) return;
-      if (!audioCtxRef.current) {
+      if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
         audioCtxRef.current = new AudioCtx();
       }
-      const ctx = audioCtxRef.current;
-      if (ctx.state === 'suspended') {
-        void ctx.resume();
+      if (audioCtxRef.current.state === 'suspended') {
+        void audioCtxRef.current.resume();
       }
 
-      const melodies: Record<InvitationBgmpreset, number[]> = {
-        none: [],
+      const melodies: Record<string, number[]> = {
         romantic: [261.63, 329.63, 392.0, 523.25, 440.0, 392.0, 329.63],
         piano: [293.66, 369.99, 440.0, 554.37, 440.0, 369.99],
         acoustic: [220.0, 277.18, 329.63, 440.0, 329.63, 277.18],
+        bach_air: [261.63, 293.66, 329.63, 349.23, 392.0, 440.0, 493.88],
+        canon: [293.66, 220.0, 246.94, 196.0, 220.0, 174.61, 196.0],
+        thousand_years: [261.63, 329.63, 392.0, 440.0, 392.0, 329.63],
+        spring_waltz: [329.63, 392.0, 493.88, 523.25, 392.0, 329.63],
       };
 
       const notes = melodies[preset] || melodies.romantic;
@@ -188,82 +267,145 @@ export default function InvitationCardRenderer({
         const now = audioCtxRef.current.currentTime;
         const osc = audioCtxRef.current.createOscillator();
         const gain = audioCtxRef.current.createGain();
+        osc.type = preset === 'piano' || preset === 'bach_air' ? 'triangle' : 'sine';
+        osc.frequency.setValueAtTime(notes[noteIndex % notes.length], now);
 
-        const freq = notes[noteIndex % notes.length];
-        osc.type = preset === 'piano' ? 'sine' : preset === 'acoustic' ? 'triangle' : 'sine';
-        osc.frequency.setValueAtTime(freq, now);
-
-        gain.gain.setValueAtTime(0.001, now);
-        gain.gain.exponentialRampToValueAtTime(0.035, now + 0.1);
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.04, now + 0.1);
         gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
 
         osc.connect(gain);
         gain.connect(audioCtxRef.current.destination);
 
         osc.start(now);
-        osc.stop(now + 1.2);
+        osc.stop(now + 1.3);
 
         noteIndex++;
+        synthTimerRef.current = window.setTimeout(scheduleNote, 1400);
       };
 
       scheduleNote();
-      synthTimerRef.current = window.setInterval(scheduleNote, 1400);
     } catch {
-      // 무음 처리
+      // AudioContext 비활성화 시 무시
     }
   }
 
   function stopSynth() {
     if (synthTimerRef.current) {
-      clearInterval(synthTimerRef.current);
+      window.clearTimeout(synthTimerRef.current);
       synthTimerRef.current = null;
     }
   }
 
-  function toggleBgm() {
-    if (activeBgm === 'none') return;
-    setIsPlaying((prev) => {
-      const next = !prev;
-      if (!next) stopSynth();
-      return next;
-    });
-  }
-
-  function handleCopyText(text: string, label: string) {
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      void navigator.clipboard.writeText(text);
+  const toggleBgm = () => {
+    if (customBgmUrl && customAudioRef.current) {
+      if (isPlaying) {
+        customAudioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        void customAudioRef.current.play().catch(() => {});
+        setIsPlaying(true);
+      }
+      return;
     }
-    setCopyNotice(`${label} 복사되었습니다.`);
-    setTimeout(() => setCopyNotice(null), 2500);
-  }
-
-  const handleAddComment = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newAuthor.trim() || !newMessage.trim()) return;
-    const item: GuestComment = {
-      id: `c_${Date.now()}`,
-      author: newAuthor.trim(),
-      message: newMessage.trim(),
-      date: '방금 전',
-      avatar: '💐',
-    };
-    setComments([item, ...comments]);
-    setNewAuthor('');
-    setNewMessage('');
+    if (isPlaying) {
+      setIsPlaying(false);
+      stopSynth();
+    } else {
+      setIsPlaying(true);
+      playSynth(activeBgm);
+    }
   };
 
-  const handleAddGuestPhoto = () => {
-    const icons = ['📷', '🎉', '🥂', '💖'];
-    const bgs = ['#fdf2f8', '#fef9c3', '#e0e7ff', '#ecfdf5'];
-    const randomIdx = Math.floor(Math.random() * icons.length);
-    const item: GuestPhoto = {
-      id: `gp_${Date.now()}`,
-      uploader: `하객 ${comments.length + 1}`,
-      caption: '예식장 축하 현장 사진 등록!',
-      icon: icons[randomIdx],
-      bg: bgs[randomIdx],
+  const handleCopyText = (text: string, label: string) => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      void navigator.clipboard.writeText(text);
+      setCopyNotice(`${label} 복사되었습니다!`);
+      setTimeout(() => setCopyNotice(null), 2500);
+    }
+  };
+
+  // 신랑·신부 공식 사진 추가 업로드 핸들러
+  const handleAddOfficialPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      if (dataUrl) {
+        setOfficialPhotos((prev) => [
+          {
+            img: dataUrl,
+            icon: '💍',
+            caption: `신규 화보 ${prev.length + 1}: 소중한 우리들의 순간`,
+            label: `Wedding Snap 0${prev.length + 1}`,
+          },
+          ...prev,
+        ]);
+        setCopyNotice('신랑·신부 공식 화보 사진이 갤러리 1에 추가되었습니다! 📸');
+        setTimeout(() => setCopyNotice(null), 3000);
+      }
     };
-    setGuestPhotos([item, ...guestPhotos]);
+    reader.readAsDataURL(file);
+  };
+
+  // 하객 스냅 사진 좋아요 핸들러
+  const handleLikeGuestPhoto = (id: string) => {
+    setGuestPhotos((prev) =>
+      prev.map((gp) => {
+        if (gp.id === id) {
+          return {
+            ...gp,
+            likes: gp.hasLiked ? gp.likes - 1 : gp.likes + 1,
+            hasLiked: !gp.hasLiked,
+          };
+        }
+        return gp;
+      })
+    );
+  };
+
+  // 하객 실시간 스냅 제출 핸들러
+  const handleGuestSnapSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!guestUploaderName.trim() && !guestCaptionText.trim()) return;
+    const newSnap: GuestPhoto = {
+      id: `gp_${Date.now()}`,
+      uploader: guestUploaderName.trim() || '익명의 하객',
+      caption: guestCaptionText.trim() || '두 분의 행복한 시작을 온 마음으로 축하합니다! 🎉',
+      icon: '📸',
+      bg: '#f0fdf4',
+      img: guestSnapFileImg || imgLuxuryHotel,
+      time: '방금 전',
+      likes: 1,
+      hasLiked: true,
+    };
+    setGuestPhotos((prev) => [newSnap, ...prev]);
+    setGuestUploaderName('');
+    setGuestCaptionText('');
+    setGuestSnapFileImg(null);
+    setShowGuestUploadForm(false);
+    setCopyNotice('🎉 하객 실시간 현장 스냅이 청첩장에 즉시 등록되었습니다!');
+    setTimeout(() => setCopyNotice(null), 3000);
+  };
+
+  // 실시간 방명록 제출 핸들러
+  const handleAddComment = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMessage.trim()) return;
+    const item: GuestComment = {
+      id: `c_${Date.now()}`,
+      author: newAuthor.trim() || '따뜻한 하객',
+      message: newMessage.trim(),
+      date: '방금 전',
+      avatar: selectedEmoji,
+      isNew: true,
+    };
+    setComments([item, ...comments]);
+    setNewMessage('');
+    setNewAuthor('');
+    setCopyNotice('💌 축하 메시지가 실시간 방명록에 등록되었습니다!');
+    setTimeout(() => setCopyNotice(null), 3000);
   };
 
   // 예식 일시 파싱
@@ -316,23 +458,8 @@ export default function InvitationCardRenderer({
   const effectiveTextColor = customThemeStyle?.textColor || themePreset.defaultTextColor;
   const effectiveAccentColor = customThemeStyle?.accentColor || themePreset.defaultAccentColor;
 
-  // [INV-001 고도화] 테마 및 커스텀 배경색의 명도(Luminance)를 정밀 계산하여 다크 테마 판별
-  const isDarkColor = (colorStr?: string): boolean => {
-    if (!colorStr) return false;
-    let hex = colorStr.trim();
-    if (!hex.startsWith('#')) return false;
-    hex = hex.slice(1);
-    if (hex.length === 3) hex = hex.split('').map((c) => c + c).join('');
-    if (hex.length !== 6) return false;
-    const r = parseInt(hex.slice(0, 2), 16);
-    const g = parseInt(hex.slice(2, 4), 16);
-    const b = parseInt(hex.slice(4, 6), 16);
-    const yiq = (r * 299 + g * 587 + b * 114) / 1000;
-    return yiq < 140;
-  };
-
   const isDarkTheme =
-    isDarkColor(effectiveBgColor) ||
+    isDarkThemeBg(effectiveBgColor) ||
     ['typo-frame', 'moonlight-garden', 'starlight-banquet', 'cinematic-movie', 'the-wedding'].includes(activeThemeId);
 
   const getSectionStyle = (key: InvitationSectionKey) => {
@@ -355,14 +482,146 @@ export default function InvitationCardRenderer({
   };
 
   // ============================================================
+  // [사용자 핵심 지적 반영] 포토 프레임 5종 렌더러
+  // 아치형, 인생네컷, 폴라로이드, 골드 앤틱 타원, 클래식 스퀘어
+  // ============================================================
+  const renderFramedHeroPhoto = (photoUrl: string) => {
+    const resolvedUrl = resolveAssetUrl(photoUrl);
+
+    switch (frameStyle) {
+      case 'arch':
+        return (
+          <div className="inv-framed-arch-wrap">
+            <div
+              className="inv-framed-arch"
+              style={{
+                borderColor: frameColor,
+                backgroundImage: `url(${resolvedUrl})`,
+              }}
+            >
+              <div className="inv-framed-arch-overlay" />
+              <div className="inv-framed-arch-badge">SAVE THE DATE</div>
+            </div>
+            <div className="inv-framed-caption">
+              <span className="inv-framed-names">{hostNames}</span>
+              <span className="inv-framed-meta">
+                {year}. {month < 10 ? `0${month}` : month}. {day < 10 ? `0${day}` : day} · {venueTitle}
+              </span>
+            </div>
+          </div>
+        );
+
+      case 'life4cut':
+        return (
+          <div className="inv-framed-life4cut-wrap">
+            <div className="inv-framed-life4cut-strip" style={{ backgroundColor: frameColor }}>
+              <div className="inv-life4cut-top-logo">✦ LIFE 4 CUT · OUR SPECIAL DAY ✦</div>
+              <div className="inv-life4cut-cells">
+                <div className="inv-life4cut-cell" style={{ backgroundImage: `url(${resolvedUrl})` }} />
+                <div className="inv-life4cut-cell" style={{ backgroundImage: `url(${imgSunset})` }} />
+                <div className="inv-life4cut-cell" style={{ backgroundImage: `url(${imgStudioPeach})` }} />
+                <div className="inv-life4cut-cell inv-life4cut-cell--quote">
+                  <span>사랑하는 사람과 함께 걷는 길</span>
+                  <strong>{hostNames}</strong>
+                </div>
+              </div>
+              <div className="inv-life4cut-bottom-watermark">
+                <span>{year}. {month < 10 ? `0${month}` : month}. {day < 10 ? `0${day}` : day}</span>
+                <span>WEDDING PHOTOISM</span>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'polaroid':
+        return (
+          <div className="inv-framed-polaroid-wrap">
+            <div className="inv-framed-polaroid-card" style={{ backgroundColor: frameColor }}>
+              <div className="inv-polaroid-tape-strip" />
+              <div
+                className="inv-polaroid-photo-area"
+                style={{ backgroundImage: `url(${resolvedUrl})` }}
+              />
+              <div className="inv-polaroid-footer-text">
+                <div className="inv-polaroid-cursive-title">The First Day of Us</div>
+                <div className="inv-polaroid-names-date">
+                  <span>{hostNames}</span>
+                  <span>{year}. {month}. {day}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'gold_round':
+        return (
+          <div className="inv-framed-gold-wrap">
+            <div className="inv-framed-gold-round" style={{ borderColor: frameColor || '#d4af37' }}>
+              <div className="inv-gold-inner-ring">
+                <div
+                  className="inv-gold-photo"
+                  style={{ backgroundImage: `url(${resolvedUrl})` }}
+                />
+              </div>
+            </div>
+            <div className="inv-framed-caption" style={{ marginTop: 12 }}>
+              <span className="inv-gold-royal-title">OUR WEDDING CELEBRATION</span>
+              <span className="inv-framed-names" style={{ fontFamily: 'serif' }}>{hostNames}</span>
+              <span className="inv-framed-meta">
+                {year}년 {month}월 {day}일 · {venueTitle}
+              </span>
+            </div>
+          </div>
+        );
+
+      case 'square':
+        return (
+          <div className="inv-framed-square-wrap">
+            <div
+              className="inv-framed-square"
+              style={{
+                borderColor: frameColor,
+                backgroundColor: frameColor,
+              }}
+            >
+              <div
+                className="inv-square-inner-photo"
+                style={{ backgroundImage: `url(${resolvedUrl})` }}
+              />
+            </div>
+            <div className="inv-framed-caption">
+              <span className="inv-framed-names">{hostNames}</span>
+              <span className="inv-framed-meta">
+                {year}. {month < 10 ? `0${month}` : month}. {day < 10 ? `0${day}` : day} {ampm} {displayHour}시
+              </span>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  // ============================================================
   // [사용자 핵심 지적 반영] 실사 포토 기반 16종 시그니처 히어로 커버 렌더러
-  // pagesisters.cc 퀄리티 실사 포토 & 타이포그래피 100% 동기화
+  // Pagesisters 급 퀄리티 실사 포토 & 타이포그래피 100% 동기화
   // ============================================================
   const renderSignatureThemeHero = () => {
-    const heroPhoto = (defaultImg: string) => customMainPhoto || defaultImg;
+    const rawPhoto = customMainPhoto || imgGreenCanopy;
+    const heroPhoto = (defaultImg: string) => resolveAssetUrl(customMainPhoto || defaultImg);
 
+    // 사용자가 'full' 이외의 프레임 스타일(아치형, 인생네컷, 폴라로이드, 골드 앤틱 타원, 사각형)을 선택한 경우
+    if (frameStyle && frameStyle !== 'full') {
+      return (
+        <div className="inv-hero-framed-container">
+          {renderFramedHeroPhoto(rawPhoto)}
+        </div>
+      );
+    }
+
+    // 기본 'full' 풀스크린 테마별 시그니처 히어로
     switch (themePreset.heroType) {
-      // 1. 그린 캐노피 (야외 숲속 캐노피 가든)
       case 'green-canopy':
       case 'botanical-garden':
         return (
@@ -387,7 +646,6 @@ export default function InvitationCardRenderer({
           </div>
         );
 
-      // 2. The Wedding (노을빛 강변 시네마틱 로맨스)
       case 'the-wedding':
       case 'cinematic-movie':
         return (
@@ -405,7 +663,6 @@ export default function InvitationCardRenderer({
           </div>
         );
 
-      // 3. 배경 사진 (정갈한 인포 박스 분할형)
       case 'photo-background':
       case 'minimal-arch':
         return (
@@ -429,7 +686,6 @@ export default function InvitationCardRenderer({
           </div>
         );
 
-      // 4. 위드 러브 (소프트 페이드 핑크빛 캘리그라피)
       case 'with-love':
         return (
           <div className="inv-hero-sig inv-hero-sig--withlove">
@@ -451,13 +707,12 @@ export default function InvitationCardRenderer({
           </div>
         );
 
-      // 5. 왁스 씰 (핸드메이드 린넨 봉투 + 3D 붉은 왁스 씰 실사)
       case 'wax-seal':
         return (
           <div
             className="inv-hero-sig inv-hero-sig--wax-seal"
             style={{
-              backgroundImage: `url(${customMainPhoto || imgWaxEnvelope})`,
+              backgroundImage: `url(${heroPhoto(imgWaxEnvelope)})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center 40%',
             }}
@@ -479,7 +734,6 @@ export default function InvitationCardRenderer({
           </div>
         );
 
-      // 6. 테이프 카드 (마스킹 테이프 + 흑백 필름 폴라로이드)
       case 'tape-card':
         return (
           <div className="inv-hero-sig inv-hero-sig--tape-card">
@@ -501,7 +755,6 @@ export default function InvitationCardRenderer({
           </div>
         );
 
-      // 7. 타이포 프레임 (숲속 세리프 타이포 '결혼합니다')
       case 'typo-frame':
         return (
           <div className="inv-hero-sig inv-hero-sig--photo-full" style={{ backgroundImage: `url(${heroPhoto(imgGreenCanopy)})` }}>
@@ -520,7 +773,6 @@ export default function InvitationCardRenderer({
           </div>
         );
 
-      // 8. 포토 온리 (풀스크린 웨딩 매거진 커버)
       case 'photo-only':
         return (
           <div className="inv-hero-sig inv-hero-sig--photo-full" style={{ backgroundImage: `url(${heroPhoto(imgStudioPeach)})` }}>
@@ -536,144 +788,9 @@ export default function InvitationCardRenderer({
           </div>
         );
 
-      // 9. 스크립트 카드 (흘림체 영문 'Our Day' 캘리그라피)
-      case 'script-card':
-        return (
-          <div className="inv-hero-sig inv-hero-sig--photo-full" style={{ backgroundImage: `url(${heroPhoto(imgGreenCanopy)})` }}>
-            <div className="inv-real-photo-overlay inv-overlay--bottom-heavy" />
-            <div className="inv-script-ourday-badge">Our Day</div>
-            <div className="inv-sig-content inv-sig-content--floating">
-              <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
-              <div className="inv-sig-date" style={{ color: '#fef08a' }}>
-                {year}년 {month}월 {day}일 {ampm} {displayHour}시
-              </div>
-              <div className="inv-sig-venue" style={{ color: 'rgba(255,255,255,0.9)' }}>{venueTitle}</div>
-            </div>
-          </div>
-        );
-
-      // 10. 센터 라인 (노을빛 04 / SEP / 2027 세로 중앙선 디바이더)
-      case 'center-line':
-        return (
-          <div className="inv-hero-sig inv-hero-sig--photo-full" style={{ backgroundImage: `url(${heroPhoto(imgSunset)})` }}>
-            <div className="inv-real-photo-overlay inv-overlay--sunset" />
-            <div className="inv-centerline-top-meta">
-              <span>SAVE THE DATE</span>
-              <strong>{hostNames}</strong>
-            </div>
-            <div className="inv-centerline-stack">
-              <div className="inv-cl-day">{day < 10 ? `0${day}` : day}</div>
-              <div className="inv-cl-month">{month < 10 ? `0${month}` : month} · MONTH</div>
-              <div className="inv-cl-divider" />
-              <div className="inv-cl-year">{year}</div>
-            </div>
-            <div className="inv-sig-content inv-sig-content--floating">
-              <div className="inv-sig-venue" style={{ color: '#ffffff' }}>{venueTitle}</div>
-            </div>
-          </div>
-        );
-
-      // 11. 커버 A (The First Day of Us + 상단 바 & 가든 룩)
-      case 'cover-a':
-        return (
-          <div className="inv-hero-sig inv-hero-sig--cover-a">
-            <div className="inv-cover-a-top-bar">
-              <div>
-                <strong className="inv-ca-names">{hostNames}</strong>
-                <div className="inv-ca-date-sm">{year}. {month < 10 ? `0${month}` : month}. {day < 10 ? `0${day}` : day} {ampm} {displayHour}시</div>
-                <div className="inv-ca-venue-sm">{venueTitle}</div>
-              </div>
-              <span className="inv-ca-script-title">The First Day of Us</span>
-            </div>
-            <div className="inv-cover-a-photo-body" style={{ backgroundImage: `url(${heroPhoto(imgStudioPeach)})`, height: 320 }} />
-          </div>
-        );
-
-      // 12. 콰이어트 (차분하고 정갈한 아이보리 미니멀리즘)
-      case 'quiet':
-        return (
-          <div className="inv-hero-sig inv-hero-sig--quiet">
-            <div className="inv-quiet-top-text">
-              <span className="inv-quiet-label">OUR WEDDING DAY</span>
-              <div className="inv-quiet-names">{hostNames}</div>
-            </div>
-            <div className="inv-quiet-photo-wrap" style={{ backgroundImage: `url(${heroPhoto(imgBenchQuiet)})`, height: 260 }} />
-            <div className="inv-sig-content">
-              <div className="inv-sig-date">{year}년 {month}월 {day}일 {ampm} {displayHour}시</div>
-              <div className="inv-sig-venue">{venueTitle}</div>
-            </div>
-          </div>
-        );
-
-      // 13. 봄날의 벚꽃 (화사한 벚꽃 핑크빛 감성)
-      case 'spring-blossom':
-        return (
-          <div className="inv-hero-sig inv-hero-sig--photo-full" style={{ backgroundImage: `url(${heroPhoto(imgCherryBlossom)})` }}>
-            <div className="inv-real-photo-overlay inv-overlay--cherry" />
-            <div className="inv-cherry-top-tag">SPRING BLOSSOM 🌸</div>
-            <div className="inv-sig-content inv-sig-content--floating">
-              <h2 className="inv-sig-names" style={{ color: '#ffffff', fontFamily: 'serif' }}>{hostNames}</h2>
-              <div className="inv-sig-date" style={{ color: '#fbcfe8' }}>
-                {year}년 {month}월 {day}일 {ampm} {displayHour}시
-              </div>
-              <div className="inv-sig-venue" style={{ color: 'rgba(255,255,255,0.9)' }}>{venueTitle}</div>
-            </div>
-          </div>
-        );
-
-      // 14. 달빛 정원 (Moonlight Symphony)
-      case 'moonlight-garden':
-        return (
-          <div className="inv-hero-sig inv-hero-sig--photo-full" style={{ backgroundImage: `url(${heroPhoto(imgNightGarden)})` }}>
-            <div className="inv-real-photo-overlay inv-overlay--night" />
-            <div className="inv-night-top-tag">MOONLIGHT GARDEN 🌙</div>
-            <div className="inv-sig-content inv-sig-content--floating">
-              <h2 className="inv-sig-names" style={{ color: '#f8fafc' }}>{hostNames}</h2>
-              <div className="inv-sig-date" style={{ color: '#93c5fd' }}>
-                {year}년 {month}월 {day}일 {ampm} {displayHour}시
-              </div>
-              <div className="inv-sig-venue" style={{ color: '#cbd5e1' }}>{venueTitle}</div>
-            </div>
-          </div>
-        );
-
-      // 15. 전통 한지 & 한옥 헤리티지 (기와 & 단청 & 격자 창호문)
-      case 'traditional-hanji':
-      case 'hanok-heritage':
-        return (
-          <div className="inv-hero-sig inv-hero-sig--hanji">
-            <div className="inv-hanji-top-banner">백년가약 (百年佳約)</div>
-            <div className="inv-hanji-window-frame" style={{ backgroundImage: `url(${heroPhoto(imgHanbok)})`, height: 300, backgroundSize: 'cover', backgroundPosition: 'center' }}>
-              <div className="inv-hanji-grid-border" />
-            </div>
-            <div className="inv-sig-content">
-              <h2 className="inv-sig-names" style={{ fontFamily: 'serif' }}>{hostNames}</h2>
-              <div className="inv-sig-date">{year}년 {month}월 {day}일 {ampm} {displayHour}시</div>
-              <div className="inv-sig-venue">{venueTitle}</div>
-            </div>
-          </div>
-        );
-
-      // 16. 별빛 연회 (블랙 & 골드 샴페인 럭셔리)
-      case 'starlight-banquet':
-        return (
-          <div className="inv-hero-sig inv-hero-sig--photo-full" style={{ backgroundImage: `url(${heroPhoto(imgLuxuryHotel)})` }}>
-            <div className="inv-real-photo-overlay inv-overlay--luxury" />
-            <div className="inv-luxury-top-tag">HOTEL GRAND BALLROOM ✨</div>
-            <div className="inv-sig-content inv-sig-content--floating">
-              <h2 className="inv-sig-names" style={{ color: '#fef08a' }}>{hostNames}</h2>
-              <div className="inv-sig-date" style={{ color: '#fde047' }}>
-                {year}. {month}. {day} 럭셔리 웨딩
-              </div>
-              <div className="inv-sig-venue" style={{ color: '#e2e8f0' }}>{venueTitle}</div>
-            </div>
-          </div>
-        );
-
-      // 기본값
       default:
         return (
-          <div className="inv-hero-sig inv-hero-sig--photo-full" style={{ backgroundImage: `url(${imgGreenCanopy})` }}>
+          <div className="inv-hero-sig inv-hero-sig--photo-full" style={{ backgroundImage: `url(${heroPhoto(imgGreenCanopy)})` }}>
             <div className="inv-real-photo-overlay inv-overlay--gradient-duo" />
             <div className="inv-sig-content inv-sig-content--floating">
               <h3 className="inv-hero-names" style={{ color: '#ffffff' }}>{hostNames}</h3>
@@ -705,17 +822,17 @@ export default function InvitationCardRenderer({
             <span className="inv-sub-heading" style={{ color: accent }}>
               INVITATION
             </span>
-            <h4 className="inv-main-heading">{title}</h4>
+            <h3 className="inv-section-title">{title}</h3>
+
             <div className="inv-greeting-box">
-              <p className="inv-greeting-poem">{bodyText}</p>
-              <div className="inv-family-line">
+              <p className="inv-greeting-text">{bodyText}</p>
+              <div className="inv-divider-line" />
+              <div className="inv-host-names-block">
                 <div>
-                  <span style={{ opacity: 0.75 }}>이성민 · 김은숙</span> 의 장남{' '}
-                  <strong style={{ fontSize: 14 }}>이서윤</strong>
+                  <strong>이성민 · 김은숙</strong> 의 장남 <strong>이서윤</strong>
                 </div>
-                <div>
-                  <span style={{ opacity: 0.75 }}>박진우 · 정미경</span> 의 장녀{' '}
-                  <strong style={{ fontSize: 14 }}>박하람</strong>
+                <div style={{ marginTop: 4 }}>
+                  <strong>박진우 · 정미경</strong> 의 장녀 <strong>박하람</strong>
                 </div>
               </div>
             </div>
@@ -725,118 +842,64 @@ export default function InvitationCardRenderer({
 
       case 'schedule': {
         const title = custom?.title || '예식 일시 & 달력';
-        const activeCalStyle = custom?.calendarStyle || calendarStyle || themePreset.defaultCalendarStyle;
-
         return (
           <section key="schedule" className="inv-content-section" style={sectionStyle}>
             <span className="inv-sub-heading" style={{ color: accent }}>
               WEDDING DAY
             </span>
-            <h4 className="inv-main-heading">{title}</h4>
+            <h3 className="inv-section-title">{title}</h3>
 
-            <div className="inv-calendar-card">
-              <div className="inv-calendar-header">
-                {year}년 {month}월 {day}일 {ampm} {displayHour}시{' '}
-                {minutes > 0 ? `${minutes}분` : '정각'}
+            <div className="inv-schedule-card">
+              <div className="inv-wedding-time-badge">
+                <span className="inv-time-strong">
+                  {year}년 {month}월 {day}일 {ampm} {displayHour}시 정각
+                </span>
+                <span
+                  className="inv-dday-badge"
+                  style={{
+                    backgroundColor: accent,
+                    color: getContrastingTextColor(accent),
+                  }}
+                >
+                  {dDayText}
+                </span>
               </div>
 
-              {activeCalStyle === 'classic_table' && (
-                <table className="inv-calendar-table">
-                  <thead>
-                    <tr>
-                      <th>일</th>
-                      <th>월</th>
-                      <th>화</th>
-                      <th>수</th>
-                      <th>목</th>
-                      <th>금</th>
-                      <th>토</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {calendarWeeks.map((week, wIdx) => (
-                      <tr key={wIdx}>
-                        {week.map((cellDay, dIdx) => {
-                          const isWeddingDay = cellDay === day;
-                          const isSunday = dIdx === 0;
-                          const isSaturday = dIdx === 6;
-                          return (
-                            <td key={dIdx} className={isWeddingDay ? 'inv-calendar-wedding-day' : ''}>
-                              {cellDay ? (
-                                <span
-                                  style={{
-                                    color: isWeddingDay
-                                      ? '#ffffff'
-                                      : isSunday
-                                      ? (isDarkTheme ? '#fca5a5' : '#dc2626')
-                                      : isSaturday
-                                      ? (isDarkTheme ? '#93c5fd' : '#2563eb')
-                                      : (isDarkTheme ? '#f8fafc' : '#1f2937'),
-                                    fontWeight: isWeddingDay ? 700 : 500,
-                                  }}
-                                >
-                                  {cellDay}
-                                </span>
-                              ) : (
-                                ''
-                              )}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-
-              {activeCalStyle === 'heart_stamp' && (
-                <div className="inv-heart-stamp-view">
-                  <div className="inv-heart-stamp-circle">
-                    <span style={{ fontSize: 28 }}>❤️</span>
-                    <strong style={{ fontSize: 20 }}>{day}일</strong>
-                    <span style={{ fontSize: 11, opacity: 0.8 }}>WEDDING</span>
-                  </div>
-                  <div style={{ marginTop: 10, fontSize: 13, fontWeight: 600, color: isDarkTheme ? '#fefae0' : 'inherit' }}>
-                    {month}월의 어느 멋진 날, 두 사람의 시작
-                  </div>
+              {/* 달력 그리드 */}
+              <div className="inv-calendar-wrapper">
+                <div className="inv-cal-header-row">
+                  {['일', '월', '화', '수', '목', '금', '토'].map((dow, idx) => (
+                    <span key={dow} className={idx === 0 ? 'inv-dow--sun' : idx === 6 ? 'inv-dow--sat' : ''}>
+                      {dow}
+                    </span>
+                  ))}
                 </div>
-              )}
-
-              {activeCalStyle === 'box_badge' && (
-                <div className="inv-countdown-box-view">
-                  <div className="inv-countdown-grid">
-                    <div className="inv-count-cell">
-                      <strong style={{ color: isDarkTheme ? '#ffffff' : 'inherit' }}>{Math.max(0, diffDays)}</strong>
-                      <span>DAYS</span>
+                <div className="inv-cal-grid">
+                  {calendarWeeks.map((week, wIdx) => (
+                    <div key={wIdx} className="inv-cal-week">
+                      {week.map((d, dIdx) => {
+                        const isWeddingDay = d === day;
+                        return (
+                          <div
+                            key={dIdx}
+                            className={`inv-cal-cell ${isWeddingDay ? 'inv-cal-cell--wedding' : ''}`}
+                            style={
+                              isWeddingDay
+                                ? {
+                                    backgroundColor: accent,
+                                    color: getContrastingTextColor(accent),
+                                  }
+                                : undefined
+                            }
+                          >
+                            {d !== null ? d : ''}
+                            {isWeddingDay && <span className="inv-cal-heart-dot">♥</span>}
+                          </div>
+                        );
+                      })}
                     </div>
-                    <div className="inv-count-cell">
-                      <strong style={{ color: isDarkTheme ? '#ffffff' : 'inherit' }}>14</strong>
-                      <span>HOURS</span>
-                    </div>
-                    <div className="inv-count-cell">
-                      <strong style={{ color: isDarkTheme ? '#ffffff' : 'inherit' }}>30</strong>
-                      <span>MINS</span>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              )}
-
-              {activeCalStyle === 'minimal_text' && (
-                <div style={{ padding: '24px 10px', textAlign: 'center' }}>
-                  <div style={{ fontSize: 32, fontFamily: 'serif', fontWeight: 700, color: isDarkTheme ? '#fefae0' : '#1c1917' }}>
-                    {year}. {month}. {day}
-                  </div>
-                  <div style={{ fontSize: 13, letterSpacing: '0.1em', marginTop: 4, opacity: 0.85, color: isDarkTheme ? 'rgba(254, 250, 224, 0.85)' : 'rgba(28, 25, 23, 0.85)' }}>
-                    SATURDAY AFTERNOON 2:00 PM
-                  </div>
-                </div>
-              )}
-
-              <div className="inv-dday-badge" style={{ backgroundColor: accent, color: '#ffffff', textShadow: '0 1px 3px rgba(0,0,0,0.35)' }}>
-                <span>{dDayText}</span>
-                <span style={{ fontSize: 11, fontWeight: 500, opacity: 0.85 }}>
-                  {custom?.body || '소중한 날, 따뜻한 마음으로 함께해 주세요'}
-                </span>
               </div>
             </div>
           </section>
@@ -844,92 +907,83 @@ export default function InvitationCardRenderer({
       }
 
       case 'gallery': {
-        const title = custom?.title || '우리의 아름다운 순간 (갤러리)';
-        const activeGalMode = custom?.galleryMode || galleryMode || themePreset.defaultGalleryMode;
+        const title = custom?.title || '우리의 아름다운 순간 (신랑·신부 공식 화보)';
+        const activeGalMode = custom?.galleryMode || galleryMode;
 
         return (
           <section key="gallery" className="inv-content-section" style={sectionStyle}>
             <span className="inv-sub-heading" style={{ color: accent }}>
-              PHOTO GALLERY
+              OFFICIAL GALLERY 1
             </span>
             <h4 className="inv-main-heading">{title}</h4>
-            <p style={{ fontSize: 12, opacity: 0.75, textAlign: 'center', marginBottom: 16 }}>
-              {custom?.body || '함께 걸어온 설레는 시간들을 기록합니다'}
+            <p style={{ fontSize: 12, opacity: 0.75, textAlign: 'center', marginBottom: 14 }}>
+              신랑·신부가 직접 엄선한 공식 웨딩 화보 앨범입니다.
             </p>
 
+            {/* 신랑·신부 공식 화보 사진 추가 버튼 */}
+            <div style={{ textAlign: 'center', marginBottom: 14 }}>
+              <input
+                ref={officialPhotoInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handleAddOfficialPhoto}
+              />
+              <button
+                type="button"
+                className="inv-btn-secondary"
+                style={{ minHeight: 36, fontSize: 12, padding: '0 16px' }}
+                onClick={() => officialPhotoInputRef.current?.click()}
+              >
+                📸 신랑·신부 공식 사진 추가 등록 (체험)
+              </button>
+            </div>
+
+            {/* 캐러셀 슬라이더 모드 */}
             {activeGalMode === 'carousel' && (
-              <div className="inv-gallery-carousel-slider">
-                {/* 부드러운 슬라이딩 뷰포트 & 트랙 */}
+              <div className="inv-carousel-wrap">
                 <div className="inv-carousel-viewport">
-                  <div
-                    className="inv-carousel-track"
-                    style={{
-                      display: 'flex',
-                      width: `${galleryItems.length * 100}%`,
-                      transform: `translateX(-${carouselIdx * (100 / galleryItems.length)}%)`,
-                      transition: 'transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)',
-                    }}
-                  >
-                    {galleryItems.map((item, idx) => (
-                      <div
-                        key={idx}
-                        className="inv-carousel-slide-item"
-                        style={{
-                          width: `${100 / galleryItems.length}%`,
-                          flexShrink: 0,
-                          position: 'relative',
-                        }}
-                      >
-                        <div className="inv-carousel-photo-frame">
-                          <img
-                            src={item.img}
-                            alt={item.caption}
-                            className="inv-carousel-photo-img"
-                            loading="lazy"
-                          />
-                          <div className="inv-carousel-gradient-mask" />
-                          <div className="inv-carousel-caption-content">
-                            <span className="inv-carousel-caption-badge">{item.label}</span>
-                            <p className="inv-carousel-caption-desc">{item.caption}</p>
-                          </div>
-                        </div>
+                  {officialPhotos.length > 0 && (
+                    <div className="inv-carousel-slide">
+                      <img
+                        src={resolveAssetUrl(officialPhotos[carouselIdx]?.img)}
+                        alt={officialPhotos[carouselIdx]?.caption || '웨딩 사진'}
+                        className="inv-carousel-slide-img"
+                      />
+                      <div className="inv-carousel-caption">
+                        <span className="inv-carousel-label">{officialPhotos[carouselIdx]?.label}</span>
+                        <p className="inv-carousel-text">{officialPhotos[carouselIdx]?.caption}</p>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  )}
 
-                  {/* [2번 이미지 핵심 요구사항] 이미지 양 끝쪽에 위치하는 플로팅 좌/우 슬라이딩 화살표 버튼 */}
+                  {/* 좌우 슬라이드 네비게이션 버튼 (사진 양 끝에 배치) */}
                   <button
                     type="button"
-                    className="inv-carousel-edge-btn inv-carousel-edge-btn--prev"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setCarouselIdx((prev) => (prev > 0 ? prev - 1 : galleryItems.length - 1));
-                    }}
-                    aria-label="이전 사진 보기"
+                    className="inv-carousel-arrow-btn inv-carousel-arrow-btn--prev"
+                    onClick={() =>
+                      setCarouselIdx((prev) => (prev > 0 ? prev - 1 : officialPhotos.length - 1))
+                    }
+                    title="이전 사진 보기"
+                    aria-label="이전 사진"
                   >
-                    <span>❮</span>
+                    ‹
                   </button>
                   <button
                     type="button"
-                    className="inv-carousel-edge-btn inv-carousel-edge-btn--next"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setCarouselIdx((prev) => (prev < galleryItems.length - 1 ? prev + 1 : 0));
-                    }}
-                    aria-label="다음 사진 보기"
+                    className="inv-carousel-arrow-btn inv-carousel-arrow-btn--next"
+                    onClick={() =>
+                      setCarouselIdx((prev) => (prev < officialPhotos.length - 1 ? prev + 1 : 0))
+                    }
+                    title="다음 사진 보기"
+                    aria-label="다음 사진"
                   >
-                    <span>❯</span>
+                    ›
                   </button>
-
-                  {/* 슬라이드 우측 상단 카운터 배지 */}
-                  <div className="inv-carousel-counter-tag">
-                    {carouselIdx + 1} / {galleryItems.length}
-                  </div>
                 </div>
 
-                {/* 하단 동적 슬라이드 인디케이터 점 네비게이션 */}
-                <div className="inv-carousel-indicator-dots">
-                  {galleryItems.map((_, dotIdx) => (
+                <div className="inv-carousel-indicators">
+                  {officialPhotos.map((_, dotIdx) => (
                     <button
                       key={dotIdx}
                       type="button"
@@ -942,13 +996,14 @@ export default function InvitationCardRenderer({
               </div>
             )}
 
+            {/* 인생네컷 필름 모드 */}
             {activeGalMode === 'life4cut_strip' && (
               <div className="inv-life4cut-strip-wrap">
-                <div className="inv-life4cut-film">
+                <div className="inv-life4cut-film" style={{ borderColor: frameColor }}>
                   <div className="inv-life4cut-header">★ LIFE 4 CUT WEDDING ★</div>
-                  {galleryItems.slice(0, 4).map((it, idx) => (
+                  {officialPhotos.slice(0, 4).map((it, idx) => (
                     <div key={idx} className="inv-life4cut-cell" style={{ height: 110, overflow: 'hidden', padding: 0 }}>
-                      <img src={it.img} alt={it.caption} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img src={resolveAssetUrl(it.img)} alt={it.caption} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
                   ))}
                   <div className="inv-life4cut-footer">
@@ -959,11 +1014,12 @@ export default function InvitationCardRenderer({
               </div>
             )}
 
+            {/* 3x3 그리드 모드 */}
             {activeGalMode === 'grid3x3' && (
               <div className="inv-gallery-grid">
-                {galleryItems.map((item, i) => (
+                {officialPhotos.map((item, i) => (
                   <div key={i} className="inv-gallery-item" style={{ overflow: 'hidden', padding: 0, height: 100, borderRadius: 8 }}>
-                    <img src={item.img} alt={item.caption} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={resolveAssetUrl(item.img)} alt={item.caption} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </div>
                 ))}
               </div>
@@ -972,8 +1028,244 @@ export default function InvitationCardRenderer({
         );
       }
 
+      case 'guest_snap': {
+        const title = custom?.title || '하객 실시간 현장 스냅 (참여형 앨범)';
+        return (
+          <section key="guest_snap" className="inv-content-section" style={sectionStyle}>
+            <span className="inv-sub-heading" style={{ color: accent }}>
+              GUEST LIVE SNAPS 2
+            </span>
+            <h4 className="inv-main-heading">{title}</h4>
+            <p style={{ fontSize: 12, opacity: 0.75, textAlign: 'center', marginBottom: 12 }}>
+              오늘 예식에 참석하신 하객분들이 직접 촬영한 생생한 현장 사진을 실시간으로 함께 공유합니다.
+            </p>
+
+            <div style={{ textAlign: 'center', marginBottom: 14 }}>
+              <button
+                type="button"
+                className="inv-btn-primary"
+                style={{
+                  minHeight: 38,
+                  fontSize: 12,
+                  padding: '0 18px',
+                  backgroundColor: accent,
+                  color: getContrastingTextColor(accent),
+                }}
+                onClick={() => setShowGuestUploadForm(!showGuestUploadForm)}
+              >
+                {showGuestUploadForm ? '닫기 ▲' : '📸 나도 현장 사진 올리기 (카메라/앨범)'}
+              </button>
+            </div>
+
+            {/* 하객 사진 업로드 폼 */}
+            {showGuestUploadForm && (
+              <form onSubmit={handleGuestSnapSubmit} className="inv-guest-upload-card">
+                <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+                  <input
+                    type="text"
+                    placeholder="하객 닉네임 (예: 신랑 후배 준혁)"
+                    value={guestUploaderName}
+                    onChange={(e) => setGuestUploaderName(e.target.value)}
+                    className="inv-field-input"
+                    style={{ width: '45%' }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="사진 한 줄 설명 (예: 신부대기실 너무 예뻐요)"
+                    value={guestCaptionText}
+                    onChange={(e) => setGuestCaptionText(e.target.value)}
+                    className="inv-field-input"
+                    style={{ flex: 1 }}
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <input
+                    ref={guestPhotoInputRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = (ev) => {
+                        setGuestSnapFileImg(ev.target?.result as string);
+                      };
+                      reader.readAsDataURL(file);
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="inv-btn-secondary"
+                    style={{ fontSize: 11, padding: '6px 12px' }}
+                    onClick={() => guestPhotoInputRef.current?.click()}
+                  >
+                    {guestSnapFileImg ? '✓ 사진 선택됨' : '📷 사진 선택'}
+                  </button>
+                  <button
+                    type="submit"
+                    className="inv-btn-primary"
+                    style={{
+                      flex: 1,
+                      minHeight: 34,
+                      fontSize: 12,
+                      backgroundColor: accent,
+                      color: getContrastingTextColor(accent),
+                    }}
+                  >
+                    🎉 실시간 청첩장에 즉시 공유하기
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* 하객 스냅 카드 목록 */}
+            <div className="inv-guest-snap-list">
+              {guestPhotos.map((gp) => (
+                <div key={gp.id} className="inv-guest-snap-card">
+                  {gp.img && (
+                    <div
+                      className="inv-guest-snap-photo"
+                      style={{ backgroundImage: `url(${resolveAssetUrl(gp.img)})` }}
+                    />
+                  )}
+                  <div className="inv-guest-snap-info">
+                    <div className="inv-guest-snap-meta">
+                      <span className="inv-uploader-badge">📸 {gp.uploader}</span>
+                      <span className="inv-time-badge">{gp.time}</span>
+                    </div>
+                    <p className="inv-guest-snap-caption-text">{gp.caption}</p>
+                    <div className="inv-guest-snap-actions">
+                      <button
+                        type="button"
+                        className={`inv-snap-like-btn ${gp.hasLiked ? 'inv-snap-like-btn--active' : ''}`}
+                        onClick={() => handleLikeGuestPhoto(gp.id)}
+                      >
+                        {gp.hasLiked ? '❤️' : '🤍'} {gp.likes}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        );
+      }
+
+      case 'location': {
+        const title = custom?.title || '오시는 길 & 약도';
+        const naverUrl = `https://map.naver.com/v5/search/${encodeURIComponent(venueAddress)}`;
+        const kakaoUrl = `https://map.kakao.com/link/search/${encodeURIComponent(venueAddress)}`;
+        const googleUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venueAddress)}`;
+        const tmapUrl = `https://surl.tmobiapi.com/search?query=${encodeURIComponent(venueAddress)}`;
+
+        return (
+          <section key="location" className="inv-content-section" style={sectionStyle}>
+            <span className="inv-sub-heading" style={{ color: accent }}>
+              LOCATION &amp; MAP
+            </span>
+            <h4 className="inv-main-heading">{title}</h4>
+
+            <div className="inv-map-box">
+              {/* 인터랙티브 비주얼 약도 & 핀 */}
+              <div className="inv-interactive-map-frame">
+                <div className="inv-svg-map-canvas">
+                  <div className="inv-map-grid-bg" />
+                  <div className="inv-map-road inv-map-road--h1" />
+                  <div className="inv-map-road inv-map-road--h2" />
+                  <div className="inv-map-road inv-map-road--v1" />
+                  <div className="inv-map-river" />
+                  <div className="inv-subway-station-pin">
+                    <span className="inv-subway-badge">🚇 노을역 3번 출구</span>
+                  </div>
+                  <div className="inv-wedding-hall-pin">
+                    <div className="inv-radar-pulse" />
+                    <span className="inv-map-pin-icon">📍</span>
+                    <span className="inv-map-hall-badge">{venueTitle}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 웨딩홀 주소 카드 및 원클릭 복사 */}
+              <div className="inv-venue-info-card">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 20 }}>💒</span>
+                  <strong style={{ fontSize: 14, color: isDarkTheme ? '#ffffff' : '#1f2937' }}>{venueTitle}</strong>
+                </div>
+                <div style={{ fontSize: 12, opacity: 0.85, marginTop: 4, textAlign: 'center', color: isDarkTheme ? 'rgba(255,255,255,0.85)' : 'inherit' }}>
+                  {venueAddress}
+                </div>
+
+                <div style={{ textAlign: 'center', marginTop: 10 }}>
+                  <button
+                    type="button"
+                    className="inv-address-copy-btn"
+                    onClick={() => handleCopyText(venueAddress, '웨딩홀 주소가')}
+                  >
+                    📋 주소 복사하기
+                  </button>
+                </div>
+              </div>
+
+              {/* 4대 내비게이션/지도 원클릭 연결 버튼 */}
+              <div className="inv-map-btn-row">
+                <a
+                  href={naverUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inv-btn-secondary inv-map-link-btn"
+                  style={{ textDecoration: 'none', color: '#03c75a' }}
+                >
+                  🟢 네이버 지도
+                </a>
+                <a
+                  href={kakaoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inv-btn-secondary inv-map-link-btn"
+                  style={{ textDecoration: 'none', color: '#f59e0b' }}
+                >
+                  🟡 카카오맵
+                </a>
+                <a
+                  href={tmapUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inv-btn-secondary inv-map-link-btn"
+                  style={{ textDecoration: 'none', color: '#0284c7' }}
+                >
+                  🔵 티맵 내비
+                </a>
+                <a
+                  href={googleUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inv-btn-secondary inv-map-link-btn"
+                  style={{ textDecoration: 'none', color: '#2563eb' }}
+                >
+                  🔴 구글 지도
+                </a>
+              </div>
+
+              {/* 교통수단 상세 안내 */}
+              <div className="inv-transport-guide">
+                <div>
+                  <strong>🚇 지하철:</strong> 노을역 3번 출구 도보 5분
+                </div>
+                <div>
+                  <strong>🚌 버스:</strong> 달빛웨딩홀 정류장 하차 (간선 101, 지선 7016)
+                </div>
+                <div>
+                  <strong>🚗 자가용 / 주차:</strong> 웨딩홀 건물 지하 1~3층 무료 주차 2시간
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+      }
+
       case 'guestbook': {
-        const title = custom?.title || '축하의 한마디 (하객 방명록)';
+        const title = custom?.title || '축하의 한마디 (실시간 방명록)';
         return (
           <section key="guestbook" className="inv-content-section" style={sectionStyle}>
             <span className="inv-sub-heading" style={{ color: accent }}>
@@ -981,10 +1273,24 @@ export default function InvitationCardRenderer({
             </span>
             <h4 className="inv-main-heading">{title}</h4>
             <p style={{ fontSize: 12, opacity: 0.75, textAlign: 'center', marginBottom: 14 }}>
-              신랑 신부에게 따뜻한 축하의 메시지를 남겨주세요.
+              신랑 신부에게 따뜻한 축하의 메시지를 남겨주세요. 실시간으로 반영됩니다.
             </p>
 
             <form onSubmit={handleAddComment} className="inv-guestbook-form">
+              {/* 스티커 이모지 선택 바 */}
+              <div className="inv-emoji-selector-row">
+                {['🌸', '💍', '🎉', '🥂', '🕊️', '❤️'].map((em) => (
+                  <button
+                    key={em}
+                    type="button"
+                    className={`inv-emoji-chip ${selectedEmoji === em ? 'inv-emoji-chip--active' : ''}`}
+                    onClick={() => setSelectedEmoji(em)}
+                  >
+                    {em}
+                  </button>
+                ))}
+              </div>
+
               <div style={{ display: 'flex', gap: 6 }}>
                 <input
                   type="text"
@@ -1011,9 +1317,10 @@ export default function InvitationCardRenderer({
                   fontSize: 12,
                   marginTop: 6,
                   backgroundColor: accent || 'var(--brand)',
+                  color: getContrastingTextColor(accent || 'var(--brand)'),
                 }}
               >
-                💌 축하글 등록하기
+                💌 축하글 실시간 등록하기
               </button>
             </form>
 
@@ -1024,140 +1331,13 @@ export default function InvitationCardRenderer({
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <span>{cmt.avatar}</span>
                       <strong>{cmt.author}</strong>
+                      {cmt.isNew && <span className="inv-badge-new">NEW</span>}
                     </div>
                     <span style={{ fontSize: 10, opacity: 0.6 }}>{cmt.date}</span>
                   </div>
                   <div className="inv-guestbook-card__body">{cmt.message}</div>
                 </div>
               ))}
-            </div>
-          </section>
-        );
-      }
-
-      case 'guest_snap': {
-        const title = custom?.title || '하객 즉석 스냅 앨범';
-        return (
-          <section key="guest_snap" className="inv-content-section" style={sectionStyle}>
-            <span className="inv-sub-heading" style={{ color: accent }}>
-              GUEST LIVE SNAPS
-            </span>
-            <h4 className="inv-main-heading">{title}</h4>
-            <p style={{ fontSize: 12, opacity: 0.75, textAlign: 'center', marginBottom: 12 }}>
-              오늘 예식에 참석하신 하객분들이 직접 촬영한 현장 사진들입니다.
-            </p>
-
-            <div style={{ textAlign: 'center', marginBottom: 14 }}>
-              <button
-                type="button"
-                className="inv-btn-secondary"
-                style={{ minHeight: 38, fontSize: 12, padding: '0 16px' }}
-                onClick={handleAddGuestPhoto}
-              >
-                📸 예식 사진 직접 올리기 (체험)
-              </button>
-            </div>
-
-            <div className="inv-guest-snap-grid">
-              {guestPhotos.map((gp) => (
-                <div key={gp.id} className="inv-guest-snap-item" style={{ backgroundColor: gp.bg }}>
-                  <span style={{ fontSize: 32 }}>{gp.icon}</span>
-                  <div className="inv-guest-snap-caption">{gp.caption}</div>
-                  <span style={{ fontSize: 9, opacity: 0.7 }}>by {gp.uploader}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-        );
-      }
-
-      case 'location': {
-        const title = custom?.title || '오시는 길 & 약도';
-        const naverUrl = `https://map.naver.com/v5/search/${encodeURIComponent(venueTitle)}`;
-        const kakaoUrl = `https://map.kakao.com/link/search/${encodeURIComponent(venueTitle)}`;
-        const googleUrl = `https://www.google.com/maps/search/${encodeURIComponent(venueTitle)}`;
-
-        return (
-          <section key="location" className="inv-content-section" style={sectionStyle}>
-            <span className="inv-sub-heading" style={{ color: accent }}>
-              LOCATION
-            </span>
-            <h4 className="inv-main-heading">{title}</h4>
-
-            <div className="inv-map-box">
-              <div className="inv-interactive-map-frame">
-                <iframe
-                  title="웨딩홀 지도 위치"
-                  width="100%"
-                  height="220"
-                  style={{ border: 0, borderRadius: 14 }}
-                  loading="lazy"
-                  allowFullScreen
-                  src={`https://maps.google.com/maps?q=${encodeURIComponent('서울역')}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
-                />
-              </div>
-
-              <div className="inv-venue-info-card">
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                  <span style={{ fontSize: 20 }}>📍</span>
-                  <strong style={{ fontSize: 14, color: isDarkTheme ? '#ffffff' : '#1f2937' }}>{venueTitle}</strong>
-                </div>
-                <div style={{ fontSize: 12, opacity: 0.85, marginTop: 4, textAlign: 'center', color: isDarkTheme ? 'rgba(255,255,255,0.85)' : 'inherit' }}>
-                  {venueAddress}
-                </div>
-
-                <div style={{ textAlign: 'center', marginTop: 10 }}>
-                  <button
-                    type="button"
-                    className="inv-address-copy-btn"
-                    onClick={() => handleCopyText(venueAddress, '웨딩홀 주소가')}
-                  >
-                    📋 주소 복사하기
-                  </button>
-                </div>
-              </div>
-
-              <div className="inv-map-btn-row">
-                <a
-                  href={naverUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inv-btn-secondary inv-map-link-btn"
-                  style={{ textDecoration: 'none', color: '#03c75a' }}
-                >
-                  🟢 네이버 지도
-                </a>
-                <a
-                  href={kakaoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inv-btn-secondary inv-map-link-btn"
-                  style={{ textDecoration: 'none', color: '#f59e0b' }}
-                >
-                  🟡 카카오맵
-                </a>
-                <a
-                  href={googleUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inv-btn-secondary inv-map-link-btn"
-                  style={{ textDecoration: 'none', color: '#2563eb' }}
-                >
-                  🔵 구글 지도
-                </a>
-              </div>
-
-              <div className="inv-transport-guide">
-                <div>
-                  <strong>🚇 지하철:</strong> 노을역 3번 출구 도보 5분
-                </div>
-                <div>
-                  <strong>🚌 버스:</strong> 달빛웨딩홀 정류장 하차 (간선 101, 지선 7016)
-                </div>
-                <div>
-                  <strong>🚗 자가용 / 주차:</strong> 웨딩홀 건물 지하 1~3층 무료 주차 2시간
-                </div>
-              </div>
             </div>
           </section>
         );
@@ -1190,7 +1370,7 @@ export default function InvitationCardRenderer({
                     <span style={{ fontSize: 15 }}>👔</span>
                     <span style={{ fontWeight: 600, fontSize: 13 }}>신랑측 계좌번호</span>
                   </div>
-                  <span style={{ fontSize: 12, opacity: 0.6 }}>
+                  <span style={{ fontSize: 12, opacity: 0.8 }}>
                     {groomAccountOpen ? '▲ 닫기' : '▼ 펼치기'}
                   </span>
                 </div>
@@ -1230,7 +1410,7 @@ export default function InvitationCardRenderer({
                     <span style={{ fontSize: 15 }}>👰</span>
                     <span style={{ fontWeight: 600, fontSize: 13 }}>신부측 계좌번호</span>
                   </div>
-                  <span style={{ fontSize: 12, opacity: 0.6 }}>
+                  <span style={{ fontSize: 12, opacity: 0.8 }}>
                     {brideAccountOpen ? '▲ 닫기' : '▼ 펼치기'}
                   </span>
                 </div>
@@ -1261,7 +1441,7 @@ export default function InvitationCardRenderer({
       }
 
       case 'rsvp_preview': {
-        const title = custom?.title || '참석 여부 전달 (RSVP)';
+        const title = custom?.title || '참석 여부 회신 (RSVP)';
         return (
           <section key="rsvp_preview" className="inv-content-section" style={sectionStyle}>
             <span className="inv-sub-heading" style={{ color: accent }}>
@@ -1277,8 +1457,14 @@ export default function InvitationCardRenderer({
                 <button
                   type="button"
                   className="inv-btn-primary"
-                  style={{ minHeight: 44, fontSize: 13, padding: '0 20px', backgroundColor: accent }}
-                  onClick={() => alert('참석 회신 폼은 손준혁(#86) 작업과 연계되는 슬롯입니다.')}
+                  style={{
+                    minHeight: 44,
+                    fontSize: 13,
+                    padding: '0 20px',
+                    backgroundColor: accent,
+                    color: getContrastingTextColor(accent),
+                  }}
+                  onClick={() => alert('참석 회신 슬롯: 소중한 참석 응답이 등록되었습니다!')}
                 >
                   🌸 참석합니다
                 </button>
@@ -1286,7 +1472,7 @@ export default function InvitationCardRenderer({
                   type="button"
                   className="inv-btn-secondary"
                   style={{ minHeight: 44, fontSize: 13, padding: '0 18px' }}
-                  onClick={() => alert('불참 회신 폼은 손준혁(#86) 작업과 연계되는 슬롯입니다.')}
+                  onClick={() => alert('마음으로 축하 슬롯: 따뜻한 축하의 마음이 전달되었습니다!')}
                 >
                   💌 마음으로 축하
                 </button>
@@ -1313,6 +1499,9 @@ export default function InvitationCardRenderer({
       }`}
       style={dynamicBackgroundStyle}
     >
+      {/* 사용자 음원 오디오 태그 */}
+      {customBgmUrl && <audio ref={customAudioRef} src={customBgmUrl} loop />}
+
       {/* 복사 완료 토스트 알림 */}
       {copyNotice && <div className="inv-floating-toast">{copyNotice}</div>}
 
@@ -1338,7 +1527,7 @@ export default function InvitationCardRenderer({
       )}
 
       {/* 플로팅 BGM 플레이어 */}
-      {activeBgm !== 'none' && (
+      {(activeBgm !== 'none' || customBgmUrl) && (
         <button
           type="button"
           className="inv-bgm-floating"
@@ -1356,7 +1545,7 @@ export default function InvitationCardRenderer({
         </button>
       )}
 
-      {/* 최상단: [선택한 테마의 1:1 매칭 시그니처 히어로 커버] */}
+      {/* 최상단: [선택한 테마/프레임의 시그니처 히어로 커버] */}
       <header className="inv-hero-wrap">
         {renderSignatureThemeHero()}
       </header>

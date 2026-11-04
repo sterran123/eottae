@@ -51,14 +51,14 @@ const DEFAULT_SECTIONS: InvitationSectionKey[] = [
 ];
 
 const SECTION_LABELS: Record<InvitationSectionKey, string> = {
-  greeting: '모시는 글 (인사말)',
-  schedule: '일시 & D-Day 캘린더',
-  gallery: '웨딩 갤러리 (캐러셀/인생네컷)',
-  guestbook: '하객 축하 방명록',
-  guest_snap: '하객 즉석 스냅 앨범',
-  location: '오시는 길 & 가상 지도',
-  account: '마음 전하실 곳 (계좌)',
-  rsvp_preview: '참석 여부 회신 (RSVP)',
+  greeting: '1. 모시는 글 (소중한 분들을 초대합니다)',
+  schedule: '2. 예식 일시 & 달력 (D-Day)',
+  gallery: '3. 갤러리 1: 신랑·신부 웨딩 갤러리 (공식 화보)',
+  guest_snap: '4. 갤러리 2: 하객 실시간 현장 스냅 (참여형 앨범)',
+  location: '5. 오시는 길 & 약도 (인터랙티브 지도)',
+  guestbook: '6. 실시간 축하 방명록 (하객 덕담)',
+  account: '7. 마음 전하실 곳 (계좌번호 안내)',
+  rsvp_preview: '8. 참석 여부 회신 (RSVP)',
 };
 
 export default function InvitationEditor({ initialId }: InvitationEditorProps) {
@@ -384,8 +384,8 @@ export default function InvitationEditor({ initialId }: InvitationEditorProps) {
               <div className="inv-section-order-list">
                 {sectionOrder.map((secKey, idx) => (
                   <div key={secKey} className="inv-section-order-item">
-                    <span>
-                      <strong>{idx + 1}.</strong> {SECTION_LABELS[secKey]}
+                    <span className="inv-section-name">
+                      {SECTION_LABELS[secKey]}
                     </span>
                     <div className="inv-section-order-btns">
                       <button
