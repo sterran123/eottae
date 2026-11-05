@@ -4,6 +4,7 @@
 //      → 통과/수정 필요/오류 상태 + 코멘트. 머지 판단은 지금처럼 규칙 봇(pr_review_bot.mjs)이 한다.
 //   2. 이슈 진행 — 머지된 PR의 대기 표시 코멘트(issue-progress.yml) → 머지 커밋 체크아웃 → tools/issue_progress.mjs
 //   3. @grok — 팀원(write 권한 이상 협력자)이 이슈·PR 댓글에 쓴 `@grok 요청` → tools/grok_mention.mjs가 답 댓글 (Devin 멘션 대체)
+//      요청을 집는 순간 👀 반응과 접수 댓글(<!-- grok-ack:id -->, 예상 소요 포함)을 먼저 남긴다 — 답은 몇 분 뒤.
 // PC가 꺼져 있으면 기다린다 — AI 리뷰 게이트는 열리지 않는다(fail-closed).
 //
 // 사용 (전용 클론의 main에서 — 실행 스크립트는 이 클론의 것을 쓰고, 주기마다 origin/main으로 빨리감기한다):
@@ -75,6 +76,21 @@ const gh = async (path) => {
   });
   if (!r.ok) throw new Error(`GitHub ${r.status} ${path}`);
   return r.json();
+};
+const ghWrite = async (path, body) => {
+  const r = await fetch(`https://api.github.com/${path}`, {
+    method: "POST",
+    headers: {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${token}`,
+      "User-Agent": "eottae-grok-worker",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(60_000),
+  });
+  if (!r.ok) throw new Error(`GitHub ${r.status} POST ${path}`);
+  return r.status === 204 ? null : r.json();
 };
 const git = (...args) =>
   execFileSync("git", ["-C", ROOT, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], timeout: 5 * 60_000 });
@@ -216,6 +232,31 @@ async function waitingMentions() {
   const team = new Map();
   for (const c of asks) if (!team.has(c.user?.login)) team.set(c.user?.login, await isTeam(c.user));
   const pending = asks.filter((c) => team.get(c.user?.login));
+  // 확인 신호 — 요청을 집는 순간 👀와 접수 댓글(<!-- grok-ack:id -->)을 남긴다.
+  // Grok 답변은 체크아웃·실행 때문에 몇 분 뒤라, 이 표시가 "봇이 봤다"를 바로 알린다.
+  // 마커로 걸러 한 번만 단다 — 재시도·다음 주기 재집회에서 다시 달지 않는다.
+  const acked = new Set(
+    recentComments.flatMap((c) => [...String(c.body).matchAll(/<!-- grok-ack:(\d+) -->/g)].map((m) => m[1])),
+  );
+  for (const [i, c] of pending.entries()) {
+    if (acked.has(String(c.id))) continue;
+    const eta = i === 0 ? "보통 3~8분" : `앞에 대기 ${i}건 — 대략 ${3 + i * 6}~${8 + i * 6}분`;
+    if (process.env.DRY_RUN === "2") {
+      console.log(`[DRY] 확인 신호: 댓글 ${c.id}에 👀·접수 댓글(예상 ${eta})`);
+      continue;
+    }
+    try {
+      await ghWrite(`repos/${REPO}/issues/comments/${c.id}/reactions`, { content: "eyes" });
+      await ghWrite(`repos/${REPO}/issues/${Number(String(c.issue_url).split("/").pop())}/comments`, {
+        body:
+          `<!-- grok-ack:${c.id} -->\n` +
+          `🤖 **@​grok이 확인했어요** — @${c.user?.login} 님의 요청을 접수했습니다. 답변까지 ${eta} 걸려요.`,
+      });
+      console.log(`확인 신호: 댓글 ${c.id} 접수 표시(예상 ${eta})`);
+    } catch (e) {
+      console.error(`확인 신호 실패(댓글 ${c.id}) — 다음 주기에 다시: ${e.message}`);
+    }
+  }
   // 시작점 이동: 남은 요청이 있으면 가장 오래된 요청 시각(그 답도 범위 안에 들어온다), 없으면 마지막으로 본 댓글 시각
   const last = recentComments.at(-1)?.created_at;
   const next = pending[0]?.created_at ?? last;
@@ -383,9 +424,10 @@ process.on("exit", unlock);
 process.on("SIGINT", () => process.exit(130));
 
 const QUEUES = [
+  // @grok을 가장 먼저 본다 — 멘션은 사람이 기다리는 대화라, 확인 신호(👀·접수 댓글)가 리뷰 작업 뒤로 밀리지 않게
+  { name: "@grok", find: waitingMentions, run: mention, show: (j) => `#${j.number} 댓글 ${j.comment.id}` },
   { name: "AI 리뷰", find: waitingReviews, run: review, show: (j) => `PR #${j.pr.number} @ ${j.pr.head.sha.slice(0, 7)}${j.force ? " (재리뷰)" : ""}` },
   { name: "이슈 진행", find: waitingProgress, run: progress, show: (j) => `PR #${j.pr.number} 머지 ${j.pr.merge_commit_sha.slice(0, 7)}` },
-  { name: "@grok", find: waitingMentions, run: mention, show: (j) => `#${j.number} 댓글 ${j.comment.id}` },
 ];
 for (;;) {
   for (const q of QUEUES) {
