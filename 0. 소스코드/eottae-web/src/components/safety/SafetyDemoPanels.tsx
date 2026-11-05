@@ -1,57 +1,121 @@
 'use client';
 
-// 내 신고 내역과 신고 관리 큐 데모. 기록은 이 기기에만 있다.
+// 내 신고 내역과 신고 관리 큐 데모/실계정.
+// - 데모 계정: 이 기기 로컬 스토리지에만 저장/표시.
+// - 실계정 (UUID): `public.reports` 조회(내 신고) 및 `public.list_reports()` RPC(신고 큐: operator 권한 검사 및 42501 거부).
 
 import { useEffect, useId, useState } from 'react';
 import { formatDemoWhen } from '@/lib/demo/demo-adult';
 import { nicknameForDemoId } from '@/lib/chat/demo-data';
 import { listDemoReports, subscribeSafetyDemo } from '@/lib/safety/demo-store';
 import { REPORT_CATEGORIES, type ReportHistoryItem } from '@/lib/safety/types';
+import { isUuid } from '@/lib/chat/types';
+import { fetchMyReports, fetchReportQueue, type ReportQueueResult } from '@/lib/safety/safety-service';
 
 function categoryLabel(item: ReportHistoryItem): string {
   return REPORT_CATEGORIES.find((category) => category.id === item.category)?.label ?? '기타';
 }
 
 function ReportItem({ item, showReporter }: { item: ReportHistoryItem; showReporter: boolean }) {
+  const isDemo = !isUuid(item.id);
+  const reporterLabel = isUuid(item.reporterId)
+    ? `회원 (${item.reporterId.slice(0, 8)})`
+    : nicknameForDemoId(item.reporterId);
+
   return (
     <li className="mt-report-item">
       <strong>{item.nickname}</strong>
       <span>{categoryLabel(item)}</span>
-      {showReporter && <span>신고자 {nicknameForDemoId(item.reporterId)}</span>}
+      {showReporter && <span>신고자 {reporterLabel}</span>}
       <span>{item.description || '상세 내용 없음'}</span>
       <time dateTime={item.createdAt}>{formatDemoWhen(item.createdAt)}</time>
-      <span className="mt-chat-demo">데모 · {item.status === 'closed' ? '닫힘' : '접수됨'}</span>
+      <span className={isDemo ? 'mt-chat-demo' : ''}>
+        {isDemo ? '데모 · ' : ''}
+        {item.status === 'closed' ? '닫힘' : '접수됨'}
+      </span>
     </li>
   );
 }
 
 export default function SafetyDemoPanels({ actorId }: { actorId: string }) {
   const hintId = useId();
+  const isLive = isUuid(actorId);
   const [ready, setReady] = useState(false);
   const [reports, setReports] = useState<ReportHistoryItem[]>([]);
   const [adminActor, setAdminActor] = useState<string | null>(null);
   const admin = adminActor === actorId;
 
+  // 실계정 신고 큐 상태 (RPC list_reports)
+  const [queueLoading, setQueueLoading] = useState(false);
+  const [queueResult, setQueueResult] = useState<ReportQueueResult | null>(null);
+
   useEffect(() => {
     setAdminActor(null);
+    setQueueResult(null);
   }, [actorId]);
 
   useEffect(() => {
-    const load = () => setReports(listDemoReports());
-    load();
-    setReady(true);
-    return subscribeSafetyDemo(load);
-  }, []);
+    let cancelled = false;
+    if (isLive) {
+      setReady(false);
+      fetchMyReports().then((items) => {
+        if (cancelled) return;
+        setReports(items ?? []);
+        setReady(true);
+      });
+      return () => {
+        cancelled = true;
+      };
+    } else {
+      const load = () => setReports(listDemoReports());
+      load();
+      setReady(true);
+      return subscribeSafetyDemo(load);
+    }
+  }, [isLive, actorId]);
 
-  const mine = reports.filter((item) => item.reporterId === actorId);
+  // 관리자 시점으로 보기 토글 시 실계정은 RPC 호출
+  const handleToggleAdmin = () => {
+    if (admin) {
+      setAdminActor(null);
+      setQueueResult(null);
+    } else {
+      setAdminActor(actorId);
+      if (isLive) {
+        setQueueLoading(true);
+        fetchReportQueue().then((res) => {
+          setQueueResult(res);
+          setQueueLoading(false);
+        });
+      }
+    }
+  };
+
+  const mine = isLive ? reports : reports.filter((item) => item.reporterId === actorId);
+
+  const adminStatusText = !admin
+    ? '일반 계정은 볼 수 없어요'
+    : isLive
+      ? queueLoading
+        ? '운영자 권한을 확인하는 중...'
+        : queueResult?.status === 403
+          ? '일반 계정은 볼 수 없어요 (403 FORBIDDEN · 운영자 전용)'
+          : queueResult?.ok
+            ? '운영자 시점이에요. 전체 신고 큐가 조회되었습니다.'
+            : '신고 큐를 조회할 수 없어요.'
+      : '데모 관리자 시점이에요. 이 기기의 신고만 보여요.';
 
   return (
     <div className="mt-report-wrap">
       <section className="mt-report-panel" aria-labelledby="my-reports-title">
         <h2 id="my-reports-title" className="mt-report-title">내 신고 내역</h2>
-        <p className="mt-chat-demo">데모 · 이 기기에만 저장돼요.</p>
+        <p className="mt-chat-demo">
+          {isLive ? '실계정 · 내가 접수한 신고 내역이에요.' : '데모 · 이 기기에만 저장돼요.'}
+        </p>
         {!ready ? null : mine.length === 0 ? (
-          <p className="mt-report-empty">아직 이 기기에 남긴 신고가 없어요.</p>
+          <p className="mt-report-empty">
+            {isLive ? '접수한 신고 내역이 없어요.' : '아직 이 기기에 남긴 신고가 없어요.'}
+          </p>
         ) : (
           <ul className="mt-report-list" aria-label="내 신고 내역">
             {mine.map((item) => (
@@ -68,22 +132,36 @@ export default function SafetyDemoPanels({ actorId }: { actorId: string }) {
           className="mt-safety-btn mt-report-admin"
           aria-pressed={admin}
           aria-describedby={hintId}
-          onClick={() => setAdminActor((current) => (current === actorId ? null : actorId))}
+          onClick={handleToggleAdmin}
         >
           관리자 시점으로 보기
         </button>
         <p id={hintId} className="mt-report-empty" role="status">
-          {admin ? '데모 관리자 시점이에요. 이 기기의 신고만 보여요.' : '일반 계정은 볼 수 없어요'}
+          {adminStatusText}
         </p>
-        {admin && ready && (
-          reports.length === 0 ? (
-            <p className="mt-report-empty">대기 중인 신고가 없어요.</p>
-          ) : (
-            <ul className="mt-report-list" aria-label="신고 관리 큐">
-              {reports.map((item) => (
-                <ReportItem key={item.id} item={item} showReporter />
-              ))}
-            </ul>
+        {admin && (
+          isLive ? (
+            queueResult?.ok ? (
+              queueResult.items.length === 0 ? (
+                <p className="mt-report-empty">대기 중인 신고가 없어요.</p>
+              ) : (
+                <ul className="mt-report-list" aria-label="신고 관리 큐">
+                  {queueResult.items.map((item) => (
+                    <ReportItem key={item.id} item={item} showReporter />
+                  ))}
+                </ul>
+              )
+            ) : null
+          ) : ready && (
+            reports.length === 0 ? (
+              <p className="mt-report-empty">대기 중인 신고가 없어요.</p>
+            ) : (
+              <ul className="mt-report-list" aria-label="신고 관리 큐">
+                {reports.map((item) => (
+                  <ReportItem key={item.id} item={item} showReporter />
+                ))}
+              </ul>
+            )
           )
         )}
       </section>

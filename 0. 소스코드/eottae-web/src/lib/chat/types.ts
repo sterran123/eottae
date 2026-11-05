@@ -58,6 +58,8 @@ export interface MessageRow {
   created_at: string;
   /** 0003 `messages.soft_delete_state`. 없으면 visible로 본다. */
   soft_delete_state?: 'visible' | 'deleted';
+  /** 0003 `messages.attachment_path`. 첨부 파일 경로 (선택). */
+  attachment_path?: string | null;
 }
 
 /** 행을 화면 메시지로 바꾼다. `deleted`는 null. `sender_id === myId`이면 내가 보낸 말이다. */

@@ -14,6 +14,7 @@
 
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import {
+  checkConversationMembership,
   createChatDataSource,
   fetchConversationMessages,
   isLiveChatRoom,
@@ -118,6 +119,7 @@ export default function ChatRoom({
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [historyFailed, setHistoryFailed] = useState(false);
   const [historyTick, setHistoryTick] = useState(0);
+  const [forbidden, setForbidden] = useState(false);
 
   const setLiveReadyBoth = useCallback((ready: boolean) => {
     liveReadyRef.current = ready;
@@ -250,9 +252,17 @@ export default function ChatRoom({
             return [...prev, incoming];
           });
         },
+        onChannelRevoked: () => {
+          blockedRef.current = true;
+          setBlocked(true);
+          setLiveReadyBoth(false);
+          dataSourceRef.current?.dispose();
+          dataSourceRef.current = null;
+          pushSystem('대화가 종료되었거나 차단되어 더 이상 메시지를 보낼 수 없어요.');
+        },
       },
     );
-  }, [actorId, isLiveRoom, partner.id, room.id]);
+  }, [actorId, isLiveRoom, partner.id, pushSystem, room.id, setLiveReadyBoth]);
 
   // 데모 방: demo-store 조회·구독 및 초기화 세대 동기화
   const chatEpochRef = useRef<number | null>(null);
@@ -285,14 +295,25 @@ export default function ChatRoom({
     };
   }, [actorId, createSource, isLiveRoom, partner.id, room.id]);
 
-  // 실계정 대화방(UUID): RLS 범위 내 과거 메시지 초기 로드.
-  // 배열이면(빈 배열 포함) 서버 기록으로 두고 이 세션에서 생긴 행만 합친다. null(오류·미인증)이면 입력을 닫고 재시도 UI를 제공한다.
+  // 실계정 대화방(UUID): RLS 범위 내 과거 메시지 초기 로드 및 구성원 자격 검증 (TC-008).
+  // 비구성원(제3자)은 빈 방으로 열리지 않고 채널 생성 전에 차단하여 '볼 수 없는 대화'로 둔다.
   useEffect(() => {
     if (!isLiveRoom) return;
     let cancelled = false;
     setHistoryLoaded(false);
     setHistoryFailed(false);
-    void fetchConversationMessages(room.id, isUuid(actorId) ? actorId : null).then((loaded) => {
+    setForbidden(false);
+
+    void (async () => {
+      const isMember = await checkConversationMembership(room.id);
+      if (cancelled) return;
+      if (!isMember) {
+        setForbidden(true);
+        setHistoryFailed(true);
+        return;
+      }
+
+      const loaded = await fetchConversationMessages(room.id, isUuid(actorId) ? actorId : null);
       if (cancelled) return;
       if (loaded) {
         setMessages((prev) => mergeLiveHistory(prev, loaded));
@@ -300,7 +321,8 @@ export default function ChatRoom({
       } else {
         setHistoryFailed(true);
       }
-    });
+    })();
+
     return () => {
       cancelled = true;
     };
@@ -320,6 +342,12 @@ export default function ChatRoom({
       return () => {
         dataSourceRef.current?.dispose();
       };
+    }
+
+    if (forbidden) {
+      dataSourceRef.current?.dispose();
+      dataSourceRef.current = null;
+      return;
     }
 
     // 실계정: 조회가 끝나기 전에는 보내기를 열지 않는다 (데이터 소스가 없어 메시지가 sending에 머무는 창을 없앤다).
@@ -356,7 +384,7 @@ export default function ChatRoom({
       dataSourceRef.current?.dispose();
       dataSourceRef.current = null;
     };
-  }, [actorId, createSource, isLiveRoom, lookupTick, partner.id, setLiveReadyBoth]);
+  }, [actorId, createSource, forbidden, isLiveRoom, lookupTick, partner.id, setLiveReadyBoth]);
 
   // 데모 방: 다른 탭이나 설정에서 차단 상태가 바뀌었을 때 동기화
   useEffect(() => {
@@ -701,7 +729,14 @@ export default function ChatRoom({
         </div>
       )}
 
-      {isLiveRoom && historyFailed && !blocked && (
+      {isLiveRoom && forbidden && (
+        <section className="mt-chat-forbidden" role="status" aria-labelledby="mt-chat-forbidden-title">
+          <h2 id="mt-chat-forbidden-title">볼 수 없는 대화</h2>
+          <p>이 방의 매칭 구성원이 아니라 메시지를 볼 수 없어요.</p>
+        </section>
+      )}
+
+      {isLiveRoom && historyFailed && !blocked && !forbidden && (
         <div className="mt-chat-blocked-bar" role="status">
           <span>대화를 불러오지 못했어요</span>
           <button type="button" onClick={() => setHistoryTick((tick) => tick + 1)}>
@@ -715,19 +750,21 @@ export default function ChatRoom({
         disabled={
           blocked ||
           !active ||
-          (isLiveRoom && (!liveReady || !historyLoaded || historyFailed))
+          (isLiveRoom && (forbidden || !liveReady || !historyLoaded || historyFailed))
         }
         disabledReason={
           blocked
             ? '차단한 상대와는 대화할 수 없어요'
-            : isLiveRoom && (!liveReady || !historyLoaded || historyFailed)
-              ? historyFailed
-                ? '대화를 불러오지 못해 보내기를 닫았어요'
-                : lookupFailed
-                  ? '차단 상태를 확인한 뒤에 보낼 수 있어요'
-                  : !historyLoaded
-                    ? '이전 대화를 불러오고 있어요'
-                    : '대화방을 준비하고 있어요'
+            : isLiveRoom && (forbidden || !liveReady || !historyLoaded || historyFailed)
+              ? forbidden
+                ? '구성원이 아니라 메시지를 보낼 수 없어요'
+                : historyFailed
+                  ? '대화를 불러오지 못해 보내기를 닫았어요'
+                  : lookupFailed
+                    ? '차단 상태를 확인한 뒤에 보낼 수 있어요'
+                    : !historyLoaded
+                      ? '이전 대화를 불러오고 있어요'
+                      : '대화방을 준비하고 있어요'
               : undefined
         }
         textOnly={isLiveRoom}

@@ -60,6 +60,10 @@ export interface ChatDataSourceCallbacks {
   onTypingChange: (typing: boolean) => void;
   /** 상대방 새 메시지가 도착했을 때 (데모 자동응답 또는 Supabase Realtime INSERT) */
   onIncomingMessage: (message: ChatMessage) => void;
+  /** 차단·권한 취소 등으로 인해 서버 채널이 회수되었을 때 (TC-009) */
+  onChannelRevoked?: () => void;
+  /** Realtime 채널 구독 상태 변경 콜백 (TC-008 검증용) */
+  onSubscriptionStatus?: (status: string, error?: Error | null) => void;
 }
 
 export interface ChatDataSource {
@@ -247,6 +251,7 @@ export function createSupabaseChatDataSource(
           body: row.body,
           created_at: row.created_at,
           soft_delete_state: row.soft_delete_state,
+          attachment_path: typeof row.attachment_path === 'string' ? row.attachment_path : null,
         };
         if (cachedUserId) {
           deliver(valid, cachedUserId);
@@ -256,7 +261,24 @@ export function createSupabaseChatDataSource(
         ensureUserThenFlush();
       },
     )
-    .subscribe();
+    .subscribe((status, err) => {
+      callbacks.onSubscriptionStatus?.(status, err ?? null);
+      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        callbacks.onChannelRevoked?.();
+      }
+    });
+
+  function doDispose() {
+    if (disposed) return;
+    disposed = true;
+    if (userRetryTimer) clearTimeout(userRetryTimer);
+    userRetryTimer = null;
+    queuedRows.length = 0;
+    callbacks.onTypingChange(false);
+    if (supabase) {
+      void supabase.removeChannel(channel);
+    }
+  }
 
   return {
     sendMessage(messageId: string, body: string) {
@@ -301,6 +323,13 @@ export function createSupabaseChatDataSource(
 
         if (error) {
           callbacks.onMessageFailed?.(messageId);
+          // RLS 거부(42501, 403, 또는 차단 등으로 인한 실패) 시 새로고침 없이 채널 즉시 회수 (TC-009)
+          const errCode = (error as { code?: string }).code;
+          const status = (error as { status?: number }).status;
+          if (errCode === '42501' || status === 403) {
+            callbacks.onChannelRevoked?.();
+            doDispose();
+          }
           return;
         }
 
@@ -310,13 +339,7 @@ export function createSupabaseChatDataSource(
     },
 
     dispose() {
-      if (disposed) return;
-      disposed = true;
-      if (userRetryTimer) clearTimeout(userRetryTimer);
-      userRetryTimer = null;
-      queuedRows.length = 0;
-      callbacks.onTypingChange(false);
-      void supabase.removeChannel(channel);
+      doDispose();
     },
   };
 }
@@ -346,6 +369,23 @@ function parseCursor(cursor: string | null | undefined): { createdAt: string; id
 }
 
 /**
+ * 실계정 대화방(`conversations`)의 구성원인지 RLS를 통해 검증한다 (TC-008).
+ * `conversations` 테이블의 `conversations_select_member` 정책(ADR-003, 0003_match_core.sql:1235)을 활용하여,
+ * 매칭 구성원이 아니면 RLS에 의해 행이 조회되지 않는다.
+ */
+export async function checkConversationMembership(conversationId: string): Promise<boolean> {
+  const supabase = getSupabase();
+  if (!supabase || !isUuid(conversationId)) return false;
+  const { data, error } = await supabase
+    .from('conversations')
+    .select('id')
+    .eq('id', conversationId)
+    .maybeSingle();
+  if (error || !data) return false;
+  return true;
+}
+
+/**
  * 특정 대화방(`conversationId`)의 메시지를 커서 기반으로 최신순 페이지 조회한 뒤 화면 시간순(오름차순)으로 반환한다.
  * - 데모 대화방이거나 환경변수가 없으면 `null`을 반환한다.
  * - 커서는 `(created_at, id)` 쌍이라 같은 시각의 메시지가 페이지 경계에서 빠지지 않는다.
@@ -370,10 +410,14 @@ export async function fetchConversationMessagesPage(
   }
   if (!resolvedUserId) return null;
 
+  // 제3자(비구성원)의 빈 방 렌더링 방지 (TC-008). conversations 조회가 실패하면 권한 없음(null)으로 반환.
+  const isMember = await checkConversationMembership(conversationId);
+  if (!isMember) return null;
+
   const pageSize = Math.min(Math.max(options.limit ?? 50, 1), 100);
   let query = supabase
     .from('messages')
-    .select('id, conversation_id, sender_id, body, created_at, soft_delete_state')
+    .select('id, conversation_id, sender_id, body, created_at, soft_delete_state, attachment_path')
     .eq('conversation_id', conversationId)
     .neq('soft_delete_state', 'deleted')
     .order('created_at', { ascending: false })

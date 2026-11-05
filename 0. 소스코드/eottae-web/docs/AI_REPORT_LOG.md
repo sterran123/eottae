@@ -1163,3 +1163,15 @@
 - [검증] 오하율의 기존 타입(`src/lib/invitations/types.ts`) 100% 재사용 및 새 types 파일 미생성 확인.
 - [검증] `src/components/invitations/*.tsx` 내 하드코딩 hex(#) 색상 0건 및 6테마 CSS 변수(`var(...)`) 100% 토큰화 확인.
 - [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수), `package.json`, `FILE_INDEX.csv`, `MANIFEST.sha256`는 수정하지 않음.
+
+
+## 2026-11-05 feat(MATCH-007): 실계정 1:1 채팅 RLS 가드·차단 채널 회수 및 DTO attachment_path 일치 (이슈 #22, Refs #22) (손준혁 작업)
+- [요청] 이슈 #22([손준혁] 채팅·신고/차단 남은 작업 + QA 증빙, MATCH-007·008, SEC-002) 지시 및 리뷰 피드백 완비:
+  1) MATCH-007 (실시간 1:1 채팅, TC-008): 실계정(UUID) 1:1 채팅 진입 시 매칭 구성원(`conversations`) RLS 정책(`conversations_select_member`)을 사전 검증하여 비구성원은 빈 대화로 진입하지 않고 즉시 채널 생성을 중단한 채 「볼 수 없는 대화」 화면 표출. Supabase Realtime 채널 구독 상태 콜백(`onSubscriptionStatus`) 연동. DTO 불일치 해결(`MessageRow`에 `attachment_path` 추가 및 `messages` SELECT 쿼리에 일치).
+  2) MATCH-008 (신고·차단 서버 효력, TC-009): 실계정 대화 중 상대 차단 등으로 `messages` INSERT 실패 시 SQLSTATE `42501`(또는 HTTP status 403)을 감지하여 `onChannelRevoked` 호출 → 새로고침 없이 즉시 `removeChannel`로 실시간 채널 회수 및 전송창 disabled 잠금 처리.
+  3) 신고 관리 큐 및 내 신고 내역 (TC-010): `SafetyDemoPanels`에서 실계정(UUID) `fetchMyReports()`(`reports_select_own` RLS) 연동. 일반 계정이 관리자 시점 토글 시 `fetchReportQueue()` RPC(`list_reports`) 호출 결과 42501/403 거부를 감지하여 「일반 계정은 볼 수 없어요 (403 FORBIDDEN · 운영자 전용)」 에러 상태 표출 및 큐 목록 0건 격리.
+- [AI] Antigravity가 해당 파일들(`ChatRoom.tsx`, `SafetyDemoPanels.tsx`, `chat-service.ts`, `safety-service.ts`, `types.ts`, `테스트_케이스_마스터.md`, `AI_REPORT_LOG.md`) 수정 후 TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors).
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 라우트 정적 export 100% 성공).
+- [검증] 하드코딩 hex(#) 색상 0건, CSS 시맨틱 변수(`var(...)`) 100% 사용.
+- [미실행] 실계정 2개 브라우저 동시 접속 실송수신 및 Supabase 원격 DB E2E 테스트는 배포/서버 연동 단계에서 실행 (클라이언트 RLS 가드·RPC 예외 핸들링·채널 회수 동작은 완비). `package.json`, `FILE_INDEX.csv`, `MANIFEST.sha256`, `src/app/globals.css`, `supabase/migrations/`는 무수정 원칙 준수.
