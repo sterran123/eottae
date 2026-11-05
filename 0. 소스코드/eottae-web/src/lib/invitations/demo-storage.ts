@@ -112,6 +112,8 @@ function sanitizeGuest(guest: Guest): Guest {
   };
 }
 
+import { isRsvpMeal } from './types';
+
 export function isStoredRsvp(value: unknown): value is Rsvp {
   if (!value || typeof value !== 'object') return false;
   const row = value as Record<string, unknown>;
@@ -127,6 +129,7 @@ export function isStoredRsvp(value: unknown): value is Rsvp {
     Number.isInteger(row.partySize) &&
     row.partySize >= 0 &&
     row.partySize <= 10 &&
+    (row.meal === undefined || isRsvpMeal(row.meal)) &&
     typeof row.note === 'string' &&
     row.note.length <= 300 &&
     typeof row.respondedAt === 'string' &&
@@ -140,6 +143,7 @@ function sanitizeRsvp(rsvp: Rsvp): Rsvp {
     guestToken: rsvp.guestToken.trim(),
     response: rsvp.response,
     partySize: rsvp.partySize,
+    ...(rsvp.meal ? { meal: rsvp.meal } : {}),
     note: rsvp.note.trim().slice(0, 300),
     respondedAt: rsvp.respondedAt,
   };

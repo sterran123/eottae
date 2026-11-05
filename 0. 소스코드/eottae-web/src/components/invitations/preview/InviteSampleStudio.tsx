@@ -77,6 +77,14 @@ export default function InviteSampleStudio() {
       </fieldset>
       <InvitePreview invitation={invitation} preset={preset} />
       <p>
+        <Link
+          className="invite-back"
+          href="/invitations/rsvp/?t=k7Qm2pL9xRt4vNw8aB3cYd6e&g=gt-x8k2m9p1"
+        >
+          하객 전용 RSVP 회신 데모로
+        </Link>
+      </p>
+      <p>
         <Link className="invite-back" href="/invitations/">
           청첩장 입구로
         </Link>

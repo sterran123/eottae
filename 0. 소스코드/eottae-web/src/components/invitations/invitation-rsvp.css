@@ -1,0 +1,313 @@
+/* 3차 RSVP 회신 폼 (INV-003) — 6테마 토큰만 사용. 색 hex·rgb 하드코딩 금지, globals.css 수정 금지. */
+
+.rsvp-box {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 20px 16px 28px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: var(--shadow-card);
+}
+
+.rsvp-demo-badge {
+  display: inline-block;
+  margin: 0 0 12px;
+  padding: 4px 10px;
+  border: 1px solid var(--warn-line);
+  border-radius: 999px;
+  background: var(--warn-bg);
+  color: var(--warn-ink);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.rsvp-title {
+  margin: 0 0 6px;
+  font-size: 18px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.rsvp-event-summary {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--soft);
+}
+
+.rsvp-event-title {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.rsvp-muted {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.rsvp-denied {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--soft);
+}
+
+.rsvp-denied strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 16px;
+}
+
+.rsvp-owner-list {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rsvp-owner-item {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--soft);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.rsvp-owner-item strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 15px;
+}
+
+.rsvp-form {
+  display: grid;
+  gap: 18px;
+  margin-top: 16px;
+}
+
+.rsvp-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.rsvp-fieldset legend,
+.rsvp-field label {
+  display: block;
+  margin-bottom: 8px;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.rsvp-choices {
+  display: grid;
+  gap: 8px;
+}
+
+.rsvp-choice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.rsvp-choice:has(input:checked) {
+  border-color: var(--brand);
+  background: var(--soft);
+}
+
+.rsvp-choice input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--brand);
+}
+
+.rsvp-field {
+  display: grid;
+}
+
+.rsvp-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  /* 16px 미만이면 iOS 가 입력 시 화면을 확대한다 */
+  font: inherit;
+  font-size: 16px;
+}
+
+.rsvp-textarea {
+  resize: vertical;
+}
+
+.rsvp-count {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: right;
+}
+
+.rsvp-submit {
+  min-width: 44px;
+  min-height: 48px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--cta-bg);
+  color: var(--cta-ink);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.rsvp-feedback {
+  min-height: 24px;
+}
+
+.rsvp-ok,
+.rsvp-error {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.rsvp-ok {
+  background: var(--soft);
+  color: var(--ink);
+}
+
+.rsvp-error {
+  border-color: var(--warn-line);
+  background: var(--warn-bg);
+  color: var(--warn-ink);
+}
+
+.rsvp-choice:focus-within,
+.rsvp-input:focus-visible,
+.rsvp-submit:focus-visible,
+.rsvp-demo-link:focus-visible,
+.rsvp-back-link:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.rsvp-page {
+  display: grid;
+  gap: 20px;
+  padding-top: 24px;
+  padding-bottom: 48px;
+}
+
+.rsvp-demo-switcher {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.rsvp-demo-switcher-title {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.rsvp-demo-links {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.rsvp-demo-link {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--soft);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.rsvp-demo-link[aria-current='page'] {
+  border-color: var(--brand);
+  background: var(--paper);
+  font-weight: 800;
+}
+
+.rsvp-nav-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.rsvp-back-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rsvp-box *,
+  .rsvp-box,
+  .rsvp-demo-switcher *,
+  .rsvp-demo-switcher {
+    transition: none;
+    animation: none;
+  }
+}
+
