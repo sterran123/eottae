@@ -4,6 +4,8 @@
 //
 // 입력: COMMENT_ID, GITHUB_TOKEN, REVIEW_CWD (DRY_RUN=2면 답을 출력만)
 // 결과: 원래 댓글에 👀 반응 → 답 댓글(마커 <!-- grok-answer:{id} -->). 실패하면 실패 안내 댓글(같은 마커).
+// 작업자(grok_review_worker.mjs)는 요청을 집을 때 이미 👀·접수 댓글(<!-- grok-ack:{id} -->)을 남긴다 —
+// 여기서의 👀는 그 표시가 없던 옛 요청·직접 실행용이고, 답을 달면 접수 댓글 끝에 완료 한 줄을 붙인다.
 // 팀원(저장소 write 권한 이상 협력자, 소유자 포함) 댓글만 받는다 — 공개 저장소라 아무나 댓글을 달 수 있고,
 // 답은 소유자 구독·이름으로 나간다. 작업자(grok_review_worker.mjs)가 고를 때와 같은 검사를 여기서 한 번 더 한다.
 const { GITHUB_TOKEN, COMMENT_ID, REVIEW_CWD } = process.env;
@@ -117,6 +119,14 @@ async function main() {
   const answer = (at >= 0 ? r.answer.slice(at + HEADING.length) : r.answer).trim();
   // 요청한 팀원만 진짜 멘션한다(알림) — 답 본문의 멘션은 끊은 채로
   await reply(number, `**@​grok 답변** — @${asker} 요청 ([댓글](${c.html_url}))\n\n${unmention(answer)}\n\n---\n🤖 로컬 Grok (${r.info})`);
+  // 작업자가 남긴 접수 댓글이 있으면 끝에 완료 한 줄을 붙인다(마커는 그대로 둔다)
+  const ack = comments.find((x) => String(x.body).includes(`<!-- grok-ack:${COMMENT_ID} -->`));
+  if (ack && !DRY) {
+    await gh(`repos/${REPO}/issues/comments/${ack.id}`, {
+      method: "PATCH",
+      body: { body: `${ack.body}\n\n→ ✅ 답변을 남겼어요.` },
+    }).catch(() => {});
+  }
   console.log("answered:", COMMENT_ID);
   return 0;
 }
