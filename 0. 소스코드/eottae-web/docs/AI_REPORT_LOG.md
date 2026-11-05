@@ -1343,3 +1343,21 @@
 - [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개
 - [미실행] 서버·Supabase 연동 없음 (3차 목업 단계 원칙 준수)
 
+## 2026-11-05 PR #102 시네마틱 무비 히어로 분기 분리 및 상용 템플릿 문구 전면 고유화 (Refs #84, Refs #102) (오하율 작업)
+- [요청] PR #102 AI 리뷰 지적(시네마틱 무비 풀커버 히어로 분기 분리 및 THE WEDDING OF, Our Wedding 등 상용 템플릿 샘플 문구 고유화) 해결:
+  1) `InvitationCardRenderer.tsx`: `renderSignatureThemeHero`에서 `our-vow`, `the-wedding`, `cinematic-movie`가 동일한 JSX로 묶여 시네마틱 무비 선택 시 'Our Vow'가 노출되던 결함을 해결. `cinematic-movie`를 독립 분기(`inv-hero-sig--cinematic`, 상단 `CINEMATIC MOMENT`, 중앙 `우리만의 상영`)로 분리하고, 레거시 `the-wedding` 또한 `WEDDING INVITATION` / `우리 둘의 약속`으로 각각 독자적인 JSX로 렌더링되도록 구현.
+  2) `InvitationCardRenderer.tsx`, `InvitationsHub.tsx`: 상용 템플릿/샘플 문구 전수 점검 및 고유화 대체:
+     - `THE WEDDING OF` -> `WEDDING INVITATION` (헤로 서브 타이포 및 허브 커버)
+     - `OUR WEDDING DAY` -> `INVITATION` (콰이어트 테마 및 허브 커버)
+     - `OUR WEDDING STORY` -> `SPECIAL MOMENT` (4컷 필름형 워터마크)
+     - `OUR WEDDING CELEBRATION` -> `CELEBRATION OF LOVE` (골드 링 프레임 캡션)
+  3) `invitations.css`: 주석 내 잔여 상용 문구(`Our Wedding 필기체 영문`)를 `시그니처 상단 영문` 및 `our-vow`로 현행화.
+  4) `scripts/verify-modal-and-card.ts`: [검증 10] 신설하여 시네마틱 무비 독자 렌더링 및 상용 템플릿 문구 부재를 자동 검증(30/30 PASS).
+- [AI] Antigravity가 해당 파일들 수정 후 TypeScript 컴파일, 자동 검증 스크립트 실행, Next.js 정적 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (30/30 통과)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 무수정 원칙 준수
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
+
+

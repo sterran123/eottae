@@ -620,7 +620,7 @@ export default function InvitationCardRenderer({
               </div>
               <div className="inv-life4cut-bottom-watermark" style={{ color: cardTextColor }}>
                 <span>{year}. {month < 10 ? `0${month}` : month}. {day < 10 ? `0${day}` : day}</span>
-                <span>OUR WEDDING STORY</span>
+                <span>SPECIAL MOMENT</span>
               </div>
             </div>
           </div>
@@ -664,7 +664,7 @@ export default function InvitationCardRenderer({
             </div>
             <div className="inv-framed-caption" style={{ marginTop: 12, color: captionColor }}>
               <span className="inv-gold-royal-title" style={{ color: effectiveAccentColor }}>
-                OUR WEDDING CELEBRATION
+                CELEBRATION OF LOVE
               </span>
               <span className="inv-framed-names" style={{ fontFamily: 'serif', color: captionColor }}>
                 {hostNames}
@@ -751,13 +751,43 @@ export default function InvitationCardRenderer({
         );
 
       case 'our-vow':
-      case 'the-wedding':
-      case 'cinematic-movie':
         return (
           <div className="inv-hero-sig inv-hero-sig--photo-full" style={{ backgroundImage: `url(${heroPhoto(imgSunset)})` }}>
             <div className="inv-real-photo-overlay inv-overlay--sunset" />
             <div className="inv-cover-top-center-names">OUR SACRED VOW</div>
             <div className="inv-cover-center-script-huge">Our Vow</div>
+            <div className="inv-sig-content inv-sig-content--floating">
+              <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
+              <div className="inv-sig-date" style={{ color: '#fed7aa' }}>
+                {displayTimeDot}
+              </div>
+              <div className="inv-sig-venue" style={{ color: 'rgba(255,255,255,0.85)' }}>{venueTitle}</div>
+            </div>
+          </div>
+        );
+
+      case 'the-wedding':
+        return (
+          <div className="inv-hero-sig inv-hero-sig--photo-full" style={{ backgroundImage: `url(${heroPhoto(imgSunset)})` }}>
+            <div className="inv-real-photo-overlay inv-overlay--sunset" />
+            <div className="inv-cover-top-center-names">WEDDING INVITATION</div>
+            <div className="inv-cover-center-script-huge">우리 둘의 약속</div>
+            <div className="inv-sig-content inv-sig-content--floating">
+              <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
+              <div className="inv-sig-date" style={{ color: '#fed7aa' }}>
+                {displayTimeDot}
+              </div>
+              <div className="inv-sig-venue" style={{ color: 'rgba(255,255,255,0.85)' }}>{venueTitle}</div>
+            </div>
+          </div>
+        );
+
+      case 'cinematic-movie':
+        return (
+          <div className="inv-hero-sig inv-hero-sig--photo-full inv-hero-sig--cinematic" style={{ backgroundImage: `url(${heroPhoto(imgSunset)})` }}>
+            <div className="inv-real-photo-overlay inv-overlay--sunset" />
+            <div className="inv-cover-top-center-names">CINEMATIC MOMENT</div>
+            <div className="inv-cover-center-script-huge">우리만의 상영</div>
             <div className="inv-sig-content inv-sig-content--floating">
               <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
               <div className="inv-sig-date" style={{ color: '#fed7aa' }}>
@@ -868,7 +898,7 @@ export default function InvitationCardRenderer({
           <div className="inv-hero-sig inv-hero-sig--photo-full" style={{ backgroundImage: `url(${heroPhoto(imgGreenCanopy)})` }}>
             <div className="inv-real-photo-overlay inv-overlay--forest" />
             <div className="inv-typo-top-group">
-              <div className="inv-typo-sub-lead">{themePreset.heroType === 'script-card' ? 'OUR SPECIAL DAY' : 'THE WEDDING OF'}</div>
+              <div className="inv-typo-sub-lead">{themePreset.heroType === 'script-card' ? 'OUR SPECIAL DAY' : 'WEDDING INVITATION'}</div>
               <h1 className="inv-typo-headline">{themePreset.heroType === 'script-card' ? 'Our Day' : '결혼합니다'}</h1>
             </div>
             <div className="inv-sig-content inv-sig-content--floating">
@@ -901,7 +931,7 @@ export default function InvitationCardRenderer({
           <div className="inv-hero-sig inv-hero-sig--photo-full" style={{ backgroundImage: `url(${heroPhoto(imgBenchQuiet)})` }}>
             <div className="inv-real-photo-overlay inv-overlay--subtle" />
             <div className="inv-sig-content inv-sig-content--floating">
-              <span className="inv-photo-only-sub">OUR WEDDING DAY</span>
+              <span className="inv-photo-only-sub">INVITATION</span>
               <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
               <div className="inv-sig-date" style={{ color: '#f8fafc' }}>
                 {displayTimeDot}

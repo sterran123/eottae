@@ -206,7 +206,7 @@ const DESIGN_COLLECTION: DesignCoverItem[] = [
       <div className="inv-real-photo-cover" style={{ backgroundImage: `url(${imgGreenCanopy})` }}>
         <div className="inv-real-photo-overlay inv-overlay--forest" />
         <div className="inv-typo-top-group">
-          <div className="inv-typo-sub-lead">THE WEDDING OF</div>
+          <div className="inv-typo-sub-lead">WEDDING INVITATION</div>
           <div className="inv-typo-headline">결혼합니다</div>
         </div>
         <div className="inv-typo-bottom-group">
@@ -315,7 +315,7 @@ const DESIGN_COLLECTION: DesignCoverItem[] = [
     renderCover: () => (
       <div className="inv-quiet-container">
         <div className="inv-quiet-top-text">
-          <span className="inv-quiet-label">OUR WEDDING DAY</span>
+          <span className="inv-quiet-label">INVITATION</span>
           <div className="inv-quiet-names">김도윤 ♥ 송하은</div>
         </div>
         <div className="inv-quiet-photo-wrap" style={{ backgroundImage: `url(${imgBenchQuiet})` }} />

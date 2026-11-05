@@ -359,7 +359,7 @@
   z-index: 2;
 }
 
-/* Our Wedding 필기체 영문 */
+/* 시그니처 상단 영문 */
 .inv-cover-top-center-names {
   text-align: center;
   font-size: 10px;
@@ -4338,7 +4338,7 @@
   color: #fefae0 !important;
 }
 
-/* --- 2. Our Wedding & 시네마틱 무비 (Sunset / Dark Cinema - 다크 모드 전용 스코핑) --- */
+/* --- 2. our-vow & 시네마틱 무비 (Sunset / Dark Cinema - 다크 모드 전용 스코핑) --- */
 .inv-mode--dark.inv-theme--our-vow,
 .inv-mode--dark.inv-theme--the-wedding,
 .inv-mode--dark.inv-theme--cinematic-movie {

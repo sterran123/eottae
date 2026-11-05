@@ -280,6 +280,26 @@ assert(
   '360px 모바일 화면 최적화 미디어 쿼리 및 가로 스크롤 완전 차단 패딩 적용'
 );
 
+// 10. [PR #102 피드백] 시네마틱 무비 히어로 분기 분리 및 상용 템플릿 문구 부재 검증
+console.log('\n[검증 10] 시네마틱 무비 히어로 분기 분리 및 상용 템플릿 문구 부재 검증');
+assert(
+  rendererCode.includes("case 'cinematic-movie':") &&
+  rendererCode.includes('inv-hero-sig--cinematic') &&
+  rendererCode.includes('CINEMATIC MOMENT') &&
+  rendererCode.includes('우리만의 상영'),
+  'cinematic-movie 테마가 독자적인 시그니처 히어로(CINEMATIC MOMENT / 우리만의 상영)로 분리되어 렌더링됨'
+);
+
+assert(
+  !rendererCode.includes('THE WEDDING OF') &&
+  !hubCode.includes('THE WEDDING OF') &&
+  !rendererCode.includes('OUR WEDDING DAY') &&
+  !hubCode.includes('OUR WEDDING DAY') &&
+  !rendererCode.includes('OUR WEDDING STORY') &&
+  !rendererCode.includes('OUR WEDDING CELEBRATION'),
+  'THE WEDDING OF, OUR WEDDING DAY 등 상용 템플릿/샘플 문구가 전면 제거되고 고유 문구로 대체됨'
+);
+
 console.log('\n============================================================');
 console.log(` 검증 결과: 총 ${passCount + failCount}개 중 ${passCount}개 통과 (실패: ${failCount}개)`);
 console.log('============================================================');
