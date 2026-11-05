@@ -53,7 +53,7 @@ export const THEME_MASTER_PRESETS: Record<string, ThemePreset> = {
     defaultTextColor: '#14532d',
     defaultAccentColor: '#16a34a',
     defaultBgm: 'acoustic',
-    defaultSectionOrder: ['greeting', 'schedule', 'gallery', 'location', 'account', 'guestbook'],
+    defaultSectionOrder: ['greeting', 'schedule', 'gallery', 'location', 'account'],
   },
   'the-wedding': {
     id: 'the-wedding' as InvitationThemeId,
@@ -113,7 +113,7 @@ export const THEME_MASTER_PRESETS: Record<string, ThemePreset> = {
     defaultTextColor: '#881337',
     defaultAccentColor: '#e11d48',
     defaultBgm: 'romantic',
-    defaultSectionOrder: ['greeting', 'schedule', 'gallery', 'location', 'account', 'guestbook'],
+    defaultSectionOrder: ['greeting', 'schedule', 'gallery', 'location', 'account'],
   },
   'wax-seal': {
     id: 'wax-seal',
@@ -153,7 +153,7 @@ export const THEME_MASTER_PRESETS: Record<string, ThemePreset> = {
     defaultTextColor: '#1c1917',
     defaultAccentColor: '#d97706',
     defaultBgm: 'acoustic',
-    defaultSectionOrder: ['gallery', 'greeting', 'schedule', 'location', 'guestbook', 'guest_snap', 'account'],
+    defaultSectionOrder: ['gallery', 'greeting', 'schedule', 'location', 'account'],
   },
   'typo-frame': {
     id: 'typo-frame',
@@ -213,7 +213,7 @@ export const THEME_MASTER_PRESETS: Record<string, ThemePreset> = {
     defaultTextColor: '#1c1917',
     defaultAccentColor: '#e11d48',
     defaultBgm: 'romantic',
-    defaultSectionOrder: ['greeting', 'schedule', 'gallery', 'location', 'account', 'guestbook'],
+    defaultSectionOrder: ['greeting', 'schedule', 'gallery', 'location', 'account'],
   },
   'center-line': {
     id: 'center-line',
@@ -253,7 +253,7 @@ export const THEME_MASTER_PRESETS: Record<string, ThemePreset> = {
     defaultTextColor: '#14532d',
     defaultAccentColor: '#16a34a',
     defaultBgm: 'acoustic',
-    defaultSectionOrder: ['greeting', 'schedule', 'location', 'gallery', 'account', 'guestbook'],
+    defaultSectionOrder: ['greeting', 'schedule', 'location', 'gallery', 'account'],
   },
   'quiet': {
     id: 'quiet',
@@ -293,7 +293,7 @@ export const THEME_MASTER_PRESETS: Record<string, ThemePreset> = {
     defaultTextColor: '#881337',
     defaultAccentColor: '#e11d48',
     defaultBgm: 'romantic',
-    defaultSectionOrder: ['greeting', 'schedule', 'gallery', 'location', 'guestbook', 'account', 'rsvp_preview'],
+    defaultSectionOrder: ['greeting', 'schedule', 'gallery', 'location', 'account', 'rsvp_preview'],
   },
   'moonlight-garden': {
     id: 'moonlight-garden',
@@ -333,7 +333,7 @@ export const THEME_MASTER_PRESETS: Record<string, ThemePreset> = {
     defaultTextColor: '#451a03',
     defaultAccentColor: '#b45309',
     defaultBgm: 'acoustic',
-    defaultSectionOrder: ['greeting', 'schedule', 'location', 'account', 'rsvp_preview', 'guestbook'],
+    defaultSectionOrder: ['greeting', 'schedule', 'location', 'account', 'rsvp_preview'],
   },
   'starlight-banquet': {
     id: 'starlight-banquet',
@@ -373,7 +373,7 @@ export const THEME_MASTER_PRESETS: Record<string, ThemePreset> = {
     defaultTextColor: '#14532d',
     defaultAccentColor: '#15803d',
     defaultBgm: 'acoustic',
-    defaultSectionOrder: ['greeting', 'schedule', 'location', 'gallery', 'account', 'guestbook'],
+    defaultSectionOrder: ['greeting', 'schedule', 'location', 'gallery', 'account'],
   },
   'minimal-arch': {
     id: 'minimal-arch',
@@ -413,7 +413,7 @@ export const THEME_MASTER_PRESETS: Record<string, ThemePreset> = {
     defaultTextColor: '#fafafa',
     defaultAccentColor: '#e11d48',
     defaultBgm: 'piano',
-    defaultSectionOrder: ['gallery', 'greeting', 'schedule', 'location', 'guest_snap', 'account'],
+    defaultSectionOrder: ['gallery', 'greeting', 'schedule', 'location', 'account'],
   },
   'hanok-heritage': {
     id: 'hanok-heritage',
@@ -433,7 +433,7 @@ export const THEME_MASTER_PRESETS: Record<string, ThemePreset> = {
     defaultTextColor: '#292524',
     defaultAccentColor: '#a16207',
     defaultBgm: 'acoustic',
-    defaultSectionOrder: ['greeting', 'schedule', 'location', 'account', 'guestbook', 'rsvp_preview'],
+    defaultSectionOrder: ['greeting', 'schedule', 'location', 'account', 'rsvp_preview'],
   },
 };
 

@@ -107,21 +107,54 @@
 }
 
 /* 사이버펑크 및 다크/시스템 다크 테마에서 버튼 글자색 대비 보장 (밝은 브랜드색 배경) */
-[data-theme='cyberpunk'] .inv-btn-primary {
-  color: #0a0a14 !important;
-  font-weight: 700;
-}
-
+/* .inv-mode--dark 는 제외: 카드 다크 모드가 아닌 앱 다크 테마의 브랜드 버튼만 어둡게 */
 [data-theme='dark'] .inv-btn-primary,
-.inv-mode--dark .inv-btn-primary {
-  color: #161423 !important;
+[data-theme='cyberpunk'] .inv-btn-primary {
+  color: var(--bg) !important;
   font-weight: 700;
 }
 
 @media (prefers-color-scheme: dark) {
   :root[data-theme='system'] .inv-btn-primary {
-    color: #161423 !important;
+    color: var(--bg) !important;
     font-weight: 700;
+  }
+}
+
+/* 사이버펑크 및 다크 테마에서 브랜드 배경 요소들의 글자색 대비 보장 */
+.inv-toast {
+  color: #ffffff;
+}
+
+[data-theme='cyberpunk'] .inv-category-tab-btn--active,
+[data-theme='cyberpunk'] .inv-copy-chip,
+[data-theme='cyberpunk'] .inv-font-btn--active,
+[data-theme='cyberpunk'] .inv-choice-pill--active,
+[data-theme='cyberpunk'] .inv-accordion-toggle-btn--active,
+[data-theme='cyberpunk'] .inv-frame-btn--active,
+[data-theme='cyberpunk'] .inv-address-copy-btn:hover,
+[data-theme='cyberpunk'] .inv-toast,
+[data-theme='dark'] .inv-category-tab-btn--active,
+[data-theme='dark'] .inv-copy-chip,
+[data-theme='dark'] .inv-font-btn--active,
+[data-theme='dark'] .inv-choice-pill--active,
+[data-theme='dark'] .inv-accordion-toggle-btn--active,
+[data-theme='dark'] .inv-frame-btn--active,
+[data-theme='dark'] .inv-address-copy-btn:hover,
+[data-theme='dark'] .inv-toast {
+  color: var(--bg) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-category-tab-btn--active,
+  :root[data-theme='system'] .inv-copy-chip,
+  :root[data-theme='system'] .inv-font-btn--active,
+  :root[data-theme='system'] .inv-choice-pill--active,
+  :root[data-theme='system'] .inv-accordion-toggle-btn--active,
+  :root[data-theme='system'] .inv-frame-btn--active,
+  :root[data-theme='system'] .inv-address-copy-btn:hover,
+  :root[data-theme='system'] .inv-toast {
+    color: var(--bg) !important;
   }
 }
 

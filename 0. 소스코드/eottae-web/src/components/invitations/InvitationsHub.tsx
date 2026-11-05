@@ -502,10 +502,10 @@ function InvitationsHubContent() {
 
       {copyToast && (
         <div
+          className="inv-toast"
           style={{
             padding: '14px 20px',
             background: 'var(--brand)',
-            color: '#ffffff',
             borderRadius: 14,
             fontWeight: 600,
             fontSize: 13,

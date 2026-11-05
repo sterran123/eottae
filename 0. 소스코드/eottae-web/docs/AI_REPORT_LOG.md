@@ -1050,3 +1050,13 @@
 - [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
 - [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
 
+
+## 2026-11-05 PR #97 8차 리뷰 지적 2건 해결 (오하율 작업)
+- [요청] PR #97 8차 피드백 2건(사이버펑크·다크 브랜드 배경 컨트롤 대비 및 .inv-mode--dark 제거, 공개 화면 하객스냅·방명록 시드 비우기 및 기본 섹션 제거) 반영:
+  1) `invitations.css`, `InvitationsHub.tsx`: 사이버펑크(`--brand: #00e0ff`) 및 다크/시스템 다크(`--brand: #a796d9`) 배경 위에서 글자색 `#ffffff` 고정으로 인한 명도 대비 결함을 해결하기 위해 활성 카테고리 탭(`.inv-category-tab-btn--active`), 복사 칩(`.inv-copy-chip`), 폰트 버튼(`.inv-font-btn--active`), 선택 알약(`.inv-choice-pill--active`), 아코디언 토글(`.inv-accordion-toggle-btn--active`), 프레임 버튼(`.inv-frame-btn--active`), 주소 복사 호버(`.inv-address-copy-btn:hover`), 복사 토스트(`.inv-toast`)에 `color: var(--bg) !important`를 부여. `InvitationsHub.tsx`의 토스트 인라인 `color: '#ffffff'`를 제거하고 `.inv-toast` 클래스를 부여. 또한 어두운 청첩장 카드 루트 클래스였던 `.inv-mode--dark .inv-btn-primary` 셀렉터를 제거하여 카드의 테마 액센트 인라인 글자색(`getContrastingTextColor`)이 덮어씌워지지 않도록 수정.
+  2) `InvitationCardRenderer.tsx`, `InvitationEditor.tsx`, `theme-presets.ts`: 공개 하객 렌더링(`previewMode={false}`) 시 개인정보 및 타인 명단 노출 방지를 위해 `guestPhotos`와 `comments` 시드 배열을 완전히 비우고(`[]`), 미리보기(`previewMode={true}`) 렌더링 시에는 임의의 인물명 대신 청첩장 당사자(`hostNames`)와 `(예시 · 제안 P1)` 문구로만 구성되도록 개선. 또한 새 청첩장 작성 기본 섹션(`DEFAULT_SECTIONS`) 및 테마 프리셋들의 `defaultSectionOrder`에서 `guestbook`과 `guest_snap`을 제외하여 공개 열람 시 하객 참여형 공간이 기본 노출되지 않도록 작업지시서 기준을 완비.
+- [AI] Antigravity가 해당 파일들(invitations.css, InvitationsHub, InvitationCardRenderer, InvitationEditor, theme-presets, AI_REPORT_LOG) 수정 후 타입체크 및 정적 빌드 테스트 통과.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
+

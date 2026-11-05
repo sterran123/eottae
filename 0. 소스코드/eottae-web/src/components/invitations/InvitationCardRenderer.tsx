@@ -210,41 +210,24 @@ export default function InvitationCardRenderer({
   const officialPhotoInputRef = useRef<HTMLInputElement | null>(null);
 
   // 2. [갤러리 2: 하객 실시간 현장 스냅 앨범]
-  const [guestPhotos, setGuestPhotos] = useState<GuestPhoto[]>([
-    {
-      id: 'gp1',
-      uploader: '신부 친구 유진',
-      caption: '신부대기실 너무 눈부셔요 ✨ 오늘 세상에서 제일 예쁘다!',
-      icon: '📸',
-      bg: '#fce7f3',
-      img: imgStudioPeach,
-      time: '방금 전',
-      likes: 24,
-      hasLiked: false,
-    },
-    {
-      id: 'gp2',
-      uploader: '신랑 대학동기 성훈',
-      caption: '포토테이블 액자 진짜 멋지네요 🌸 두 분 축하합니다',
-      icon: '🌷',
-      bg: '#fef3c7',
-      img: imgSunset,
-      time: '8분 전',
-      likes: 15,
-      hasLiked: false,
-    },
-    {
-      id: 'gp3',
-      uploader: '회사 동료 지민',
-      caption: '예식장 생화 꽃장식 향기가 너무 좋아요 💐 행복하세요!',
-      icon: '🥂',
-      bg: '#e0e7ff',
-      img: imgGreenCanopy,
-      time: '18분 전',
-      likes: 9,
-      hasLiked: false,
-    },
-  ]);
+  // 공개 하객 렌더(previewMode=false)에서는 시드 배열을 비우고, 미리보기(previewMode=true)에서는 hostNames 기반 예시만 노출 (Refs #97)
+  const [guestPhotos, setGuestPhotos] = useState<GuestPhoto[]>(() => {
+    if (!previewMode) return [];
+    const host = invitation.hostNames || '신랑 · 신부';
+    return [
+      {
+        id: 'gp1',
+        uploader: `${host} (예시 · 제안 P1)`,
+        caption: '현장 스냅 사진을 실시간으로 공유할 수 있는 참여형 공간입니다. (예시 · 제안 P1)',
+        icon: '📸',
+        bg: '#fce7f3',
+        img: imgStudioPeach,
+        time: '예시',
+        likes: 12,
+        hasLiked: false,
+      },
+    ];
+  });
   const [showGuestUploadForm, setShowGuestUploadForm] = useState<boolean>(false);
   const [guestUploaderName, setGuestUploaderName] = useState<string>('');
   const [guestCaptionText, setGuestCaptionText] = useState<string>('');
@@ -252,29 +235,20 @@ export default function InvitationCardRenderer({
   const guestPhotoInputRef = useRef<HTMLInputElement | null>(null);
 
   // 3. [하객 실시간 축하 방명록]
-  const [comments, setComments] = useState<GuestComment[]>([
-    {
-      id: 'c1',
-      author: '소율 (절친)',
-      message: '서윤아 하람아 결혼 너무너무 축하해! 세상에서 제일 행복한 부부가 되길 🌸',
-      date: '방금 전',
-      avatar: '👭',
-    },
-    {
-      id: 'c2',
-      author: '준우 선배',
-      message: '둘이 정말 선남선녀다. 예식날 정장 멋지게 차려입고 축하하러 갈게! 💍',
-      date: '10분 전',
-      avatar: '🤵',
-    },
-    {
-      id: 'c3',
-      author: '이모님',
-      message: '우리 예쁜 하람이 시집가는 날 눈물 나겠네. 평생 아끼고 사랑하렴 ❤️',
-      date: '35분 전',
-      avatar: '💐',
-    },
-  ]);
+  // 공개 하객 렌더(previewMode=false)에서는 시드 배열을 비우고, 미리보기(previewMode=true)에서는 hostNames 기반 예시만 노출 (Refs #97)
+  const [comments, setComments] = useState<GuestComment[]>(() => {
+    if (!previewMode) return [];
+    const host = invitation.hostNames || '신랑 · 신부';
+    return [
+      {
+        id: 'c1',
+        author: `${host} (예시 · 제안 P1)`,
+        message: `${host} 두 분의 소중한 결혼을 축하드리며, 하객의 따뜻한 축하 글이 실시간으로 공유되는 공간입니다. (예시 · 제안 P1)`,
+        date: '예시',
+        avatar: '🌸',
+      },
+    ];
+  });
   const [newAuthor, setNewAuthor] = useState<string>('');
   const [newMessage, setNewMessage] = useState<string>('');
   const [selectedEmoji, setSelectedEmoji] = useState<string>('🌸');

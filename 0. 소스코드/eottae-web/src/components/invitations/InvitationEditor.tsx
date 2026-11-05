@@ -45,8 +45,6 @@ const DEFAULT_SECTIONS: InvitationSectionKey[] = [
   'schedule',
   'gallery',
   'location',
-  'guestbook',
-  'guest_snap',
   'account',
   'rsvp_preview',
 ];
