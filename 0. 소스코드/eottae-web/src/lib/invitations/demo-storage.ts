@@ -4,7 +4,15 @@
 
 import { DEMO_GUESTS, DEMO_INVITATIONS, DEMO_RSVPS } from './demo-data';
 import type { Guest, Invitation, Rsvp, InvitationSectionKey } from './types';
-import { isInvitationStatus, isInvitationThemeId, isInvitationVisibility, isRsvpResponse, INVITATION_BGM_PRESETS, INVITATION_SECTION_KEYS } from './types';
+import {
+  isInvitationStatus,
+  isInvitationThemeId,
+  isInvitationVisibility,
+  isRsvpMeal,
+  isRsvpResponse,
+  INVITATION_BGM_PRESETS,
+  INVITATION_SECTION_KEYS,
+} from './types';
 
 export const INVITATIONS_DEMO_STORAGE_KEY = 'eottae.invitations.demo.v1';
 export const DEMO_INVITATIONS_EVENT = 'eottae-demo-invitations';
@@ -118,8 +126,6 @@ function sanitizeGuest(guest: Guest): Guest {
     memo: typeof guest.memo === 'string' ? guest.memo.trim().slice(0, 100) : undefined,
   };
 }
-
-import { isRsvpMeal } from './types';
 
 export function isStoredRsvp(value: unknown): value is Rsvp {
   if (!value || typeof value !== 'object') return false;

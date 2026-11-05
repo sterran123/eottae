@@ -111,9 +111,6 @@ function OwnerRsvpReadOnlyCard({ invitationId }: { invitationId: string }) {
         <p className="rsvp-demo-badge">데모 데이터로 동작하는 3차 미리보기</p>
         <div className="rsvp-denied" role="alert">
           <strong>{overview.message}</strong>
-          {overview.title ? (
-            <p className="rsvp-muted">대상 청첩장: {overview.title} (타인 소유 · viewerIsOwner=false)</p>
-          ) : null}
           <p className="rsvp-muted">
             청첩장 수정·토큰 재발급·하객 회신 명단 열람은 소유자(호스트) 계정에서만 허용됩니다. (TC-015 목업)
           </p>
@@ -156,6 +153,14 @@ function RsvpPageContent() {
   const token = searchParams.get('t') ?? '';
   const guestToken = searchParams.get('g') ?? '';
   const hostId = searchParams.get('host') ?? '';
+  const showDemoQuery = searchParams.get('demo') === '1';
+  // 하객 RSVP 화면(t 또는 g가 있는 경우)에서는 타인 회신이나 데모 링크 목록을 일체 노출하지 않는다 (ADR-004 · INV-003 · TC-016 회신 격리 준수).
+  // 데모 시연 목록은 파라미터가 없는 상태에서 ?demo=1 일 때만 연다.
+  const showDemoSwitcher =
+    showDemoQuery &&
+    token.trim() === '' &&
+    guestToken.trim() === '' &&
+    hostId.trim() === '';
 
   return (
     <div className="shell subpage rsvp-page">
@@ -165,30 +170,32 @@ function RsvpPageContent() {
         <InvitationRsvpForm token={token} guestToken={guestToken} />
       )}
 
-      <nav className="rsvp-demo-switcher" aria-label="RSVP 데모 링크 전환">
-        <p className="rsvp-demo-switcher-title">데모 링크 전환 (INV-003 · TC-015 · TC-016 시연)</p>
-        <p className="rsvp-muted">
-          공유 토큰(t)·하객 토큰(g) 조합에 따른 접근 제어, 하객 간 회신 격리, 비소유자 거절을 바로 확인할 수 있어요.
-        </p>
-        <div className="rsvp-demo-links">
-          {DEMO_SCENARIOS.map((item) => {
-            const active =
-              item.host !== ''
-                ? hostId === item.host
-                : hostId === '' && token === item.t && guestToken === item.g;
-            return (
-              <Link
-                key={item.id}
-                href={item.href}
-                className="rsvp-demo-link"
-                aria-current={active ? 'page' : undefined}
-              >
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
+      {showDemoSwitcher && (
+        <nav className="rsvp-demo-switcher" aria-label="RSVP 데모 링크 전환">
+          <p className="rsvp-demo-switcher-title">데모 링크 전환 (INV-003 · TC-015 · TC-016 시연)</p>
+          <p className="rsvp-muted">
+            공유 토큰(t)·하객 토큰(g) 조합에 따른 접근 제어, 하객 간 회신 격리, 비소유자 거절을 바로 확인할 수 있어요.
+          </p>
+          <div className="rsvp-demo-links">
+            {DEMO_SCENARIOS.map((item) => {
+              const active =
+                item.host !== ''
+                  ? hostId === item.host
+                  : hostId === '' && token === item.t && guestToken === item.g;
+              return (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  className="rsvp-demo-link"
+                  aria-current={active ? 'page' : undefined}
+                >
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+      )}
 
       <div className="rsvp-nav-row">
         <Link className="rsvp-back-link" href="/invitations/sample/">

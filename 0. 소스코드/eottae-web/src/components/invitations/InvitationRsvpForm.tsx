@@ -20,7 +20,15 @@ import {
   type RsvpDraft,
 } from '@/lib/invitations/rsvp-access';
 import type { RsvpMeal, RsvpResponse } from '@/lib/invitations/types';
+import { formatKoreanClock, parseSeoul } from './preview/invite-format';
 import './invitation-rsvp.css';
+
+function formatWeddingDate(rawDate: string): string {
+  const parsed = parseSeoul(rawDate);
+  if (!parsed) return rawDate;
+  const clock = formatKoreanClock(parsed.hour, parsed.minute);
+  return `${parsed.year}년 ${parsed.month}월 ${parsed.day}일 ${clock}`;
+}
 
 const RESPONSE_OPTIONS: ReadonlyArray<{ id: RsvpResponse; label: string }> = [
   { id: 'yes', label: '참석할게요' },
@@ -110,7 +118,8 @@ export default function InvitationRsvpForm({ token, guestToken }: InvitationRsvp
       <div className="rsvp-event-summary" aria-label="초대 행사 요약">
         <p className="rsvp-event-title">{access.invitation.title}</p>
         <p className="rsvp-muted">
-          {access.invitation.hostNames} · {access.invitation.weddingDate} · {access.invitation.venueLabel}
+          {access.invitation.hostNames} · {formatWeddingDate(access.invitation.weddingDate)} ·{' '}
+          {access.invitation.venueLabel}
         </p>
       </div>
       <h3 className="rsvp-title">{access.guest.displayName}님, 참석 여부를 알려 주세요</h3>
