@@ -172,7 +172,7 @@ export type OwnerRsvpRow = {
 };
 
 export type OwnerRsvpOverview =
-  | { ok: false; message: string; title?: string }
+  | { ok: false; message: string }
   | {
       ok: true;
       invitation: Invitation;
@@ -189,7 +189,7 @@ export function resolveOwnerRsvpOverview(invitationId: string): OwnerRsvpOvervie
   const invitation = getInvitationById(id);
   if (!invitation) return { ok: false, message: RSVP_NOT_OWNER_MESSAGE };
   if (invitation.viewerIsOwner !== true || invitation.ownerId !== 'user-demo-me') {
-    return { ok: false, message: RSVP_NOT_OWNER_MESSAGE, title: invitation.title };
+    return { ok: false, message: RSVP_NOT_OWNER_MESSAGE };
   }
   const state = loadInvitationsDemo();
   const guestsByToken = new Map(
