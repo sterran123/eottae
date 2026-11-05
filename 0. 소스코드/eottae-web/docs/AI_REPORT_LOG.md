@@ -1153,6 +1153,52 @@
 
 
 
+## 2026-11-05 3차 모바일 청첩장 행사/하객/공개 정책 목업 및 옛 토큰 만료 뷰 구현 (이슈 #85, INV-002, TC-015) (주한태 작업)
+- [요청] 이슈 #85(INV-002, TC-015): 3차 모바일 청첩장 목업 화면에서 소유자만 편집, 공개 링크 토큰 재발급, 옛 토큰 만료 화면, 보존 기간 안내, 하객 개인정보 비노출(ADR-004)을 구현. 서버 API·RLS·마이그레이션·Edge Function은 없음. 오하율의 INV-001 타입·데이터(`src/lib/invitations/`)만 사용하며 새 types 파일을 만들지 않음.
+- [AI] Antigravity가 `AGENT_주한태_INV_POLICY.md`, `3차_작업지시서.md`, `src/lib/invitations/types.ts`·`demo-storage.ts`·`href.ts`를 분석하고, Grok 봇이 지적했던 "하객 목록 거절 화면 누락" 및 "토큰 재발급 후 옛 토큰 만료 흐름 부재", "44px 및 6테마 완벽 대응"을 전면 해결.
+- [신규] `src/components/invitations/InvitationPolicyPanel.tsx` | 소유자 전용 정책 관리 패널. `viewerIsOwner` 검증 및 비소유자 거절 가드(TC-015), `regenerateSharingToken`을 통한 새 공유 링크 발급 및 이전 링크 만료 알림, 데이터 보존 안내(DEC-06 미결 반영: 임의 숫자 없이 「행사 종료 후 이 브라우저에서 지울 수 있어요. 보관 기간은 팀 결정(DEC-06) 후 확정」), 소유자 전용 하객 명단 및 RSVP 회신 현황 테이블, 청첩장 완전 삭제(`deleteInvitation`), 재발급 후 옛 토큰 만료 화면 검증 링크 제공. 360px 모바일 호환 및 44px 터치 영역 준수.
+- [신규] `src/components/invitations/InvitationGuestForbiddenView.tsx` | 하객 목록 전용 거절 화면 (TC-015 목업 · 403 FORBIDDEN). 비소유자가 하객 명단을 조회하려 할 때(?guests= 직접 쿼리 및 소유자 아닌 상태) 명확한 접근 차단 및 개인정보 보호 안내를 렌더링.
+- [신규] `src/components/invitations/InvitationExpiredView.tsx` | 옛 토큰 및 삭제된 청첩장 접근 시의 만료 안내 화면. 재발급 전의 옛 `sharingToken`이나 삭제된 청첩장 링크 접근 시 행사 정보 및 하객 데이터를 일체 숨기고 만료 사실과 홈 이동 버튼 제공.
+- [변경] `src/components/invitations/InvitationEditor.tsx` | 비소유자(`notOwner`) 진입 시 `InvitationGuestForbiddenView`를 마운트하여 편집뿐만 아니라 하객 목록 조회까지 완벽 거절. 기존 청첩장 편집 시 하단에 `InvitationPolicyPanel`을 마운트하여 토큰 재발급, 옛 토큰 만료 흐름, 하객 목록 및 삭제가 유기적으로 동작하도록 연결.
+- [변경] `src/components/invitations/InvitationsHub.tsx` | `guestsParam`(?guests=<id>) 직접 쿼리 수신 지원, 비소유자 카드에 `하객 목록 거절 테스트 (TC-015)` 링크 연결, 소유자 카드에 `하객·정책 관리` 연결.
+- [변경] `src/app/invitations/p/page.tsx` | 유효하지 않거나 재발급된 이전 토큰으로 접근 시 `InvitationExpiredView` 만료 화면 렌더링.
+- [검증] 오하율의 기존 타입(`src/lib/invitations/types.ts`) 100% 재사용 및 새 types 파일 미생성 확인.
+- [검증] `src/components/invitations/*.tsx` 내 하드코딩 hex(#) 색상 0건 및 6테마 CSS 변수(`var(...)`) 100% 토큰화 확인.
+- [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수), `package.json`, `FILE_INDEX.csv`, `MANIFEST.sha256`는 수정하지 않음.
+
+## 2026-11-05 INV-003 하객 카드 RSVP 버튼 연동 및 TC-016 테스트 기록 추가 (손준혁 작업, Refs #86)
+- [요청] 이슈 #22 피드백 및 Grok 코멘트(issue #22 comment 6650663244) 지침에 따른 INV-003 하객 카드 RSVP 연동 및 TC-016 테스트 마스터 기록 반영:
+  1) `InvitationCardRenderer.tsx` 및 `/invitations/p/page.tsx`: 공개 하객 청첩장 URL에서 `g` (하객 토큰) 쿼리스트링을 추출하여 `InvitationCardRenderer`에 전달. 하객 카드의 "🌸 참석합니다" 버튼 클릭 시 `router.push('/invitations/rsvp/?t=' + token + '&g=' + guestToken)`으로 회신 폼 이동 연결 (토큰 부재 시 거부 화면 `/invitations/rsvp/?t=`로 안전하게 분기). "마음으로 축하하기" 안내를 `(제안 · P1)`로 통일하고 `#86 연동 준비 중` 임시 각주 완전 제거.
+  2) `sample-content.ts`: 144행 FAQ 답변을 "참석 회신 저장은 아직 준비 중이에요"에서 하객 전용 링크를 통한 온라인 참석 회신 지원 안내로 최신화.
+  3) PR #98 AI 코드 리뷰 권장 사항 정돈: `demo-storage.ts`의 중간 `isRsvpMeal` import를 파일 최상단 모듈 import 구문으로 통합 정리, `InvitationRsvpForm.tsx`의 행사 일시(`weddingDate`)를 서울 시간대 기준 한국어 서식(`formatWeddingDate`)으로 통일, `rsvp-access.ts` 및 `/invitations/rsvp/page.tsx`의 비소유자 거부 화면에서 미사용 `title` 의존 제거.
+  4) `2. 프로젝트 설계서/테스트_케이스_마스터.md`: `## 실행 기록` 테이블에 TC-016(모바일 청첩장 하객 RSVP 응답 및 접근 제어) 검증 완료 행 추가 (`PASS (목업)`).
+- [AI] Antigravity가 해당 파일들 수정 및 타입체크·정적 빌드 검증 수행.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 페이지 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음 (3차 목업 단계 원칙 준수)
+
+## 2026-11-05 PR #101 1차 AI 코드 리뷰 지적 해결 (손준혁 작업, Refs #86)
+- [요청] PR #101 AI 리뷰 지적(InvitationCardRenderer.tsx:1732 필수 해결 및 권장 사항) 반영:
+  1) `InvitationCardRenderer.tsx` (필수): 에디터 실시간 미리보기 및 전체 화면 모달 미리보기(`previewMode={true}`)에서 「🌸 참석합니다」 버튼 클릭 시 페이지를 이탈하여 작성 중인 에디터 React state가 초기화되는 결함 해결. `if (previewMode)` 가드를 추가하여 미리보기 상태에서는 `router.push` 대신 "참석 회신은 하객 전용 초대 링크(t와 g)에서만 열려요. 이 미리보기에서는 이동하지 않아요." 토스트 알림을 띄우도록 보정하고, `URLSearchParams` 기반으로 파라미터를 안전하게 구성.
+  2) `2. 프로젝트 설계서/테스트_케이스_마스터.md`: TC-016 행의 검증 설명에서 캡처 증빙(22~25번) 범위를 초과하는 불일치 문구를 정리하여 목업 회신 폼 검증 범위와 일치화.
+  3) `/invitations/rsvp/page.tsx` (권장): 하객 카드에서 t+g를 가지고 진입한 경우 타인 회신 및 호스트 명단 전환 바(`rsvp-demo-switcher`)를 숨겨 ADR-004 및 TC-016의 하객 간 회신 격리 보장 (`?demo=1` 시에만 노출).
+- [AI] Antigravity가 해당 파일들 수정 후 타입체크 및 정적 빌드 검증 수행.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 페이지 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음 (3차 목업 단계 원칙 준수)
+
+
+## 2026-11-05 PR #101 2차 AI 코드 리뷰 지적 해결 (손준혁 작업, Refs #86, Refs #101)
+- [요청] PR #101 2차 AI 리뷰 지적(3건) 반영:
+  1) `/invitations/rsvp/page.tsx`: 하객 RSVP 화면(t 또는 g를 가지고 접근한 모든 경로)에서 데모 시나리오 링크 전환 바(`rsvp-demo-switcher`)가 노출되던 결함 완전 해결 (`token.trim() === '' && guestToken.trim() === '' && searchParams.get('demo') === '1'`일 때만 열리도록 제한하여 하객 간 회신 격리 및 ADR-004 준수).
+  2) `InvitationCardRenderer.tsx`: 공개 카드 「🌸 참석합니다」 버튼에서 g가 없을 때 `/invitations/rsvp/?t=` 회신 화면으로 잘못 넘어가던 문제 해결. `invitationGuestHref`를 연동하여 g가 있을 때만 `/invitations/rsvp/?t=&g=` 회신 폼으로 이동하고, g가 없을 때는 회신으로 보내지 않고 `invitationGuestHref(token)` 공개 경로(`/invitations/p/?t=`) 유지 및 안내 토스트 노출. 「💌 마음으로 축하」 토스트에 3초 자동 닫힘 타이머(`setTimeout`) 추가.
+  3) `테스트_케이스_마스터.md`: TC-016 행에서 캡처 스냅샷(22~25번) 불일치 문구 및 360px 실측 주장을 실제 확인된 동작(미리보기 이동 방지, g 유무에 따른 분기 및 공개 경로 유지, 하객 화면 데모 전환 바 비노출 격리) 기준으로 현행화하고 판정을 명확히 분리 기록.
+- [AI] Antigravity가 해당 파일들 수정 후 TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 라우트 정적 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음 (3차 목업 단계 원칙 준수)
+
+
 ## 2026-11-05 @grok 멘션 접수 신호 — 👀·확인 댓글·예상 시간 (김민기 작업 · Devin 실행)
 - [요청] 소유자 요청: `@grok` 멘션 시 (1) 봇이 봤다는 표시를 먼저, (2) "확인하겠습니다" 접수 댓글을 즉시, (3) 예상 소요 시간까지 안내.
 - [AI] Devin이 `tools/grok_review_worker.mjs`·`tools/grok_mention.mjs` 수정:
@@ -1161,3 +1207,12 @@
   3) `grok_mention.mjs`가 답변 게시 후 접수 댓글 끝에 "→ ✅ 답변을 남겼어요." 한 줄을 PATCH로 추가(마커 보존).
 - [검증] `node --check` 두 파일 PASS. 확인 신호는 GitHub 쓰기라 로컬 DRY_RUN=2 출력 로그만 확인(실게시 검증은 main 머지 후 작업자 주기에서 발생).
 - [미실행] 라이브 작업자(C:\eottae-grok-review 전용 클론)는 origin/main으로 자동 빨리감기 후 재시작 — 본 PR 머지 전까지 신동작 미적용.
+
+
+## 2026-11-05 PR #100 머지본 로그 절 복원 및 접수 댓글 실패 갱신 (김민기 작업 · Devin 실행)
+- [요청] PR #100(이슈 #100) 1차 AI 리뷰 필수 지적 2건 중 미해결분 반영: 머지 과정에서 AI_REPORT_LOG.md의 직전 절 4개가 유실된 것 복원, 접수 댓글이 종료 후에도 "답변까지 N분 걸려요"로 남는 문제 해결.
+- [AI] Devin이 `0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md`·`tools/grok_mention.mjs` 수정:
+  1) `AI_REPORT_LOG.md`: 머지 베이스(5582973^) 대비 유실된 절 4개를 원문 그대로 복원 — 「3차 모바일 청첩장 행사/하객/공개 정책 목업 및 옛 토큰 만료 뷰 구현 (이슈 #85, INV-002, TC-015) (주한태 작업)」, 「INV-003 하객 카드 RSVP 버튼 연동 및 TC-016 테스트 기록 추가 (손준혁 작업)」, 「PR #101 1차·2차 AI 코드 리뷰 지적 해결 (손준혁 작업)」. 기존 @grok 절은 그 뒤에 유지.
+  2) `tools/grok_mention.mjs`: 접수 댓글 갱신을 `noteAck(line)` 헬퍼로 정리하고 실패 경로에도 적용 — 종료된 실패 시 "→ 이번 요청은 처리하지 못했습니다."를 붙여 접수 댓글이 영구 미결처럼 남지 않게 함. 갱신 실패는 `console.error` 로그로 남기고 답 게시 흐름을 막지 않음. 계정 문제(return 3)는 다음 실행이 다시 집으므로 기존대로 접수 댓글 미갱신 유지.
+- [검증] `node --check tools/grok_mention.mjs` PASS. 유실 절 4개가 베이스 원문과 동일하게 복원됨을 `git show 5582973^` 비교로 확인.
+- [미실행] GitHub 쓰기 경로(접수 댓글 PATCH)는 로컬 DRY_RUN=2 로그만 확인 — 실게시 검증은 머지 후 작업자 주기에서 발생.

@@ -108,10 +108,23 @@ async function main() {
   const { runGrok } = await import("./grok_review_engine.mjs");
   const r = await runGrok(prompt, { cwd: REVIEW_CWD, timeoutMs: DEADLINE_MS });
   console.log(`grok: ${r.ok ? "응답" : r.kind} · ${r.info}`);
+  // 작업자가 남긴 접수 댓글 끝에 결과 한 줄을 붙인다(마커는 그대로 둔다)
+  const noteAck = async (line) => {
+    if (DRY) return;
+    const ack = comments.find((x) => String(x.body).includes(`<!-- grok-ack:${COMMENT_ID} -->`));
+    if (!ack || String(ack.body).includes(line)) return;
+    await gh(`repos/${REPO}/issues/comments/${ack.id}`, {
+      method: "PATCH",
+      body: { body: `${ack.body}\n\n${line}` },
+    });
+  };
   if (!r.ok) {
     // 계정 문제(로그인·한도)는 답을 달지 않고 작업자를 멈춘다 — 같은 댓글은 다음 실행에서 다시 집는다
     if (r.kind === "account") return 3;
     await reply(number, `🤖 @${asker} **@​grok 요청을 처리하지 못했습니다** (${r.reason}). 다시 요청하려면 새 댓글로 \`@grok\`을 불러 주세요.`);
+    await noteAck("→ 이번 요청은 처리하지 못했습니다.").catch((e) =>
+      console.error(`접수 댓글 갱신 실패: ${e.message}`),
+    );
     return 1;
   }
   // 최종 답 앞에 진행 문구("먼저 대조하겠습니다…")가 붙어 나온다 — 정해 둔 제목 줄 뒤부터 쓴다
@@ -119,14 +132,9 @@ async function main() {
   const answer = (at >= 0 ? r.answer.slice(at + HEADING.length) : r.answer).trim();
   // 요청한 팀원만 진짜 멘션한다(알림) — 답 본문의 멘션은 끊은 채로
   await reply(number, `**@​grok 답변** — @${asker} 요청 ([댓글](${c.html_url}))\n\n${unmention(answer)}\n\n---\n🤖 로컬 Grok (${r.info})`);
-  // 작업자가 남긴 접수 댓글이 있으면 끝에 완료 한 줄을 붙인다(마커는 그대로 둔다)
-  const ack = comments.find((x) => String(x.body).includes(`<!-- grok-ack:${COMMENT_ID} -->`));
-  if (ack && !DRY) {
-    await gh(`repos/${REPO}/issues/comments/${ack.id}`, {
-      method: "PATCH",
-      body: { body: `${ack.body}\n\n→ ✅ 답변을 남겼어요.` },
-    }).catch(() => {});
-  }
+  await noteAck("→ ✅ 답변을 남겼어요.").catch((e) =>
+    console.error(`접수 댓글 갱신 실패: ${e.message}`),
+  );
   console.log("answered:", COMMENT_ID);
   return 0;
 }
