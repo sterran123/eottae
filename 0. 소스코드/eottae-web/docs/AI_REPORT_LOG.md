@@ -1435,6 +1435,21 @@
 - [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
 - [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
 
+## 2026-11-06 PR #102 허브 크롬/카드 보조 버튼 선택자 분리 및 고특이성 밝은 카드 격리 (Refs #84, Refs #102) (오하율 작업)
+- [요청] `invitations.css:5765`: 다크 테마에서 허브 미리보기 모달 및 에디터 셸 내부 밝은 카드(`inv-mode--light`)의 보조 버튼(💌 마음으로 축하, 공식 사진 추가 등)이 허브 전역 크롬 오버라이드에 덮여 가독성이 저하되는 현상 완전 해결:
+  1) `invitations.css`: `[data-theme='dark'] .inv-hub .inv-btn-secondary`의 포괄적 조상 선택자를 제거하고, 실제 허브 크롬 UI(`.inv-hub-header`, `.inv-my-card`, `.inv-my-card-row`, `.inv-editor-toolbar`, `.inv-modal-toolbar`)로 선택자 범위를 정밀 분리.
+  2) `invitations.css`: 밝은 카드 보조 버튼에 `[data-theme='dark'] .inv-hub .inv-mode--light .inv-btn-secondary`, `[data-theme='dark'] .inv-editor-shell .inv-mode--light .inv-btn-secondary`의 고특이성(0,4,0) 선택자를 부여하고, 다크 오버라이드 규칙 뒤에도 배치하여 허브 모달 및 에디터 내 밝은 카드 보조 버튼이 항상 `--inv-surface` 및 `--inv-ink`로 13:1 이상의 고대비를 유지하도록 보장.
+  3) `InvitationCardRenderer.tsx`: 신랑/신부 계좌 아코디언 토글(`inv-account-row`)에 Space 키 핸들러(`e.key === ' '`) 및 `preventDefault()`를 추가하여 왁스 씰과 동일한 키보드 접근성 완비.
+  4) `scripts/verify-modal-and-card.ts`: [검증 13]을 갱신하여 포괄적 `.inv-hub` 다크 오버라이드 부재 및 고특이성 밝은 카드 선택자 적용 자동 검증 (39/39 PASS).
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (39/39 통과)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
+
+
+
 
 
 

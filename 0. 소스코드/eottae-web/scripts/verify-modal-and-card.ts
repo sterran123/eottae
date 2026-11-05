@@ -345,11 +345,14 @@ assert(
 );
 
 assert(
+  cssCode.includes("[data-theme='dark'] .inv-hub .inv-mode--light .inv-btn-secondary") &&
+  cssCode.includes("[data-theme='dark'] .inv-editor-shell .inv-mode--light .inv-btn-secondary") &&
   cssCode.includes('.inv-mode--light .inv-btn-secondary') &&
   cssCode.includes('background: var(--inv-surface) !important;') &&
   cssCode.includes('color: var(--inv-ink) !important;') &&
-  !cssCode.includes("[data-theme='dark'] .inv-btn-secondary {"),
-  '밝은 카드(.inv-mode--light)의 보조 버튼(마음으로 축하)이 다크 테마 오버라이드 없이 전용 토큰으로 고대비를 보장함'
+  !cssCode.includes("[data-theme='dark'] .inv-hub .inv-btn-secondary") &&
+  !cssCode.includes("[data-theme='dark'] .inv-editor-shell .inv-btn-secondary"),
+  '밝은 카드(.inv-mode--light)의 보조 버튼이 허브·에디터 셸 스코프 포함 고특이성 선택자로 다크 오버라이드를 완전 차단하고 고대비를 보장함'
 );
 
 assert(

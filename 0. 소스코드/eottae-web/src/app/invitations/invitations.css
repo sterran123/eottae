@@ -4239,12 +4239,16 @@
   color: var(--inv-surface);
 }
 
+[data-theme='dark'] .inv-hub .inv-mode--light .inv-btn-secondary,
+[data-theme='dark'] .inv-editor-shell .inv-mode--light .inv-btn-secondary,
 .inv-mode--light .inv-btn-secondary {
   background: var(--inv-surface) !important;
   color: var(--inv-ink) !important;
   border: 1px solid var(--inv-ink) !important;
 }
 
+[data-theme='dark'] .inv-hub .inv-mode--light .inv-btn-secondary:hover,
+[data-theme='dark'] .inv-editor-shell .inv-mode--light .inv-btn-secondary:hover,
 .inv-mode--light .inv-btn-secondary:hover {
   background: var(--inv-ink) !important;
   color: var(--inv-surface) !important;
@@ -5762,8 +5766,10 @@
 /* ============================================================
  * [다크 테마 고대비 보정 - WCAG 2.1 AA 100% 보장]
  * ============================================================ */
-[data-theme='dark'] .inv-hub .inv-btn-secondary,
-[data-theme='dark'] .inv-editor-shell .inv-btn-secondary,
+[data-theme='dark'] .inv-hub-header .inv-btn-secondary,
+[data-theme='dark'] .inv-my-card .inv-btn-secondary,
+[data-theme='dark'] .inv-my-card-row .inv-btn-secondary,
+[data-theme='dark'] .inv-editor-toolbar .inv-btn-secondary,
 [data-theme='dark'] .inv-modal-toolbar .inv-btn-secondary,
 .inv-mode--dark .inv-btn-secondary {
   background: rgba(255, 255, 255, 0.16) !important;
@@ -5771,13 +5777,31 @@
   border: 1px solid rgba(255, 255, 255, 0.32) !important;
 }
 
-[data-theme='dark'] .inv-hub .inv-btn-secondary:hover,
-[data-theme='dark'] .inv-editor-shell .inv-btn-secondary:hover,
+[data-theme='dark'] .inv-hub-header .inv-btn-secondary:hover,
+[data-theme='dark'] .inv-my-card .inv-btn-secondary:hover,
+[data-theme='dark'] .inv-my-card-row .inv-btn-secondary:hover,
+[data-theme='dark'] .inv-editor-toolbar .inv-btn-secondary:hover,
 [data-theme='dark'] .inv-modal-toolbar .inv-btn-secondary:hover,
 .inv-mode--dark .inv-btn-secondary:hover {
   background: rgba(255, 255, 255, 0.26) !important;
   color: #ffffff !important;
   border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+[data-theme='dark'] .inv-hub .inv-mode--light .inv-btn-secondary,
+[data-theme='dark'] .inv-editor-shell .inv-mode--light .inv-btn-secondary,
+.inv-mode--light .inv-btn-secondary {
+  background: var(--inv-surface) !important;
+  color: var(--inv-ink) !important;
+  border: 1px solid var(--inv-ink) !important;
+}
+
+[data-theme='dark'] .inv-hub .inv-mode--light .inv-btn-secondary:hover,
+[data-theme='dark'] .inv-editor-shell .inv-mode--light .inv-btn-secondary:hover,
+.inv-mode--light .inv-btn-secondary:hover {
+  background: var(--inv-ink) !important;
+  color: var(--inv-surface) !important;
+  border-color: var(--inv-ink) !important;
 }
 
 .inv-mode--dark .inv-account-card {

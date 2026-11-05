@@ -1628,7 +1628,10 @@ export default function InvitationCardRenderer({
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') setGroomAccountOpen(!groomAccountOpen);
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setGroomAccountOpen(!groomAccountOpen);
+                    }
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1673,7 +1676,10 @@ export default function InvitationCardRenderer({
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') setBrideAccountOpen(!brideAccountOpen);
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setBrideAccountOpen(!brideAccountOpen);
+                    }
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
