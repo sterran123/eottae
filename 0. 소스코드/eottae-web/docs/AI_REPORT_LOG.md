@@ -1332,3 +1332,14 @@
 - [검증] `npm run build` PASS (Next.js 15.5.28 정적 페이지 export 100% 성공)
 - [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
 
+## 2026-11-05 PR #102 버튼 글자색 토큰 전환(`var(--bg)`) 및 스코프 규칙 정리 (Refs #84, Refs #102) (오하율 작업)
+- [요청] PR #102 AI 리뷰 지적(기본 버튼 color: var(--bg) 전환 및 사이버펑크/다크 개별 스코프 규칙 제거):
+  1) `invitations.css`: `.inv-btn-primary`의 글자색을 `color: var(--bg)`로 전환. 모든 앱 테마(light, dark, cyberpunk, cupcake, disney, system)에서 각 테마의 배경색(`--bg`)과 브랜드색(`--brand`) 간의 확실한 명도 대비를 보장하고, 에디터 및 모달 전역의 버튼들이 일관된 시각적 대비를 갖도록 개선.
+  2) `invitations.css`: 허브·헤더·모달 툴바에 개별 적용되었던 `#ffffff` 및 `#05050d` 스코프 오버라이드 규칙을 완전히 제거하여 카드 인라인 액센트 색상과 자연스럽게 조화되도록 정리.
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (28/28 통과)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개
+- [미실행] 서버·Supabase 연동 없음 (3차 목업 단계 원칙 준수)
+

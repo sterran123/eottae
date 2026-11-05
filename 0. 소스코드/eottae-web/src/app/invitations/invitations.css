@@ -95,7 +95,7 @@
   min-height: 44px;
   padding: 0 22px;
   background: var(--brand);
-  color: #ffffff;
+  color: var(--bg);
   font-weight: 600;
   font-size: 14px;
   border-radius: 12px;
@@ -104,33 +104,6 @@
   cursor: pointer;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
   transition: all 0.2s ease;
-}
-
-/* 사이버펑크 및 다크/시스템 다크 테마에서 버튼 글자색 대비 보장 (허브 배너·헤더·모달 툴바 버튼만 한정하여 카드 인라인 액센트 보존) */
-[data-theme='dark'] .inv-hub .inv-btn-primary,
-[data-theme='dark'] .inv-hub-shell .inv-btn-primary,
-[data-theme='dark'] .inv-section-header-row .inv-btn-primary,
-[data-theme='dark'] .inv-modal-toolbar .inv-btn-primary {
-  color: #ffffff;
-  font-weight: 700;
-}
-
-[data-theme='cyberpunk'] .inv-hub .inv-btn-primary,
-[data-theme='cyberpunk'] .inv-hub-shell .inv-btn-primary,
-[data-theme='cyberpunk'] .inv-section-header-row .inv-btn-primary,
-[data-theme='cyberpunk'] .inv-modal-toolbar .inv-btn-primary {
-  color: #05050d;
-  font-weight: 700;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root[data-theme='system'] .inv-hub .inv-btn-primary,
-  :root[data-theme='system'] .inv-hub-shell .inv-btn-primary,
-  :root[data-theme='system'] .inv-section-header-row .inv-btn-primary,
-  :root[data-theme='system'] .inv-modal-toolbar .inv-btn-primary {
-    color: #ffffff;
-    font-weight: 700;
-  }
 }
 
 /* 사이버펑크 및 다크 테마에서 브랜드 배경 요소들의 글자색 대비 보장 */
