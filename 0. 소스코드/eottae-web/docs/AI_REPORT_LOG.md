@@ -1266,11 +1266,18 @@
 
 
 ## 2026-11-05 PR #102 AI 리뷰 지적 해결 및 main 충돌 해결 (오하율 작업)
-- [요청] PR #102 main 충돌 해결 및 AI 코드 리뷰 FAIL 2건(공개 하객 화면 참석 회신 버튼 미노출·TC-016 클릭 동작 불일치) 해결:
-  1) `AI_REPORT_LOG.md`: main 브랜치 머지 시 충돌난 멘션 접수 로그와 3차 정책 목업 로그를 통합 보존하여 충돌 해소.
-  2) `InvitationCardRenderer.tsx`: 공개 하객 화면(`previewMode === false`)에서 `activeSections`를 필터링할 때 `rsvp_preview`가 누락되어 회신 버튼이 그려지지 않던 문제를 해결하여 `rsvp_preview` 섹션을 보장(방명록 `guestbook`은 하객 개인정보 비노출 원칙에 따라 공개 화면에서 격리).
-  3) `InvitationCardRenderer.tsx`: 참석 회신 버튼 클릭 시 손준혁의 TC-016 명세와 동일하게 일치화. `resolveRsvpAccess`로 인한 사전 차단 대신 게스트 토큰(`g`) 보유 시 `/invitations/rsvp/?t=&g=`로 정상 이동하도록 하고, `g` 부재 시 안내 토스트 표출 및 `invitationGuestHref` 공개 경로 유지.
-- [AI] Antigravity가 main 충돌 해결 및 InvitationCardRenderer.tsx 수정, 정적 빌드 테스트 통과.
+- [요청] PR #102 main 충돌 해결 및 AI 코드 리뷰 FAIL 2건(공개 하객 화면 참석 회신 버튼 미노출·TC-016 클릭 동작 불일치) 및 권장사항 5건 해결:
+  1) `AI_REPORT_LOG.md`: main 브랜치 머지 시 충돌난 멘션 접수 로그와 주한태·손준혁의 3차 정책/RSVP 목업 로그 4개 절을 통합 보존하여 충돌 해소.
+  2) `InvitationCardRenderer.tsx`: 공개 하객 화면(`previewMode === false`)에서 `activeSections`를 필터링할 때 `PUBLIC_HIDDEN` Set(`guestbook`, `guest_snap`)을 도입하여 하객 개인정보 비노출(ADR-004)을 지키면서 `rsvp_preview`·`gallery`·`account` 섹션 및 참석 회신 버튼이 온전히 그려지도록 개선.
+  3) `InvitationCardRenderer.tsx`: 참석 회신 버튼 클릭 핸들러를 TC-016 명세와 동일하게 `if (token && g)` 분기로 일치화. 불필요한 사전 차단을 배제하고 `/invitations/rsvp/?t=&g=` 이동을 정식 위임하며, `g` 부재 시 안내 토스트 노출.
+  4) `scripts/verify-modal-and-card.ts`: 4컷 필름형 모달 라벨 변경에 맞춰 검증 문자열을 `4컷 필름형`으로 일치화하여 28개 검증 항목 100% PASS 달성.
+  5) `InvitationPreviewModal.tsx`: 오시는 길 본문이 80자를 넘거나 줄바꿈이 포함될 경우 저장 실패 대신 사용자에게 `장소명은 줄바꿈 없이 80자 이내로 입력해 주세요` 안내 토스트를 즉시 제공.
+  6) `demo-storage.ts`: `deleteInvitation` 및 `regenerateSharingToken`에 `saveInvitation`과 동일한 소유자 검증(`viewerIsOwner === true || (ownerId && ownerId === 'user-demo-me')`) 적용.
+  7) `src/app/invitations/new/page.tsx`, `InvitationCardRenderer.tsx`, `InvitationsHub.tsx`: 에디터 상태 칩 편집/생성 문구 복원(`청첩장 수정 (데모)` / `새 청첩장 만들기 (데모)`), 테마 ID 고유화에 맞춘 영문 문구(`Our Vow`, `warm heart`) 일치화.
+- [AI] Antigravity가 main 충돌 해결 및 InvitationCardRenderer.tsx, demo-storage.ts 등 수정, 타입체크 및 정적 빌드 테스트 통과.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (28/28 통과)
+- [검증] `npm run typecheck` PASS (0 errors)
 - [검증] `npm run build` PASS (Next.js 15.5.28 정적 페이지 export 100% 성공)
 - [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
+
 

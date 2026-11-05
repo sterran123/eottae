@@ -159,9 +159,9 @@ assert(
   modalCode.includes("label: '감성사진형'") &&
   modalCode.includes("label: '둥근형'") &&
   modalCode.includes("label: '네모형'") &&
-  modalCode.includes("label: '인생네컷형'") &&
+  modalCode.includes("label: '4컷 필름형'") &&
   modalCode.includes("label: '풀커버형'"),
-  '모달에 6가지 프레임 스타일(아치형, 감성사진형, 둥근형, 네모형, 인생네컷형, 풀커버형) 선택 UI 완벽 반영'
+  '모달에 6가지 프레임 스타일(아치형, 감성사진형, 둥근형, 네모형, 4컷 필름형, 풀커버형) 선택 UI 완벽 반영'
 );
 
 assert(

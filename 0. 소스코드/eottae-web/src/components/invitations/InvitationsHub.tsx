@@ -85,7 +85,7 @@ const DESIGN_COLLECTION: DesignCoverItem[] = [
       <div className="inv-real-photo-cover" style={{ backgroundImage: `url(${imgSunset})` }}>
         <div className="inv-real-photo-overlay inv-overlay--sunset" />
         <div className="inv-cover-top-center-names">SIWOO &amp; YURIN</div>
-        <div className="inv-cover-center-script-huge">Our Wedding</div>
+        <div className="inv-cover-center-script-huge">Our Vow</div>
         <div className="inv-cover-bottom-date">2027.11.13</div>
       </div>
     ),
@@ -139,7 +139,7 @@ const DESIGN_COLLECTION: DesignCoverItem[] = [
           <div className="inv-fade-bottom-gradient" />
         </div>
         <div className="inv-fade-content">
-          <div className="inv-script-with-love">with love</div>
+          <div className="inv-script-with-love">warm heart</div>
           <div className="inv-fade-info">
             <div>2027년 4월 17일 토요일 오후 2시</div>
             <div style={{ marginTop: 2 }}>한들시 숲속의아침 가든볼룸</div>

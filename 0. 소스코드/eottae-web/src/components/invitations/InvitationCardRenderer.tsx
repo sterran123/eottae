@@ -182,13 +182,14 @@ export default function InvitationCardRenderer({
   const activeBgm = overrideBgm || invitation.bgmPreset || themePreset.defaultBgm || 'romantic';
   const baseSections: InvitationSectionKey[] =
     overrideSectionOrder || invitation.sectionOrder || themePreset.defaultSectionOrder;
+  const PUBLIC_HIDDEN = new Set<InvitationSectionKey>(['guestbook', 'guest_snap']);
   // 공개 하객 화면(/invitations/p/?t=, previewMode === false)에서도 하객이 참석 여부를 회신할 수 있도록 rsvp_preview 섹션 포함 보장 (타 하객 명단/방명록은 격리)
   const baseList: InvitationSectionKey[] = baseSections.includes('rsvp_preview')
     ? baseSections
     : [...baseSections, 'rsvp_preview'];
   const activeSections: InvitationSectionKey[] = previewMode
     ? baseSections
-    : baseList.filter((sec): sec is InvitationSectionKey => sec !== 'guestbook');
+    : baseList.filter((sec) => !PUBLIC_HIDDEN.has(sec));
 
   const activeEffect = propEffect || themePreset.defaultEffect || 'petals';
   const frameStyle = propFrameStyle || themePreset.defaultFrameStyle || 'arch';
@@ -755,8 +756,8 @@ export default function InvitationCardRenderer({
         return (
           <div className="inv-hero-sig inv-hero-sig--photo-full" style={{ backgroundImage: `url(${heroPhoto(imgSunset)})` }}>
             <div className="inv-real-photo-overlay inv-overlay--sunset" />
-            <div className="inv-cover-top-center-names">THE WEDDING OF</div>
-            <div className="inv-cover-center-script-huge">Our Wedding</div>
+            <div className="inv-cover-top-center-names">OUR SACRED VOW</div>
+            <div className="inv-cover-center-script-huge">Our Vow</div>
             <div className="inv-sig-content inv-sig-content--floating">
               <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
               <div className="inv-sig-date" style={{ color: '#fed7aa' }}>
@@ -803,7 +804,7 @@ export default function InvitationCardRenderer({
               <div className="inv-withlove-gradient-mask" />
             </div>
             <div className="inv-withlove-body">
-              <div className="inv-script-with-love">with love</div>
+              <div className="inv-script-with-love">warm heart</div>
               <h2 className="inv-sig-names" style={{ fontFamily: 'serif', marginTop: 6 }}>{hostNames}</h2>
               <div className="inv-sig-date">
                 {displayTimeKorean}
@@ -1710,22 +1711,17 @@ export default function InvitationCardRenderer({
                     }
                     const token = invitation.sharingToken?.trim() || '';
                     const g = guestToken?.trim() || '';
-                    if (g) {
-                      // g가 있을 때만 RSVP 회신 폼으로 이동 (INV-003 · TC-016)
+                    if (token && g) {
                       const params = new URLSearchParams();
-                      if (token) params.set('t', token);
+                      params.set('t', token);
                       params.set('g', g);
                       router.push(`/invitations/rsvp/?${params.toString()}`);
-                    } else {
-                      // g가 없는 공개 카드에서는 회신(/invitations/rsvp/)으로 보내지 않고 공개 경로(/invitations/p/?t=)를 유지
-                      setCopyNotice(
-                        '참석 회신은 청첩장에 동봉된 개인별 하객 링크(g)로 접속했을 때만 가능해요.',
-                      );
-                      setTimeout(() => setCopyNotice(null), 3000);
-                      if (token) {
-                        router.push(invitationGuestHref(token));
-                      }
+                      return;
                     }
+                    setCopyNotice(
+                      '참석 회신은 청첩장에 동봉된 개인별 하객 링크(g)로 접속했을 때만 가능해요.',
+                    );
+                    setTimeout(() => setCopyNotice(null), 3000);
                   }}
                 >
                   🌸 참석합니다
