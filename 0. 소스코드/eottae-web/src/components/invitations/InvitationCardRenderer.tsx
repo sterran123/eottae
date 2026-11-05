@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import type {
   Invitation,
   InvitationSectionKey,
@@ -14,6 +15,7 @@ import type {
   GalleryViewMode,
   ThemeCustomStyle,
 } from '@/lib/invitations/types';
+import { invitationGuestHref } from '@/lib/invitations/href';
 import { getThemePreset } from '@/lib/invitations/theme-presets';
 import {
   getContrastingTextColor,
@@ -49,6 +51,7 @@ interface InvitationCardRendererProps {
   customMainPhoto?: string;
   customBgmUrl?: string;
   customBgmTitle?: string;
+  guestToken?: string;
 }
 
 interface GuestComment {
@@ -152,6 +155,7 @@ export function getThemeDefaultPhoto(themeId: string): string {
 export default function InvitationCardRenderer({
   invitation,
   previewMode = false,
+  guestToken,
   overrideTheme,
   overrideLayout,
   overrideBgm,
@@ -167,6 +171,7 @@ export default function InvitationCardRenderer({
   customBgmUrl,
   customBgmTitle,
 }: InvitationCardRendererProps) {
+  const router = useRouter();
   const activeThemeId = overrideTheme || invitation.themeId || 'wax-seal';
   const themePreset = getThemePreset(activeThemeId);
 
@@ -1725,9 +1730,33 @@ export default function InvitationCardRenderer({
                     backgroundColor: accent,
                     color: getContrastingTextColor(accent),
                   }}
-                  onClick={() =>
-                    setCopyNotice('RSVP 회신 폼은 현재 준비 중입니다 (손준혁 #86 목업 연동 예정)')
-                  }
+                  onClick={() => {
+                    if (previewMode) {
+                      setCopyNotice(
+                        '참석 회신은 하객 전용 초대 링크(t와 g)에서만 열려요. 이 미리보기에서는 이동하지 않아요.',
+                      );
+                      setTimeout(() => setCopyNotice(null), 3000);
+                      return;
+                    }
+                    const token = invitation.sharingToken?.trim() || '';
+                    const g = guestToken?.trim() || '';
+                    if (g) {
+                      // g가 있을 때만 RSVP 회신 폼으로 이동 (INV-003)
+                      const params = new URLSearchParams();
+                      if (token) params.set('t', token);
+                      params.set('g', g);
+                      router.push(`/invitations/rsvp/?${params.toString()}`);
+                    } else {
+                      // g가 없는 공개 카드에서는 회신(/invitations/rsvp/)으로 보내지 않고 공개 경로(/invitations/p/?t=)를 유지
+                      setCopyNotice(
+                        '참석 회신은 청첩장에 동봉된 개인별 하객 링크(g)로 접속했을 때만 가능해요.',
+                      );
+                      setTimeout(() => setCopyNotice(null), 3000);
+                      if (token) {
+                        router.push(invitationGuestHref(token));
+                      }
+                    }
+                  }}
                 >
                   🌸 참석합니다
                 </button>
@@ -1735,16 +1764,14 @@ export default function InvitationCardRenderer({
                   type="button"
                   className="inv-btn-secondary"
                   style={{ minHeight: 44, fontSize: 13, padding: '0 18px' }}
-                  onClick={() =>
-                    setCopyNotice('마음으로 축하하기 기능은 현재 준비 중입니다 (손준혁 #86 연동 예정)')
-                  }
+                  onClick={() => {
+                    setCopyNotice('마음으로 축하하기 기능은 현재 준비 중입니다 (제안 · P1)');
+                    setTimeout(() => setCopyNotice(null), 3000);
+                  }}
                 >
                   💌 마음으로 축하
                 </button>
               </div>
-              <p style={{ fontSize: 11, opacity: 0.65, textAlign: 'center', marginTop: 12 }}>
-                * 손준혁 담당: RSVP 응답 및 접근 제어 목업(#86) 연동 준비 중
-              </p>
             </div>
           </section>
         );

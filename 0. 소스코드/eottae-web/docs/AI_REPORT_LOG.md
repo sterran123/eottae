@@ -1164,6 +1164,38 @@
 - [검증] `src/components/invitations/*.tsx` 내 하드코딩 hex(#) 색상 0건 및 6테마 CSS 변수(`var(...)`) 100% 토큰화 확인.
 - [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수), `package.json`, `FILE_INDEX.csv`, `MANIFEST.sha256`는 수정하지 않음.
 
+## 2026-11-05 INV-003 하객 카드 RSVP 버튼 연동 및 TC-016 테스트 기록 추가 (손준혁 작업, Refs #86)
+- [요청] 이슈 #22 피드백 및 Grok 코멘트(issue #22 comment 6650663244) 지침에 따른 INV-003 하객 카드 RSVP 연동 및 TC-016 테스트 마스터 기록 반영:
+  1) `InvitationCardRenderer.tsx` 및 `/invitations/p/page.tsx`: 공개 하객 청첩장 URL에서 `g` (하객 토큰) 쿼리스트링을 추출하여 `InvitationCardRenderer`에 전달. 하객 카드의 "🌸 참석합니다" 버튼 클릭 시 `router.push('/invitations/rsvp/?t=' + token + '&g=' + guestToken)`으로 회신 폼 이동 연결 (토큰 부재 시 거부 화면 `/invitations/rsvp/?t=`로 안전하게 분기). "마음으로 축하하기" 안내를 `(제안 · P1)`로 통일하고 `#86 연동 준비 중` 임시 각주 완전 제거.
+  2) `sample-content.ts`: 144행 FAQ 답변을 "참석 회신 저장은 아직 준비 중이에요"에서 하객 전용 링크를 통한 온라인 참석 회신 지원 안내로 최신화.
+  3) PR #98 AI 코드 리뷰 권장 사항 정돈: `demo-storage.ts`의 중간 `isRsvpMeal` import를 파일 최상단 모듈 import 구문으로 통합 정리, `InvitationRsvpForm.tsx`의 행사 일시(`weddingDate`)를 서울 시간대 기준 한국어 서식(`formatWeddingDate`)으로 통일, `rsvp-access.ts` 및 `/invitations/rsvp/page.tsx`의 비소유자 거부 화면에서 미사용 `title` 의존 제거.
+  4) `2. 프로젝트 설계서/테스트_케이스_마스터.md`: `## 실행 기록` 테이블에 TC-016(모바일 청첩장 하객 RSVP 응답 및 접근 제어) 검증 완료 행 추가 (`PASS (목업)`).
+- [AI] Antigravity가 해당 파일들 수정 및 타입체크·정적 빌드 검증 수행.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 페이지 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음 (3차 목업 단계 원칙 준수)
+
+## 2026-11-05 PR #101 1차 AI 코드 리뷰 지적 해결 (손준혁 작업, Refs #86)
+- [요청] PR #101 AI 리뷰 지적(InvitationCardRenderer.tsx:1732 필수 해결 및 권장 사항) 반영:
+  1) `InvitationCardRenderer.tsx` (필수): 에디터 실시간 미리보기 및 전체 화면 모달 미리보기(`previewMode={true}`)에서 「🌸 참석합니다」 버튼 클릭 시 페이지를 이탈하여 작성 중인 에디터 React state가 초기화되는 결함 해결. `if (previewMode)` 가드를 추가하여 미리보기 상태에서는 `router.push` 대신 "참석 회신은 하객 전용 초대 링크(t와 g)에서만 열려요. 이 미리보기에서는 이동하지 않아요." 토스트 알림을 띄우도록 보정하고, `URLSearchParams` 기반으로 파라미터를 안전하게 구성.
+  2) `2. 프로젝트 설계서/테스트_케이스_마스터.md`: TC-016 행의 검증 설명에서 캡처 증빙(22~25번) 범위를 초과하는 불일치 문구를 정리하여 목업 회신 폼 검증 범위와 일치화.
+  3) `/invitations/rsvp/page.tsx` (권장): 하객 카드에서 t+g를 가지고 진입한 경우 타인 회신 및 호스트 명단 전환 바(`rsvp-demo-switcher`)를 숨겨 ADR-004 및 TC-016의 하객 간 회신 격리 보장 (`?demo=1` 시에만 노출).
+- [AI] Antigravity가 해당 파일들 수정 후 타입체크 및 정적 빌드 검증 수행.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 페이지 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음 (3차 목업 단계 원칙 준수)
+
+
+## 2026-11-05 PR #101 2차 AI 코드 리뷰 지적 해결 (손준혁 작업, Refs #86, Refs #101)
+- [요청] PR #101 2차 AI 리뷰 지적(3건) 반영:
+  1) `/invitations/rsvp/page.tsx`: 하객 RSVP 화면(t 또는 g를 가지고 접근한 모든 경로)에서 데모 시나리오 링크 전환 바(`rsvp-demo-switcher`)가 노출되던 결함 완전 해결 (`token.trim() === '' && guestToken.trim() === '' && searchParams.get('demo') === '1'`일 때만 열리도록 제한하여 하객 간 회신 격리 및 ADR-004 준수).
+  2) `InvitationCardRenderer.tsx`: 공개 카드 「🌸 참석합니다」 버튼에서 g가 없을 때 `/invitations/rsvp/?t=` 회신 화면으로 잘못 넘어가던 문제 해결. `invitationGuestHref`를 연동하여 g가 있을 때만 `/invitations/rsvp/?t=&g=` 회신 폼으로 이동하고, g가 없을 때는 회신으로 보내지 않고 `invitationGuestHref(token)` 공개 경로(`/invitations/p/?t=`) 유지 및 안내 토스트 노출. 「💌 마음으로 축하」 토스트에 3초 자동 닫힘 타이머(`setTimeout`) 추가.
+  3) `테스트_케이스_마스터.md`: TC-016 행에서 캡처 스냅샷(22~25번) 불일치 문구 및 360px 실측 주장을 실제 확인된 동작(미리보기 이동 방지, g 유무에 따른 분기 및 공개 경로 유지, 하객 화면 데모 전환 바 비노출 격리) 기준으로 현행화하고 판정을 명확히 분리 기록.
+- [AI] Antigravity가 해당 파일들 수정 후 TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 라우트 정적 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음 (3차 목업 단계 원칙 준수)
+
 
 ## 2026-11-05 feat(MATCH-007): 실계정 1:1 채팅 RLS 가드·차단 채널 회수 및 DTO attachment_path 일치 (이슈 #22, Refs #22) (손준혁 작업)
 - [요청] 이슈 #22([손준혁] 채팅·신고/차단 남은 작업 + QA 증빙, MATCH-007·008, SEC-002) 지시 및 리뷰 피드백 완비:
