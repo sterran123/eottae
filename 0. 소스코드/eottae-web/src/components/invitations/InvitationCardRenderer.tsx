@@ -22,7 +22,6 @@ import {
   ensureLegibleColor,
   isDarkThemeBg,
 } from '@/lib/invitations/contrast-helper';
-import { resolveRsvpAccess } from '@/lib/invitations/rsvp-access';
 import {
   WaxSealBadgeSVG,
   MaskingTapeSVG,
@@ -181,11 +180,15 @@ export default function InvitationCardRenderer({
 
   const activeLayout = overrideLayout || invitation.layoutStyle || themePreset.defaultLayout || 'classic';
   const activeBgm = overrideBgm || invitation.bgmPreset || themePreset.defaultBgm || 'romantic';
-  const baseSections = overrideSectionOrder || invitation.sectionOrder || themePreset.defaultSectionOrder;
-  // 공개 하객 화면(/invitations/p/?t=, previewMode === false)은 순수 행사 정보만 노출 (인수 조건: 행사 정보만, 명단·RSVP 목록 없음)
-  const activeSections = previewMode
+  const baseSections: InvitationSectionKey[] =
+    overrideSectionOrder || invitation.sectionOrder || themePreset.defaultSectionOrder;
+  // 공개 하객 화면(/invitations/p/?t=, previewMode === false)에서도 하객이 참석 여부를 회신할 수 있도록 rsvp_preview 섹션 포함 보장 (타 하객 명단/방명록은 격리)
+  const baseList: InvitationSectionKey[] = baseSections.includes('rsvp_preview')
     ? baseSections
-    : baseSections.filter((sec) => sec === 'greeting' || sec === 'schedule' || sec === 'location');
+    : [...baseSections, 'rsvp_preview'];
+  const activeSections: InvitationSectionKey[] = previewMode
+    ? baseSections
+    : baseList.filter((sec): sec is InvitationSectionKey => sec !== 'guestbook');
 
   const activeEffect = propEffect || themePreset.defaultEffect || 'petals';
   const frameStyle = propFrameStyle || themePreset.defaultFrameStyle || 'arch';
@@ -1707,20 +1710,22 @@ export default function InvitationCardRenderer({
                     }
                     const token = invitation.sharingToken?.trim() || '';
                     const g = guestToken?.trim() || '';
-                    if (token && g) {
-                      const access = resolveRsvpAccess(token, g);
-                      if (access.ok) {
-                        const params = new URLSearchParams();
-                        params.set('t', token);
-                        params.set('g', g);
-                        window.location.href = `${basePath}/invitations/rsvp/?${params.toString()}`;
-                        return;
+                    if (g) {
+                      // g가 있을 때만 RSVP 회신 폼으로 이동 (INV-003 · TC-016)
+                      const params = new URLSearchParams();
+                      if (token) params.set('t', token);
+                      params.set('g', g);
+                      router.push(`/invitations/rsvp/?${params.toString()}`);
+                    } else {
+                      // g가 없는 공개 카드에서는 회신(/invitations/rsvp/)으로 보내지 않고 공개 경로(/invitations/p/?t=)를 유지
+                      setCopyNotice(
+                        '참석 회신은 청첩장에 동봉된 개인별 하객 링크(g)로 접속했을 때만 가능해요.',
+                      );
+                      setTimeout(() => setCopyNotice(null), 3000);
+                      if (token) {
+                        router.push(invitationGuestHref(token));
                       }
                     }
-                    setCopyNotice(
-                      '참석 회신은 하객마다 다른 초대 링크(?t=와 ?g=)로만 열립니다.',
-                    );
-                    setTimeout(() => setCopyNotice(null), 3000);
                   }}
                 >
                   🌸 참석합니다

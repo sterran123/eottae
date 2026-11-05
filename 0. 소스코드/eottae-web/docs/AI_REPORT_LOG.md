@@ -1222,3 +1222,14 @@
   3) `grok_mention.mjs`가 답변 게시 후 접수 댓글 끝에 "→ ✅ 답변을 남겼어요." 한 줄을 PATCH로 추가(마커 보존).
 - [검증] `node --check` 두 파일 PASS. 확인 신호는 GitHub 쓰기라 로컬 DRY_RUN=2 출력 로그만 확인(실게시 검증은 main 머지 후 작업자 주기에서 발생).
 - [미실행] 라이브 작업자(C:\eottae-grok-review 전용 클론)는 origin/main으로 자동 빨리감기 후 재시작 — 본 PR 머지 전까지 신동작 미적용.
+
+
+## 2026-11-05 PR #102 AI 리뷰 지적 해결 및 main 충돌 해결 (오하율 작업)
+- [요청] PR #102 main 충돌 해결 및 AI 코드 리뷰 FAIL 2건(공개 하객 화면 참석 회신 버튼 미노출·TC-016 클릭 동작 불일치) 해결:
+  1) `AI_REPORT_LOG.md`: main 브랜치 머지 시 충돌난 멘션 접수 로그와 3차 정책 목업 로그를 통합 보존하여 충돌 해소.
+  2) `InvitationCardRenderer.tsx`: 공개 하객 화면(`previewMode === false`)에서 `activeSections`를 필터링할 때 `rsvp_preview`가 누락되어 회신 버튼이 그려지지 않던 문제를 해결하여 `rsvp_preview` 섹션을 보장(방명록 `guestbook`은 하객 개인정보 비노출 원칙에 따라 공개 화면에서 격리).
+  3) `InvitationCardRenderer.tsx`: 참석 회신 버튼 클릭 시 손준혁의 TC-016 명세와 동일하게 일치화. `resolveRsvpAccess`로 인한 사전 차단 대신 게스트 토큰(`g`) 보유 시 `/invitations/rsvp/?t=&g=`로 정상 이동하도록 하고, `g` 부재 시 안내 토스트 표출 및 `invitationGuestHref` 공개 경로 유지.
+- [AI] Antigravity가 main 충돌 해결 및 InvitationCardRenderer.tsx 수정, 정적 빌드 테스트 통과.
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 페이지 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
+
