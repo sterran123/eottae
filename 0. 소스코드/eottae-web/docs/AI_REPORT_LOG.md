@@ -1212,3 +1212,13 @@
 - [검증] 오하율의 기존 타입(`src/lib/invitations/types.ts`) 100% 재사용 및 새 types 파일 미생성 확인.
 - [검증] `src/components/invitations/*.tsx` 내 하드코딩 hex(#) 색상 0건 및 6테마 CSS 변수(`var(...)`) 100% 토큰화 확인.
 - [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수), `package.json`, `FILE_INDEX.csv`, `MANIFEST.sha256`는 수정하지 않음.
+
+
+## 2026-11-05 @grok 멘션 접수 신호 — 👀·확인 댓글·예상 시간 (김민기 작업 · Devin 실행)
+- [요청] 소유자 요청: `@grok` 멘션 시 (1) 봇이 봤다는 표시를 먼저, (2) "확인하겠습니다" 접수 댓글을 즉시, (3) 예상 소요 시간까지 안내.
+- [AI] Devin이 `tools/grok_review_worker.mjs`·`tools/grok_mention.mjs` 수정:
+  1) 작업자가 요청을 집는 순간(`waitingMentions`) 원래 댓글에 👀 반응 + 접수 댓글(`<!-- grok-ack:id -->`, 요청자 멘션·예상 시간 — 첫 건 "보통 3~8분", 대기 건은 위치×약 6분 가산)을 즉시 게시. 마커로 걸러 재시도·다음 주기에 중복 게시 없음. 접수 문구의 `@grok`은 ZWSP로 끊어 자기 멘션 루프 방지(기존 답변 헤더와 같은 방식).
+  2) QUEUES 순서를 @grok → AI 리뷰 → 이슈 진행으로 변경해 확인 신호가 리뷰 작업 뒤로 밀리지 않게 함.
+  3) `grok_mention.mjs`가 답변 게시 후 접수 댓글 끝에 "→ ✅ 답변을 남겼어요." 한 줄을 PATCH로 추가(마커 보존).
+- [검증] `node --check` 두 파일 PASS. 확인 신호는 GitHub 쓰기라 로컬 DRY_RUN=2 출력 로그만 확인(실게시 검증은 main 머지 후 작업자 주기에서 발생).
+- [미실행] 라이브 작업자(C:\eottae-grok-review 전용 클론)는 origin/main으로 자동 빨리감기 후 재시작 — 본 PR 머지 전까지 신동작 미적용.
