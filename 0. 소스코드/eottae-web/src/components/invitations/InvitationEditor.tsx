@@ -87,9 +87,11 @@ export default function InvitationEditor({ initialId }: InvitationEditorProps) {
   const [formError, setFormError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
   const [notOwner, setNotOwner] = useState<boolean>(false);
+  const [notFound, setNotFound] = useState<boolean>(false);
 
   useEffect(() => {
     setNotOwner(false);
+    setNotFound(false);
     if (initialId) {
       const existing = getInvitationById(initialId);
       if (existing) {
@@ -116,6 +118,8 @@ export default function InvitationEditor({ initialId }: InvitationEditorProps) {
         setExpiry(existing.expiry);
         setOwnerId(existing.ownerId);
         setCreatedAt(existing.createdAt || '');
+      } else {
+        setNotFound(true);
       }
     } else {
       // 신규 생성 기본값
@@ -255,6 +259,23 @@ export default function InvitationEditor({ initialId }: InvitationEditorProps) {
         </h2>
         <p style={{ fontSize: 14, color: 'var(--muted)', margin: '0 0 24px 0', lineHeight: 1.6 }}>
           이 청첩장의 작성자 본인 계정으로만 내용을 수정하거나 설정을 변경할 수 있습니다 (TC-015 목업).
+        </p>
+        <Link href="/invitations/" className="inv-btn-primary">
+          청첩장 목록으로 돌아가기
+        </Link>
+      </div>
+    );
+  }
+
+  if (notFound) {
+    return (
+      <div className="shell subpage" style={{ padding: '60px 20px', textAlign: 'center' }}>
+        <div style={{ fontSize: 44, marginBottom: 16 }}>🔍</div>
+        <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 8px 0', color: 'var(--ink)' }}>
+          청첩장을 찾을 수 없어요
+        </h2>
+        <p style={{ fontSize: 14, color: 'var(--muted)', margin: '0 0 24px 0', lineHeight: 1.6 }}>
+          요청하신 청첩장이 삭제되었거나 존재하지 않는 링크입니다.
         </p>
         <Link href="/invitations/" className="inv-btn-primary">
           청첩장 목록으로 돌아가기

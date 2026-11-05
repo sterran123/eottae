@@ -626,6 +626,21 @@ function InvitationsHubContent() {
                       >
                         {themeInfo.name} 테마
                       </span>
+                      {!inv.viewerIsOwner && (
+                        <span
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 600,
+                            padding: '2px 8px',
+                            borderRadius: 6,
+                            background: 'var(--paper)',
+                            color: 'var(--muted)',
+                            border: '1px solid var(--line)',
+                          }}
+                        >
+                          열람 전용 데모
+                        </span>
+                      )}
                     </div>
                     <div className="inv-my-card-meta">
                       <span>💍 {inv.hostNames}</span>
@@ -639,24 +654,24 @@ function InvitationsHubContent() {
                   <button
                     type="button"
                     className="inv-btn-primary"
-                    style={{ minHeight: 40, fontSize: 13, padding: '0 16px' }}
+                    style={{ minHeight: 44, fontSize: 13, padding: '0 16px' }}
                     onClick={() => setPreviewTarget(inv)}
                   >
                     <span>📱</span>
                     <span>체험 테스트</span>
                   </button>
                   {inv.viewerIsOwner && (
-                    <Link href={`/invitations/?edit=${inv.id}`} className="inv-btn-secondary" style={{ minHeight: 40, fontSize: 13 }}>
+                    <Link href={`/invitations/?edit=${inv.id}`} className="inv-btn-secondary" style={{ minHeight: 44, fontSize: 13 }}>
                       정보 수정
                     </Link>
                   )}
-                  <Link href={guestUrl} className="inv-btn-secondary" style={{ minHeight: 40, fontSize: 13 }} target="_blank">
+                  <Link href={guestUrl} className="inv-btn-secondary" style={{ minHeight: 44, fontSize: 13 }} target="_blank">
                     하객 화면
                   </Link>
                   <button
                     type="button"
                     className="inv-btn-secondary"
-                    style={{ minHeight: 40, fontSize: 13 }}
+                    style={{ minHeight: 44, fontSize: 13 }}
                     onClick={() => handleCopyLink(inv.sharingToken)}
                   >
                     링크 복사
@@ -665,7 +680,7 @@ function InvitationsHubContent() {
                     <button
                       type="button"
                       className="inv-btn-secondary"
-                      style={{ minHeight: 40, fontSize: 13, color: 'var(--muted)' }}
+                      style={{ minHeight: 44, fontSize: 13, color: 'var(--muted)' }}
                       onClick={() => handleDelete(inv.id, inv.title)}
                     >
                       삭제

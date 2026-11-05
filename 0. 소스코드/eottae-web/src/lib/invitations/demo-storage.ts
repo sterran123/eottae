@@ -3,8 +3,8 @@
 // 서버·Supabase 호출은 일체 하지 않는다.
 
 import { DEMO_GUESTS, DEMO_INVITATIONS, DEMO_RSVPS } from './demo-data';
-import type { Guest, Invitation, Rsvp } from './types';
-import { isInvitationStatus, isInvitationThemeId, isInvitationVisibility, isRsvpResponse, INVITATION_BGM_PRESETS } from './types';
+import type { Guest, Invitation, Rsvp, InvitationSectionKey } from './types';
+import { isInvitationStatus, isInvitationThemeId, isInvitationVisibility, isRsvpResponse, INVITATION_BGM_PRESETS, INVITATION_SECTION_KEYS } from './types';
 
 export const INVITATIONS_DEMO_STORAGE_KEY = 'eottae.invitations.demo.v1';
 export const DEMO_INVITATIONS_EVENT = 'eottae-demo-invitations';
@@ -82,7 +82,11 @@ function sanitizeInvitation(inv: Invitation): Invitation {
     contactNote: typeof inv.contactNote === 'string' ? inv.contactNote.slice(0, 200) : undefined,
     layoutStyle: inv.layoutStyle && ['classic', 'modern', 'minimal'].includes(inv.layoutStyle) ? inv.layoutStyle : 'classic',
     bgmPreset: inv.bgmPreset && (INVITATION_BGM_PRESETS as readonly string[]).includes(inv.bgmPreset) ? inv.bgmPreset : 'none',
-    sectionOrder: Array.isArray(inv.sectionOrder) ? inv.sectionOrder.slice(0, 8) : undefined,
+    sectionOrder: Array.isArray(inv.sectionOrder)
+      ? (inv.sectionOrder.filter((k) =>
+          (INVITATION_SECTION_KEYS as readonly string[]).includes(k),
+        ) as InvitationSectionKey[]).slice(0, 8)
+      : undefined,
   };
 }
 

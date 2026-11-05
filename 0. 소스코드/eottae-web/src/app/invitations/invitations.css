@@ -134,6 +134,7 @@
 [data-theme='cyberpunk'] .inv-frame-btn--active,
 [data-theme='cyberpunk'] .inv-address-copy-btn:hover,
 [data-theme='cyberpunk'] .inv-toast,
+[data-theme='cyberpunk'] .inv-chip-btn--active,
 [data-theme='dark'] .inv-category-tab-btn--active,
 [data-theme='dark'] .inv-copy-chip,
 [data-theme='dark'] .inv-font-btn--active,
@@ -141,7 +142,8 @@
 [data-theme='dark'] .inv-accordion-toggle-btn--active,
 [data-theme='dark'] .inv-frame-btn--active,
 [data-theme='dark'] .inv-address-copy-btn:hover,
-[data-theme='dark'] .inv-toast {
+[data-theme='dark'] .inv-toast,
+[data-theme='dark'] .inv-chip-btn--active {
   color: var(--bg) !important;
 }
 
@@ -153,7 +155,8 @@
   :root[data-theme='system'] .inv-accordion-toggle-btn--active,
   :root[data-theme='system'] .inv-frame-btn--active,
   :root[data-theme='system'] .inv-address-copy-btn:hover,
-  :root[data-theme='system'] .inv-toast {
+  :root[data-theme='system'] .inv-toast,
+  :root[data-theme='system'] .inv-chip-btn--active {
     color: var(--bg) !important;
   }
 }
@@ -2322,7 +2325,7 @@
   flex: 1;
   text-align: center;
   font-weight: 700;
-  min-height: 40px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2708,9 +2711,9 @@
 
 .inv-field-input:focus,
 .inv-field-textarea:focus {
-  outline: none;
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
   border-color: var(--brand);
-  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.15);
 }
 
 .inv-font-choice-row {
@@ -4503,9 +4506,14 @@
   .inv-modal-backdrop,
   .inv-modal-shell,
   .inv-bgm-disc--spinning,
-  .inv-bgm-eq--active .inv-bgm-eq__bar {
+  .inv-bgm-eq--active .inv-bgm-eq__bar,
+  .inv-radar-pulse,
+  .inv-btn-primary:hover,
+  .inv-btn-secondary:hover,
+  .inv-cover-viewport:hover {
     animation: none !important;
     transition: none !important;
+    transform: none !important;
   }
 }
 
@@ -4714,11 +4722,14 @@
   transition: all 0.2s ease;
 }
 
-.inv-color-theme-dropdown:hover,
-.inv-color-theme-dropdown:focus {
-  border-color: #7c3aed;
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+.inv-color-theme-dropdown:hover {
+  border-color: var(--brand);
+}
+
+.inv-color-theme-dropdown:focus-visible {
+  border-color: var(--brand);
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
 }
 
 .inv-dropdown-carat {
@@ -5926,7 +5937,7 @@
 
 .inv-cal-choice-btn,
 .inv-gal-mode-btn {
-  min-height: 40px;
+  min-height: 44px;
   padding: 8px 10px;
   border-radius: 10px;
   border: 1.5px solid #e2e8f0;
@@ -6155,6 +6166,220 @@
   justify-content: center;
   gap: 6px;
   padding: 4px 0;
+}
+
+/* ============================================================
+ * [청첩장 에디터 전용 스타일] (INV-001)
+ * ============================================================ */
+.inv-editor-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.inv-actions-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.inv-editor-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .inv-editor-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.inv-editor-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.inv-form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md, 16px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.inv-form-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.inv-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inv-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.inv-field input,
+.inv-field textarea,
+.inv-field select {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 10px 14px;
+  font-size: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--ink);
+  box-sizing: border-box;
+  font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.inv-field textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.inv-field input:focus-visible,
+.inv-field textarea:focus-visible,
+.inv-field select:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-color: var(--brand);
+}
+
+.inv-field-desc {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.inv-chip-options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.inv-chip-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.inv-chip-btn:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.inv-chip-btn:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.inv-chip-btn--active {
+  background: var(--brand) !important;
+  color: var(--bg) !important;
+  border-color: var(--brand) !important;
+  font-weight: 700;
+}
+
+.inv-section-order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inv-section-order-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  min-height: 44px;
+}
+
+.inv-section-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.inv-section-order-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.inv-order-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.15s ease;
+}
+
+.inv-order-btn:hover:not(:disabled) {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.inv-order-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.inv-order-btn:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.inv-editor-preview-panel {
+  position: sticky;
+  top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
 }
 
 

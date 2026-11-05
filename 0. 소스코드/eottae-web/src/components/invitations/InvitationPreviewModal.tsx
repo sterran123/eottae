@@ -46,8 +46,8 @@ const BGM_OPTIONS: { id: InvitationBgmpreset; label: string; icon: string; desc:
   { id: 'bach_air', label: '바흐: G선상의 아리아 (Air on G String)', icon: '🎻', desc: '고결하고 우아한 클래식 현악' },
   { id: 'canon', label: '파헬벨: 캐논 변주곡 (Pachelbel Canon)', icon: '🎼', desc: '맑고 감미로운 감성 피아노' },
   { id: 'piano', label: '쇼팽: 녹턴 Op.9 No.2 (Chopin Nocturne)', icon: '🎹', desc: '낭만적인 야상곡 피아노' },
-  { id: 'thousand_years', label: '크리스티나 페리: A Thousand Years', icon: '💖', desc: '영원을 약속하는 로맨틱 발라드' },
-  { id: 'acoustic', label: '폴킴: 너를 만나 (Acoustic Guitar)', icon: '🎸', desc: '따뜻하고 포근한 어쿠스틱 선율' },
+  { id: 'thousand_years', label: '로맨틱 앙상블 (Romantic Ensemble)', icon: '💖', desc: '영원을 약속하는 로맨틱 현악 선율' },
+  { id: 'acoustic', label: '어쿠스틱 세레나데 (Acoustic Serenade)', icon: '🎸', desc: '따뜻하고 포근한 어쿠스틱 선율' },
   { id: 'spring_waltz', label: '봄날의 왈츠 (Spring Waltz)', icon: '🌸', desc: '경쾌하고 설레는 웨딩 왈츠' },
   { id: 'none', label: '무음 (배경음악 끔)', icon: '🔇', desc: '소리 재생 없음' },
 ];
@@ -222,6 +222,15 @@ export default function InvitationPreviewModal({
   const [customBgmUrl, setCustomBgmUrl] = useState<string | undefined>(undefined);
   const [customBgmTitle, setCustomBgmTitle] = useState<string | undefined>(undefined);
   const bgmFileInputRef = useRef<HTMLInputElement | null>(null);
+  const customBgmUrlRef = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    return () => {
+      if (customBgmUrlRef.current) {
+        URL.revokeObjectURL(customBgmUrlRef.current);
+      }
+    };
+  }, []);
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -247,7 +256,11 @@ export default function InvitationPreviewModal({
   const handleBgmUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (customBgmUrlRef.current) {
+      URL.revokeObjectURL(customBgmUrlRef.current);
+    }
     const url = URL.createObjectURL(file);
+    customBgmUrlRef.current = url;
     setCustomBgmUrl(url);
     setCustomBgmTitle(file.name);
     setSelectedBgm('custom');
@@ -338,6 +351,9 @@ export default function InvitationPreviewModal({
   // 스마트폰 뷰포트 영구 애니메이션 캔버스 (스크롤 시 끊김 문제 해결)
   useEffect(() => {
     if (!isOpen || activeEffect === 'none' || activeEffect === 'envelope') return;
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
     const canvas = fxCanvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -586,7 +602,7 @@ export default function InvitationPreviewModal({
               <button
                 type="button"
                 className="inv-btn-primary"
-                style={{ minHeight: 32, padding: '0 12px', fontSize: 12 }}
+                style={{ minHeight: 44, padding: '0 16px', fontSize: 13 }}
                 onClick={() => {
                   const updated: Invitation = {
                     ...invitation,
@@ -983,7 +999,7 @@ export default function InvitationPreviewModal({
                 <button
                   type="button"
                   className="inv-btn-secondary"
-                  style={{ width: '100%', minHeight: 36, fontSize: 12 }}
+                  style={{ width: '100%', minHeight: 44, fontSize: 13 }}
                   onClick={() => bgmFileInputRef.current?.click()}
                 >
                   🎵 내 BGM 음원 파일 첨부 (.mp3, .wav, .m4a)
@@ -1100,7 +1116,7 @@ export default function InvitationPreviewModal({
                           <button
                             type="button"
                             className="inv-btn-secondary"
-                            style={{ minHeight: 30, fontSize: 11, padding: '4px 10px' }}
+                            style={{ minHeight: 44, fontSize: 13, padding: '0 12px' }}
                             onClick={() => fileInputRef.current?.click()}
                           >
                             📷 내 사진 업로드
@@ -1295,7 +1311,7 @@ export default function InvitationPreviewModal({
                           key={hidKey}
                           type="button"
                           className="inv-btn-secondary"
-                          style={{ minHeight: 28, fontSize: 11, padding: '2px 8px' }}
+                          style={{ minHeight: 44, fontSize: 12, padding: '0 12px' }}
                           onClick={() => setSectionOrder((prev) => [...prev, hidKey])}
                         >
                           + {SECTION_LABELS[hidKey].split('(')[0]?.trim()}

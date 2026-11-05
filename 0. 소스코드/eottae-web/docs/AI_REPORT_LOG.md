@@ -1060,3 +1060,17 @@
 - [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
 - [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
 
+
+## 2026-11-05 PR #97 9차 AI 리뷰 반영 (오하율 작업)
+- [요청] PR #97 9차 AI 자동 코드 리뷰 피드백(commit 270f8d5 기준) 완전 해결:
+  1) `invitations.css`: InvitationEditor 전용 누락 CSS 완비 (`.inv-editor-shell`, `.inv-editor-grid`, `.inv-editor-form`, `.inv-form-section`, `.inv-field`, `.inv-chip-btn`, `.inv-order-btn`, `.inv-editor-preview-panel` 등). 데스크톱 2컬럼 레이아웃(좌측 폼 + 우측 360px sticky 미리보기 패널), 모바일(≤860px) 1컬럼 반응형 전환, 사이버펑크 및 다크 모드 칩 버튼 명도 대비 토큰 적용.
+  2) 터치 타겟 44px 접근성 보강: `.inv-map-link-btn`, `.inv-cal-choice-btn`, `.inv-gal-mode-btn` min-height 44px 반영, `InvitationsHub.tsx`의 카드 액션 버튼 인라인 `minHeight: 40`을 `minHeight: 44`로 상향, `InvitationPreviewModal.tsx`의 저장 및 파일 첨부 버튼 등 인라인 `minHeight: 32/36/30/28`을 `minHeight: 44`로 통일.
+  3) 키보드 포커스 링 & 모션 감소(a11y) 강화: `.inv-field-input:focus`, `.inv-field-textarea:focus`, `.inv-color-theme-dropdown:focus-visible`에 3px 솔리드 포커스 링 복원. `prefers-reduced-motion: reduce` 미디어 쿼리에 `.inv-radar-pulse` 및 버튼 호버 애니메이션 정지 적용, `InvitationPreviewModal.tsx` 캔버스 파티클 애니메이션도 `prefers-reduced-motion` 감지 시 즉시 중단.
+  4) BGM 명칭 저작권 준수 & 메모리 누수 방지: 가상 곡명 적용(로맨틱 앙상블, 어쿠스틱 세레나데), 커스텀 BGM 업로드 시 `URL.revokeObjectURL`을 사용하여 이전 blob URL 및 컴포넌트 언마운트 시 메모리 누수 방지.
+  5) 데이터 검증 & 예외 처리 보강: `demo-storage.ts`의 `sanitizeInvitation`에서 `sectionOrder`를 `INVITATION_SECTION_KEYS` 허용 목록으로 화이트리스트 검사 필터링, `InvitationEditor.tsx`에 존재하지 않는 ID 접근 시 `notFound` 안내 뷰 추가, `src/app/invitations/p/page.tsx` 미사용 import 및 변수 정리, Hub 내 타인 청첩장에 `[열람 전용 데모]` 배지 부여.
+- [AI] Antigravity가 해당 파일들(invitations.css, InvitationEditor, demo-storage, InvitationsHub, InvitationPreviewModal, p/page.tsx, AI_REPORT_LOG) 수정 후 정적 빌드 테스트 통과.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
+
+

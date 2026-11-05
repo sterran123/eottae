@@ -4,14 +4,13 @@ import React, { Suspense, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import type { Invitation } from '@/lib/invitations/types';
-import { getInvitationByToken, loadInvitationsDemo } from '@/lib/invitations/demo-storage';
+import { getInvitationByToken } from '@/lib/invitations/demo-storage';
 import InvitationCardRenderer from '@/components/invitations/InvitationCardRenderer';
 import '../invitations.css';
 
 function GuestInvitationContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('t') || '';
-  const guestToken = searchParams.get('g') || '';
 
   const [invitation, setInvitation] = useState<Invitation | null>(null);
   const [loaded, setLoaded] = useState<boolean>(false);
