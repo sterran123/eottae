@@ -15,6 +15,8 @@ import type {
 import { getInvitationById, saveInvitation } from '@/lib/invitations/demo-storage';
 import InvitationCardRenderer from './InvitationCardRenderer';
 import InvitationPreviewModal from './InvitationPreviewModal';
+import InvitationPolicyPanel from './InvitationPolicyPanel';
+import InvitationGuestForbiddenView from './InvitationGuestForbiddenView';
 
 interface InvitationEditorProps {
   initialId?: string | null;
@@ -252,17 +254,21 @@ export default function InvitationEditor({ initialId }: InvitationEditorProps) {
 
   if (notOwner) {
     return (
-      <div className="shell subpage" style={{ padding: '60px 20px', textAlign: 'center' }}>
-        <div style={{ fontSize: 44, marginBottom: 16 }}>🔒</div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 8px 0', color: 'var(--ink)' }}>
-          소유자만 고칠 수 있어요
-        </h2>
-        <p style={{ fontSize: 14, color: 'var(--muted)', margin: '0 0 24px 0', lineHeight: 1.6 }}>
-          이 청첩장의 작성자 본인 계정으로만 내용을 수정하거나 설정을 변경할 수 있습니다 (TC-015 목업).
-        </p>
-        <Link href="/invitations/" className="inv-btn-primary">
-          청첩장 목록으로 돌아가기
-        </Link>
+      <div className="shell subpage" style={{ padding: '60px 20px', maxWidth: 640, margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <div style={{ fontSize: 44, marginBottom: 16 }}>🔒</div>
+          <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 8px 0', color: 'var(--ink)' }}>
+            소유자만 고칠 수 있어요 (TC-015 목업)
+          </h2>
+          <p style={{ fontSize: 14, color: 'var(--muted)', margin: '0 0 24px 0', lineHeight: 1.6 }}>
+            이 청첩장의 작성자 본인 계정으로만 내용을 수정하거나 설정을 변경할 수 있습니다.
+          </p>
+        </div>
+
+        {/* 하객 목록 열람 거절 화면 (Grok 지적: 하객 목록 거절 화면 누락 해결) */}
+        <InvitationGuestForbiddenView
+          invitationTitle={initialId ? `청첩장 #${initialId}` : undefined}
+        />
       </div>
     );
   }
@@ -526,13 +532,28 @@ export default function InvitationEditor({ initialId }: InvitationEditorProps) {
 
           {/* 제출 버튼 */}
           <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
-            <button type="submit" className="inv-btn-primary" style={{ flex: 1 }}>
+            <button type="submit" className="inv-btn-primary" style={{ flex: 1, minHeight: 44 }}>
               {isEditing ? '청첩장 수정 완료' : '청첩장 저장 및 발행'}
             </button>
-            <Link href="/invitations/" className="inv-btn-secondary">
+            <Link href="/invitations/" className="inv-btn-secondary" style={{ minHeight: 44, display: 'inline-flex', alignItems: 'center' }}>
               목록으로
             </Link>
           </div>
+
+          {/* 주한태 담당: 소유자 전용 정책 관리 패널 (토큰 재발급, 옛 토큰 만료 흐름, 보존 안내, 하객 목록, 삭제) */}
+          {isEditing && (
+            <div style={{ marginTop: 24 }}>
+              <InvitationPolicyPanel
+                invitation={previewInvitation}
+                onUpdated={(updated) => {
+                  setSharingToken(updated.sharingToken);
+                }}
+                onDeleted={() => {
+                  router.push('/invitations/');
+                }}
+              />
+            </div>
+          )}
         </form>
 
         {/* 우측 실시간 미니 프리뷰 스티키 패널 */}
