@@ -2275,15 +2275,16 @@
   overflow: hidden;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   margin-bottom: 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--line);
 }
 
 .inv-venue-info-card {
-  background: rgba(0, 0, 0, 0.02);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: var(--soft);
+  border: 1px solid var(--line);
   border-radius: 14px;
   padding: 14px;
   margin-bottom: 12px;
+  color: var(--ink);
 }
 
 .inv-address-copy-btn {
@@ -2293,7 +2294,7 @@
   padding: 8px 18px;
   border-radius: 20px;
   border: 1px solid var(--brand);
-  background: rgba(124, 58, 237, 0.08);
+  background: var(--soft);
   color: var(--brand);
   font-size: 12px;
   font-weight: 700;
@@ -2303,7 +2304,7 @@
 
 .inv-address-copy-btn:hover {
   background: var(--brand);
-  color: #ffffff;
+  color: var(--bg);
 }
 
 .inv-map-link-btn {
@@ -6472,7 +6473,9 @@
 :root[data-theme='cyberpunk'] .inv-design-card,
 :root[data-theme='cyberpunk'] .inv-my-card-row,
 :root[data-theme='cyberpunk'] .inv-my-card,
-:root[data-theme='cyberpunk'] .inv-form-section {
+:root[data-theme='cyberpunk'] .inv-form-section,
+:root[data-theme='cyberpunk'] .inv-venue-info-card,
+:root[data-theme='cyberpunk'] .inv-interactive-map-frame {
   border-color: var(--line);
 }
 
@@ -6480,7 +6483,9 @@
 :root[data-theme='dark'] .inv-design-card,
 :root[data-theme='dark'] .inv-my-card-row,
 :root[data-theme='dark'] .inv-my-card,
-:root[data-theme='dark'] .inv-form-section {
+:root[data-theme='dark'] .inv-form-section,
+:root[data-theme='dark'] .inv-venue-info-card,
+:root[data-theme='dark'] .inv-interactive-map-frame {
   border-color: var(--line);
 }
 

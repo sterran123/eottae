@@ -315,6 +315,20 @@ assert(
   '어두운 카드(.inv-mode--dark)의 주소 복사하기 버튼 호버 시 color: #ffffff !important로 밝은 글자색이 보장됨'
 );
 
+// 12. [PR #102 피드백] 청첩장 지도·장소 카드 고정 색 제거 및 globals 다크 토큰 연동 검증
+console.log('\n[검증 12] 청첩장 지도·장소 카드 고정 색 제거 및 globals 다크 토큰 연동 검증');
+assert(
+  !cssCode.includes('rgba(124, 58, 237, 0.08)') &&
+  !cssCode.includes('.inv-interactive-map-frame {\n  width: 100%;\n  border-radius: 14px;\n  overflow: hidden;\n  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);\n  margin-bottom: 12px;\n  border: 1px solid #e2e8f0;'),
+  '.inv-address-copy-btn 및 .inv-interactive-map-frame에서 고정 색(보라 0.08, #e2e8f0)이 완전히 제거됨'
+);
+
+assert(
+  cssCode.includes('.inv-address-copy-btn {\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  padding: 8px 18px;\n  border-radius: 20px;\n  border: 1px solid var(--brand);\n  background: var(--soft);') &&
+  cssCode.includes('.inv-address-copy-btn:hover {\n  background: var(--brand);\n  color: var(--bg);'),
+  '.inv-address-copy-btn이 background: var(--soft) 및 호버 시 color: var(--bg)로 globals 테마 토큰을 연동함'
+);
+
 console.log('\n============================================================');
 console.log(` 검증 결과: 총 ${passCount + failCount}개 중 ${passCount}개 통과 (실패: ${failCount}개)`);
 console.log('============================================================');

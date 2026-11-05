@@ -1390,5 +1390,19 @@
 - [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 무수정 원칙 준수
 - [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
 
+## 2026-11-05 PR #102 청첩장 지도·장소 카드 고정 색 제거 및 globals 다크 토큰 연동 (Refs #84, Refs #102) (오하율 작업)
+- [요청] PR #102 AI 리뷰 지적(invitations.css:2289, :2304 고정 색상 제거 및 globals.css:70, :205 다크 테마 토큰 연동):
+  1) `invitations.css`: 지도 프레임(`.inv-interactive-map-frame`)의 `border: 1px solid #e2e8f0` 고정 색상을 `var(--line)` 테마 토큰으로 전환.
+  2) `invitations.css`: 장소 안내 카드(`.inv-venue-info-card`)의 `background: rgba(0, 0, 0, 0.02)` 및 `border: 1px solid rgba(0, 0, 0, 0.06)` 고정 색상을 각각 `var(--soft)`, `var(--line)` 및 `color: var(--ink)` 테마 토큰으로 전환.
+  3) `invitations.css`: 주소 복사 버튼(`.inv-address-copy-btn`)의 고정 보라색 배경(`rgba(124, 58, 237, 0.08)`)을 `background: var(--soft)`로 전환하고, 호버 시 고정 흰색(`color: #ffffff`)을 `color: var(--bg)` 테마 토큰으로 전환하여 앱 테마가 dark(`globals.css:70`) 또는 cyberpunk(`globals.css:205`)일 때 `--brand` 배경 위에서 최적의 명도 대비를 보장.
+  4) `invitations.css`: `:root[data-theme='cyberpunk']` 및 `:root[data-theme='dark']` 스코프에 `.inv-venue-info-card`, `.inv-interactive-map-frame`의 `border-color: var(--line)` 연결.
+  5) `scripts/verify-modal-and-card.ts`: [검증 12] 신설하여 지도·장소 카드 고정 색 부재 및 테마 토큰 연동 자동 검증(34/34 PASS).
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (34/34 통과)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
+
 
 
