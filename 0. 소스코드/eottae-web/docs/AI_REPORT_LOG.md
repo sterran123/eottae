@@ -1122,4 +1122,13 @@
 - [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
 
 
+## 2026-11-05 PR #99 2차 AI 코드 리뷰 지적 해결 (오하율 작업)
+- [요청] PR #99 2차 AI 리뷰 지적(포커스 링 미표시 결함 필수 해결 및 권장 사항 3건) 반영:
+  1) `match-recommend.css` (필수): `.mt-rec-list .mt-rec__dropdown-item:focus-visible`의 `outline` 색상을 존재하지 않는 변수 `var(--match-primary)` 대신 매칭 시스템 공식 포커스 토큰인 `var(--match-focus)`로 수정하여 키보드 탐색 시 포커스 링이 선명하게 그려지도록 완벽 해결.
+  2) `RecommendCard.tsx`: `menuRef` 중복 바인딩을 제거하고 래퍼(`.mt-rec__more-wrapper`) 단일 ref로 정돈. 백드롭 클릭 시 포커스를 뺏지 않고 닫기만 수행(`setMenuOpen(false)`). 메뉴가 이미 열린 상태에서 더보기 버튼 `ArrowDown`/`ArrowUp` 입력 시 해당 항목으로 즉시 포커스 이동 처리. 메뉴 항목 수를 `MORE_ACTIONS` 배열 기준으로 관리.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+
+
+
 

@@ -56,7 +56,11 @@ export default function RecommendCard({
   const focusIndex = useRef(0);
 
   const menuId = `rec-more-menu-${profile.id}`;
-  const totalItems = 2;
+  const MORE_ACTIONS = [
+    { key: 'report', label: '신고하기', danger: false },
+    { key: 'block', label: '차단하기', danger: true },
+  ] as const;
+  const totalItems = MORE_ACTIONS.length;
   const lastIndex = totalItems - 1;
 
   useEffect(() => {
@@ -93,10 +97,18 @@ export default function RecommendCard({
       closeToButton();
     } else if (event.key === 'ArrowDown') {
       event.preventDefault();
-      openAt(0);
+      if (menuOpen) {
+        itemRefs.current[0]?.focus();
+      } else {
+        openAt(0);
+      }
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
-      openAt(lastIndex);
+      if (menuOpen) {
+        itemRefs.current[lastIndex]?.focus();
+      } else {
+        openAt(lastIndex);
+      }
     }
   };
 
@@ -191,12 +203,11 @@ export default function RecommendCard({
                     className="mt-rec__dropdown-backdrop"
                     onClick={(e) => {
                       e.stopPropagation();
-                      closeToButton();
+                      setMenuOpen(false);
                     }}
                     aria-hidden="true"
                   />
                   <div
-                    ref={menuRef}
                     id={menuId}
                     className="mt-rec__dropdown-menu"
                     role="menu"

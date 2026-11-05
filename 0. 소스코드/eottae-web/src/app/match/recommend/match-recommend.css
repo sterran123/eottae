@@ -277,7 +277,7 @@
   background: var(--match-soft);
 }
 .mt-rec-list .mt-rec__dropdown-item:focus-visible {
-  outline: 2px solid var(--match-primary);
+  outline: 2px solid var(--match-focus);
   outline-offset: -2px;
 }
 .mt-rec__dropdown-item--danger {
