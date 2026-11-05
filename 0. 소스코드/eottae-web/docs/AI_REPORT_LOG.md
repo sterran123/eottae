@@ -1167,6 +1167,7 @@
 - [요청] PR #101 AI 리뷰 지적(InvitationCardRenderer.tsx:1732 필수 해결 및 권장 사항) 반영:
   1) `InvitationCardRenderer.tsx` (필수): 에디터 실시간 미리보기 및 전체 화면 모달 미리보기(`previewMode={true}`)에서 「🌸 참석합니다」 버튼 클릭 시 페이지를 이탈하여 작성 중인 에디터 React state가 초기화되는 결함 해결. `if (previewMode)` 가드를 추가하여 미리보기 상태에서는 `router.push` 대신 "참석 회신은 하객 전용 초대 링크(t와 g)에서만 열려요. 이 미리보기에서는 이동하지 않아요." 토스트 알림을 띄우도록 보정하고, `URLSearchParams` 기반으로 파라미터를 안전하게 구성.
   2) `2. 프로젝트 설계서/테스트_케이스_마스터.md`: TC-016 행의 검증 설명에서 캡처 증빙(22~25번) 범위를 초과하는 불일치 문구를 정리하여 목업 회신 폼 검증 범위와 일치화.
+  3) `/invitations/rsvp/page.tsx` (권장): 하객 카드에서 t+g를 가지고 진입한 경우 타인 회신 및 호스트 명단 전환 바(`rsvp-demo-switcher`)를 숨겨 ADR-004 및 TC-016의 하객 간 회신 격리 보장 (`?demo=1` 시에만 노출).
 - [AI] Antigravity가 해당 파일들 수정 후 타입체크 및 정적 빌드 검증 수행.
 - [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
 - [검증] `npm run build` PASS (Next.js 15.5.28 정적 페이지 export 100% 성공)
