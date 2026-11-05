@@ -1151,3 +1151,14 @@
 
 
 
+
+## 2026-11-05 INV-003 하객 카드 RSVP 버튼 연동 및 TC-016 테스트 기록 추가 (손준혁 작업, Refs #86)
+- [요청] 이슈 #22 피드백 및 Grok 코멘트(issue #22 comment 6650663244) 지침에 따른 INV-003 하객 카드 RSVP 연동 및 TC-016 테스트 마스터 기록 반영:
+  1) `InvitationCardRenderer.tsx` 및 `/invitations/p/page.tsx`: 공개 하객 청첩장 URL에서 `g` (하객 토큰) 쿼리스트링을 추출하여 `InvitationCardRenderer`에 전달. 하객 카드의 "🌸 참석합니다" 버튼 클릭 시 `router.push('/invitations/rsvp/?t=' + token + '&g=' + guestToken)`으로 회신 폼 이동 연결 (토큰 부재 시 거부 화면 `/invitations/rsvp/?t=`로 안전하게 분기). "마음으로 축하하기" 안내를 `(제안 · P1)`로 통일하고 `#86 연동 준비 중` 임시 각주 완전 제거.
+  2) `sample-content.ts`: 144행 FAQ 답변을 "참석 회신 저장은 아직 준비 중이에요"에서 하객 전용 링크를 통한 온라인 참석 회신 지원 안내로 최신화.
+  3) PR #98 AI 코드 리뷰 권장 사항 정돈: `demo-storage.ts`의 중간 `isRsvpMeal` import를 파일 최상단 모듈 import 구문으로 통합 정리, `InvitationRsvpForm.tsx`의 행사 일시(`weddingDate`)를 서울 시간대 기준 한국어 서식(`formatWeddingDate`)으로 통일, `rsvp-access.ts` 및 `/invitations/rsvp/page.tsx`의 비소유자 거부 화면에서 미사용 `title` 의존 제거.
+  4) `2. 프로젝트 설계서/테스트_케이스_마스터.md`: `## 실행 기록` 테이블에 TC-016(모바일 청첩장 하객 RSVP 응답 및 접근 제어) 검증 완료 행 추가 (`PASS (목업)`).
+- [AI] Antigravity가 해당 파일들 수정 및 타입체크·정적 빌드 검증 수행.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 페이지 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음 (3차 목업 단계 원칙 준수)

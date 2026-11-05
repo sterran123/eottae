@@ -111,9 +111,6 @@ function OwnerRsvpReadOnlyCard({ invitationId }: { invitationId: string }) {
         <p className="rsvp-demo-badge">데모 데이터로 동작하는 3차 미리보기</p>
         <div className="rsvp-denied" role="alert">
           <strong>{overview.message}</strong>
-          {overview.title ? (
-            <p className="rsvp-muted">대상 청첩장: {overview.title} (타인 소유 · viewerIsOwner=false)</p>
-          ) : null}
           <p className="rsvp-muted">
             청첩장 수정·토큰 재발급·하객 회신 명단 열람은 소유자(호스트) 계정에서만 허용됩니다. (TC-015 목업)
           </p>

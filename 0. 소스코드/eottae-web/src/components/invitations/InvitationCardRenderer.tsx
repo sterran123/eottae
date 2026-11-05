@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import type {
   Invitation,
   InvitationSectionKey,
@@ -49,6 +50,7 @@ interface InvitationCardRendererProps {
   customMainPhoto?: string;
   customBgmUrl?: string;
   customBgmTitle?: string;
+  guestToken?: string;
 }
 
 interface GuestComment {
@@ -152,6 +154,7 @@ export function getThemeDefaultPhoto(themeId: string): string {
 export default function InvitationCardRenderer({
   invitation,
   previewMode = false,
+  guestToken,
   overrideTheme,
   overrideLayout,
   overrideBgm,
@@ -167,6 +170,7 @@ export default function InvitationCardRenderer({
   customBgmUrl,
   customBgmTitle,
 }: InvitationCardRendererProps) {
+  const router = useRouter();
   const activeThemeId = overrideTheme || invitation.themeId || 'wax-seal';
   const themePreset = getThemePreset(activeThemeId);
 
@@ -1725,9 +1729,14 @@ export default function InvitationCardRenderer({
                     backgroundColor: accent,
                     color: getContrastingTextColor(accent),
                   }}
-                  onClick={() =>
-                    setCopyNotice('RSVP 회신 폼은 현재 준비 중입니다 (손준혁 #86 목업 연동 예정)')
-                  }
+                  onClick={() => {
+                    const token = invitation.sharingToken?.trim() || '';
+                    const g = guestToken?.trim() || '';
+                    const targetUrl = g
+                      ? `/invitations/rsvp/?t=${encodeURIComponent(token)}&g=${encodeURIComponent(g)}`
+                      : `/invitations/rsvp/?t=${encodeURIComponent(token)}`;
+                    router.push(targetUrl);
+                  }}
                 >
                   🌸 참석합니다
                 </button>
@@ -1736,15 +1745,12 @@ export default function InvitationCardRenderer({
                   className="inv-btn-secondary"
                   style={{ minHeight: 44, fontSize: 13, padding: '0 18px' }}
                   onClick={() =>
-                    setCopyNotice('마음으로 축하하기 기능은 현재 준비 중입니다 (손준혁 #86 연동 예정)')
+                    setCopyNotice('마음으로 축하하기 기능은 현재 준비 중입니다 (제안 · P1)')
                   }
                 >
                   💌 마음으로 축하
                 </button>
               </div>
-              <p style={{ fontSize: 11, opacity: 0.65, textAlign: 'center', marginTop: 12 }}>
-                * 손준혁 담당: RSVP 응답 및 접근 제어 목업(#86) 연동 준비 중
-              </p>
             </div>
           </section>
         );

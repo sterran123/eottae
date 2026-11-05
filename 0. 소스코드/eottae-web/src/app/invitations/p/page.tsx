@@ -11,6 +11,7 @@ import '../invitations.css';
 function GuestInvitationContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('t') || '';
+  const guestToken = searchParams.get('g') || '';
 
   const [invitation, setInvitation] = useState<Invitation | null>(null);
   const [loaded, setLoaded] = useState<boolean>(false);
@@ -90,6 +91,7 @@ function GuestInvitationContent() {
         <InvitationCardRenderer
           invitation={invitation}
           previewMode={false}
+          guestToken={guestToken}
         />
       </div>
     </div>
