@@ -95,7 +95,7 @@
   min-height: 44px;
   padding: 0 22px;
   background: var(--brand);
-  color: var(--bg);
+  color: #ffffff;
   font-weight: 600;
   font-size: 14px;
   border-radius: 12px;
@@ -110,12 +110,16 @@
 [data-theme='dark'] .inv-hub .inv-btn-primary,
 [data-theme='dark'] .inv-hub-shell .inv-btn-primary,
 [data-theme='dark'] .inv-section-header-row .inv-btn-primary,
-[data-theme='dark'] .inv-modal-toolbar .inv-btn-primary,
+[data-theme='dark'] .inv-modal-toolbar .inv-btn-primary {
+  color: #ffffff;
+  font-weight: 700;
+}
+
 [data-theme='cyberpunk'] .inv-hub .inv-btn-primary,
 [data-theme='cyberpunk'] .inv-hub-shell .inv-btn-primary,
 [data-theme='cyberpunk'] .inv-section-header-row .inv-btn-primary,
 [data-theme='cyberpunk'] .inv-modal-toolbar .inv-btn-primary {
-  color: var(--bg) !important;
+  color: #05050d;
   font-weight: 700;
 }
 
@@ -124,7 +128,7 @@
   :root[data-theme='system'] .inv-hub-shell .inv-btn-primary,
   :root[data-theme='system'] .inv-section-header-row .inv-btn-primary,
   :root[data-theme='system'] .inv-modal-toolbar .inv-btn-primary {
-    color: var(--bg) !important;
+    color: #ffffff;
     font-weight: 700;
   }
 }

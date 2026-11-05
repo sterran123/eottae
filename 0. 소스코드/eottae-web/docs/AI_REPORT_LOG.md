@@ -1271,9 +1271,10 @@
   2) `InvitationCardRenderer.tsx`: 공개 하객 화면(`previewMode === false`)에서 `activeSections`를 필터링할 때 `PUBLIC_HIDDEN` Set(`guestbook`, `guest_snap`)을 도입하여 하객 개인정보 비노출(ADR-004)을 지키면서 `rsvp_preview`·`gallery`·`account` 섹션 및 참석 회신 버튼이 온전히 그려지도록 개선.
   3) `InvitationCardRenderer.tsx`: 참석 회신 버튼 클릭 핸들러를 TC-016 명세와 동일하게 `if (token && g)` 분기로 일치화. 불필요한 사전 차단을 배제하고 `/invitations/rsvp/?t=&g=` 이동을 정식 위임하며, `g` 부재 시 안내 토스트 노출.
   4) `scripts/verify-modal-and-card.ts`: 4컷 필름형 모달 라벨 변경에 맞춰 검증 문자열을 `4컷 필름형`으로 일치화하여 28개 검증 항목 100% PASS 달성.
-  5) `InvitationPreviewModal.tsx`: 오시는 길 본문이 80자를 넘거나 줄바꿈이 포함될 경우 저장 실패 대신 사용자에게 `장소명은 줄바꿈 없이 80자 이내로 입력해 주세요` 안내 토스트를 즉시 제공.
-  6) `demo-storage.ts`: `deleteInvitation` 및 `regenerateSharingToken`에 `saveInvitation`과 동일한 소유자 검증(`viewerIsOwner === true || (ownerId && ownerId === 'user-demo-me')`) 적용.
-  7) `src/app/invitations/new/page.tsx`, `InvitationCardRenderer.tsx`, `InvitationsHub.tsx`: 에디터 상태 칩 편집/생성 문구 복원(`청첩장 수정 (데모)` / `새 청첩장 만들기 (데모)`), 테마 ID 고유화에 맞춘 영문 문구(`Our Vow`, `warm heart`) 일치화.
+  5) `InvitationPreviewModal.tsx`: 오시는 길 본문이 80자를 넘거나 줄바꿈이 있는 경우에도 저장을 일체 중단하지 않고, 본문이 2~80자의 단일 줄일 때만 `venueLabel`로 반영하고 길면 기존 `invitation.venueLabel`을 안전하게 유지하여 테마·레이아웃·BGM 저장이 계속 진행되도록 개선.
+  6) `invitations.css`: 다크·사이버펑크·시스템 다크 테마에서 `.inv-hub .inv-btn-primary` 글자색을 명도 대비가 보장되는 색상(다크/시스템 다크 `#ffffff`, 사이버펑크 `#05050d`)으로 변경하고 `!important`를 제거하여 버튼 글자가 배경에 묻히지 않도록 수정.
+  7) `demo-storage.ts`: `deleteInvitation` 및 `regenerateSharingToken`에 `saveInvitation`과 동일한 소유자 검증(`viewerIsOwner === true || (ownerId && ownerId === 'user-demo-me')`) 적용.
+  8) `src/app/invitations/new/page.tsx`, `InvitationCardRenderer.tsx`, `InvitationsHub.tsx`: 에디터 상태 칩 편집/생성 문구 복원(`청첩장 수정 (데모)` / `새 청첩장 만들기 (데모)`), 테마 ID 고유화에 맞춘 영문 문구(`Our Vow`, `warm heart`) 일치화.
 - [AI] Antigravity가 main 충돌 해결 및 InvitationCardRenderer.tsx, demo-storage.ts 등 수정, 타입체크 및 정적 빌드 테스트 통과.
 - [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (28/28 통과)
 - [검증] `npm run typecheck` PASS (0 errors)

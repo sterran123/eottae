@@ -606,12 +606,10 @@ export default function InvitationPreviewModal({
                 onClick={() => {
                   const saveBgm = selectedBgm === 'custom' ? (invitation.bgmPreset || 'romantic') : selectedBgm;
                   const locationBody = customConfigs.location?.body?.trim() ?? '';
-                  if (locationBody && (locationBody.length > 80 || locationBody.includes('\n'))) {
-                    setSaveNotice('장소명은 줄바꿈 없이 80자 이내로 입력해 주세요');
-                    setTimeout(() => setSaveNotice(null), 3500);
-                    return;
-                  }
-                  const venueLabel = locationBody.length >= 2 ? locationBody : invitation.venueLabel;
+                  const venueLabel =
+                    locationBody.length >= 2 && locationBody.length <= 80 && !locationBody.includes('\n')
+                      ? locationBody
+                      : invitation.venueLabel;
                   const updated: Invitation = {
                     ...invitation,
                     greeting: customConfigs.greeting?.body || invitation.greeting,
