@@ -141,7 +141,8 @@ export function previewContentFor(invitation: Invitation): InvitePreviewContent 
       },
       {
         question: '아이와 함께 가도 되나요?',
-        answer: '함께 오셔도 돼요. 참석 회신 저장은 아직 준비 중이에요.',
+        answer:
+          '함께 오셔도 돼요. 하객 전용 초대 링크를 통해 이 브라우저에 참석 회신을 남길 수 있어요.',
       },
       {
         question: '옷은 어떻게 입을까요?',
