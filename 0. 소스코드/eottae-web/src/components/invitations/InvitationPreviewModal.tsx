@@ -604,13 +604,14 @@ export default function InvitationPreviewModal({
                 className="inv-btn-primary"
                 style={{ minHeight: 44, padding: '0 16px', fontSize: 13 }}
                 onClick={() => {
+                  const saveBgm = selectedBgm === 'custom' ? (invitation.bgmPreset || 'romantic') : selectedBgm;
                   const updated: Invitation = {
                     ...invitation,
                     greeting: customConfigs.greeting?.body || invitation.greeting,
                     venueLabel: invitation.venueLabel,
                     themeId: selectedTheme,
                     layoutStyle: selectedLayout,
-                    bgmPreset: selectedBgm,
+                    bgmPreset: saveBgm,
                     sectionOrder: sectionOrder,
                     updatedAt: new Date().toISOString(),
                   };
@@ -618,8 +619,10 @@ export default function InvitationPreviewModal({
                   if (ok) {
                     if (onSaveSettings) onSaveSettings(updated);
                     setSaveNotice('미리보기 설정이 저장되었습니다');
-                  } else {
+                  } else if (!invitation.viewerIsOwner || invitation.id.startsWith('showcase-')) {
                     setSaveNotice('소유자만 고칠 수 있어요 (TC-015 목업)');
+                  } else {
+                    setSaveNotice('설정 저장 중 오류가 발생했습니다');
                   }
                   setTimeout(() => setSaveNotice(null), 3000);
                 }}
@@ -1006,7 +1009,7 @@ export default function InvitationPreviewModal({
                 </button>
                 {customBgmTitle && (
                   <div style={{ fontSize: 11, color: '#16a34a', marginTop: 4, textAlign: 'center' }}>
-                    ✓ 적용된 음원: {customBgmTitle}
+                    ✓ 적용된 음원: {customBgmTitle} (올린 음원은 이 미리보기에서만 재생됩니다)
                   </div>
                 )}
               </div>

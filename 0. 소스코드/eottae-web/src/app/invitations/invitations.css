@@ -2128,8 +2128,10 @@
 }
 
 .inv-carousel-arrow-btn {
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: 50%;
   border: 1px solid #cbd5e1;
   background: #ffffff;
@@ -2137,7 +2139,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 13px;
   transition: all 0.15s ease;
 }
 
@@ -2980,12 +2982,13 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  min-height: 44px;
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(8px);
   color: #1e293b;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 11px;
+  padding: 0 16px;
+  border-radius: 22px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   border: 1px solid rgba(255, 255, 255, 0.6);
@@ -5420,8 +5423,10 @@
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(4px);

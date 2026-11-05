@@ -98,10 +98,10 @@ const imgLuxuryHotel = `${basePath}/invitations/wedding-luxury-hotel.jpg`;
 export const BGM_LABEL_MAP: Record<string, string> = {
   romantic: '축혼 행진곡',
   piano: '쇼팽 야상곡',
-  acoustic: '어쿠스틱 기타',
+  acoustic: '어쿠스틱 선율',
   bach_air: 'G선상의 아리아',
   canon: '파헬벨 캐논',
-  thousand_years: 'A Thousand Years',
+  thousand_years: '로맨틱 앙상블',
   spring_waltz: '봄날의 왈츠',
   none: '무음',
   custom: '커스텀 BGM',
@@ -180,20 +180,20 @@ export default function InvitationCardRenderer({
   const calendarStyle = propCalendarStyle || themePreset.defaultCalendarStyle || 'classic_table';
   const galleryMode = propGalleryMode || themePreset.defaultGalleryMode || 'carousel';
 
-  const [isPlaying, setIsPlaying] = useState<boolean>(activeBgm !== 'none');
+  const [isPlaying, setIsPlaying] = useState<boolean>(previewMode ? activeBgm !== 'none' : false);
   const [groomAccountOpen, setGroomAccountOpen] = useState<boolean>(false);
   const [brideAccountOpen, setBrideAccountOpen] = useState<boolean>(false);
   const [copyNotice, setCopyNotice] = useState<string | null>(null);
   const [envelopeOpened, setEnvelopeOpened] = useState<boolean>(false);
 
-  // activeBgm 변경 시 재생 상태 동기화
+  // activeBgm 변경 시 재생 상태 동기화 (하객 공개 화면은 사용자 클릭 전 무음 유지)
   useEffect(() => {
     if (activeBgm === 'none' && !customBgmUrl) {
       setIsPlaying(false);
-    } else {
+    } else if (previewMode) {
       setIsPlaying(true);
     }
-  }, [activeBgm, customBgmUrl]);
+  }, [activeBgm, customBgmUrl, previewMode]);
 
   // 1. [갤러리 1: 신랑·신부 공식 웨딩 화보 갤러리]
   const [carouselIdx, setCarouselIdx] = useState<number>(0);
@@ -363,7 +363,12 @@ export default function InvitationCardRenderer({
   const handleCopyText = (text: string, label: string) => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       void navigator.clipboard.writeText(text);
-      setCopyNotice(`${label} 복사되었습니다!`);
+      const isAccount = label.includes('계좌');
+      setCopyNotice(
+        isAccount
+          ? `${label} 복사되었습니다! (가상 계좌 · 실제 이체되지 않음)`
+          : `${label} 복사되었습니다!`
+      );
       setTimeout(() => setCopyNotice(null), 2500);
     }
   };
@@ -372,6 +377,10 @@ export default function InvitationCardRenderer({
   const handleAddOfficialPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 15 * 1024 * 1024) {
+      alert('사진 파일 용량은 15MB 이하만 업로드 가능합니다.');
+      return;
+    }
     const reader = new FileReader();
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result as string;
@@ -385,7 +394,7 @@ export default function InvitationCardRenderer({
           },
           ...prev,
         ]);
-        setCopyNotice('신랑·신부 공식 화보 사진이 갤러리 1에 추가되었습니다! 📸');
+        setCopyNotice('신랑·신부 공식 화보 사진이 추가되었습니다 (이 미리보기 화면에서만 보입니다) 📸');
         setTimeout(() => setCopyNotice(null), 3000);
       }
     };
@@ -428,7 +437,7 @@ export default function InvitationCardRenderer({
     setGuestCaptionText('');
     setGuestSnapFileImg(null);
     setShowGuestUploadForm(false);
-    setCopyNotice('🎉 하객 실시간 현장 스냅이 청첩장에 즉시 등록되었습니다!');
+    setCopyNotice('🎉 하객 현장 스냅이 등록되었습니다 (이 미리보기 화면에서만 보입니다)');
     setTimeout(() => setCopyNotice(null), 3000);
   };
 
@@ -447,7 +456,7 @@ export default function InvitationCardRenderer({
     setComments([item, ...comments]);
     setNewMessage('');
     setNewAuthor('');
-    setCopyNotice('💌 축하 메시지가 실시간 방명록에 등록되었습니다!');
+    setCopyNotice('💌 축하 메시지가 등록되었습니다 (이 미리보기 화면에서만 보입니다)');
     setTimeout(() => setCopyNotice(null), 3000);
   };
 
@@ -504,9 +513,12 @@ export default function InvitationCardRenderer({
   const venueAddress = sectionCustomMap.location?.body || `${venueTitle} (노을역 3번 출구 방향)`;
 
   // 신랑·신부 성함 동적 파싱
-  const parsedNames = hostNames.split(/[·&,]/).map((s) => s.trim());
-  const groomName = parsedNames[0]?.replace(/^(신랑\s*|groom\s*)/i, '').trim() || '이서윤';
-  const brideName = parsedNames[1]?.replace(/^(신부\s*|bride\s*)/i, '').trim() || '박하람';
+  const parts = hostNames
+    .split(/\s*[·ㆍ・&,/|]\s*|\s+와\s+|\s+과\s+/)
+    .map((s) => s.replace(/^(신랑|신부|groom|bride)\s*/i, '').trim())
+    .filter(Boolean);
+  const groomName = parts[0] || '신랑';
+  const brideName = parts[1] || '신부';
 
   // 현재 적용 색상 및 폰트 (WCAG 명도 대비 자동 보정 적용)
   const effectiveBgColor = customThemeStyle?.bgColor || themePreset.defaultBgColor || '#ffffff';
@@ -1117,24 +1129,26 @@ export default function InvitationCardRenderer({
               신랑·신부가 직접 엄선한 공식 웨딩 화보 앨범입니다.
             </p>
 
-            {/* 신랑·신부 공식 화보 사진 추가 버튼 */}
-            <div style={{ textAlign: 'center', marginBottom: 14 }}>
-              <input
-                ref={officialPhotoInputRef}
-                type="file"
-                accept="image/*"
-                style={{ display: 'none' }}
-                onChange={handleAddOfficialPhoto}
-              />
-              <button
-                type="button"
-                className="inv-btn-secondary"
-                style={{ minHeight: 36, fontSize: 12, padding: '0 16px' }}
-                onClick={() => officialPhotoInputRef.current?.click()}
-              >
-                📸 신랑·신부 공식 사진 추가 등록 (체험)
-              </button>
-            </div>
+            {/* 신랑·신부 공식 화보 사진 추가 버튼 (미리보기 체험 전용) */}
+            {previewMode && (
+              <div style={{ textAlign: 'center', marginBottom: 14 }}>
+                <input
+                  ref={officialPhotoInputRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={handleAddOfficialPhoto}
+                />
+                <button
+                  type="button"
+                  className="inv-btn-secondary"
+                  style={{ minHeight: 44, fontSize: 13, padding: '0 16px' }}
+                  onClick={() => officialPhotoInputRef.current?.click()}
+                >
+                  📸 신랑·신부 공식 사진 추가 등록 (체험)
+                </button>
+              </div>
+            )}
 
             {/* 캐러셀 슬라이더 모드 */}
             {activeGalMode === 'carousel' && (
@@ -1237,83 +1251,95 @@ export default function InvitationCardRenderer({
               오늘 예식에 참석하신 하객분들이 직접 촬영한 생생한 현장 사진을 실시간으로 함께 공유합니다.
             </p>
 
-            <div style={{ textAlign: 'center', marginBottom: 14 }}>
-              <button
-                type="button"
-                className="inv-btn-primary"
-                style={{
-                  minHeight: 38,
-                  fontSize: 12,
-                  padding: '0 18px',
-                  backgroundColor: accent,
-                  color: getContrastingTextColor(accent),
-                }}
-                onClick={() => setShowGuestUploadForm(!showGuestUploadForm)}
-              >
-                {showGuestUploadForm ? '닫기 ▲' : '📸 나도 현장 사진 올리기 (카메라/앨범)'}
-              </button>
-            </div>
-
-            {/* 하객 사진 업로드 폼 */}
-            {showGuestUploadForm && (
-              <form onSubmit={handleGuestSnapSubmit} className="inv-guest-upload-card">
-                <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-                  <input
-                    type="text"
-                    placeholder="하객 닉네임 (예: 신랑 후배 준혁)"
-                    value={guestUploaderName}
-                    onChange={(e) => setGuestUploaderName(e.target.value)}
-                    className="inv-field-input"
-                    style={{ width: '45%' }}
-                  />
-                  <input
-                    type="text"
-                    placeholder="사진 한 줄 설명 (예: 신부대기실 너무 예뻐요)"
-                    value={guestCaptionText}
-                    onChange={(e) => setGuestCaptionText(e.target.value)}
-                    className="inv-field-input"
-                    style={{ flex: 1 }}
-                  />
-                </div>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <input
-                    ref={guestPhotoInputRef}
-                    type="file"
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      const reader = new FileReader();
-                      reader.onload = (ev) => {
-                        setGuestSnapFileImg(ev.target?.result as string);
-                      };
-                      reader.readAsDataURL(file);
-                    }}
-                  />
+            {!previewMode ? (
+              <div style={{ textAlign: 'center', padding: '16px', background: 'var(--paper)', borderRadius: 12, border: '1px dashed var(--line)', margin: '12px 0' }}>
+                <span style={{ fontSize: 13, color: 'var(--muted)', fontWeight: 600 }}>📸 하객 실시간 현장 스냅 업로드는 준비 중이에요 (데모)</span>
+              </div>
+            ) : (
+              <>
+                <div style={{ textAlign: 'center', marginBottom: 14 }}>
                   <button
                     type="button"
-                    className="inv-btn-secondary"
-                    style={{ fontSize: 11, padding: '6px 12px' }}
-                    onClick={() => guestPhotoInputRef.current?.click()}
-                  >
-                    {guestSnapFileImg ? '✓ 사진 선택됨' : '📷 사진 선택'}
-                  </button>
-                  <button
-                    type="submit"
                     className="inv-btn-primary"
                     style={{
-                      flex: 1,
-                      minHeight: 34,
-                      fontSize: 12,
+                      minHeight: 44,
+                      fontSize: 13,
+                      padding: '0 18px',
                       backgroundColor: accent,
                       color: getContrastingTextColor(accent),
                     }}
+                    onClick={() => setShowGuestUploadForm(!showGuestUploadForm)}
                   >
-                    🎉 실시간 청첩장에 즉시 공유하기
+                    {showGuestUploadForm ? '닫기 ▲' : '📸 나도 현장 사진 올리기 (체험)'}
                   </button>
                 </div>
-              </form>
+
+                {/* 하객 사진 업로드 폼 */}
+                {showGuestUploadForm && (
+                  <form onSubmit={handleGuestSnapSubmit} className="inv-guest-upload-card">
+                    <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+                      <input
+                        type="text"
+                        placeholder="하객 닉네임 (예: 신랑 후배 준혁)"
+                        value={guestUploaderName}
+                        onChange={(e) => setGuestUploaderName(e.target.value)}
+                        className="inv-field-input"
+                        style={{ width: '45%' }}
+                      />
+                      <input
+                        type="text"
+                        placeholder="사진 한 줄 설명 (예: 신부대기실 너무 예뻐요)"
+                        value={guestCaptionText}
+                        onChange={(e) => setGuestCaptionText(e.target.value)}
+                        className="inv-field-input"
+                        style={{ flex: 1 }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <input
+                        ref={guestPhotoInputRef}
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          if (file.size > 15 * 1024 * 1024) {
+                            alert('사진 파일 용량은 15MB 이하만 업로드 가능합니다.');
+                            return;
+                          }
+                          const reader = new FileReader();
+                          reader.onload = (ev) => {
+                            setGuestSnapFileImg(ev.target?.result as string);
+                          };
+                          reader.readAsDataURL(file);
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="inv-btn-secondary"
+                        style={{ minHeight: 44, fontSize: 13, padding: '0 14px' }}
+                        onClick={() => guestPhotoInputRef.current?.click()}
+                      >
+                        {guestSnapFileImg ? '✓ 사진 선택됨' : '📷 사진 선택'}
+                      </button>
+                      <button
+                        type="submit"
+                        className="inv-btn-primary"
+                        style={{
+                          flex: 1,
+                          minHeight: 44,
+                          fontSize: 13,
+                          backgroundColor: accent,
+                          color: getContrastingTextColor(accent),
+                        }}
+                      >
+                        🎉 등록
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </>
             )}
 
             {/* 하객 스냅 카드 목록 */}
@@ -1495,53 +1521,59 @@ export default function InvitationCardRenderer({
               신랑 신부에게 따뜻한 축하의 메시지를 남겨주세요. 실시간으로 반영됩니다.
             </p>
 
-            <form onSubmit={handleAddComment} className="inv-guestbook-form">
-              {/* 스티커 이모지 선택 바 */}
-              <div className="inv-emoji-selector-row">
-                {['🌸', '💍', '🎉', '🥂', '🕊️', '❤️'].map((em) => (
-                  <button
-                    key={em}
-                    type="button"
-                    className={`inv-emoji-chip ${selectedEmoji === em ? 'inv-emoji-chip--active' : ''}`}
-                    onClick={() => setSelectedEmoji(em)}
-                  >
-                    {em}
-                  </button>
-                ))}
+            {!previewMode ? (
+              <div style={{ textAlign: 'center', padding: '16px', background: 'var(--paper)', borderRadius: 12, border: '1px dashed var(--line)', margin: '12px 0' }}>
+                <span style={{ fontSize: 13, color: 'var(--muted)', fontWeight: 600 }}>💌 축하 방명록 등록은 준비 중이에요 (데모)</span>
               </div>
+            ) : (
+              <form onSubmit={handleAddComment} className="inv-guestbook-form">
+                {/* 스티커 이모지 선택 바 */}
+                <div className="inv-emoji-selector-row">
+                  {['🌸', '💍', '🎉', '🥂', '🕊️', '❤️'].map((em) => (
+                    <button
+                      key={em}
+                      type="button"
+                      className={`inv-emoji-chip ${selectedEmoji === em ? 'inv-emoji-chip--active' : ''}`}
+                      onClick={() => setSelectedEmoji(em)}
+                    >
+                      {em}
+                    </button>
+                  ))}
+                </div>
 
-              <div style={{ display: 'flex', gap: 6 }}>
-                <input
-                  type="text"
-                  placeholder="작성자 성함 (예: 친구 지수)"
-                  value={newAuthor}
-                  onChange={(e) => setNewAuthor(e.target.value)}
-                  className="inv-field-input"
-                  style={{ width: '40%' }}
-                />
-                <input
-                  type="text"
-                  placeholder="축하 메시지를 입력하세요"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  className="inv-field-input"
-                  style={{ flex: 1 }}
-                />
-              </div>
-              <button
-                type="submit"
-                className="inv-btn-primary"
-                style={{
-                  minHeight: 38,
-                  fontSize: 12,
-                  marginTop: 6,
-                  backgroundColor: accent || 'var(--brand)',
-                  color: getContrastingTextColor(accent || 'var(--brand)'),
-                }}
-              >
-                💌 축하글 실시간 등록하기
-              </button>
-            </form>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <input
+                    type="text"
+                    placeholder="작성자 성함 (예: 친구 지수)"
+                    value={newAuthor}
+                    onChange={(e) => setNewAuthor(e.target.value)}
+                    className="inv-field-input"
+                    style={{ width: '40%' }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="축하 메시지를 입력하세요"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    className="inv-field-input"
+                    style={{ flex: 1 }}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="inv-btn-primary"
+                  style={{
+                    minHeight: 44,
+                    fontSize: 13,
+                    marginTop: 6,
+                    backgroundColor: accent || 'var(--brand)',
+                    color: getContrastingTextColor(accent || 'var(--brand)'),
+                  }}
+                >
+                  💌 축하글 실시간 등록하기 (체험)
+                </button>
+              </form>
+            )}
 
             <div className="inv-guestbook-list">
               {comments.map((cmt) => (

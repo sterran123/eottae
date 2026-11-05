@@ -1074,3 +1074,18 @@
 - [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
 
 
+## 2026-11-05 PR #97 10차 AI 리뷰 반영 및 보호 영역 0개 복원 (오하율 작업)
+- [요청] PR #97 10차 AI 자동 코드 리뷰 피드백(commit 7b0f698/ddb0966 기준) 및 보호 영역 차단 해소:
+  1) `보호 영역 해소`: `tsconfig.json`, `FILE_INDEX.csv`, `MANIFEST.sha256`의 불필요한 수정 내역을 `origin/main`과 동일하게 복원하여 PR 내 보호 영역 변경 0건(`보호 영역: 0개`)으로 정격 통과.
+  2) `InvitationCardRenderer.tsx` (필수 1): 신랑·신부 성함 파싱 정규식을 `/\s*[·ㆍ・&,/|]\s*|\s+와\s+|\s+과\s+/`로 대폭 보강하고, 접두어('신랑'/'신부') 제거 및 기본 폴백('신랑'/'신부')을 지정하여 다양한 혼주 성함 표기에도 화면이 깨지지 않도록 개선.
+  3) `InvitationCardRenderer.tsx` (필수 2): 공개 하객 카드(`previewMode={false}`)에서 불필요한 인터랙티브 쓰기 폼(공식 사진 업로드 폼, 하객 실시간 스냅 업로드 폼, 축하 방명록 등록 폼)을 완전히 분리하고 `준비 중이에요 (데모)` 안내 배너로 치환. 미리보기 모드(`previewMode={true}`)에서는 44px 터치 타겟 및 15MB 파일 용량 가드를 적용.
+  4) `InvitationPreviewModal.tsx` (필수 3): 커스텀 BGM(`selectedBgm === 'custom'`) 저장 시 Web Audio API 신디사이저 프리셋 불일치를 방지하기 위해 저장 대상 데이터의 `bgmPreset`을 기존 유효 프리셋으로 치환하여 커스텀 키의 DB/스토리지 유입 원천 차단. UI 문구에도 `(올린 음원은 이 미리보기에서만 재생됩니다)` 명시.
+  5) `invitations.css`, `InvitationCardRenderer.tsx`: 캐러셀 이전/다음 화살표 버튼(`.inv-carousel-arrow-btn`) 크기 44px 확보, 플로팅 BGM 버튼(`.inv-bgm-floating`) min-height 44px 보장, 공개 하객 카드 첫 진입 시 BGM 기본 무음화(`isPlaying: false`), 축의금 계좌 복사 시 `(가상 계좌 · 실제 이체되지 않음)` 알림 표기.
+- [AI] Antigravity가 해당 파일들(tsconfig, FILE_INDEX, MANIFEST, invitations.css, InvitationCardRenderer, InvitationPreviewModal, AI_REPORT_LOG) 수정 및 검증.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (package.json, tsconfig.json, .github/ 등 변경 없음)
+- [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
+
+
+
