@@ -51,12 +51,19 @@ export default function RecommendCard({
 }: RecommendCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const moreBtnRef = useRef<HTMLButtonElement>(null);
+  const itemRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const focusIndex = useRef(0);
 
   useEffect(() => {
     if (!menuOpen) return;
+    const index = Math.min(Math.max(focusIndex.current, 0), 1);
+    itemRefs.current[index]?.focus();
+
     function handleClickOutside(e: MouseEvent | TouchEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
+        moreBtnRef.current?.focus();
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -66,6 +73,48 @@ export default function RecommendCard({
       document.removeEventListener('touchstart', handleClickOutside);
     };
   }, [menuOpen]);
+
+  const openAt = (index: number) => {
+    focusIndex.current = index;
+    setMenuOpen(true);
+  };
+
+  const closeToButton = () => {
+    setMenuOpen(false);
+    moreBtnRef.current?.focus();
+  };
+
+  const onButtonKey = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      openAt(0);
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      openAt(1);
+    }
+  };
+
+  const onItemKey = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+    const last = 1;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeToButton();
+      return;
+    }
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      itemRefs.current[index === last ? 0 : index + 1]?.focus();
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      itemRefs.current[index === 0 ? last : index - 1]?.focus();
+    } else if (event.key === 'Home') {
+      event.preventDefault();
+      itemRefs.current[0]?.focus();
+    } else if (event.key === 'End') {
+      event.preventDefault();
+      itemRefs.current[last]?.focus();
+    }
+  };
 
   const { photo, relation } = profile;
   const isMutual = relation === 'mutual';
@@ -111,14 +160,18 @@ export default function RecommendCard({
             </div>
             <div className="mt-rec__more-wrapper" ref={menuRef}>
               <button
+                ref={moreBtnRef}
                 type="button"
                 className="mt-rec__more-btn"
                 aria-label={`${profile.nickname} 더보기 메뉴`}
                 aria-expanded={menuOpen}
+                aria-haspopup="menu"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setMenuOpen((v) => !v);
+                  if (menuOpen) closeToButton();
+                  else openAt(0);
                 }}
+                onKeyDown={onButtonKey}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <circle cx="12" cy="5" r="2" />
@@ -132,18 +185,22 @@ export default function RecommendCard({
                     className="mt-rec__dropdown-backdrop"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setMenuOpen(false);
+                      closeToButton();
                     }}
                     aria-hidden="true"
                   />
                   <div className="mt-rec__dropdown-menu" role="menu" onClick={(e) => e.stopPropagation()}>
                     <button
+                      ref={(el) => {
+                        itemRefs.current[0] = el;
+                      }}
                       type="button"
                       className="mt-rec__dropdown-item"
                       role="menuitem"
+                      onKeyDown={(e) => onItemKey(e, 0)}
                       onClick={(e) => {
                         e.stopPropagation();
-                        setMenuOpen(false);
+                        closeToButton();
                         onReport?.(profile.id);
                       }}
                     >
@@ -154,12 +211,16 @@ export default function RecommendCard({
                       <span>신고하기</span>
                     </button>
                     <button
+                      ref={(el) => {
+                        itemRefs.current[1] = el;
+                      }}
                       type="button"
                       className="mt-rec__dropdown-item mt-rec__dropdown-item--danger"
                       role="menuitem"
+                      onKeyDown={(e) => onItemKey(e, 1)}
                       onClick={(e) => {
                         e.stopPropagation();
-                        setMenuOpen(false);
+                        closeToButton();
                         onBlock?.(profile.id);
                       }}
                     >
