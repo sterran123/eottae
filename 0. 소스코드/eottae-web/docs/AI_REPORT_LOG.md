@@ -1234,7 +1234,6 @@
 - [검증] `npm run build` PASS (Next.js 15.5.28 정적 페이지 export 100% 성공)
 - [미실행] 서버·Supabase 연동 없음 (3차 목업 단계 원칙 준수)
 
-
 ## 2026-11-05 PR #101 2차 AI 코드 리뷰 지적 해결 (손준혁 작업, Refs #86, Refs #101)
 - [요청] PR #101 2차 AI 리뷰 지적(3건) 반영:
   1) `/invitations/rsvp/page.tsx`: 하객 RSVP 화면(t 또는 g를 가지고 접근한 모든 경로)에서 데모 시나리오 링크 전환 바(`rsvp-demo-switcher`)가 노출되던 결함 완전 해결 (`token.trim() === '' && guestToken.trim() === '' && searchParams.get('demo') === '1'`일 때만 열리도록 제한하여 하객 간 회신 격리 및 ADR-004 준수).
@@ -1255,7 +1254,6 @@
 - [검증] `node --check` 두 파일 PASS. 확인 신호는 GitHub 쓰기라 로컬 DRY_RUN=2 출력 로그만 확인(실게시 검증은 main 머지 후 작업자 주기에서 발생).
 - [미실행] 라이브 작업자(C:\eottae-grok-review 전용 클론)는 origin/main으로 자동 빨리감기 후 재시작 — 본 PR 머지 전까지 신동작 미적용.
 
-
 ## 2026-11-05 PR #100 머지본 로그 절 복원 및 접수 댓글 실패 갱신 (김민기 작업 · Devin 실행)
 - [요청] PR #100(이슈 #100) 1차 AI 리뷰 필수 지적 2건 중 미해결분 반영: 머지 과정에서 AI_REPORT_LOG.md의 직전 절 4개가 유실된 것 복원, 접수 댓글이 종료 후에도 "답변까지 N분 걸려요"로 남는 문제 해결.
 - [AI] Devin이 `0. 소스코드/eottae-web/docs/AI_REPORT_LOG.md`·`tools/grok_mention.mjs` 수정:
@@ -1264,6 +1262,59 @@
 - [검증] `node --check tools/grok_mention.mjs` PASS. 유실 절 4개가 베이스 원문과 동일하게 복원됨을 `git show 5582973^` 비교로 확인.
 - [미실행] GitHub 쓰기 경로(접수 댓글 PATCH)는 로컬 DRY_RUN=2 로그만 확인 — 실게시 검증은 머지 후 작업자 주기에서 발생.
 
+## 2026-11-05 feat(MATCH-007): 실계정 1:1 채팅 RLS 가드·차단 채널 회수 및 DTO attachment_path 일치 (이슈 #22, Refs #22) (손준혁 작업)
+- [요청] 이슈 #22([손준혁] 채팅·신고/차단 남은 작업 + QA 증빙, MATCH-007·008, SEC-002) 지시 및 리뷰 피드백 완비:
+  1) MATCH-007 (실시간 1:1 채팅, TC-008): 실계정(UUID) 1:1 채팅 진입 시 매칭 구성원(`conversations`) RLS 정책(`conversations_select_member`)을 사전 검증하여 비구성원은 빈 대화로 진입하지 않고 즉시 채널 생성을 중단한 채 「볼 수 없는 대화」 화면 표출. Supabase Realtime 채널 구독 상태 콜백(`onSubscriptionStatus`) 연동. DTO 불일치 해결(`MessageRow`에 `attachment_path` 추가 및 `messages` SELECT 쿼리에 일치).
+  2) MATCH-008 (신고·차단 서버 효력, TC-009): 실계정 대화 중 상대 차단 등으로 `messages` INSERT 실패 시 SQLSTATE `42501`을 감지하여 `onChannelRevoked` 호출 → 새로고침 없이 즉시 `removeChannel`로 실시간 채널 회수 및 전송창 disabled 잠금 처리.
+  3) 신고 관리 큐 및 내 신고 내역 (TC-010): `SafetyDemoPanels`에서 실계정(UUID) `fetchMyReports()`(`reports_select_own` RLS) 연동. 일반 계정이 관리자 시점 토글 시 `fetchReportQueue()` RPC(`list_reports`) 호출 결과 42501/403 거부를 감지하여 「일반 계정은 볼 수 없어요 (403 FORBIDDEN · 운영자 전용)」 에러 상태 표출 및 큐 목록 0건 격리.
+- [AI] Antigravity가 해당 파일들(`ChatRoom.tsx`, `SafetyDemoPanels.tsx`, `chat-service.ts`, `safety-service.ts`, `types.ts`, `테스트_케이스_마스터.md`, `AI_REPORT_LOG.md`) 수정 후 TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors).
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 라우트 정적 export 100% 성공).
+- [검증] 하드코딩 hex(#) 색상 0건, CSS 시맨틱 변수(`var(...)`) 100% 사용.
+- [미실행] 실계정 2개 브라우저 동시 접속 실송수신 및 Supabase 원격 DB E2E 테스트는 배포/서버 연동 단계에서 실행 (클라이언트 RLS 가드·RPC 예외 핸들링·채널 회수 동작은 완비). `package.json`, `FILE_INDEX.csv`, `MANIFEST.sha256`, `src/app/globals.css`, `supabase/migrations/`는 무수정 원칙 준수.
+
+## 2026-11-05 PR #104 1차 AI 코드 리뷰 지적 해결 (손준혁 작업, Refs #22, Refs #104)
+- [요청] PR #104(`feat/MATCH-007-chat-live`) 1차 AI 코드 리뷰 필수 지적 4건 및 권장 사항 반영:
+  1) `ChatHub.tsx` · `SafetyDemoPanels.tsx` · `테스트_케이스_마스터.md` (필수 1): `/match/chat`에서 로그인 세션(`useAuth()`)이 있을 때 세션 사용자 ID로 `conversations`와 `matches`를 RLS(`fetchMyLiveConversations`)로 읽어 그 방만 `ChatRoom`에 넘기도록 연결. UUID `room` 쿼리는 `demoRoomAccess`로 끊지 않고 `checkConversationMembership` 결과(`member`/`forbidden`/`error`)로 열거나 차단·오류 안내를 표시하며, 데모 `as` 쿼리는 기존 데모 방 동작을 유지. `SafetyDemoPanels`는 세션이 있을 때 서버 신고(`fetchMyReports`, `fetchReportQueue`)를 읽고 데모 actor일 때만 로컬 목록을 읽도록 수정. `2. 프로젝트 설계서/테스트_케이스_마스터.md:47-49`의 TC-008·009·010 신규 행은 브라우저 실세션 실행 전이므로 `PASS` 대신 **미실행** / 서버 실세션 **BLOCKED**로 정정.
+  2) `chat-service.ts` · `ChatRoom.tsx` (필수 2): Realtime `.subscribe()` 콜백에서 `if (disposed) return;` 가드를 두고, `CHANNEL_ERROR`·`TIMED_OUT`에서는 차단 잠금이 아닌 `onSubscriptionLost`를 호출해 채널을 정리하고 연결 끊김·다시 연결 버튼만 표시하도록 분리. `onChannelRevoked`는 메시지 INSERT 실패가 `error.code === '42501'`일 때만 호출하며, 그 상대 차단 잠금(`peerBlocked`)을 내가 건 차단(`blocked`)과 분리해 「차단 해제」 버튼을 숨기고 해제 시 채널을 다시 열지 않도록 수정.
+  3) `chat-service.ts` · `ChatRoom.tsx` (필수 3): `checkConversationMembership` 반환형을 `'member' | 'forbidden' | 'error'`로, `ChatRoom` 상태를 `'pending' | 'member' | 'forbidden' | 'error'`로 구분하여 `'error'`일 때는 「대화를 불러오지 못했어요」와 다시 시도 버튼을 보여주고, `'forbidden'`일 때만 「볼 수 없는 대화」를 표시하며, `'member'`가 확인된 뒤에만 `createSource()`를 호출하도록 수정.
+  4) `safety-service.ts` (필수 4): `fetchReportQueue()`에서 `(error as { code?: string }).code === '42501'`일 때만 `status: 403`(`INSUFFICIENT_PRIVILEGE`)으로 두고, 그 외 오류는 `status: 0, error: 'REPORT_QUEUE_FAILED'`로 반환.
+  5) 권장 사항 반영: `SafetyDemoPanels`의 `fetchReportQueue` 요청 세대 취소 가드(`queueReqIdRef`) 및 토글 시 이전 결과 비우기, `fetchMyReports() === null` 조회 실패와 빈 배열(`[]`) 구분 표시, `ChatHub`·`ChatRoom`의 `useId()`로 중복 `id="mt-chat-forbidden-title"` 방지, `fetchConversationMessagesPage` 내 중복 `checkConversationMembership` 호출 제거, `ChatRoom`에서 `createChatDataSource`에 `onSubscriptionStatus` 전달.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors).
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 export 100% 성공).
+- [미실행] 브라우저 실세션(2계정) 실행 및 원격 Supabase DB E2E 검증 — `테스트_케이스_마스터.md`에 미실행으로 기록.
+
+## 2026-11-05 PR #104 2차 AI 코드 리뷰 지적 해결 (손준혁 작업, Refs #22, Refs #104)
+- [요청] PR #104 2차 AI 코드 리뷰 지적(데모 주체·세션 확정 전 UUID 방 송수신 방지 및 3차 목업 범위 일치) 반영:
+  1) `ChatHub.tsx`: `useLive = !isDemoOverride && liveSessionId !== null`을 기준으로 `!useLive`일 때는 서버 목록 조회(`fetchMyLiveConversations`, `checkConversationMembership`)를 일절 실행하지 않고 `visibleRooms`를 순수 `demoVisibleRooms`로 고정하여 데모 actor 화면에 실대화가 병합되지 않도록 격리. `chooseActor`에서 데모 actor 전환 시 UUID `room`·`partner` 쿼리를 자동 제거. `useLive`일 때는 상단 데모 도구(`mt-chat-tools`)를 숨겨 데모-라이브 혼용 방지. `auth.status === 'loading'`일 때 대화 목록 로딩 상태 표시. "다시 시도" 버튼 스타일을 `mt-safety-btn`(min-height 44px)으로 수정.
+  2) `ChatRoom.tsx`: `sessionUserId` prop을 받아 `isLiveRoom = Boolean(isUuid(actorId) && sessionUserId && actorId === sessionUserId && isLiveChatRoom(room.id, partner.id))`로 엄격히 제한하여 데모 actor일 경우 서버 데이터 소스 생성 및 조회를 원천 차단. 상대방 차단(`peerBlocked`) 활성화 시 더보기 메뉴에서 차단 버튼을 disabled('상대방에 의해 차단됨') 처리하고, `releaseBlock` 실행 시 즉시 안내 메시지 노출 및 중단.
+  3) `chat-service.ts`: `resolveUserId` 및 `fetchConversationMessagesPage`에서 `options.myUserId`가 유효한 UUID이고 `auth.getUser()`와 일치할 때만 조회하도록 보강(`myUserId` 누락 시 null 반환). `fetchMyLiveConversations`에서 `matches` 테이블의 `user_low`/`user_high`로 상대방이 확정된 방만 포함하고 URL `partnerHint` 임의 폴백 생성 제거.
+  4) PR 제목 및 3차 목업 범위 일치: PR 제목을 `feat(MATCH-007): 1:1 채팅 차단 채널 회수 목업 가드 및 DTO attachment_path 일치 (Refs #22)`로 수정하여 DEC-10/DEC-11의 3차 목업(예시 데이터) 원칙을 준수.
+- [AI] Antigravity가 해당 파일들 수정 후 TypeScript 컴파일 및 정적 빌드 검증 수행.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors).
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 export 100% 성공).
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수).
+
+## 2026-11-05 PR #104 3차 AI 코드 리뷰 지적 해결 (손준혁 작업, Refs #22, Refs #104)
+- [요청] PR #104 3차 AI 코드 리뷰 지적(입장 중 차단 조회 경쟁 해소 및 세션 로딩 가드) 반영:
+  1) `ChatRoom.tsx` (필수): 방 입장 중 `checkIsBlockedOnServer` 조회가 진행되는 사이에 내가 차단을 확정했을 때, 늦게 도착한 비차단(`clear`) 응답이 내 차단을 덮어쓰고 채널을 재연결하지 않도록 `if (cancelled || blockedRef.current || peerBlockedRef.current) return;` 가드 추가. 내 차단 확정 상태(`blockedRef.current === true`)에서 INSERT 실패(`42501`)가 발생한 경우 `peerBlocked`로 전이되지 않고 채널 정리만 수행하도록 `onChannelRevoked` 분기 보정. `confirmBlockLock` 시 `peerBlockedRef.current = false` 및 `setPeerBlocked(false)`로 상대 차단 상태를 정리하여 내 차단 해제 경로 보장.
+  2) `ChatHub.tsx` (권장): 세션 인증 로딩 중(`auth.status === 'loading'`)에는 데모 방 목록이 깜빡이며 먼저 그려지지 않도록 로딩 문구 유지, 대화 목록 조회 실패 시 「열린 대화가 없어요」 빈 목록 문구를 숨기고 「다시 시도」 안내만 명확히 노출, `Promise.all`에 `.catch()` 핸들러를 추가하여 예외 발생 시 `liveRoomsLoading`이 무한 대기하지 않고 실패 상태로 안전하게 전이되도록 보강.
+  3) `SafetyDemoPanels.tsx` (권장): 로그아웃 상태에서 `?as=<uuid>` 쿼리만으로 서버 조회가 실행되지 않도록 `isLive = !isDemoOverride && sessionUserId !== null`로 엄격히 제한.
+  4) `chat-service.ts` (권장): `fetchMyLiveConversations` JSDoc 주석에서 제거된 `partnerHint` 폴백 설명을 최신 구현(`matches` 기반 확정)에 맞게 현행화.
+- [AI] Antigravity가 해당 파일들 수정 후 TypeScript 컴파일 및 정적 빌드 검증 수행.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors).
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 export 100% 성공).
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수).
+
+## 2026-11-05 PR #104 4차 AI 코드 리뷰 지적 해결 (손준혁 작업, Refs #22, Refs #104)
+- [요청] PR #104 4차 AI 코드 리뷰 필수 지적(세션 확정 전 데모 화면·도구·신고패널 노출 방지 및 세션 불일치 조회 차단) 반영:
+  1) `ChatHub.tsx` (필수): `useAuth()` 초기 로딩 중(`auth.status === 'loading'`) 데모 오버라이드(`as` 데모 id)가 아닐 때는 `authPending = true`로 정의하여 세션 확정 전까지 `visibleRooms`를 빈 배열(`[]`)로 유지하고, 상단 데모 도구(`mt-chat-tools`) 렌더링을 완전히 차단. `SafetyDemoPanels` 또한 `authPending` 중에는 마운트하지 않도록 분기하여 로그인 사용자가 진입 시 데모 화면이나 데모 선택창이 순간 노출되는 결함 원천 해결. 헤더 안내 문구도 세션 확인 중에는 대기 문구로 표시.
+  2) `SafetyDemoPanels.tsx` (권장): 실조회 조건(`isLive`)을 `!isDemoOverride && sessionUserId !== null && actorId === sessionUserId`로 강화하여 로그인 세션 사용자와 현재 actorId가 일치할 때만 서버 조회가 발생하도록 보장.
+  3) `AI_REPORT_LOG.md` (권장): MATCH-008 설명에서 불일치 문구 「또는 HTTP status 403」을 제거하고 코드와 일치하는 SQLSTATE `42501`로 단일화.
+- [AI] Antigravity가 해당 파일들 수정 후 TypeScript 컴파일 및 정적 빌드 검증 수행.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors).
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 export 100% 성공).
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수).
 
 ## 2026-11-05 PR #102 AI 리뷰 지적 해결 및 main 충돌 해결 (오하율 작업)
 - [요청] PR #102 main 충돌 해결 및 AI 코드 리뷰 FAIL 2건(공개 하객 화면 참석 회신 버튼 미노출·TC-016 클릭 동작 불일치) 및 권장사항 5건 해결:
@@ -1280,5 +1331,4 @@
 - [검증] `npm run typecheck` PASS (0 errors)
 - [검증] `npm run build` PASS (Next.js 15.5.28 정적 페이지 export 100% 성공)
 - [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
-
 
