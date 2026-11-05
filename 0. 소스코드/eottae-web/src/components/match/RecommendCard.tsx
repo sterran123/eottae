@@ -51,21 +51,138 @@ export default function RecommendCard({
 }: RecommendCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const moreBtnRef = useRef<HTMLButtonElement>(null);
+  const itemRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const focusIndex = useRef(0);
+
+  const menuId = `rec-more-menu-${profile.id}`;
+  const MORE_ACTIONS = [
+    {
+      key: 'report',
+      label: '신고하기',
+      danger: false,
+      icon: (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+          <line x1="4" y1="22" x2="4" y2="15" />
+        </svg>
+      ),
+      action: (id: string) => onReport?.(id),
+    },
+    {
+      key: 'block',
+      label: '차단하기',
+      danger: true,
+      icon: (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+        </svg>
+      ),
+      action: (id: string) => onBlock?.(id),
+    },
+  ] as const;
+  const totalItems = MORE_ACTIONS.length;
+  const lastIndex = totalItems - 1;
 
   useEffect(() => {
     if (!menuOpen) return;
-    function handleClickOutside(e: MouseEvent | TouchEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
+    const root = menuRef.current;
+    const index = Math.min(Math.max(focusIndex.current, 0), lastIndex);
+
+    function onFocusOut(event: FocusEvent) {
+      const next = event.relatedTarget;
+      if (next instanceof Node && root?.contains(next)) return;
+      setMenuOpen(false);
     }
+
+    function onEscape(event: KeyboardEvent) {
+      if (event.key !== 'Escape') return;
+      if (!(document.activeElement instanceof Node) || !root?.contains(document.activeElement)) return;
+      event.preventDefault();
+      closeToButton();
+    }
+
+    function handleClickOutside(e: MouseEvent | TouchEvent) {
+      const root = menuRef.current;
+      if (!root || root.contains(e.target as Node)) return;
+      const target = e.target;
+      const landedOnControl =
+        target instanceof Element &&
+        Boolean(
+          target.closest(
+            'button, a[href], input, textarea, select, [tabindex]:not([tabindex="-1"])',
+          ),
+        );
+      if (landedOnControl) setMenuOpen(false);
+      else closeToButton();
+    }
+
+    root?.addEventListener('focusout', onFocusOut);
+    document.addEventListener('keydown', onEscape);
     document.addEventListener('mousedown', handleClickOutside);
     document.addEventListener('touchstart', handleClickOutside);
+    itemRefs.current[index]?.focus();
+
     return () => {
+      root?.removeEventListener('focusout', onFocusOut);
+      document.removeEventListener('keydown', onEscape);
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('touchstart', handleClickOutside);
     };
-  }, [menuOpen]);
+  }, [menuOpen, lastIndex]);
+
+  const openAt = (index: number) => {
+    focusIndex.current = index;
+    setMenuOpen(true);
+  };
+
+  const closeToButton = () => {
+    setMenuOpen(false);
+    moreBtnRef.current?.focus();
+  };
+
+  const onButtonKey = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key === 'Escape' && menuOpen) {
+      event.preventDefault();
+      closeToButton();
+    } else if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      if (menuOpen) {
+        itemRefs.current[0]?.focus();
+      } else {
+        openAt(0);
+      }
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      if (menuOpen) {
+        itemRefs.current[lastIndex]?.focus();
+      } else {
+        openAt(lastIndex);
+      }
+    }
+  };
+
+  const onItemKey = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeToButton();
+      return;
+    }
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      itemRefs.current[index === lastIndex ? 0 : index + 1]?.focus();
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      itemRefs.current[index === 0 ? lastIndex : index - 1]?.focus();
+    } else if (event.key === 'Home') {
+      event.preventDefault();
+      itemRefs.current[0]?.focus();
+    } else if (event.key === 'End') {
+      event.preventDefault();
+      itemRefs.current[lastIndex]?.focus();
+    }
+  };
 
   const { photo, relation } = profile;
   const isMutual = relation === 'mutual';
@@ -111,14 +228,19 @@ export default function RecommendCard({
             </div>
             <div className="mt-rec__more-wrapper" ref={menuRef}>
               <button
+                ref={moreBtnRef}
                 type="button"
                 className="mt-rec__more-btn"
                 aria-label={`${profile.nickname} 더보기 메뉴`}
                 aria-expanded={menuOpen}
+                aria-haspopup="menu"
+                aria-controls={menuOpen ? menuId : undefined}
                 onClick={(e) => {
                   e.stopPropagation();
-                  setMenuOpen((v) => !v);
+                  if (menuOpen) closeToButton();
+                  else openAt(0);
                 }}
+                onKeyDown={onButtonKey}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <circle cx="12" cy="5" r="2" />
@@ -132,43 +254,38 @@ export default function RecommendCard({
                     className="mt-rec__dropdown-backdrop"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setMenuOpen(false);
+                      closeToButton();
                     }}
                     aria-hidden="true"
                   />
-                  <div className="mt-rec__dropdown-menu" role="menu" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      type="button"
-                      className="mt-rec__dropdown-item"
-                      role="menuitem"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setMenuOpen(false);
-                        onReport?.(profile.id);
-                      }}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
-                        <line x1="4" y1="22" x2="4" y2="15" />
-                      </svg>
-                      <span>신고하기</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="mt-rec__dropdown-item mt-rec__dropdown-item--danger"
-                      role="menuitem"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setMenuOpen(false);
-                        onBlock?.(profile.id);
-                      }}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
-                      </svg>
-                      <span>차단하기</span>
-                    </button>
+                  <div
+                    id={menuId}
+                    className="mt-rec__dropdown-menu"
+                    role="menu"
+                    aria-label="더보기"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {MORE_ACTIONS.map((actionItem, idx) => (
+                      <button
+                        key={actionItem.key}
+                        ref={(el) => {
+                          itemRefs.current[idx] = el;
+                        }}
+                        type="button"
+                        className={`mt-rec__dropdown-item${actionItem.danger ? ' mt-rec__dropdown-item--danger' : ''}`}
+                        role="menuitem"
+                        tabIndex={-1}
+                        onKeyDown={(e) => onItemKey(e, idx)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          closeToButton();
+                          actionItem.action(profile.id);
+                        }}
+                      >
+                        {actionItem.icon}
+                        <span>{actionItem.label}</span>
+                      </button>
+                    ))}
                   </div>
                 </>
               )}
