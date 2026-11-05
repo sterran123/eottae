@@ -13,6 +13,8 @@ import { invitationGuestHref } from '@/lib/invitations/href';
 import { getThemePreset } from '@/lib/invitations/theme-presets';
 import InvitationPreviewModal from './InvitationPreviewModal';
 import InvitationEditor from './InvitationEditor';
+import InvitationGuestForbiddenView from './InvitationGuestForbiddenView';
+import InvitationPolicyPanel from './InvitationPolicyPanel';
 
 type ThemeCategory = 'all' | 'photo' | 'typo' | 'emotional' | 'heritage';
 
@@ -405,6 +407,7 @@ function InvitationsHubContent() {
   const searchParams = useSearchParams();
   const previewParam = searchParams.get('preview');
   const editParam = searchParams.get('edit');
+  const guestsParam = searchParams.get('guests');
 
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [previewTarget, setPreviewTarget] = useState<Invitation | null>(null);
@@ -450,6 +453,31 @@ function InvitationsHubContent() {
     return (
       <div className="inv-hub">
         <InvitationEditor initialId={editParam} />
+      </div>
+    );
+  }
+
+  // [INV-002, TC-015] ?guests=<id> 직접 쿼리 수신 시 하객 목록 및 거절 화면 처리
+  if (guestsParam) {
+    const target = invitations.find((item) => item.id === guestsParam);
+    return (
+      <div className="inv-hub shell subpage" style={{ padding: '40px 20px', maxWidth: 720, margin: '0 auto' }}>
+        <div style={{ marginBottom: 16 }}>
+          <Link href="/invitations/" className="inv-btn-secondary" style={{ minHeight: 44, display: 'inline-flex', alignItems: 'center' }}>
+            ← 청첩장 허브로 돌아가기
+          </Link>
+        </div>
+        {target ? (
+          target.viewerIsOwner ? (
+            <InvitationPolicyPanel invitation={target} onDeleted={refresh} />
+          ) : (
+            <InvitationGuestForbiddenView invitationTitle={target.title} />
+          )
+        ) : (
+          <div className="inv-form-section" style={{ textAlign: 'center', padding: '40px 20px' }}>
+            <p style={{ color: 'var(--muted)', fontSize: 14 }}>요청하신 청첩장을 찾을 수 없습니다.</p>
+          </div>
+        )}
       </div>
     );
   }
@@ -660,9 +688,22 @@ function InvitationsHubContent() {
                     <span>📱</span>
                     <span>체험 테스트</span>
                   </button>
-                  {inv.viewerIsOwner && (
-                    <Link href={`/invitations/?edit=${inv.id}`} className="inv-btn-secondary" style={{ minHeight: 44, fontSize: 13 }}>
-                      정보 수정
+                  {inv.viewerIsOwner ? (
+                    <>
+                      <Link href={`/invitations/?edit=${inv.id}`} className="inv-btn-secondary" style={{ minHeight: 44, fontSize: 13 }}>
+                        정보 수정
+                      </Link>
+                      <Link href={`/invitations/?guests=${inv.id}`} className="inv-btn-secondary" style={{ minHeight: 44, fontSize: 13 }}>
+                        하객·정책 관리
+                      </Link>
+                    </>
+                  ) : (
+                    <Link
+                      href={`/invitations/?guests=${inv.id}`}
+                      className="inv-btn-secondary"
+                      style={{ minHeight: 44, fontSize: 13, color: 'var(--warn-ink)' }}
+                    >
+                      하객 목록 거절 테스트 (TC-015)
                     </Link>
                   )}
                   <Link href={guestUrl} className="inv-btn-secondary" style={{ minHeight: 44, fontSize: 13 }} target="_blank">
