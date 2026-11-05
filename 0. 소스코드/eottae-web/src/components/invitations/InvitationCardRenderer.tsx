@@ -1730,12 +1730,20 @@ export default function InvitationCardRenderer({
                     color: getContrastingTextColor(accent),
                   }}
                   onClick={() => {
+                    if (previewMode) {
+                      setCopyNotice(
+                        '참석 회신은 하객 전용 초대 링크(t와 g)에서만 열려요. 이 미리보기에서는 이동하지 않아요.',
+                      );
+                      setTimeout(() => setCopyNotice(null), 3000);
+                      return;
+                    }
                     const token = invitation.sharingToken?.trim() || '';
                     const g = guestToken?.trim() || '';
-                    const targetUrl = g
-                      ? `/invitations/rsvp/?t=${encodeURIComponent(token)}&g=${encodeURIComponent(g)}`
-                      : `/invitations/rsvp/?t=${encodeURIComponent(token)}`;
-                    router.push(targetUrl);
+                    const params = new URLSearchParams();
+                    if (token) params.set('t', token);
+                    if (g) params.set('g', g);
+                    const qs = params.toString();
+                    router.push(qs ? `/invitations/rsvp/?${qs}` : '/invitations/rsvp/?t=');
                   }}
                 >
                   🌸 참석합니다
