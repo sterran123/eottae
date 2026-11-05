@@ -1,6 +1,7 @@
 // 3차 모바일 청첩장 예시 데이터 (INV-001)
 // 실존 인물(팀원 실명 포함)·실주소·실전화번호가 없는 순수 가상 데이터만 사용한다.
 // 2차 가상 지역(노을구·달동네·한들시 등)을 재사용한다.
+// 요구사항 인수 조건: 예시 청첩장 정확히 2~3개 준수 (3건)
 
 import type { Guest, Invitation, Rsvp } from './types';
 
@@ -24,6 +25,9 @@ export const DEMO_INVITATIONS: readonly Invitation[] = [
     updatedAt: '2026-11-01T15:30:00+09:00',
     notice: '식사는 식장 내 연회장에 정성껏 준비되어 있습니다. 주차는 건물 지하 1~3층 이용 가능합니다.',
     contactNote: '가상 문의 안내: 모바일 청첩장 데모 환경입니다.',
+    layoutStyle: 'classic',
+    bgmPreset: 'romantic',
+    sectionOrder: ['greeting', 'schedule', 'location', 'account', 'rsvp_preview'],
   },
   {
     id: 'demo-inv-2',
@@ -44,6 +48,9 @@ export const DEMO_INVITATIONS: readonly Invitation[] = [
     updatedAt: '2026-11-02T18:20:00+09:00',
     notice: '소규모 스몰 웨딩으로 진행됩니다. 편안한 마음으로 참석해 주세요.',
     contactNote: '가상 문의 안내: 모바일 청첩장 데모 환경입니다.',
+    layoutStyle: 'modern',
+    bgmPreset: 'piano',
+    sectionOrder: ['greeting', 'location', 'schedule', 'account', 'rsvp_preview'],
   },
   {
     id: 'demo-inv-3',
@@ -64,24 +71,9 @@ export const DEMO_INVITATIONS: readonly Invitation[] = [
     updatedAt: '2026-11-01T14:00:00+09:00',
     notice: '전통 혼례 식순으로 진행되며, 식후 피로연이 준비되어 있습니다.',
     contactNote: '타인의 예시 청첩장(열람 전용)입니다.',
-  },
-  {
-    id: 'demo-inv-revoked',
-    ownerId: 'user-demo-me',
-    title: '재발급으로 폐기된 예시 청첩장',
-    hostNames: '신랑 유하늘 · 신부 윤바다',
-    weddingDate: '2026-10-10T12:00:00+09:00',
-    venueLabel: '온기동 가든하우스',
-    greeting: '토큰 재발급 또는 만료 테스트를 위한 예시 청첩장입니다.',
-    sharingToken: 'old-revoked-token-sample',
-    visibility: 'public',
-    expiry: '2026-10-11T00:00:00+09:00',
-    themeId: 'star-table',
-    status: 'revoked',
-    viewerIsOwner: true,
-    createdAt: '2026-10-01T10:00:00+09:00',
-    updatedAt: '2026-10-11T00:00:00+09:00',
-    notice: '폐기된 청첩장 시연용입니다.',
+    layoutStyle: 'minimal',
+    bgmPreset: 'acoustic',
+    sectionOrder: ['greeting', 'schedule', 'location', 'rsvp_preview', 'account'],
   },
 ];
 

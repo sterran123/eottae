@@ -1,0 +1,6392 @@
+/* ============================================================
+ * 모바일 청첩장 프리미엄 스타일시트 (INV-001)
+ * 어때? 감성 모바일 청첩장 프리미엄 디자인 적용
+ * 1. 세로형 모바일 폰 비율 청첩장 디자인 쇼케이스 갤러리
+ * 2. 반투명 버그 제거: 완벽한 솔리드 모달 및 스튜디오 뷰포트
+ * 3. 360px 모바일 폭, 44px 터치 타겟, 6테마 완벽 대응
+ * ============================================================ */
+
+/* --- 메인 허브 레이아웃 --- */
+.inv-hub {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  width: 100%;
+}
+
+/* 상단 데모 뱃지 안내 바 */
+.inv-badge-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 20px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  font-size: 13px;
+  color: var(--muted);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.inv-badge-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: var(--brand);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 20px;
+  letter-spacing: 0.05em;
+}
+
+/* 사이버펑크 및 다크 테마에서 밝은 브랜드 색상 위의 텍스트 묻힘 방지 */
+[data-theme='cyberpunk'] .inv-badge-chip {
+  color: #0a0a14 !important;
+  font-weight: 800;
+}
+
+[data-theme='dark'] .inv-badge-chip,
+.inv-mode--dark .inv-badge-chip {
+  color: #161423 !important;
+  font-weight: 800;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-badge-chip {
+    color: #161423 !important;
+    font-weight: 800;
+  }
+}
+
+/* 상단 섹션 헤더 & 버튼 */
+.inv-section-header-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.inv-section-header-row h2 {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+}
+
+.inv-section-header-row p {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* 버튼 스타일 */
+.inv-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 22px;
+  background: var(--brand);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 12px;
+  text-decoration: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  transition: all 0.2s ease;
+}
+
+/* 사이버펑크 및 다크/시스템 다크 테마에서 버튼 글자색 대비 보장 (밝은 브랜드색 배경) */
+/* .inv-mode--dark 는 제외: 카드 다크 모드가 아닌 앱 다크 테마의 브랜드 버튼만 어둡게 */
+[data-theme='dark'] .inv-btn-primary,
+[data-theme='cyberpunk'] .inv-btn-primary {
+  color: var(--bg) !important;
+  font-weight: 700;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-btn-primary {
+    color: var(--bg) !important;
+    font-weight: 700;
+  }
+}
+
+/* 사이버펑크 및 다크 테마에서 브랜드 배경 요소들의 글자색 대비 보장 */
+.inv-toast {
+  color: #ffffff;
+}
+
+[data-theme='cyberpunk'] .inv-category-tab-btn--active,
+[data-theme='cyberpunk'] .inv-copy-chip,
+[data-theme='cyberpunk'] .inv-font-btn--active,
+[data-theme='cyberpunk'] .inv-choice-pill--active,
+[data-theme='cyberpunk'] .inv-accordion-toggle-btn--active,
+[data-theme='cyberpunk'] .inv-frame-btn--active,
+[data-theme='cyberpunk'] .inv-address-copy-btn:hover,
+[data-theme='cyberpunk'] .inv-toast,
+[data-theme='cyberpunk'] .inv-chip-btn--active,
+[data-theme='dark'] .inv-category-tab-btn--active,
+[data-theme='dark'] .inv-copy-chip,
+[data-theme='dark'] .inv-font-btn--active,
+[data-theme='dark'] .inv-choice-pill--active,
+[data-theme='dark'] .inv-accordion-toggle-btn--active,
+[data-theme='dark'] .inv-frame-btn--active,
+[data-theme='dark'] .inv-address-copy-btn:hover,
+[data-theme='dark'] .inv-toast,
+[data-theme='dark'] .inv-chip-btn--active {
+  color: var(--bg) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-category-tab-btn--active,
+  :root[data-theme='system'] .inv-copy-chip,
+  :root[data-theme='system'] .inv-font-btn--active,
+  :root[data-theme='system'] .inv-choice-pill--active,
+  :root[data-theme='system'] .inv-accordion-toggle-btn--active,
+  :root[data-theme='system'] .inv-frame-btn--active,
+  :root[data-theme='system'] .inv-address-copy-btn:hover,
+  :root[data-theme='system'] .inv-toast,
+  :root[data-theme='system'] .inv-chip-btn--active {
+    color: var(--bg) !important;
+  }
+}
+
+.inv-btn-primary:hover {
+  opacity: 0.92;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16);
+}
+
+.inv-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 16px;
+  background: var(--card);
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 13px;
+  border-radius: 10px;
+  text-decoration: none;
+  border: 1px solid var(--line);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.inv-btn-secondary:hover {
+  background: var(--bg);
+  border-color: var(--muted);
+}
+
+/* ============================================================
+ * [디자인 쇼케이스] 프리미엄 테마 쇼케이스 갤러리
+ * ============================================================ */
+
+.inv-design-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px 20px;
+  width: 100%;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .inv-design-gallery-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 540px) {
+  .inv-design-gallery-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* 1번 이미지의 세로형 모바일 청첩장 커버 카드 (완벽히 통일된 크기 규격) */
+.inv-design-cover-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  padding: 0;
+  text-align: center;
+  transition: transform 0.25s ease;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.inv-design-cover-card:hover {
+  transform: translateY(-6px);
+}
+
+.inv-design-cover-card:hover .inv-cover-viewport {
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.14);
+  border-color: var(--brand);
+}
+
+/* 세로 모바일 비율 (9:15.5 비율, 16종 모두 완전히 동일한 가로/세로 비율 고정) */
+.inv-cover-viewport {
+  width: 100%;
+  aspect-ratio: 9 / 15.5;
+  height: auto;
+  border-radius: 18px;
+  overflow: hidden !important;
+  position: relative;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  box-sizing: border-box;
+  transition: all 0.25s ease;
+  user-select: none;
+  background: transparent !important;
+  min-width: 0;
+  contain: paint;
+}
+
+.inv-cover-viewport > * {
+  width: 100%;
+  height: 100%;
+  flex: 1 1 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+/* 디자인 카드 하단 레이블 */
+.inv-cover-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  margin: 0;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --- 실사 웨딩 포토 기반 커버 스타일 --- */
+
+.inv-real-photo-cover {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 22px 16px 18px;
+  box-sizing: border-box;
+}
+
+.inv-real-photo-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.inv-overlay--gradient-duo {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0.35) 100%);
+}
+
+.inv-overlay--sunset {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0) 45%, rgba(0, 0, 0, 0.45) 100%);
+}
+
+.inv-overlay--forest {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.1) 40%, rgba(0, 0, 0, 0.5) 100%);
+}
+
+.inv-overlay--cherry {
+  background: linear-gradient(180deg, rgba(136, 19, 55, 0.35) 0%, rgba(0, 0, 0, 0) 45%, rgba(136, 19, 55, 0.45) 100%);
+}
+
+.inv-overlay--night {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.4) 0%, rgba(0, 0, 0, 0) 50%, rgba(15, 23, 42, 0.65) 100%);
+}
+
+.inv-overlay--luxury {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0) 45%, rgba(0, 0, 0, 0.6) 100%);
+}
+
+.inv-overlay--bottom-heavy {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0.7) 100%);
+}
+
+.inv-overlay--subtle {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0) 30%, rgba(0, 0, 0, 0.25) 100%);
+}
+
+/* 숲속의 싱그러움 타이포그래피 */
+.inv-cover-top-names {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 11px;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: 0.15em;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+  z-index: 2;
+}
+
+.inv-cover-center-korean-cursive {
+  margin: auto 0 14px;
+  text-align: center;
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: #ffffff;
+  font-family: serif;
+  letter-spacing: -0.02em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  z-index: 2;
+}
+
+.inv-cover-bottom-date {
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: #ffffff;
+  opacity: 0.95;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  z-index: 2;
+}
+
+/* Our Wedding 필기체 영문 */
+.inv-cover-top-center-names {
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  z-index: 2;
+}
+
+.inv-cover-center-script-huge {
+  margin: auto 0;
+  text-align: center;
+  font-size: 34px;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  letter-spacing: -0.01em;
+  z-index: 2;
+}
+
+/* 배경 사진 분할 카드 (Top 65% photo + Bottom 35% white info card) */
+.inv-split-card-cover {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.inv-split-photo {
+  flex: 1;
+  background-size: cover;
+  background-position: center top;
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+}
+
+.inv-split-info-box {
+  padding: 12px 14px;
+  background: #ffffff;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
+}
+
+.inv-split-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.inv-split-names {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1e293b;
+  text-shadow: none !important;
+}
+
+.inv-split-sub {
+  font-size: 9px;
+  color: #94a3b8;
+  letter-spacing: 0.05em;
+}
+
+.inv-split-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 3px 0 5px;
+}
+
+.inv-split-row {
+  display: flex;
+  gap: 6px;
+  font-size: 9px;
+  line-height: 1.35;
+}
+
+.inv-split-label {
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.inv-split-val {
+  color: #475569;
+}
+
+/* 사랑을 담아 페이드 카드 */
+.inv-fade-card-cover {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+}
+
+.inv-fade-photo {
+  height: 60%;
+  background-size: cover;
+  background-position: center top;
+  position: relative;
+  padding: 16px 14px;
+  box-sizing: border-box;
+}
+
+.inv-fade-bottom-gradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 55px;
+  background: linear-gradient(to bottom, transparent, #ffffff);
+}
+
+.inv-fade-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px 14px;
+  text-align: center;
+}
+
+.inv-script-with-love {
+  font-size: 26px;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  color: #881337;
+  margin-top: -14px;
+  margin-bottom: 6px;
+  z-index: 2;
+}
+
+.inv-fade-info {
+  font-size: 9px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+/* 클래식 실링인장 실사 봉투 */
+.inv-wax-envelope-bottom-text {
+  margin-top: auto;
+  text-align: center;
+  z-index: 2;
+  padding-bottom: 6px;
+}
+
+.inv-wax-calligraphy-names {
+  font-size: 15px;
+  font-weight: 700;
+  font-family: serif;
+  color: #334155;
+}
+
+.inv-wax-calligraphy-venue {
+  font-size: 10px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.inv-wax-calligraphy-date {
+  font-size: 10px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+/* 스냅 포토카드 폴라로이드 */
+.inv-tape-card-container {
+  width: 100%;
+  height: 100%;
+  background: #f7f5f0;
+  padding: 18px 14px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.inv-tape-top-save {
+  font-size: 13px;
+  font-family: serif;
+  font-style: italic;
+  color: #57534e;
+  text-align: center;
+}
+
+.inv-tape-polaroid-wrap {
+  position: relative;
+  width: 84%;
+  margin: 4px auto 0;
+}
+
+.inv-washi-tape-strip {
+  width: 60px;
+  height: 16px;
+  background: rgba(254, 240, 138, 0.75);
+  backdrop-filter: blur(2px);
+  margin: 0 auto;
+  transform: rotate(-3deg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 2;
+}
+
+.inv-tape-polaroid-inner {
+  width: 100%;
+  height: 120px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 3px;
+  margin-top: -6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 4px solid #ffffff;
+}
+
+.inv-tape-bottom-text {
+  text-align: center;
+}
+
+.inv-tape-date {
+  font-size: 13px;
+  font-weight: 700;
+  font-family: serif;
+  color: #292524;
+}
+
+.inv-tape-sub {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: #78716c;
+  margin-top: 2px;
+}
+
+.inv-tape-kicker {
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  color: #a8a29e;
+  margin-top: 1px;
+}
+
+/* 에디토리얼 프레임 */
+.inv-typo-top-group {
+  text-align: center;
+  z-index: 2;
+}
+
+.inv-typo-sub-lead {
+  font-size: 8px;
+  letter-spacing: 0.25em;
+  color: #ffffff;
+  opacity: 0.9;
+}
+
+.inv-typo-headline {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  margin: 2px 0 0;
+}
+
+.inv-typo-bottom-group {
+  text-align: center;
+  z-index: 2;
+}
+
+.inv-typo-couple-names {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fefae0;
+}
+
+.inv-typo-date-loc {
+  font-size: 10px;
+  color: #ffffff;
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+/* 손글씨 레터 'Our Day' */
+.inv-script-ourday-badge {
+  font-size: 32px;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-weight: 700;
+  color: #e11d48;
+  text-shadow: 0 1px 4px rgba(255, 255, 255, 0.9);
+  position: absolute;
+  bottom: 60px;
+  left: 16px;
+  z-index: 2;
+}
+
+.inv-script-card-bottom {
+  margin-top: auto;
+  text-align: left;
+  z-index: 2;
+  color: #ffffff;
+}
+
+.inv-script-names {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.inv-script-date {
+  font-size: 9px;
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+.inv-script-venue {
+  font-size: 9px;
+  opacity: 0.75;
+}
+
+/* 노을빛 실루엣 */
+.inv-centerline-top-meta {
+  text-align: center;
+  z-index: 2;
+  color: #ffffff;
+  font-size: 8px;
+  letter-spacing: 0.2em;
+}
+
+.inv-centerline-top-meta strong {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
+
+.inv-centerline-stack {
+  text-align: center;
+  margin: auto 0;
+  z-index: 2;
+  color: #ffffff;
+}
+
+.inv-cl-day {
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.inv-cl-month {
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  margin-top: 2px;
+}
+
+.inv-cl-divider {
+  width: 1px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.7);
+  margin: 6px auto;
+}
+
+.inv-cl-year {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.inv-centerline-bot-venue {
+  text-align: center;
+  font-size: 9px;
+  color: #ffffff;
+  opacity: 0.85;
+  z-index: 2;
+}
+
+/* 린넨 가든 */
+.inv-cover-a-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #f8fafc;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.inv-cover-a-top-bar {
+  padding: 10px 12px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+}
+
+.inv-ca-names {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1e293b;
+  text-shadow: none !important;
+}
+
+.inv-ca-date-sm {
+  font-size: 8px;
+  color: #64748b;
+  margin-top: 1px;
+  text-shadow: none !important;
+}
+
+.inv-ca-venue-sm {
+  font-size: 8px;
+  color: #94a3b8;
+  text-shadow: none !important;
+}
+
+.inv-ca-script-title {
+  font-size: 10px;
+  font-family: serif;
+  font-style: italic;
+  color: #94a3b8;
+  text-shadow: none !important;
+}
+
+.inv-cover-a-photo-body {
+  flex: 1;
+  width: 100%;
+  background-size: cover;
+  background-position: center;
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
+}
+
+/* 콰이어트 */
+.inv-quiet-container {
+  width: 100%;
+  height: 100%;
+  background: #faf8f5;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 12px 12px;
+  box-sizing: border-box;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.inv-quiet-top-text {
+  text-align: center;
+}
+
+.inv-quiet-label {
+  font-size: 8px;
+  letter-spacing: 0.25em;
+  color: #78716c;
+}
+
+.inv-quiet-names {
+  font-size: 15px;
+  font-weight: 700;
+  font-family: serif;
+  color: #292524;
+  margin: 4px 0 8px;
+}
+
+.inv-quiet-photo-wrap {
+  flex: 1;
+  background-size: cover;
+  background-position: center;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.inv-quiet-bot-venue {
+  text-align: center;
+  font-size: 9px;
+  color: #78716c;
+  margin-top: 8px;
+}
+
+/* 봄날의 꽃잎, 달빛 정원, 전통 한지, 별빛 연회 뱃지 */
+.inv-cherry-top-tag,
+.inv-night-top-tag,
+.inv-luxury-top-tag {
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  text-align: center;
+  z-index: 2;
+}
+
+.inv-cherry-center-names,
+.inv-night-center-names,
+.inv-luxury-center-names {
+  margin: auto 0;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  z-index: 2;
+}
+
+.inv-cherry-bot-date,
+.inv-night-bot-venue,
+.inv-luxury-bot-venue {
+  text-align: center;
+  font-size: 10px;
+  color: #ffffff;
+  opacity: 0.9;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  z-index: 2;
+}
+
+/* 전통 한지 */
+.inv-hanji-container {
+  width: 100%;
+  height: 100%;
+  background: #fbf8f1;
+  padding: 14px 10px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.inv-hanji-top-banner {
+  text-align: center;
+  font-size: 11px;
+  font-family: serif;
+  letter-spacing: 0.15em;
+  color: #78350f;
+  margin-bottom: 6px;
+}
+
+.inv-hanji-photo-wrap {
+  flex: 1;
+  background-size: cover;
+  background-position: center;
+  border-radius: 4px;
+  border: 2px solid #d97706;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(120, 53, 15, 0.1);
+}
+
+.inv-hanji-grid-border {
+  position: absolute;
+  inset: 4px;
+  border: 1px dashed rgba(217, 119, 6, 0.4);
+  pointer-events: none;
+}
+
+.inv-hanji-bot-text {
+  text-align: center;
+  margin-top: 8px;
+}
+
+.inv-hanji-names {
+  font-size: 13px;
+  font-weight: 700;
+  font-family: serif;
+  color: #451a03;
+}
+
+.inv-hanji-loc {
+  font-size: 9px;
+  color: #78350f;
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+/* 모달 및 뷰포트 내 풀스크린 실사 히어로 */
+.inv-hero-sig--photo-full {
+  width: 100%;
+  min-height: 480px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 30px 20px;
+  box-sizing: border-box;
+}
+
+.inv-sig-content--floating {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+}
+
+.inv-hero-sig--split {
+  width: 100%;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+}
+
+.inv-hero-split-photo {
+  width: 100%;
+  height: 340px;
+  background-size: cover;
+  background-position: center top;
+}
+
+.inv-hero-split-info {
+  padding: 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #ffffff;
+}
+
+.inv-hero-sig--withlove {
+  width: 100%;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+}
+
+.inv-withlove-photo-wrap {
+  width: 100%;
+  height: 320px;
+  background-size: cover;
+  background-position: center top;
+  position: relative;
+  padding: 20px 16px;
+  box-sizing: border-box;
+}
+
+.inv-withlove-gradient-mask {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  background: linear-gradient(to bottom, transparent, #ffffff);
+}
+
+.inv-withlove-body {
+  padding: 0 16px 24px;
+  text-align: center;
+}
+
+.wax-seal-interactive-hotspot {
+  position: absolute;
+  top: 36%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 5;
+}
+
+.inv-tape-card-polaroid-frame {
+  position: relative;
+  width: 88%;
+  margin: 10px auto 0;
+  background: #ffffff;
+  padding: 6px 6px 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
+}
+
+.inv-tape-polaroid-photo {
+  width: 100%;
+  height: 240px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 2px;
+}
+
+/* --- 8종 커버 프리뷰 테마별 디테일 --- */
+
+/* 1. 클래식 실링인장 (Wax Seal) */
+.inv-cover--wax-seal {
+  background: #f7f4ed;
+  background-image: radial-gradient(#ece6d8 1px, transparent 1px);
+  background-size: 16px 16px;
+  color: #3f3933;
+}
+.inv-cover--wax-seal .wax-seal-emboss {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #b91c1c, #7f1d1d);
+  box-shadow: 0 6px 14px rgba(127, 29, 29, 0.35), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  margin: 40px auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fca5a5;
+  font-size: 24px;
+}
+.inv-cover--wax-seal .envelope-v-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 90px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+  background: linear-gradient(180deg, #ede7db, #f7f4ed);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  z-index: 1;
+}
+
+/* 2. 스냅 포토카드 (Snap Polaroid) */
+.inv-cover--tape-card {
+  background: #f1f3f5;
+  color: #212529;
+}
+.inv-cover--tape-card .masking-tape {
+  width: 70px;
+  height: 18px;
+  background: rgba(254, 240, 138, 0.7);
+  backdrop-filter: blur(2px);
+  margin: 0 auto;
+  transform: rotate(-3deg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+.inv-cover--tape-card .polaroid-photo {
+  width: 140px;
+  height: 150px;
+  background: #ffffff;
+  padding: 8px 8px 24px;
+  margin: -6px auto 0;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+}
+
+/* 3. 에디토리얼 프레임 (Editorial Frame) */
+.inv-cover--typo-frame {
+  background: linear-gradient(180deg, #283618 0%, #1c2710 100%);
+  color: #fefae0;
+}
+
+/* 4. 모던 풀스크린 (Full Photo) */
+.inv-cover--photo-only {
+  background: linear-gradient(180deg, #fceade 0%, #f7d6c8 100%);
+  color: #3d2c29;
+}
+
+/* 5. 손글씨 레터 (Script Letter) */
+.inv-cover--script-card {
+  background: #ffffff;
+  color: #1a1a1a;
+}
+.inv-cover--script-card .script-big-text {
+  font-size: 34px;
+  font-family: serif, 'Times New Roman';
+  font-style: italic;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+/* 6. 노을빛 실루엣 (Center Line) */
+.inv-cover--center-line {
+  background: linear-gradient(180deg, #7b9acc 0%, #d4a373 100%);
+  color: #ffffff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+.inv-cover--center-line .center-vertical-divider {
+  width: 1px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.6);
+  margin: 10px auto;
+}
+
+/* 7. 린넨 가든 (Linen Garden) */
+.inv-cover--cover-a {
+  background: #fafafa;
+  color: #262626;
+  border: 1px solid #e5e5e5;
+}
+
+/* 8. 고요한 산책 (Quiet) */
+.inv-cover--quiet {
+  background: #fbf9f5;
+  color: #2b2b2b;
+}
+
+/* 9. 봄날의 벚꽃 (Spring Blossom) */
+.inv-cover--spring-blossom {
+  background: linear-gradient(180deg, #fff1f2 0%, #ffe4e6 100%);
+  color: #881337;
+  border: 1px solid #fecdd3;
+}
+
+/* 10. 달빛 정원 (Moonlight Garden) */
+.inv-cover--moonlight-garden {
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  color: #f8fafc;
+}
+
+/* 11. 전통 한지 (Traditional Hanji) */
+.inv-cover--traditional-hanji {
+  background: #fbf8f1;
+  color: #451a03;
+  border: 1px solid #e7dfd5;
+}
+
+/* 12. 별빛 연회 (Starlight Banquet) */
+.inv-cover--starlight-banquet {
+  background: linear-gradient(180deg, #18181b 0%, #27272a 100%);
+  color: #fef08a;
+  border: 1px solid #3f3f46;
+}
+
+/* 13. 보태니컬 가든 (Botanical Garden) */
+.inv-cover--botanical {
+  background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%);
+  color: #14532d;
+  border: 1px solid #bbf7d0;
+}
+
+/* 14. 미니멀 아치 (Minimal Arch) */
+.inv-cover--minimal-arch {
+  background: #ffffff;
+  color: #1f2937;
+  border: 1px solid #e5e7eb;
+}
+.inv-cover--minimal-arch .arch-outline-box {
+  width: 130px;
+  height: 160px;
+  border: 2px solid #94a3b8;
+  border-radius: 65px 65px 0 0;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 15. 시네마틱 무비 (Cinematic Movie) */
+.inv-cover--cinematic {
+  background: #09090b;
+  color: #fafafa;
+  border: 1px solid #27272a;
+}
+
+/* 16. 한옥 헤리티지 (Hanok Heritage) */
+.inv-cover--hanok {
+  background: #fdfaf6;
+  color: #292524;
+  border: 1px solid #e7e5e4;
+}
+
+/* 테마 카드 우측 상단 뱃지 */
+.inv-cover-top-tag {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  padding: 3px 8px;
+  background: rgba(0, 0, 0, 0.45);
+  color: #ffffff;
+  backdrop-filter: blur(6px);
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  z-index: 5;
+}
+
+/* 카테고리 탭 바 */
+.inv-category-tabs-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.inv-category-tab-btn {
+  padding: 8px 18px;
+  background: var(--card);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.inv-category-tab-btn:hover {
+  color: var(--ink);
+  border-color: var(--brand);
+}
+
+.inv-category-tab-btn--active {
+  background: var(--brand) !important;
+  color: #ffffff !important;
+  border-color: var(--brand) !important;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+}
+
+/* --- 호버 시 나타나는 빠른 액션 뱃지 --- */
+.inv-cover-hover-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+  border-radius: inherit !important;
+  pointer-events: auto;
+}
+
+.inv-design-cover-card:hover .inv-cover-hover-overlay {
+  opacity: 1;
+}
+
+.inv-cover-hover-btn {
+  padding: 8px 16px;
+  background: #ffffff;
+  color: #111111;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* ============================================================
+ * [내 모바일 청첩장 관리 섹션] 심플 & 와이드 카드
+ * ============================================================ */
+
+.inv-my-list-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 10px;
+}
+
+.inv-my-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 18px 24px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
+}
+
+.inv-my-card-row:hover {
+  border-color: var(--brand);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+}
+
+.inv-my-card-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.inv-my-card-thumb {
+  width: 48px;
+  height: 64px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.inv-my-card-details h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  color: var(--ink);
+}
+
+.inv-my-card-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.inv-my-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ============================================================
+ * [3번 이미지 반투명 버그 완전 제거] 솔리드 모달 & 스튜디오 뷰포트
+ * ============================================================ */
+
+.inv-modal-backdrop,
+.inv-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  z-index: 9999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 24px;
+  animation: inv-fade-in 0.2s ease-out;
+  box-sizing: border-box;
+}
+
+/* 반투명 제거: 완전한 솔리드 흰색/다크 모달 본체 (와이드 확장 스튜디오 - 테마 토큰 적용) */
+.inv-modal-shell,
+.inv-modal-container {
+  background: var(--paper, #ffffff) !important;
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 28px;
+  max-width: 1440px !important;
+  width: 96vw !important;
+  height: 95vh !important;
+  max-height: 980px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  position: relative;
+  animation: inv-scale-up 0.2s ease-out;
+  box-sizing: border-box;
+}
+
+[data-theme='dark'] .inv-modal-shell,
+[data-theme='dark'] .inv-modal-container,
+[data-theme='cyberpunk'] .inv-modal-shell,
+[data-theme='cyberpunk'] .inv-modal-container {
+  background: var(--paper, #1e293b) !important;
+  border-color: var(--line, #334155);
+}
+
+.inv-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 28px;
+  background: var(--paper, #ffffff);
+  border-bottom: 1px solid var(--line, #e2e8f0);
+  gap: 16px;
+}
+
+[data-theme='dark'] .inv-modal-header,
+[data-theme='cyberpunk'] .inv-modal-header {
+  background: var(--paper, #1e293b);
+  border-bottom-color: var(--line, #334155);
+}
+
+.inv-modal-title-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.inv-modal-title-area h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--ink);
+}
+
+.inv-modal-close-btn {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  font-size: 18px;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.15s ease;
+}
+
+.inv-modal-close-btn:hover {
+  color: var(--ink);
+  border-color: var(--brand);
+}
+
+.inv-modal-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  flex-direction: row;
+}
+
+@media (max-width: 860px) {
+  .inv-modal-body {
+    flex-direction: column;
+  }
+}
+
+/* 좌측 컨트롤러 툴바: 360px 모바일 화면 넘침 방지 및 max-width: 100% 반응형 처리 */
+.inv-modal-toolbar {
+  width: 460px;
+  max-width: 100%;
+  background: var(--paper, #ffffff);
+  border-right: 1px solid var(--line, #e2e8f0);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  overflow-y: auto;
+}
+
+[data-theme='dark'] .inv-modal-toolbar,
+[data-theme='cyberpunk'] .inv-modal-toolbar {
+  background: var(--paper, #1e293b);
+  border-right-color: var(--line, #334155);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-modal-shell,
+  :root[data-theme='system'] .inv-modal-container {
+    background: var(--paper, #1e293b) !important;
+    border-color: var(--line, #334155);
+  }
+
+  :root[data-theme='system'] .inv-modal-header {
+    background: var(--paper, #1e293b);
+    border-bottom-color: var(--line, #334155);
+  }
+
+  :root[data-theme='system'] .inv-modal-toolbar {
+    background: var(--paper, #1e293b);
+    border-right-color: var(--line, #334155);
+  }
+}
+
+@media (max-width: 860px) {
+  .inv-modal-toolbar {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    max-height: 280px;
+    border-right: none;
+    border-bottom: 1px solid var(--line, #e2e8f0);
+    padding: 16px;
+  }
+}
+
+.inv-ctrl-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.inv-ctrl-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 테마 선택 2열 그리드 */
+.inv-theme-selector-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.inv-theme-choice-btn {
+  min-height: 54px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+[data-theme='dark'] .inv-theme-choice-btn {
+  border-color: #334155;
+  background: #0f172a;
+}
+
+.inv-theme-choice-btn:hover {
+  border-color: var(--brand);
+}
+
+.inv-theme-choice-btn--active {
+  background: #ffffff !important;
+  border: 2px solid var(--brand) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme='dark'] .inv-theme-choice-btn--active {
+  background: #1e293b !important;
+}
+
+.inv-theme-choice-btn__icon {
+  font-size: 22px;
+}
+
+.inv-theme-choice-btn__name {
+  font-size: 13px;
+  font-weight: 700;
+  display: block;
+}
+
+.inv-theme-choice-btn__sub {
+  font-size: 10px;
+  color: var(--muted);
+  display: block;
+}
+
+/* 세그먼트 버튼 (레이아웃, BGM) */
+.inv-segment-group {
+  display: flex;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+}
+
+[data-theme='dark'] .inv-segment-group {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.inv-segment-btn {
+  flex: 1;
+  min-height: 44px;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.inv-segment-btn:hover {
+  color: var(--ink);
+}
+
+.inv-segment-btn--active {
+  background: #ffffff;
+  color: var(--ink);
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme='dark'] .inv-segment-btn--active {
+  background: #1e293b;
+  color: #ffffff;
+}
+
+/* 섹션 순서 조작 및 아코디언 드래그앤드롭 */
+.inv-section-order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inv-section-accordion-wrap {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+[data-theme='dark'] .inv-section-accordion-wrap {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.inv-section-item--dragging {
+  opacity: 0.4;
+  border: 2px dashed var(--brand);
+}
+
+.inv-section-item--dragover {
+  border-color: var(--brand);
+  background: rgba(124, 58, 237, 0.05);
+  transform: translateY(-2px);
+}
+
+/* ============================================================
+ * [2번 이미지 수정] 웨딩 시각 효과 2열 와이드 카드 그리드
+ * ============================================================ */
+.inv-fx-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.inv-fx-card-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+[data-theme='dark'] .inv-fx-card-btn {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.inv-fx-card-btn:hover {
+  border-color: var(--brand);
+}
+
+.inv-fx-card-btn--active {
+  background: #ffffff !important;
+  border: 2px solid var(--brand) !important;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.12);
+}
+
+[data-theme='dark'] .inv-fx-card-btn--active {
+  background: #1e293b !important;
+}
+
+.inv-fx-card-btn__icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.inv-fx-card-btn__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.inv-fx-card-btn__title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.inv-fx-card-btn__desc {
+  font-size: 10px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================
+ * [인생네컷 / 포토 프레임 테두리 디자인]
+ * ============================================================ */
+.inv-frame-choices-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.inv-frame-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 6px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+[data-theme='dark'] .inv-frame-btn {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.inv-frame-btn:hover {
+  border-color: var(--brand);
+}
+
+.inv-frame-btn--active {
+  background: var(--brand) !important;
+  color: #ffffff !important;
+  border-color: var(--brand) !important;
+  font-weight: 700;
+}
+
+/* 실제 렌더러 커버 사진 프레임 테두리 스타일들 */
+.inv-photo-frame-container {
+  width: 260px;
+  height: 330px;
+  margin: 16px auto 20px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12);
+}
+
+/* 1. 모던 아치 프레임 */
+.inv-frame--arch {
+  border-radius: 130px 130px 16px 16px;
+  border: 3px solid #ffffff;
+}
+
+/* 2. 인생네컷 필름 프레임 */
+.inv-frame--life4cut {
+  border-radius: 4px;
+  border: 10px solid #ffffff;
+  padding-bottom: 24px;
+}
+.inv-life4cut-stamp-line {
+  position: absolute;
+  bottom: 6px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  color: #18181b;
+}
+
+/* 3. 폴라로이드 테이프 프레임 */
+.inv-frame--polaroid {
+  border-radius: 4px;
+  border: 8px solid #ffffff;
+  border-bottom: 28px solid #ffffff;
+}
+.inv-polaroid-tape-badge {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70px;
+  height: 18px;
+  background: rgba(254, 240, 138, 0.85);
+  border-left: 2px dashed rgba(202, 138, 4, 0.5);
+  border-right: 2px dashed rgba(202, 138, 4, 0.5);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 5;
+}
+
+/* 4. 골드 앤틱 타원 프레임 */
+.inv-frame--gold_round {
+  border-radius: 50%;
+  border: 6px double #d97706;
+  width: 250px;
+  height: 290px;
+}
+
+/* 5. 클래식 스퀘어 */
+.inv-frame--square {
+  border-radius: 8px;
+  border: 2px solid #e2e8f0;
+}
+
+/* ============================================================
+ * [1번 이미지 화살표 완전 제거] 깔끔한 버거바 드래그 & 아코디언 토글
+ * ============================================================ */
+.inv-section-order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inv-section-accordion-wrap {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+[data-theme='dark'] .inv-section-accordion-wrap {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.inv-section-item--dragging {
+  opacity: 0.35;
+  border: 2px dashed var(--brand);
+}
+
+.inv-section-item--dragover {
+  border-color: var(--brand);
+  background: rgba(124, 58, 237, 0.05);
+  transform: translateY(-2px);
+}
+
+.inv-section-order-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  gap: 10px;
+}
+
+.inv-drag-handle {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  color: var(--muted);
+  border-radius: 6px;
+  transition: all 0.15s ease;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.inv-drag-handle:active {
+  cursor: grabbing;
+}
+
+.inv-drag-handle:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--ink);
+}
+
+.inv-drag-dots {
+  font-size: 17px;
+  letter-spacing: -2px;
+}
+
+/* 섹션 타이틀: 줄바꿈 없이 한 줄로 깔끔하게 처리 */
+.inv-section-title-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.inv-section-index {
+  color: var(--brand);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.inv-section-name {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 화살표 버튼 완전 제거! 직관적인 편집/닫기 토글 버튼 */
+.inv-accordion-toggle-btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+[data-theme='dark'] .inv-accordion-toggle-btn {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+.inv-accordion-toggle-btn:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.inv-accordion-toggle-btn--active {
+  background: var(--brand) !important;
+  color: #ffffff !important;
+  border-color: var(--brand) !important;
+}
+
+/* 아코디언 커스텀 서랍 */
+.inv-accordion-drawer {
+  padding: 16px;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: inv-accordion-down 0.2s ease-out;
+}
+
+[data-theme='dark'] .inv-accordion-drawer {
+  background: #1e293b;
+  border-top-color: #334155;
+}
+
+.inv-choice-pills-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.inv-choice-pill {
+  padding: 6px 12px;
+  border-radius: 16px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+[data-theme='dark'] .inv-choice-pill {
+  background: #0f172a;
+  border-color: #475569;
+}
+
+.inv-choice-pill--active {
+  background: var(--brand) !important;
+  color: #ffffff !important;
+  border-color: var(--brand) !important;
+  font-weight: 700;
+}
+
+/* ============================================================
+ * [달력 형태 4종 룩앤필]
+ * ============================================================ */
+.inv-heart-stamp-view {
+  padding: 24px 10px;
+  text-align: center;
+}
+
+.inv-heart-stamp-circle {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  border: 3px dashed #e11d48;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #fff1f2;
+  color: #be123c;
+  transform: rotate(-6deg);
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.15);
+}
+
+.inv-countdown-box-view {
+  padding: 16px 10px;
+}
+
+.inv-countdown-grid {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.inv-count-cell {
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 10px;
+  padding: 10px 14px;
+  text-align: center;
+  min-width: 60px;
+}
+
+.inv-count-cell strong {
+  display: block;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.inv-count-cell span {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+/* ============================================================
+ * [갤러리 모드: 캐러셀 / 인생네컷 스트립 / 인스타 그리드]
+ * ============================================================ */
+.inv-gallery-carousel-wrap {
+  padding: 0 10px;
+}
+
+.inv-carousel-card {
+  height: 240px;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+}
+
+.inv-carousel-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.inv-carousel-arrow-btn {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 50%;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.15s ease;
+}
+
+.inv-carousel-arrow-btn:hover {
+  background: var(--brand);
+  color: #ffffff;
+  border-color: var(--brand);
+}
+
+/* 인생네컷 스트립 */
+.inv-life4cut-strip-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.inv-life4cut-film {
+  width: 220px;
+  background: #18181b;
+  color: #f4f4f5;
+  padding: 14px 12px;
+  border-radius: 6px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inv-life4cut-header {
+  font-size: 10px;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: 0.1em;
+  color: #fbbf24;
+}
+
+.inv-life4cut-cell {
+  height: 100px;
+  background: #27272a;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.inv-life4cut-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  opacity: 0.75;
+  margin-top: 4px;
+  font-family: monospace;
+}
+
+/* ============================================================
+ * [하객 축하 방명록 & 하객 즉석 스냅 앨범]
+ * ============================================================ */
+.inv-guestbook-form {
+  margin-bottom: 14px;
+}
+
+.inv-guestbook-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inv-guestbook-card {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.inv-guestbook-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.inv-guestbook-card__body {
+  font-size: 12px;
+  line-height: 1.45;
+  opacity: 0.85;
+}
+
+/* 하객 즉석 스냅 그리드 */
+.inv-guest-snap-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.inv-guest-snap-item {
+  height: 96px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  text-align: center;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.inv-guest-snap-caption {
+  font-size: 9px;
+  font-weight: 600;
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+/* ============================================================
+ * [애니메이션 스크롤 하단 끊김 완전 해결] 목업 최상위 고정 캔버스
+ * ============================================================ */
+.inv-phone-mockup {
+  position: relative;
+  overflow: hidden;
+}
+
+.inv-phone-fx-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 80;
+}
+
+.inv-phone-screen {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  background: #ffffff;
+  scroll-behavior: smooth;
+}
+
+/* ============================================================
+ * [1번 이미지 지적] 실제 인터랙티브 지도 & 주소 복사 & 지도 링크
+ * ============================================================ */
+.inv-interactive-map-frame {
+  width: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  margin-bottom: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.inv-venue-info-card {
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.inv-address-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 20px;
+  border: 1px solid var(--brand);
+  background: rgba(124, 58, 237, 0.08);
+  color: var(--brand);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.inv-address-copy-btn:hover {
+  background: var(--brand);
+  color: #ffffff;
+}
+
+.inv-map-link-btn {
+  flex: 1;
+  text-align: center;
+  font-weight: 700;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+}
+
+.inv-floating-toast {
+  position: fixed;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.92);
+  color: #ffffff;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  z-index: 1000;
+  animation: inv-fade-in 0.2s ease-out;
+}
+
+/* ============================================================
+ * [2번 이미지 지적] 레이아웃 단독 행 & BGM 단독 행 분리
+ * ============================================================ */
+.inv-layout-cards-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inv-layout-choice-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+[data-theme='dark'] .inv-layout-choice-card {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.inv-layout-choice-card:hover {
+  border-color: var(--brand);
+}
+
+.inv-layout-choice-card--active {
+  background: #ffffff !important;
+  border: 2px solid var(--brand) !important;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.12);
+}
+
+[data-theme='dark'] .inv-layout-choice-card--active {
+  background: #1e293b !important;
+}
+
+.inv-bgm-choices-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.inv-bgm-choice-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--ink);
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+[data-theme='dark'] .inv-bgm-choice-btn {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.inv-bgm-choice-btn:hover {
+  border-color: var(--brand);
+}
+
+.inv-bgm-choice-btn--active {
+  background: #ffffff !important;
+  border: 2px solid var(--brand) !important;
+  color: var(--brand) !important;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.12);
+}
+
+[data-theme='dark'] .inv-bgm-choice-btn--active {
+  background: #1e293b !important;
+}
+
+/* ============================================================
+ * [사용자 레포 WeddingPlatform 반영] 색상 테마 16종 프리셋
+ * ============================================================ */
+.inv-reset-btn {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #f1f5f9;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.inv-reset-btn:hover {
+  background: #e2e8f0;
+  color: var(--ink);
+}
+
+.inv-color-theme-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.inv-color-theme-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+[data-theme='dark'] .inv-color-theme-card {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.inv-color-theme-card:hover {
+  border-color: var(--brand);
+  transform: translateY(-2px);
+}
+
+.inv-color-theme-card--active {
+  border: 2px solid var(--brand) !important;
+  background: rgba(124, 58, 237, 0.05);
+}
+
+.inv-theme-color-dots {
+  display: flex;
+  gap: 2px;
+}
+
+.inv-theme-color-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.inv-theme-card-name {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+/* ============================================================
+ * [레이아웃 3종의 확실한 시각적 차이]
+ * ============================================================ */
+/* 1. Classic: 연속형 스크롤 */
+.inv-layout--classic .inv-content-section {
+  padding: 36px 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* 2. Modern: 각 섹션이 둥근 플로팅 카드로 분리! */
+.inv-layout--modern {
+  background: transparent;
+}
+.inv-layout--modern .inv-hero-wrap {
+  margin: 0;
+  background: transparent;
+  padding: 0;
+}
+.inv-layout--modern .inv-content-section {
+  margin: 16px 14px;
+  border-radius: 22px;
+  padding: 28px 18px;
+  box-sizing: border-box;
+  transition: all 0.25s ease;
+}
+
+.inv-layout--modern.inv-mode--light .inv-content-section {
+  background: #ffffff;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.inv-layout--modern.inv-mode--dark .inv-content-section {
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+}
+
+/* 3. Minimal: 군더더기 없는 미니멀리즘 */
+.inv-layout--minimal .inv-content-section {
+  padding: 32px 18px;
+  border: none;
+  background: transparent;
+}
+
+/* ============================================================
+ * [2번 이미지 요구사항] 은은한 반투명 + 마우스 스크롤 유도 오버레이
+ * 뒤의 청첩장 요소(커버, 사진, 텍스트)가 은은하게 비치며
+ * 마우스 휠 애니메이션과 함께 터치/클릭/스크롤 시 잠금 해제
+ * ============================================================ */
+.inv-phone-tap-hint-overlay {
+  position: absolute;
+  inset: 0;
+  /* 뒤의 청첩장 요소들이 은은하게 투과되어 보이는 고급스러운 글래스 딤 */
+  background: rgba(15, 23, 42, 0.38);
+  backdrop-filter: blur(1px);
+  z-index: 85;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  cursor: pointer;
+  animation: inv-fade-in 0.25s ease-out;
+  user-select: none;
+}
+
+.inv-tap-hint-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  padding: 22px 26px;
+  border-radius: 24px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  text-align: center;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  max-width: 260px;
+}
+
+.inv-phone-tap-hint-overlay:hover .inv-tap-hint-card {
+  transform: scale(1.04);
+}
+
+/* 세련된 마우스 스크롤 아이콘 */
+.inv-mouse-scroll-icon {
+  width: 26px;
+  height: 42px;
+  border-radius: 14px;
+  border: 2.5px solid #1e293b;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding-top: 6px;
+  box-sizing: border-box;
+}
+
+.inv-mouse-wheel-dot {
+  width: 4px;
+  height: 8px;
+  background: var(--brand);
+  border-radius: 4px;
+  animation: inv-wheel-scroll 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+@keyframes inv-wheel-scroll {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+
+.inv-tap-hint-text strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.inv-tap-hint-text span {
+  display: block;
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 3px;
+}
+
+.inv-tap-hint-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: var(--brand);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+/* 아코디언 드로어 상세 편집 */
+.inv-accordion-drawer {
+  padding: 14px;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: inv-accordion-down 0.2s ease-out;
+}
+
+[data-theme='dark'] .inv-accordion-drawer {
+  background: #1e293b;
+  border-top-color: #334155;
+}
+
+@keyframes inv-accordion-down {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.inv-accordion-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inv-field-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.inv-field-input,
+.inv-field-textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--ink);
+  background: var(--bg);
+  box-sizing: border-box;
+}
+
+[data-theme='dark'] .inv-field-input,
+[data-theme='dark'] .inv-field-textarea {
+  border-color: #475569;
+}
+
+.inv-field-input:focus,
+.inv-field-textarea:focus {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-color: var(--brand);
+}
+
+.inv-font-choice-row {
+  display: flex;
+  gap: 6px;
+}
+
+.inv-font-btn {
+  flex: 1;
+  padding: 6px 4px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: var(--ink);
+  border-radius: 6px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+[data-theme='dark'] .inv-font-btn {
+  background: #0f172a;
+  border-color: #475569;
+}
+
+.inv-font-btn--active {
+  background: var(--brand) !important;
+  color: #ffffff !important;
+  border-color: var(--brand) !important;
+  font-weight: 700;
+}
+
+.inv-color-chips-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inv-color-chip {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 1px #cbd5e1;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.inv-color-chip:hover {
+  transform: scale(1.15);
+}
+
+.inv-color-chip--active {
+  box-shadow: 0 0 0 2px var(--brand);
+  transform: scale(1.1);
+}
+
+.inv-color-picker {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: transparent;
+}
+
+/* ============================================================
+ * [웨딩 고퀄리티 비주얼 FX] 캔버스 파티클 및 봉투 왁스씰 인트로
+ * ============================================================ */
+.inv-fx-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.inv-envelope-intro-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 150;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: inv-fade-in 0.3s ease-out;
+}
+
+.inv-envelope-intro-box {
+  width: 290px;
+  height: 380px;
+  background: #fbf7ee;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dcd3be;
+  overflow: hidden;
+}
+
+.inv-envelope-top-flap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 150px;
+  background: #f1ebd8;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  border-bottom: 1px solid #d4c8af;
+}
+
+.inv-envelope-seal {
+  position: absolute;
+  top: 120px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.inv-envelope-seal:hover {
+  transform: scale(1.1);
+}
+
+.inv-envelope-seal__wax {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #be123c, #881337);
+  box-shadow: 0 6px 16px rgba(136, 19, 55, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  color: #fce7f3;
+}
+
+.inv-envelope-seal__click-text {
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 3px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.05em;
+}
+
+.inv-envelope-body {
+  margin-top: 140px;
+  text-align: center;
+  color: #451a03;
+}
+
+/* 우측: 3번 이미지 반투명 버그를 완벽하게 고친 솔리드 소프트 스튜디오 배경 */
+.inv-modal-viewer-area {
+  flex: 1;
+  background: #eef2f6 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  overflow: hidden;
+  position: relative;
+}
+
+[data-theme='dark'] .inv-modal-viewer-area {
+  background: #0b1120 !important;
+}
+
+/* 스마트폰 디바이스 목업 (잘림 없는 독립 뷰포트) */
+.inv-phone-mockup {
+  width: 390px;
+  max-width: 100%;
+  height: 100%;
+  max-height: 760px;
+  background: #ffffff;
+  border-radius: 46px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.22), 0 0 0 10px #0f172a;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  .inv-phone-mockup {
+    border-radius: 0;
+    box-shadow: none;
+    max-height: 100%;
+  }
+}
+
+.inv-phone-notch {
+  height: 28px;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.inv-phone-notch__bar {
+  width: 110px;
+  height: 16px;
+  background: #0f172a;
+  border-radius: 12px;
+}
+
+.inv-phone-screen {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  display: block;
+  scroll-behavior: smooth;
+  padding-top: 0;
+}
+
+.inv-phone-screen::-webkit-scrollbar {
+  width: 4px;
+}
+.inv-phone-screen::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 2px;
+}
+
+/* ============================================================
+ * [청첩장 내부 렌더러] 감성 웨딩 룩앤필
+ * ============================================================ */
+
+.inv-render-canvas {
+  width: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: relative;
+  box-sizing: border-box;
+  font-family: inherit;
+  line-height: 1.6;
+}
+
+/* 플로팅 BGM 플레이어 (글래스모피즘 미니 알약) */
+.inv-bgm-floating {
+  position: absolute;
+  top: 36px;
+  right: 16px;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  color: #1e293b;
+  padding: 0 16px;
+  border-radius: 22px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+}
+
+.inv-bgm-floating:hover {
+  background: #ffffff;
+  transform: scale(1.03);
+}
+
+.inv-bgm-disc {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #111111;
+  border: 2px solid #e0a96d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  color: #ffffff;
+}
+
+.inv-bgm-disc--spinning {
+  animation: inv-spin 4s linear infinite;
+}
+
+.inv-bgm-eq {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+}
+
+.inv-bgm-eq__bar {
+  width: 2px;
+  background: currentColor;
+  border-radius: 1px;
+}
+
+.inv-bgm-eq--active .inv-bgm-eq__bar:nth-child(1) {
+  animation: inv-eq 0.7s ease-in-out infinite alternate;
+}
+.inv-bgm-eq--active .inv-bgm-eq__bar:nth-child(2) {
+  animation: inv-eq 0.4s ease-in-out infinite alternate 0.2s;
+}
+.inv-bgm-eq--active .inv-bgm-eq__bar:nth-child(3) {
+  animation: inv-eq 0.6s ease-in-out infinite alternate 0.4s;
+}
+
+/* 커버 히어로 래퍼 (기본 0패딩 풀블리드, 축소 방지) */
+.inv-hero-wrap {
+  width: 100%;
+  position: relative;
+  overflow: visible !important;
+  flex-shrink: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: block !important;
+}
+
+.inv-hero-eng-title {
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin: 0;
+  opacity: 0.75;
+}
+
+/* 감성 아치형 웨딩 포토 프레임 */
+.inv-arch-photo-frame {
+  width: 240px;
+  height: 310px;
+  border-radius: 120px 120px 16px 16px;
+  overflow: hidden;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12);
+  position: relative;
+  border: 4px solid #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+}
+
+.inv-arch-photo-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px;
+  text-align: center;
+}
+
+.inv-hero-names {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin: 6px 0 0;
+}
+
+.inv-hero-date-line {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
+}
+
+.inv-hero-venue-line {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+/* 본문 섹션 래퍼 */
+.inv-sections-container {
+  padding: 20px 20px 50px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.inv-content-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+}
+
+.inv-sub-heading {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin: 0;
+  opacity: 0.65;
+}
+
+.inv-main-heading {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.inv-greeting-box {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 20px;
+  padding: 28px 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.inv-greeting-poem {
+  font-size: 14px;
+  line-height: 2.1;
+  white-space: pre-line;
+  margin: 0 0 20px 0;
+  opacity: 0.9;
+}
+
+.inv-family-line {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* 달력 & D-Day */
+.inv-calendar-card {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 20px;
+  padding: 24px 18px;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.inv-calendar-header {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.inv-calendar-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  font-size: 13px;
+}
+
+.inv-calendar-table th {
+  padding: 6px 0;
+  font-size: 11px;
+  font-weight: 700;
+  opacity: 0.6;
+}
+
+.inv-calendar-table th:first-child {
+  color: #ef4444;
+}
+
+.inv-calendar-table td {
+  padding: 8px 0;
+  height: 36px;
+}
+
+.inv-calendar-cell {
+  width: 32px;
+  height: 32px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: 500;
+}
+
+.inv-calendar-cell--wedding {
+  background: #e11d48;
+  color: #ffffff !important;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(225, 29, 72, 0.35);
+}
+
+.inv-dday-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* 갤러리 그리드 */
+.inv-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.inv-gallery-item {
+  aspect-ratio: 1;
+  background: rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+/* 오시는 길 */
+.inv-location-card {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 20px;
+  padding: 24px 18px;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.inv-map-graphic {
+  height: 150px;
+  border-radius: 14px;
+  background: #e2e8f0;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.inv-transport-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+  font-size: 13px;
+  padding: 12px 14px;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 12px;
+}
+
+.inv-transport-row {
+  display: flex;
+  gap: 8px;
+  line-height: 1.5;
+}
+
+.inv-map-btn-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.inv-map-action-btn {
+  min-height: 44px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+/* 계좌 아코디언 */
+.inv-account-accordion {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.inv-account-tab-btn {
+  min-height: 48px;
+  width: 100%;
+  padding: 0 16px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+  color: inherit;
+  cursor: pointer;
+}
+
+.inv-account-drawer {
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+  font-size: 12px;
+}
+
+/* RSVP 슬롯 */
+.inv-rsvp-card {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.75);
+  border: 2px dashed rgba(0, 0, 0, 0.15);
+  border-radius: 20px;
+  padding: 24px 20px;
+  box-sizing: border-box;
+}
+
+/* ============================================================
+ * [사용자 핵심 지적 반영] 16종 시그니처 히어로 커버 고퀄리티 스타일링
+ * 어때? 시그니처 벡터 아트워크 & 레이아웃
+ * ============================================================ */
+
+.inv-hero-wrap {
+  width: 100%;
+  position: relative;
+  overflow: visible !important;
+  flex-shrink: 0 !important;
+  padding: 0;
+  margin: 0;
+  display: block;
+}
+
+/* 벡터 아트 공통 */
+.inv-art-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.inv-art-thumb {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  border-radius: 2px;
+}
+
+.inv-hero-sig {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* 1. 클래식 실링인장 (Wax Seal) */
+.inv-hero-sig--wax-seal {
+  background: #f8f5ee;
+  background-image: radial-gradient(#ece4d4 1.5px, transparent 1.5px);
+  background-size: 18px 18px;
+  padding: 52px 24px 38px;
+  min-height: 400px;
+  box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.03);
+}
+
+.inv-hero-sig--wax-seal .envelope-v-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 110px;
+  background: linear-gradient(180deg, #ede5d5, #f5efe3);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  border-bottom: 1.5px solid rgba(0, 0, 0, 0.08);
+  z-index: 1;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.05));
+}
+
+.inv-hero-sig--wax-seal .wax-seal-emboss {
+  position: relative;
+  z-index: 2;
+  margin: 36px auto 16px;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.inv-hero-sig--wax-seal .wax-seal-emboss:hover {
+  transform: scale(1.08);
+}
+
+.inv-sig-sub {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+  font-family: serif;
+}
+
+.inv-sig-names {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin: 0 0 8px;
+  color: #2c2523;
+}
+
+.inv-sig-venue {
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.85;
+  margin-bottom: 4px;
+}
+
+.inv-sig-date {
+  font-size: 12px;
+  opacity: 0.75;
+  letter-spacing: 0.04em;
+}
+
+/* 2. 스냅 포토카드 (Snap Polaroid) */
+.inv-hero-sig--tape-card {
+  background: #f4f4f5;
+  padding: 36px 20px 28px;
+  min-height: 440px;
+}
+
+.inv-sig-script-badge {
+  font-family: "Caveat", "Dancing Script", cursive;
+  font-size: 28px;
+  font-weight: 700;
+  color: #3f3f46;
+  margin-bottom: 8px;
+}
+
+.inv-polaroid-frame-box {
+  position: relative;
+  width: 240px;
+  background: #ffffff;
+  padding: 10px 10px 22px;
+  border-radius: 6px;
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.12);
+  transform: rotate(-1.5deg);
+  margin: 0 auto;
+}
+
+.masking-tape-wrap {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  z-index: 4;
+}
+
+.polaroid-photo-art {
+  width: 100%;
+  height: 220px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #e4e4e7;
+}
+
+.polaroid-caption {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #27272a;
+}
+
+.inv-sig-eng-text {
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  opacity: 0.7;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+/* 3. 에디토리얼 프레임 (Editorial Frame) */
+.inv-hero-sig--typo-frame {
+  position: relative;
+  min-height: 450px;
+  background: #131c0e;
+  color: #fefae0;
+}
+
+.inv-typo-bg-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  opacity: 0.9;
+}
+
+.inv-typo-overlay-content {
+  position: relative;
+  z-index: 2;
+  padding: 48px 24px 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(180deg, rgba(19, 28, 14, 0.75) 0%, rgba(19, 28, 14, 0.35) 50%, rgba(19, 28, 14, 0.9) 100%);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.inv-typo-sub {
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #dda15e;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.inv-typo-main-title {
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  font-family: serif;
+  color: #ffffff;
+  margin: 0 0 12px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+.inv-typo-divider {
+  width: 44px;
+  height: 1.5px;
+  background: #dda15e;
+  margin: 0 auto 16px;
+}
+
+/* 4. 모던 풀스크린 (Full Photo) */
+.inv-hero-sig--photo-only {
+  position: relative;
+  min-height: 460px;
+  background: #0f172a;
+}
+
+.inv-photo-only-art {
+  width: 100%;
+  height: 460px;
+  overflow: hidden;
+}
+
+.inv-photo-only-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 70px 24px 28px;
+  background: linear-gradient(180deg, transparent 0%, rgba(15, 23, 42, 0.94) 100%);
+  text-align: center;
+}
+
+.inv-photo-only-sub {
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 6px;
+}
+
+/* 5. 손글씨 레터 (Script Letter) */
+.inv-hero-sig--script-card {
+  padding: 36px 20px 24px;
+  min-height: 440px;
+  background: #ffffff;
+}
+
+.inv-script-photo-frame {
+  position: relative;
+  width: 260px;
+  height: 270px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.1);
+  margin: 0 auto 16px;
+}
+
+.inv-script-photo-frame .script-big-text {
+  position: absolute;
+  bottom: 10px;
+  left: 16px;
+  font-size: 46px;
+  font-family: "Caveat", "Dancing Script", cursive;
+  font-weight: 700;
+  color: #e11d48;
+  text-shadow: 0 2px 8px rgba(255, 255, 255, 0.95);
+  line-height: 1;
+}
+
+/* 6. 노을빛 실루엣 (Center Line) */
+.inv-hero-sig--center-line {
+  position: relative;
+  min-height: 450px;
+  background: #1c1917;
+  color: #ffffff;
+}
+
+.inv-centerline-bg-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.inv-centerline-overlay {
+  position: relative;
+  z-index: 2;
+  padding: 44px 24px 34px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 450px;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.inv-centerline-top {
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.inv-centerline-top strong {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.inv-centerline-date-box {
+  text-align: center;
+  margin: auto 0;
+}
+
+.inv-centerline-day {
+  font-size: 52px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.inv-centerline-month {
+  font-size: 13px;
+  letter-spacing: 0.25em;
+  margin: 6px 0;
+  font-weight: 600;
+}
+
+.center-vertical-divider {
+  width: 1.5px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.85);
+  margin: 8px auto;
+}
+
+.inv-centerline-year {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+
+/* 7. 린넨 가든 (Linen Garden) */
+.inv-hero-sig--cover-a {
+  background: #ffffff;
+  padding: 24px 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.inv-cover-a-topline {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  text-align: left;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.inv-cover-a-names {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  display: block;
+}
+
+.inv-cover-a-venue {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 3px;
+}
+
+.inv-cover-a-right {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.inv-cover-a-script {
+  font-family: serif;
+  font-style: italic;
+  font-size: 13px;
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.inv-cover-a-date {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 3px;
+}
+
+.inv-cover-a-photo-box {
+  width: 100%;
+  height: 270px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+}
+
+/* 8. 콰이어트 (Quiet) */
+.inv-hero-sig--quiet {
+  background: #faf8f5;
+  padding: 44px 24px 32px;
+  min-height: 430px;
+}
+
+.inv-quiet-header {
+  margin-bottom: 16px;
+}
+
+.inv-quiet-tag {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #78716c;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.inv-quiet-names {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: #292524;
+  margin: 0;
+}
+
+.inv-quiet-photo-wrap {
+  width: 260px;
+  height: 220px;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 0 auto 16px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+}
+
+/* 9. 봄날의 벚꽃 (Spring Blossom) */
+.inv-hero-sig--spring {
+  background: linear-gradient(180deg, #fff1f2 0%, #ffe4e6 100%);
+  padding: 38px 20px 28px;
+}
+
+.inv-spring-arch-wrap {
+  position: relative;
+  width: 240px;
+  height: 250px;
+  border-radius: 120px 120px 16px 16px;
+  overflow: hidden;
+  margin: 12px auto 16px;
+  border: 3px solid #fecdd3;
+  box-shadow: 0 14px 35px rgba(244, 63, 94, 0.15);
+}
+
+.inv-spring-cherry-badge {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 4px 14px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #e11d48;
+  border: 1px solid #fecdd3;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* 10. 달빛 정원 (Moonlight Garden) */
+.inv-hero-sig--moonlight {
+  background: linear-gradient(180deg, #050811 0%, #0c152a 100%);
+  color: #f8fafc;
+  padding: 38px 20px 28px;
+}
+
+.inv-moon-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.inv-moon-tag {
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  color: #93c5fd;
+  font-weight: 600;
+}
+
+.inv-moon-symbol {
+  font-size: 18px;
+}
+
+.inv-moon-photo-box {
+  width: 250px;
+  height: 230px;
+  border-radius: 16px;
+  overflow: hidden;
+  margin: 0 auto 16px;
+  border: 1px solid rgba(147, 197, 253, 0.35);
+  box-shadow: 0 14px 40px rgba(37, 99, 235, 0.25);
+}
+
+/* 11. 전통 한지 (Traditional Hanji) */
+.inv-hero-sig--hanji {
+  background: #fcf9f2;
+  background-image: radial-gradient(#ece3d0 1.5px, transparent 1.5px);
+  background-size: 16px 16px;
+  padding: 38px 20px 28px;
+}
+
+.inv-hanji-top-banner {
+  display: inline-block;
+  padding: 4px 16px;
+  background: rgba(180, 83, 9, 0.08);
+  border: 1px solid #d97706;
+  border-radius: 20px;
+  font-size: 13px;
+  font-family: serif;
+  color: #78350f;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  margin-bottom: 14px;
+}
+
+.inv-hanji-window-frame {
+  width: 250px;
+  height: 250px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 0 auto 16px;
+  box-shadow: 0 10px 28px rgba(120, 53, 15, 0.14);
+  border: 2px solid #b45309;
+}
+
+/* 12. 별빛 연회 (Starlight Banquet) */
+.inv-hero-sig--starlight {
+  background: linear-gradient(180deg, #030712 0%, #0f172a 100%);
+  color: #f8fafc;
+  padding: 38px 20px 28px;
+}
+
+.inv-starlight-tag {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  color: #fbbf24;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.inv-starlight-photo-box {
+  width: 250px;
+  height: 230px;
+  border-radius: 14px;
+  overflow: hidden;
+  margin: 0 auto 16px;
+  border: 1.5px solid rgba(251, 191, 36, 0.45);
+  box-shadow: 0 16px 45px rgba(251, 191, 36, 0.2);
+}
+
+/* 13. 보태니컬 가든 (Botanical Garden) */
+.inv-hero-sig--botanical {
+  background: #f7faf7;
+  padding: 38px 20px 28px;
+}
+
+.inv-botanical-tag {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 0.25em;
+  color: #15803d;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.inv-botanical-frame {
+  width: 250px;
+  height: 230px;
+  border-radius: 14px;
+  overflow: hidden;
+  margin: 0 auto 16px;
+  border: 2px solid #86efac;
+  box-shadow: 0 10px 28px rgba(22, 163, 74, 0.12);
+}
+
+/* 14. 미니멀 아치 (Minimal Arch) */
+.inv-hero-sig--minimal-arch {
+  background: #ffffff;
+  padding: 38px 20px 28px;
+}
+
+.inv-arch-cutout-frame {
+  width: 230px;
+  height: 250px;
+  border-radius: 115px 115px 8px 8px;
+  overflow: hidden;
+  margin: 12px auto 16px;
+  border: 1.5px solid #cbd5e1;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.06);
+}
+
+/* 15. 시네마틱 무비 (Cinematic Movie) */
+.inv-hero-sig--cinematic {
+  background: #09090b;
+  color: #fafafa;
+  padding: 32px 18px 26px;
+}
+
+.inv-cinematic-banner {
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  color: #fca5a5;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.inv-cinematic-photo {
+  width: 100%;
+  height: 220px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.55);
+}
+
+.inv-cinematic-footer {
+  margin-top: 14px;
+}
+
+.inv-cinematic-title {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin: 0 0 4px;
+}
+
+.inv-cinematic-credits {
+  font-size: 11px;
+  color: #a1a1aa;
+  letter-spacing: 0.05em;
+}
+
+/* ============================================================
+ * [INV-001 테마 & 모드별 스크롤 완벽 일관성 및 가독성 고도화]
+ * 스크롤을 끝까지 내려도 테마 고유의 분위기와 색감이 끊기지 않고 자연스럽게 이어지며,
+ * 텍스트와 숫자가 100% 명확하게 읽히도록 고대비 명도 보장
+ * ============================================================ */
+
+/* --- 다크 모드 (Dark Themes: typo-frame, the-wedding, moonlight-garden, starlight-banquet, cinematic-movie) --- */
+.inv-mode--dark {
+  color: #f8fafc;
+}
+
+.inv-mode--dark .inv-main-heading {
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.inv-mode--dark .inv-sub-heading {
+  letter-spacing: 0.18em;
+  font-weight: 700;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+.inv-mode--dark.inv-layout--modern .inv-content-section {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.38);
+  color: #f8fafc;
+}
+
+.inv-mode--dark.inv-layout--classic .inv-content-section {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: #f8fafc;
+}
+
+.inv-mode--dark .inv-calendar-card,
+.inv-mode--dark .inv-greeting-box,
+.inv-mode--dark .inv-rsvp-box {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  color: #f8fafc;
+}
+
+.inv-mode--dark .inv-calendar-header {
+  color: #ffffff;
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.inv-mode--dark .inv-calendar-table th {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.inv-mode--dark .inv-calendar-table th:first-child {
+  color: #f87171;
+}
+
+.inv-mode--dark .inv-calendar-table td {
+  color: #f8fafc;
+}
+
+.inv-mode--dark .inv-greeting-poem {
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.inv-mode--dark .inv-family-line {
+  border-top-color: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.inv-mode--dark .inv-family-line strong {
+  color: #ffffff;
+}
+
+.inv-mode--dark .inv-venue-info-card {
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+}
+
+.inv-mode--dark .inv-venue-info-card strong {
+  color: #ffffff !important;
+}
+
+.inv-mode--dark .inv-address-copy-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.inv-mode--dark .inv-address-copy-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.inv-mode--dark .inv-map-link-btn {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.inv-mode--dark .inv-transport-guide {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.inv-mode--dark .inv-transport-guide strong {
+  color: #ffffff;
+}
+
+.inv-mode--dark .inv-account-card {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #f8fafc;
+}
+
+.inv-mode--dark .inv-account-detail {
+  background: rgba(0, 0, 0, 0.38);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.inv-mode--dark .inv-guestbook-card {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.inv-mode--dark .inv-field-input {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.inv-mode--dark .inv-field-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* --- 라이트 모드 (Light Themes: green-canopy, with-love, wax-seal, tape-card, etc.) --- */
+.inv-mode--light {
+  color: #1f2937;
+}
+
+.inv-mode--light .inv-main-heading {
+  color: #111827;
+}
+
+.inv-mode--light.inv-layout--modern .inv-content-section {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+  color: #1f2937;
+}
+
+.inv-mode--light.inv-layout--classic .inv-content-section {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  color: #1f2937;
+}
+
+.inv-mode--light .inv-calendar-card,
+.inv-mode--light .inv-greeting-box,
+.inv-mode--light .inv-rsvp-box {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  color: #1f2937;
+}
+
+.inv-mode--light .inv-calendar-header {
+  color: #1f2937;
+}
+
+.inv-mode--light .inv-calendar-table th {
+  color: #6b7280;
+}
+
+.inv-mode--light .inv-calendar-table td {
+  color: #1f2937;
+}
+
+.inv-mode--light .inv-greeting-poem {
+  color: #374151;
+}
+
+.inv-mode--light .inv-venue-info-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #1f2937;
+}
+
+.inv-mode--light .inv-transport-guide {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #374151;
+}
+
+.inv-mode--light .inv-account-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #1f2937;
+}
+
+.inv-mode--light .inv-account-detail {
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  color: #1f2937;
+}
+
+/* --- 1. 에디토리얼 프레임 (Editorial Frame) - 딥 포레스트 그린 에디토리얼 테마 (다크 모드 전용 스코핑) --- */
+.inv-mode--dark.inv-theme--typo-frame {
+  background-color: #1c2710;
+  color: #fefae0;
+}
+
+.inv-mode--dark.inv-theme--typo-frame.inv-layout--modern .inv-content-section {
+  background: rgba(28, 48, 22, 0.88) !important;
+  border: 1px solid rgba(254, 250, 224, 0.2) !important;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+  color: #fefae0 !important;
+}
+
+.inv-mode--dark.inv-theme--typo-frame .inv-main-heading,
+.inv-mode--dark.inv-theme--typo-frame .inv-section-title {
+  color: #fefae0 !important;
+}
+
+.inv-mode--dark.inv-theme--typo-frame .inv-sub-heading {
+  color: #dda15e !important;
+}
+
+.inv-mode--dark.inv-theme--typo-frame .inv-calendar-card,
+.inv-mode--dark.inv-theme--typo-frame .inv-greeting-box,
+.inv-mode--dark.inv-theme--typo-frame .inv-rsvp-box,
+.inv-mode--dark.inv-theme--typo-frame .inv-schedule-card {
+  background: rgba(18, 32, 14, 0.72) !important;
+  border: 1px solid rgba(254, 250, 224, 0.18) !important;
+  color: #fefae0 !important;
+}
+
+.inv-mode--dark.inv-theme--typo-frame .inv-calendar-header {
+  color: #fefae0 !important;
+}
+
+.inv-mode--dark.inv-theme--typo-frame .inv-calendar-table th {
+  color: rgba(254, 250, 224, 0.75) !important;
+}
+
+.inv-mode--dark.inv-theme--typo-frame .inv-greeting-poem,
+.inv-mode--dark.inv-theme--typo-frame .inv-greeting-text {
+  color: #fefae0 !important;
+}
+
+.inv-mode--dark.inv-theme--typo-frame .inv-family-line,
+.inv-mode--dark.inv-theme--typo-frame .inv-host-names-block {
+  border-top-color: rgba(254, 250, 224, 0.18);
+  color: rgba(254, 250, 224, 0.92) !important;
+}
+
+.inv-mode--dark.inv-theme--typo-frame .inv-family-line strong,
+.inv-mode--dark.inv-theme--typo-frame .inv-host-names-block strong {
+  color: #fefae0 !important;
+}
+
+.inv-mode--dark.inv-theme--typo-frame .inv-venue-info-card {
+  background: rgba(18, 32, 14, 0.72) !important;
+  border: 1px solid rgba(254, 250, 224, 0.18) !important;
+  color: #fefae0 !important;
+}
+
+.inv-mode--dark.inv-theme--typo-frame .inv-venue-info-card strong {
+  color: #fefae0 !important;
+}
+
+.inv-mode--dark.inv-theme--typo-frame .inv-transport-guide {
+  background: rgba(18, 32, 14, 0.6) !important;
+  border: 1px solid rgba(254, 250, 224, 0.15) !important;
+  color: #fefae0 !important;
+}
+
+.inv-mode--dark.inv-theme--typo-frame .inv-account-card {
+  background: rgba(18, 32, 14, 0.72) !important;
+  border: 1px solid rgba(254, 250, 224, 0.18) !important;
+  color: #fefae0 !important;
+}
+
+.inv-mode--dark.inv-theme--typo-frame .inv-account-detail {
+  background: rgba(10, 20, 8, 0.8) !important;
+  border-top: 1px solid rgba(254, 250, 224, 0.15) !important;
+  color: #fefae0 !important;
+}
+
+.inv-mode--dark.inv-theme--typo-frame .inv-guestbook-card {
+  background: rgba(18, 32, 14, 0.72) !important;
+  border: 1px solid rgba(254, 250, 224, 0.18) !important;
+  color: #fefae0 !important;
+}
+
+.inv-mode--dark.inv-theme--typo-frame .inv-field-input {
+  background: rgba(10, 20, 8, 0.6) !important;
+  border: 1px solid rgba(254, 250, 224, 0.25) !important;
+  color: #fefae0 !important;
+}
+
+/* --- 2. Our Wedding & 시네마틱 무비 (Sunset / Dark Cinema - 다크 모드 전용 스코핑) --- */
+.inv-mode--dark.inv-theme--the-wedding,
+.inv-mode--dark.inv-theme--cinematic-movie {
+  background-color: #09090b;
+  color: #f4f4f5;
+}
+
+.inv-mode--dark.inv-theme--the-wedding.inv-layout--modern .inv-content-section,
+.inv-mode--dark.inv-theme--cinematic-movie.inv-layout--modern .inv-content-section {
+  background: rgba(24, 24, 27, 0.88) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+  color: #f4f4f5 !important;
+}
+
+/* --- 3. 달빛 정원 (Moonlight Garden) - 미드나잇 블루 테마 (다크 모드 전용 스코핑) --- */
+.inv-mode--dark.inv-theme--moonlight-garden {
+  background-color: #0f172a;
+  color: #f1f5f9;
+}
+
+.inv-mode--dark.inv-theme--moonlight-garden.inv-layout--modern .inv-content-section {
+  background: rgba(15, 23, 42, 0.88) !important;
+  border: 1px solid rgba(226, 232, 240, 0.16) !important;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+  color: #f1f5f9 !important;
+}
+
+.inv-mode--dark.inv-theme--moonlight-garden .inv-calendar-card,
+.inv-mode--dark.inv-theme--moonlight-garden .inv-greeting-box,
+.inv-mode--dark.inv-theme--moonlight-garden .inv-rsvp-box,
+.inv-mode--dark.inv-theme--moonlight-garden .inv-venue-info-card,
+.inv-mode--dark.inv-theme--moonlight-garden .inv-account-card,
+.inv-mode--dark.inv-theme--moonlight-garden .inv-schedule-card {
+  background: rgba(30, 41, 59, 0.75) !important;
+  border: 1px solid rgba(226, 232, 240, 0.15) !important;
+  color: #f1f5f9 !important;
+}
+
+/* --- 4. 별빛 연회 (Starlight Banquet) - 럭셔리 호텔 그랜드볼룸 골드 테마 (다크 모드 전용 스코핑) --- */
+.inv-mode--dark.inv-theme--starlight-banquet {
+  background-color: #18181b;
+  color: #fef08a;
+}
+
+.inv-mode--dark.inv-theme--starlight-banquet.inv-layout--modern .inv-content-section {
+  background: rgba(28, 28, 32, 0.9) !important;
+  border: 1px solid rgba(250, 204, 21, 0.22) !important;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55);
+  color: #fef08a !important;
+}
+
+.inv-mode--dark.inv-theme--starlight-banquet .inv-calendar-card,
+.inv-mode--dark.inv-theme--starlight-banquet .inv-greeting-box,
+.inv-mode--dark.inv-theme--starlight-banquet .inv-rsvp-box,
+.inv-mode--dark.inv-theme--starlight-banquet .inv-venue-info-card,
+.inv-mode--dark.inv-theme--starlight-banquet .inv-account-card,
+.inv-mode--dark.inv-theme--starlight-banquet .inv-schedule-card {
+  background: rgba(20, 20, 22, 0.8) !important;
+  border: 1px solid rgba(250, 204, 21, 0.2) !important;
+  color: #fef08a !important;
+}
+
+.inv-mode--dark.inv-theme--starlight-banquet .inv-main-heading,
+.inv-mode--dark.inv-theme--starlight-banquet .inv-section-title {
+  color: #ffffff !important;
+}
+
+/* --- 5. 전통 한지 (Traditional Hanji) --- */
+.inv-theme--traditional-hanji {
+  background-color: #faf7f2;
+  color: #292524;
+}
+
+.inv-theme--traditional-hanji.inv-layout--modern .inv-content-section {
+  background: #ffffff;
+  border: 1px solid #e7e0d6;
+  border-radius: 16px;
+  color: #292524;
+}
+
+/* --- D-Day 배지 및 계좌 아코디언 컴포넌트 --- */
+.inv-dday-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 13px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-top: 8px;
+}
+
+.inv-account-card {
+  border-radius: 14px;
+  overflow: hidden;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.inv-account-row {
+  min-height: 48px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+
+.inv-account-detail {
+  padding: 12px 16px;
+}
+
+.inv-account-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.inv-copy-chip {
+  padding: 5px 12px;
+  border-radius: 12px;
+  background: var(--brand);
+  color: #ffffff;
+  border: none;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.inv-copy-chip:hover {
+  filter: brightness(1.15);
+}
+
+/* 애니메이션 */
+@keyframes inv-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes inv-scale-up {
+  from { transform: scale(0.96); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes inv-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes inv-eq {
+  0% { height: 3px; }
+  100% { height: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inv-modal-backdrop,
+  .inv-modal-shell,
+  .inv-bgm-disc--spinning,
+  .inv-bgm-eq--active .inv-bgm-eq__bar,
+  .inv-radar-pulse,
+  .inv-btn-primary:hover,
+  .inv-btn-secondary:hover,
+  .inv-cover-viewport:hover {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* ============================================================
+ * [사용자 요구사항] 메인 커버 사진 직접 업로드 & 20대 프리셋 선택 UI
+ * ============================================================ */
+.inv-ctrl-group--highlight {
+  background: linear-gradient(135deg, #fdf4ff 0%, #faf5ff 50%, #eff6ff 100%);
+  border: 1.5px solid #e9d5ff;
+  border-radius: 16px;
+  padding: 14px 14px 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 14px rgba(168, 85, 247, 0.08);
+}
+
+.inv-pill-tag {
+  background: #7c3aed;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  margin-left: 8px;
+  letter-spacing: 0.02em;
+}
+
+.inv-photo-upload-dropzone {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border: 2px dashed #c084fc;
+  border-radius: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.inv-photo-upload-dropzone:hover {
+  background: #faf5ff;
+  border-color: #9333ea;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.15);
+}
+
+.inv-dropzone-content {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 12px;
+}
+
+.inv-dropzone-icon {
+  font-size: 24px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3e8ff;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.inv-dropzone-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.inv-dropzone-text strong {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e1b4b;
+  margin-bottom: 2px;
+}
+
+.inv-dropzone-text span {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.inv-dropzone-btn {
+  background: #7c3aed;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+
+.inv-dropzone-btn:hover {
+  background: #6d28d9;
+}
+
+.inv-current-photo-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-top: 10px;
+}
+
+.inv-current-photo-mini {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  background-size: cover;
+  background-position: center;
+  border: 1px solid #cbd5e1;
+  flex-shrink: 0;
+}
+
+.inv-preset-photos-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.inv-preset-photo-card {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  text-align: center;
+  padding: 0;
+  transition: all 0.18s ease;
+}
+
+.inv-preset-photo-card:hover {
+  transform: translateY(-2px);
+  border-color: #a855f7;
+  box-shadow: 0 4px 10px rgba(168, 85, 247, 0.15);
+}
+
+.inv-preset-photo-card--active {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 2px #7c3aed, 0 4px 12px rgba(124, 58, 237, 0.25);
+  background: #faf5ff;
+}
+
+.inv-preset-photo-thumb {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.inv-photo-check-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: #7c3aed;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.inv-preset-photo-title {
+  font-size: 10px;
+  font-weight: 600;
+  color: #1f2937;
+  padding: 4px 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================
+ * [사용자 요구사항] 색상 테마 16종 드롭다운 & 직접 컬러 피커
+ * ============================================================ */
+.inv-theme-select-container {
+  position: relative;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.inv-color-theme-dropdown {
+  width: 100%;
+  padding: 10px 36px 10px 14px;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+  appearance: none;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.inv-color-theme-dropdown:hover {
+  border-color: var(--brand);
+}
+
+.inv-color-theme-dropdown:focus-visible {
+  border-color: var(--brand);
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.inv-dropdown-carat {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.inv-palette-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin-bottom: 10px;
+}
+
+.inv-palette-dots-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inv-palette-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+.inv-palette-text {
+  font-size: 11px;
+  color: #475569;
+  font-weight: 500;
+}
+
+.inv-custom-colors-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.inv-custom-color-item {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+
+.inv-color-item-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 4px;
+}
+
+.inv-color-chip-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inv-native-color-input {
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 0;
+  background: none;
+  flex-shrink: 0;
+}
+
+.inv-native-color-input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.inv-native-color-input::-webkit-color-swatch {
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+}
+
+.inv-color-hex-tag {
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+/* ============================================================
+ * [사용자 요구사항] 부드러운 슬라이딩 갤러리 캐러셀 & 양 끝단 화살표 버튼
+ * ============================================================ */
+.inv-gallery-carousel-slider {
+  width: 100%;
+  position: relative;
+  margin: 0 auto;
+}
+
+.inv-carousel-viewport {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  background: #0f172a;
+}
+
+.inv-carousel-track {
+  display: flex;
+  will-change: transform;
+}
+
+.inv-carousel-slide-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.inv-carousel-photo-frame {
+  position: relative;
+  width: 100%;
+  height: 330px;
+  overflow: hidden;
+}
+
+.inv-carousel-photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.inv-carousel-gradient-mask {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.08) 0%, transparent 40%, rgba(0, 0, 0, 0.8) 100%);
+  pointer-events: none;
+}
+
+.inv-carousel-caption-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px 14px 12px;
+  text-align: left;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.inv-carousel-caption-badge {
+  display: inline-block;
+  background: #fef08a;
+  color: #713f12;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.03em;
+  margin-bottom: 4px;
+}
+
+.inv-carousel-caption-desc {
+  font-size: 12px;
+  color: #ffffff;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.4;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* 이미지 양 끝단에 플로팅되는 둥근 네비게이션 버튼 */
+.inv-carousel-edge-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(255, 255, 255, 0.65);
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.inv-carousel-edge-btn--prev {
+  left: 10px;
+}
+
+.inv-carousel-edge-btn--next {
+  right: 10px;
+}
+
+.inv-carousel-edge-btn:hover {
+  background: #ffffff;
+  color: #7c3aed;
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.inv-carousel-edge-btn:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.inv-carousel-counter-tag {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 5;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  letter-spacing: 0.05em;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* 동적 인디케이터 점 */
+.inv-carousel-indicator-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.inv-carousel-indicator-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: #cbd5e1;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.inv-carousel-indicator-dot--active {
+  width: 22px;
+  background: var(--brand, #7c3aed);
+}
+
+/* ============================================================
+ * [사용자 요구사항] 텍스트 가독성 & 가시성 대폭 향상
+ * ============================================================ */
+.inv-ctrl-label {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  letter-spacing: -0.01em;
+}
+
+.inv-field-label {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #1e293b !important;
+  margin-bottom: 6px !important;
+}
+
+.inv-main-heading {
+  font-size: 20px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.02em;
+  margin: 6px 0 16px !important;
+}
+
+.inv-sub-heading {
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.15em !important;
+}
+
+.inv-greeting-poem {
+  font-size: 14.5px !important;
+  line-height: 1.9 !important;
+  font-weight: 500 !important;
+}
+
+/* [사용자 요구사항] 부자연스러운 텍스트 그림자 완전 제거 및 고해상도 타이포그래피 정돈 */
+.inv-ca-names,
+.inv-ca-date-sm,
+.inv-ca-venue-sm,
+.inv-ca-script-title,
+.inv-split-names,
+.inv-split-date,
+.inv-split-venue,
+.inv-quiet-names,
+.inv-quiet-sub,
+.inv-quiet-date,
+.inv-cover-label,
+.inv-cover-a-names,
+.inv-cover-a-venue,
+.inv-cover-a-date {
+  text-shadow: none !important;
+}
+
+/* 포토 풀 커버 화보에서만 자연스럽고 은은한 가독성 그림자 지원 */
+.inv-hero-sig--photo-full .inv-sig-names,
+.inv-cover-center-korean-cursive,
+.inv-cover-center-script-huge {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+.inv-hero-sig--photo-full .inv-sig-date,
+.inv-hero-sig--photo-full .inv-sig-venue {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================================
+ * [INV-001 고도화] 포토 프레임 5종 (아치, 인생네컷, 폴라로이드, 골드 앤틱, 스퀘어)
+ * ============================================================ */
+.inv-hero-framed-container {
+  width: 100%;
+  padding: 36px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+/* 1. 모던 아치 프레임 */
+.inv-framed-arch-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.inv-framed-arch {
+  width: 250px;
+  height: 340px;
+  border-radius: 130px 130px 16px 16px;
+  background-size: cover;
+  background-position: center top;
+  border: 6px solid #ffffff;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.14);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+
+.inv-framed-arch:hover {
+  transform: translateY(-3px);
+}
+
+.inv-framed-arch-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 65%, rgba(0, 0, 0, 0.35) 100%);
+}
+
+.inv-framed-arch-badge {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(4px);
+  color: #1f2937;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+/* 2. 인생네컷 (Life 4-Cut) 세로 스트립 */
+.inv-framed-life4cut-wrap {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.inv-framed-life4cut-strip {
+  width: 220px;
+  padding: 12px 10px 14px;
+  border-radius: 8px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box;
+}
+
+.inv-life4cut-top-logo {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-align: center;
+  color: #374151;
+  padding-bottom: 2px;
+}
+
+.inv-life4cut-cells {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inv-life4cut-cell {
+  width: 100%;
+  height: 96px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.inv-life4cut-cell--quote {
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 6px 10px;
+  color: #1e293b;
+  font-size: 10.5px;
+  line-height: 1.4;
+}
+
+.inv-life4cut-cell--quote strong {
+  margin-top: 4px;
+  font-size: 11.5px;
+  color: var(--brand, #e11d48);
+}
+
+.inv-life4cut-bottom-watermark {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 8.5px;
+  color: #64748b;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding-top: 2px;
+}
+
+/* 3. 폴라로이드 (Polaroid) 프레임 */
+.inv-framed-polaroid-wrap {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.inv-framed-polaroid-card {
+  width: 250px;
+  padding: 14px 14px 20px;
+  border-radius: 4px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.14);
+  position: relative;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-sizing: border-box;
+}
+
+.inv-polaroid-tape-strip {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  width: 74px;
+  height: 20px;
+  background: rgba(254, 240, 138, 0.85);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-left: 2px dashed rgba(202, 138, 4, 0.3);
+  border-right: 2px dashed rgba(202, 138, 4, 0.3);
+}
+
+.inv-polaroid-photo-area {
+  width: 100%;
+  height: 250px;
+  background-size: cover;
+  background-position: center top;
+  border-radius: 2px;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.08);
+}
+
+.inv-polaroid-footer-text {
+  margin-top: 14px;
+  text-align: center;
+}
+
+.inv-polaroid-cursive-title {
+  font-family: 'Caveat', 'Dancing Script', cursive, sans-serif;
+  font-size: 19px;
+  color: #1e293b;
+  font-weight: 700;
+}
+
+.inv-polaroid-names-date {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+/* 4. 골드 앤틱 타원 (Gold Round) 프레임 */
+.inv-framed-gold-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.inv-framed-gold-round {
+  width: 240px;
+  height: 310px;
+  border-radius: 50%;
+  border: 6px double #d4af37;
+  padding: 6px;
+  box-shadow: 0 14px 34px rgba(212, 175, 55, 0.25), 0 6px 14px rgba(0, 0, 0, 0.15);
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #fdf6e2 0%, #fae8b4 100%);
+}
+
+.inv-gold-inner-ring {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid #b8860b;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.inv-gold-photo {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center top;
+}
+
+.inv-gold-royal-title {
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  font-weight: 800;
+  color: #b45309;
+  text-align: center;
+  display: block;
+}
+
+/* 5. 클래식 스퀘어 (Square) 프레임 */
+.inv-framed-square-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.inv-framed-square {
+  width: 260px;
+  height: 260px;
+  padding: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.inv-square-inner-photo {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center top;
+  border-radius: 2px;
+}
+
+.inv-framed-caption {
+  text-align: center;
+  margin-top: 14px;
+}
+
+.inv-framed-names {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.inv-framed-meta {
+  display: block;
+  font-size: 12px;
+  opacity: 0.8;
+  margin-top: 4px;
+}
+
+/* ============================================================
+ * [컨트롤러 UI] 프레임 스타일 그리드 & 테두리 컬러 픽커
+ * ============================================================ */
+.inv-frame-style-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.inv-frame-card-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 4px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.inv-frame-card-btn:hover {
+  border-color: var(--brand, #6366f1);
+  background: #f8fafc;
+}
+
+.inv-frame-card-btn--active {
+  border-color: var(--brand, #6366f1) !important;
+  background: #eff6ff !important;
+  box-shadow: 0 0 0 1px var(--brand, #6366f1);
+}
+
+.inv-frame-card-btn__icon {
+  font-size: 16px;
+}
+
+.inv-frame-card-btn__label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-top: 3px;
+  white-space: nowrap;
+}
+
+.inv-frame-color-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inv-frame-color-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid #cbd5e1;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.inv-frame-color-dot:hover {
+  transform: scale(1.15);
+}
+
+.inv-frame-color-dot--active {
+  transform: scale(1.2);
+  border-color: #0f172a !important;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.4);
+}
+
+/* ============================================================
+ * [갤러리 1 & 2 & 지도 & 다크모드 고대비 스타일링]
+ * ============================================================ */
+.inv-carousel-arrow-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #0f172a;
+  font-size: 20px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+}
+
+.inv-carousel-arrow-btn:hover {
+  background: #ffffff;
+  transform: translateY(-50%) scale(1.08);
+}
+
+.inv-carousel-arrow-btn--prev {
+  left: 10px;
+}
+
+.inv-carousel-arrow-btn--next {
+  right: 10px;
+}
+
+/* 갤러리 2: 하객 실시간 스냅 카드 */
+.inv-guest-upload-card {
+  background: #f8fafc;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 14px;
+}
+
+.inv-guest-snap-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.inv-guest-snap-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.inv-guest-snap-photo {
+  width: 100%;
+  height: 180px;
+  background-size: cover;
+  background-position: center;
+}
+
+.inv-guest-snap-info {
+  padding: 12px;
+}
+
+.inv-guest-snap-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.inv-uploader-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.inv-time-badge {
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+.inv-guest-snap-caption-text {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: #334155;
+  margin: 0 0 8px;
+}
+
+.inv-guest-snap-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.inv-snap-like-btn {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.inv-snap-like-btn:hover,
+.inv-snap-like-btn--active {
+  background: #ffe4e6;
+  border-color: #fda4af;
+  color: #e11d48;
+}
+
+/* 실시간 방명록 이모지 셀렉터 */
+.inv-emoji-selector-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.inv-emoji-chip {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.inv-emoji-chip:hover {
+  transform: scale(1.15);
+}
+
+.inv-emoji-chip--active {
+  border-color: var(--brand, #e11d48) !important;
+  background: #ffe4e6 !important;
+  transform: scale(1.2);
+}
+
+.inv-badge-new {
+  font-size: 9px;
+  background: #ef4444;
+  color: #ffffff;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-weight: 800;
+  margin-left: 4px;
+}
+
+/* 인터랙티브 지도 캔버스 */
+.inv-svg-map-canvas {
+  width: 100%;
+  height: 190px;
+  background: #eef2f6;
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+}
+
+.inv-map-grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(#e2e8f0 1px, transparent 1px),
+    linear-gradient(90deg, #e2e8f0 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.inv-map-road--h1 {
+  position: absolute;
+  top: 45px;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.inv-map-road--h2 {
+  position: absolute;
+  bottom: 45px;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: #ffffff;
+}
+
+.inv-map-road--v1 {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 35%;
+  width: 12px;
+  background: #ffffff;
+  box-shadow: 1px 0 3px rgba(0, 0, 0, 0.08);
+}
+
+.inv-map-river {
+  position: absolute;
+  right: -10px;
+  top: 0;
+  bottom: 0;
+  width: 48px;
+  background: #bfdbfe;
+  opacity: 0.6;
+  border-radius: 20px 0 0 20px;
+}
+
+.inv-subway-station-pin {
+  position: absolute;
+  top: 36px;
+  left: 14%;
+  z-index: 2;
+}
+
+.inv-subway-badge {
+  background: #0284c7;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 3px 6px;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  white-space: nowrap;
+}
+
+.inv-wedding-hall-pin {
+  position: absolute;
+  top: 80px;
+  left: 45%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 3;
+}
+
+.inv-radar-pulse {
+  position: absolute;
+  top: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(225, 29, 72, 0.35);
+  animation: inv-pulse 1.8s infinite cubic-bezier(0, 0.2, 0.8, 1);
+}
+
+@keyframes inv-pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+.inv-map-pin-icon {
+  font-size: 28px;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+
+.inv-map-hall-badge {
+  background: #1e293b;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
+  margin-top: -2px;
+}
+
+/* ============================================================
+ * [다크 테마 고대비 보정 - WCAG 2.1 AA 100% 보장]
+ * ============================================================ */
+.inv-mode--dark .inv-btn-secondary,
+[data-theme='dark'] .inv-btn-secondary {
+  background: rgba(255, 255, 255, 0.16) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+}
+
+.inv-mode--dark .inv-btn-secondary:hover,
+[data-theme='dark'] .inv-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.26) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.inv-mode--dark .inv-account-card {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+}
+
+.inv-mode--dark .inv-account-row {
+  color: #ffffff !important;
+}
+
+.inv-mode--dark .inv-copy-chip {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+}
+
+.inv-mode--dark .inv-address-copy-btn {
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.26) !important;
+}
+
+.inv-mode--dark .inv-map-link-btn {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.inv-mode--dark .inv-guest-snap-card {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+.inv-mode--dark .inv-guest-snap-caption-text {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.inv-mode--dark .inv-snap-like-btn {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.inv-mode--dark .inv-guestbook-card {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  color: #ffffff !important;
+}
+
+.inv-mode--dark .inv-guestbook-card__body {
+  color: rgba(255, 255, 255, 0.88) !important;
+}
+
+/* ============================================================
+ * [모달 좌측 툴바 & 렌더러 누락 클래스 완전 복원 및 고도화]
+ * ============================================================ */
+
+/* 1. 테마 그리드 & 테마 버튼 내부 */
+.inv-themes-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.inv-theme-icon {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+.inv-theme-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.inv-theme-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.25;
+}
+
+.inv-theme-sub {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 2. 청첩장 배경색 & 색상 테마 16종 카드 칩 그리드 */
+.inv-color-chips-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.inv-color-preset-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 6px;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+.inv-color-preset-card:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  transform: translateY(-1px);
+}
+
+.inv-color-preset-card--selected {
+  border-color: var(--brand) !important;
+  background: #faf5ff !important;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.16);
+}
+
+.inv-palette-dots {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.inv-color-preset-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1e293b;
+  letter-spacing: -0.01em;
+}
+
+/* 3. 레이아웃 스타일 (단독 행 버튼 3종) */
+.inv-layout-choices-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inv-layout-choice-btn {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.16s ease;
+}
+
+.inv-layout-choice-btn:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.inv-layout-choice-btn--active {
+  border-color: var(--brand) !important;
+  background: #faf5ff !important;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.15);
+}
+
+.inv-layout-choice-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.inv-layout-choice-desc {
+  font-size: 11px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.inv-layout-choice-btn--active .inv-layout-choice-title {
+  color: var(--brand);
+}
+
+/* 4. 섹션 0 (메인 웨딩 사진 & 프레임) 강조 아코디언 */
+.inv-section-accordion-wrap--hero0 .inv-section-order-item--hero0 {
+  background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 100%);
+  border: 1.5px solid #c4b5fd;
+}
+
+.inv-section-accordion-wrap--hero0 .inv-section-order-item--active {
+  border-color: #7c3aed;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.14);
+}
+
+/* 5. 달력 스타일 & 갤러리 모드 선택 버튼 */
+.inv-calendar-style-row,
+.inv-gallery-mode-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.inv-cal-choice-btn,
+.inv-gal-mode-btn {
+  min-height: 44px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.inv-cal-choice-btn:hover,
+.inv-gal-mode-btn:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.inv-cal-choice-btn--active,
+.inv-gal-mode-btn--active {
+  border-color: var(--brand) !important;
+  background: #faf5ff !important;
+  color: var(--brand) !important;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.14);
+}
+
+/* 6. 렌더러 본문 섹션 제목 / 인사말 / 혼주 / 달력 / 캐러셀 스타일 */
+.inv-section-title {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin: 0 0 6px;
+  line-height: 1.35;
+}
+
+.inv-greeting-text {
+  font-size: 14px;
+  line-height: 2.05;
+  white-space: pre-line;
+  margin: 0;
+  word-break: keep-all;
+}
+
+.inv-divider-line {
+  width: 48px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.22;
+  margin: 18px auto;
+}
+
+.inv-host-names-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.inv-host-names-block p {
+  margin: 0;
+}
+
+.inv-schedule-card {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 20px;
+  padding: 22px 16px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.inv-mode--dark .inv-schedule-card {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+}
+
+.inv-wedding-time-badge {
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.04);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.inv-mode--dark .inv-wedding-time-badge {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.inv-time-strong {
+  font-size: 14.5px;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.inv-calendar-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inv-cal-header-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.18);
+}
+
+.inv-dow--sun {
+  color: #e11d48;
+}
+
+.inv-dow--sat {
+  color: #2563eb;
+}
+
+.inv-mode--dark .inv-dow--sun {
+  color: #fda4af !important;
+}
+
+.inv-mode--dark .inv-dow--sat {
+  color: #93c5fd !important;
+}
+
+.inv-cal-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 4px;
+}
+
+.inv-cal-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  align-items: center;
+}
+
+.inv-cal-cell {
+  height: 34px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: 50%;
+  position: relative;
+  width: 34px;
+  margin: 0 auto;
+}
+
+.inv-cal-cell--wedding {
+  font-weight: 800 !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+}
+
+.inv-cal-heart-dot {
+  font-size: 8px;
+  line-height: 1;
+  margin-top: -2px;
+}
+
+/* 7. 캐러셀 갤러리 (Gallery 1) */
+.inv-carousel-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.inv-carousel-slide {
+  width: 100%;
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(128, 128, 128, 0.14);
+}
+
+.inv-carousel-slide-img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  position: relative;
+}
+
+.inv-carousel-caption {
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12.5px;
+}
+
+.inv-carousel-label {
+  font-weight: 800;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(128, 128, 128, 0.12);
+}
+
+.inv-carousel-text {
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.inv-carousel-indicators {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px 0;
+}
+
+/* ============================================================
+ * [청첩장 에디터 전용 스타일] (INV-001)
+ * ============================================================ */
+.inv-editor-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.inv-actions-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.inv-editor-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .inv-editor-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.inv-editor-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.inv-form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md, 16px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.inv-form-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.inv-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inv-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.inv-field input,
+.inv-field textarea,
+.inv-field select {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 10px 14px;
+  font-size: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--ink);
+  box-sizing: border-box;
+  font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.inv-field textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.inv-field input:focus-visible,
+.inv-field textarea:focus-visible,
+.inv-field select:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-color: var(--brand);
+}
+
+.inv-field-desc {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.inv-chip-options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.inv-chip-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.inv-chip-btn:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.inv-chip-btn:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.inv-chip-btn--active {
+  background: var(--brand) !important;
+  color: var(--bg) !important;
+  border-color: var(--brand) !important;
+  font-weight: 700;
+}
+
+.inv-section-order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inv-section-order-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  min-height: 44px;
+}
+
+.inv-section-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.inv-section-order-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.inv-order-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.15s ease;
+}
+
+.inv-order-btn:hover:not(:disabled) {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.inv-order-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.inv-order-btn:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.inv-editor-preview-panel {
+  position: sticky;
+  top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+
+
+

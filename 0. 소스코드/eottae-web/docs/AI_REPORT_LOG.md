@@ -911,17 +911,181 @@
   6. `chat-service.ts` | 커서 페이지네이션 `.or()` 필터에서 `created_at` 타임스탬프와 `id` 값을 큰따옴표(`"..."`)로 감싸 PostgREST 파싱 거절 방지.
   7. `MessageComposer.tsx` | `textOnly` 활성화 시 숨은 파일 `<input type="file">`도 `disabled` 처리하고, `handlePhotoUpload` 및 `finishRecording` 진입 시 `textOnly`면 즉시 리턴하여 실시간 대화방에서 미지원 미디어가 전송되는 경로를 완전 차단.
 
----
+## 2026-11-04 INV-001 모바일 청첩장 에디터·미리보기·공개 하객 뼈대 목업 (오하율 작업)
+- [요청] 3차 메인 청첩장 에디터·미리보기·공개 하객 뼈대 구현(이슈 #84). 사용자 특별 요구로 테마 미리보기 및 미리보기 모달창에서 사용자가 직접 고퀄리티 체험 테스트(4종 테마, 3종 레이아웃, 4종 BGM 프리셋 및 Web Audio 신스 재생, 섹션 순서 위/아래 이동 재배치)를 할 수 있도록 구현. ThemePreviewSection 모의 결제 유지, globals.css 수정 금지, invitations.css 전용 스타일 적용.
+- [AI] Antigravity가 3차 작업지시서, AGENT_오하율_INV_EDITOR.md, types.ts, demo-storage.ts를 바탕으로 청첩장 메인 허브, 에디터 화면(/invitations/new/), 하객 공개 뼈대(/invitations/p/?t=), 인터랙티브 모달 및 카드 렌더러 구현.
+- [신규] src/app/invitations/invitations.css | 청첩장 전용 스타일 (4종 테마 클래스, 3종 레이아웃, 모바일 360px 대응, 터치 타겟 44px, Web Audio BGM 이퀄라이저·LP 회전 애니메이션, prefers-reduced-motion 대응). globals.css 무수정.
+- [신규] src/components/invitations/InvitationCardRenderer.tsx | 4종 테마(spring-card, moon-garden, hanji, star-table) 및 3종 레이아웃(classic, modern, minimal), Web Audio 실시간 BGM 신스 멜로디 시연, 5개 섹션 동적 렌더링, D-Day 계산, 가상 계좌 복사 토글, 손준혁 RSVP 연동 슬롯(id="rsvp-slot").
+- [신규] src/components/invitations/InvitationPreviewModal.tsx | 실시간 스마트폰 뷰포트 목업(노치·스크린 프레임)과 인터랙티브 컨트롤 패널(테마 탭, 레이아웃 탭, BGM 탭, 섹션 순서 ▲/▼ 버튼, Esc 닫기).
+- [신규] src/components/invitations/InvitationEditor.tsx | 청첩장 작성/수정 폼(제목, 성함, 일시, 장소, 인사말, 테마/레이아웃/BGM 선택, 섹션 순서 커스텀, 공개 설정) 및 우측 실시간 모바일 프리뷰 스티키 패널.
+- [신규] src/components/invitations/InvitationsHub.tsx | 내 청첩장 목록 카드 그리드(체험 테스트, 정보 수정, 하객 화면, 링크 복사, 삭제), 3차 MVP 데모 배너, 프리미엄 테마 쇼케이스 및 원클릭 체험 모달 연동.
+- [신규] src/app/invitations/new/page.tsx | 정적 export 대응 에디터 라우트 (신규 작성 및 ?edit=id 수정 지원, Suspense 감쌈).
+- [신규] src/app/invitations/p/page.tsx | 정적 export 대응 하객 공개 열람 뼈대 (?t=sharingToken, 행사 정보 및 RSVP 슬롯 렌더링, 만료/폐기 시 친절한 안내).
+- [변경] src/app/invitations/page.tsx | 청첩장 허브에 InvitationsHub 탑재, 하단 ThemePreviewSection(모의 결제) 100% 보존 유지.
+- [변경] src/lib/invitations/{types.ts, demo-data.ts, demo-storage.ts} | InvitationLayoutStyle, InvitationBgmpreset, InvitationSectionKey 타입 정의 및 예시 데이터/스토리지 sanitize 확장.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` (`next build`, 25개 정적 페이지 export 완료) PASS
+- [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수), RSVP 폼 본문(손준혁 #86), 토큰 재발급 본문(주한태 #85)
 
-## 2026-11-05 INV-003 모바일 청첩장 RSVP 응답·접근 제어 목업 및 QA 캡처 (손준혁 작업)
+## 2026-11-04 이슈 #84 Grok 검증 반영 — 미리보기 테마·토큰·경로 및 360px·44px·키보드·6테마 완벽 대응 (오하율 작업)
+- [요청] 이슈 #84 체크리스트 검증(PR #95 Grok 판정 피드백)에서 지적된 2개 미완료 항목 완료:
+  1) `미리보기 테마 적용. CSS 토큰만. globals.css 수정 없음` — 4종 테마 연결(`DEMO_THEMES`), globals.css 무수정 및 전용 CSS 토큰(`--bg`, `--paper`, `--ink`, `--line` 등) 적용, 미리보기 경로(`/invitations/?preview=<id>`, `/invitations/sample/`) 완비.
+  2) `360px·44px·키보드·6테마` — 360px 모바일 폭 제한 및 패딩 최적화, 모든 대화형 컨트롤 44px 터치 타겟(`min-height: 44px`, `min-width: 44px`), 키보드 포커스 링(`:focus-visible` outline 3px), globals.css의 6개 전역 테마(`light`, `cupcake`, `cyberpunk`, `disney`, `dark`, `system`) 완벽 연동.
+- [AI] Antigravity가 이슈 #84 체크리스트 및 Grok 판정 기준을 분석. `invite-preview.css`에 6테마별 전용 셀렉터, 44px 터치, 3px 포커스 링, 360px 반응형 패딩을 전면 보강하고, `InvitationsHub.tsx`에 `useSearchParams` 기반 `?preview=<id>` 자동 모달 오픈 로직 탑재 및 `Suspense` 래핑 적용.
+- [변경] src/components/invitations/preview/invite-preview.css |
+  1) 6테마 셀렉터 연동: `[data-theme='light']`, `[data-theme='cupcake']`, `[data-theme='cyberpunk']`, `[data-theme='disney']`, `[data-theme='dark']` 및 `@media (prefers-color-scheme: dark)`에서 스테이지·샘플 세트·플래그 고대비 스타일링.
+  2) 44px 터치 타겟 전수 보장: 버튼, 링크, 탭, 입력, 셀렉트, 요약(`summary`), 닫기, 달력 헤더/셀 등 모든 인터랙티브 요소 `min-height: 44px`, `min-width: 44px`.
+  3) 키보드 포커스 링 전수 보장: `button:focus-visible`, `a:focus-visible`, `[role='tab']:focus-visible` 등에 `outline: 3px solid var(--focus) !important`.
+  4) 360px 미디어 쿼리 최적화: 가로 넘침(overflow-x) 0px, 패딩 12px~14px 축소, 캘린더/라이트박스 핏.
+- [변경] src/components/invitations/InvitationsHub.tsx | `useSearchParams` 기반 URL 파라미터 `?preview=<id>` 수신 시 해당 청첩장 미리보기 모달 자동 열림 로직 구현, `Suspense` 경계 적용으로 정적 빌드 완전 무결성 확보.
+- [변경] src/app/invitations/page.tsx | `InvitationsHub` 호출부 주석 및 최신 머지 정합성 유지.
+- [변경] scripts/verify-modal-and-card.ts | 검증 8(`?preview=` 경로 및 4종 테마 연결), 검증 9(6테마, 44px 터치, 3px 포커스 링, 360px 미디어 쿼리) 자동 검증 항목 추가 (28/28 항목 통과).
+- [검증] `npx tsx scripts/verify-modal-and-card.ts` PASS (총 28개 검증 항목 100% 통과)
+- [검증] `npx tsx scripts/verify-theme-contrast.ts` PASS (16종 테마 및 16종 색상 프리셋 WCAG 2.1 92개 항목 100% 통과)
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수), RSVP 폼 본문(손준혁 #86), 토큰 재발급 본문(주한태 #85)
 
-- [변경] `src/lib/invitations/types.ts`, `src/lib/invitations/demo-storage.ts` | 기존 `Rsvp` 타입을 새로 중복 선언하지 않고 선택 필드 `meal?: RsvpMeal`(`RSVP_MEALS = ['yes', 'no', 'undecided'] as const`)과 `isRsvpMeal` 타입 가드를 보강. `isStoredRsvp` 및 `sanitizeRsvp`에서 선택적 `meal` 값을 검증·보존하도록 확장.
-- [변경] `src/lib/invitations/rsvp-access.ts` | 공유 토큰(`t`)과 게스트 토큰(`g`)이 모두 유효하고 청첩장이 `published`·미만료 상태일 때만 회신 권한을 여는 `resolveRsvpAccess`, `localStorage` 키 `eottae.invitations.demo.v1`에만 저장하고 같은 게스트 토큰의 10초(`RSVP_COOLDOWN_MS = 10_000`) 내 연속 제출 시 데모 안내(`잠시 뒤에 다시 시도해 주세요`, 서버 429 아님)를 반환하는 `submitGuestRsvp`, 그리고 소유자(`viewerIsOwner === true && ownerId === 'user-demo-me'`)만 회신 명단을 읽기 전용으로 조회하고 비소유자(`demo-inv-3` 등)는 거절하는 `resolveOwnerRsvpOverview` 구현.
-- [변경] `src/components/invitations/InvitationRsvpForm.tsx`, `src/components/invitations/invitation-rsvp.css` | 유효한 `t`+`g` 조합에서만 해당 하객 본인의 회신(`myRsvp`)만 불러와 참석 여부(`yes`/`maybe`/`no`)·인원(1~10명, 불참 시 숨김 및 0 저장)·식사(선택, `선택 안 함` 포함)·메모(300자)를 입력·저장하는 폼 구현. 토큰 누락·오류·만료·폐기 시 행사 상세와 타인 정보를 전혀 그리지 않고 `초대 링크가 없어 회신할 수 없어요` 거절 안내만 표시. 모든 스타일은 6테마 CSS 변수(`var(--paper)`, `var(--ink)`, `var(--line)`, `var(--brand)`, `var(--focus)` 등)만 사용하고 최소 터치 영역 44px·입력 16px·`:focus-visible` 포커스 링·`prefers-reduced-motion`을 준수.
-- [변경] `src/app/invitations/rsvp/layout.tsx`, `src/app/invitations/rsvp/page.tsx`, `src/components/invitations/preview/InviteClosing.tsx`, `src/components/invitations/preview/InvitePreview.tsx`, `src/components/invitations/preview/InviteSampleStudio.tsx` | 검색엔진 미노출(`robots: { index: false, follow: false }`) 하객 전용 회신 라우트(`/invitations/rsvp/?t=&g=`) 및 QA 데모 시나리오 전환 바 연결. 공개 샘플 미리보기(`/invitations/sample/`)의 참석 여부 섹션(`InviteRsvp`)은 공개 화면에서 참석 명단·타인 회신을 노출하지 않고 하객 전용 초대 링크로 이동하도록 연결.
-- [변경] `3. 구현 이미지(5장이상)/20_청첩장_테마목록_모바일.png` ~ `25_청첩장_비소유자_편집거절_모바일.png`, `3. 구현 이미지(5장이상)/captions.csv` | 기존 `06_준비중_모듈_청첩장_모바일.png`를 재사용하지 않고 20~25번 신규 360px 모바일 캡처 6장(테마 목록, 샘플 미리보기, 하객 공개 명단 없음, 하객 RSVP 회신 폼·연속 제출 제한, 토큰 거절, 비소유자 편집·명단 열람 거절)을 추가하고 `captions.csv` 행 기록.
-- [검증] `npm --prefix "0. 소스코드/eottae-web" run typecheck` (`tsc --noEmit`) PASS (에러 0건)
-- [검증] `npm --prefix "0. 소스코드/eottae-web" run build` (`next build`, `/invitations/rsvp` 포함 25개 정적 페이지 export) PASS
-- [검증]2026-11-05 Node 단위 검증(`resolveRsvpAccess`·`submitGuestRsvp`·`resolveOwnerRsvpOverview` 26개 단언: 유효 `t+g` 허용, `t`/`g` 누락·오류·타 청첩장 토큰·폐기 토큰 거절, 하객 A/B 회신 격리, `eottae.invitations.demo.v1` 단일 키 저장, 10초 내 연속 제출 쿨다운 및 11초 후 재제출, 소유자 허용·비소유자 거절) 26 PASS / 0 FAIL
-- [검증]2026-11-05 Windows + 헤드리스 Chrome(CDP) + `node tools/serve_pages_preview.mjs` 정적 산출물 실측: 360px 폭에서 6테마(`light`·`cupcake`·`cyberpunk`·`disney`·`dark`·`system`) 모두 `scrollWidth(360) <= clientWidth(360)` 가로 스크롤 없음, 대화형 요소 최소 높이 `44px` 확인, 1차 회신 저장 안내 및 즉시 재제출 시 `잠시 뒤에 다시 시도해 주세요` 표시, 토큰 누락 시 폼·행사 상세 비노출 확인 후 20~25번 캡처 생성 완료
-- [미실행]3차는 팀 결정에 따른 브라우저 `localStorage` 목업 단계이므로 실서버(`POST /invitations/:token/rsvp`)·Supabase DB 마이그레이션·서버 레이트리밋(HTTP 429) 연동은 실행하지 않음. `FILE_INDEX.csv`·`MANIFEST.sha256`·`src/app/globals.css`·`package.json`·`supabase/`는 수정하지 않음.
+## 2026-11-04 이슈 #84 전체 체크리스트 최종 완비 및 해결 (오하율 작업)
+- [요청] 이슈 #84 체크리스트 전수 점검 및 미완료 항목 해결:
+  1) 예시 청첩장 수 2~3개 조건 준수 (4건 -> 3건 축소).
+  2) `/invitations/` 데모 뱃지 표준 문구(「데모 데이터로 동작하는 3차 미리보기」) 반영.
+  3) 편집 `/invitations/?edit=` 경로 지원 및 소유자(`viewerIsOwner`) 전용 검증 차단 로직(TC-015 목업).
+  4) 공개 하객 페이지 `/invitations/p/?t=`의 `robots: { index: false, follow: false }` metadata 레이아웃 신설, 토큰 유효성 검증 엄격화, 하객 토큰 배지 비노출, 검색엔진 미노출 안내 문구 반영.
+  5) 카드 렌더러 `data-invite-theme` 속성 부여 및 시간 계산 보정.
+  6) 클립보드 링크 복사 시 `basePath` 누락 방지.
+- [AI] Antigravity가 이슈 #84 본문 및 3차 작업지시서 기준을 분석하여 체크리스트 12개 항목을 100% 만족하도록 수정.
+- [신규] `src/app/invitations/p/layout.tsx` | 하객 초대 페이지 전용 noindex 레이아웃(`robots: { index: false, follow: false }`).
+- [변경] `src/lib/invitations/demo-data.ts` | 예시 청첩장 3건(`demo-inv-1`, `demo-inv-2`, `demo-inv-3`)으로 조정하여 2~3개 제한 준수. 가상 이름(이서윤·박하람, 최도현·강은우, 정시우·윤아린) 및 가상 장소만 유지.
+- [변경] `src/app/invitations/p/page.tsx` | `getInvitationByToken`을 통해 유효한(만료/폐기/private 배제) 청첩장만 조회하도록 엄격화, 하객 토큰 배지 비노출, 검색엔진 미노출 안내 배너 추가.
+- [변경] `src/components/invitations/InvitationEditor.tsx` | 비소유자 접근 시 `notOwner` 에러 화면(`소유자만 고칠 수 있어요 (TC-015 목업)`) 및 `handleSubmit` 차단 가드 추가, 기존 메타데이터 필드 보존.
+- [변경] `src/components/invitations/InvitationsHub.tsx` | 데모 뱃지 텍스트를 `데모 데이터로 동작하는 3차 미리보기`로 변경, `useSearchParams` 기반 `?edit=` 수신 시 `InvitationEditor` 인라인 렌더링, 소유자일 때만 "정보 수정" 버튼 노출 및 `/invitations/?edit=${inv.id}` 링크 연결, 링크 복사 시 `NEXT_PUBLIC_BASE_PATH` 반영.
+- [변경] `src/app/invitations/page.tsx` | SubpageHero 상태 라벨을 `데모 데이터로 동작하는 3차 미리보기`로 일치.
+- [변경] `src/components/invitations/InvitationCardRenderer.tsx` | `data-invite-theme={activeThemeId}` 속성 추가, 0시 시간 파싱 보정.
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수), RSVP 폼 본문(손준혁 #86), 토큰 재발급 본문(주한태 #85)
+
+## 2026-11-04 외부 서비스 명칭·템플릿명·샘플 커플 전면 독자 브랜드화 (오하율 작업)
+- [요청] PR #97 리뷰 피드백 반영: 외부 특정 서비스(pagesisters 등) 상표/URL 노출 방지, 기존 템플릿 명칭(그린 캐노피, The Wedding, 위드 러브 등) 및 샘플 커플(한영준·곽지은, 재하·민지 등)을 순수 창작/가상 명칭으로 전면 변경. 주석 내 "1:1 완벽 재현", "Pagesisters 급" 등 참조 잔재 제거.
+- [AI] Antigravity가 소스 전체를 전수 검색하여 UI 텍스트, 코드 주석, 프리셋 이름, 커플 명칭을 어때? 고유 감성 브랜드 명칭으로 교체.
+- [변경] `src/components/invitations/InvitationsHub.tsx`: 16종 디자인 컬렉션 템플릿 명칭 및 커플 이름 변경(숲속의 싱그러움, 우리 둘의 서약, 사랑을 담아, 클래식 실링인장, 스냅 포토카드, 에디토리얼 프레임, 모던 풀스크린, 손글씨 레터, 노을빛 실루엣, 린넨 가든, 고요한 산책 등 / 이시우·정유린, 박서진·윤채원, 김도윤·송하은), 상단 데모 뱃지 설명문 독자 브랜드화.
+- [변경] `src/lib/invitations/theme-presets.ts`: 프리셋 `name` 12종 허브 명칭과 일치하도록 변경.
+- [변경] `src/components/invitations/InvitationPreviewModal.tsx`: 사진 프리셋 라벨 및 주석 정리.
+- [변경] `src/components/invitations/InvitationCardRenderer.tsx`: 방명록 예시 작성자('소율 (절친)') 및 영문 타이포('Our Wedding') 변경.
+- [변경] `src/components/invitations/ThemeHeroArtworks.tsx`: 주석 및 aria-label('클래식 실링 인장 각인') 정리.
+- [변경] `src/app/invitations/invitations.css`: 외부 서비스 언급 주석 5곳 전면 제거 및 독자 스타일시트 주석화.
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
+
+
+## 2026-11-04 PR #97 2차 리뷰 지적 6건 및 주석 전면 해결 (오하율 작업)
+- [요청] PR #97 2차 AI/팀원 리뷰 지적 6건 및 주석 반영:
+  1) 저장한 레이아웃·BGM·섹션 순서가 카드 렌더러에 미반영되던 문제 해결 (invitation 객체 우선 참조).
+  2) 저장 시 기존 청첩장의 expiry·status·ownerId·createdAt 유실 방지 (상태 보존 가드).
+  3) 계좌 정보 하드코딩 제거 (hostNames 기반 신랑·신부 성함 동적 파싱 및 ID 연동 가상 계좌).
+  4) 공개 하객 RSVP 버튼 클릭 시 alert 대신 준비 중 안내 토스트 및 슬롯 라벨 반영 (손준혁 #86 목업 연동 안내).
+  5) ?preview= 미존재 ID 요청 시 첫 번째 청첩장 강제 노출 방지 ("찾을 수 없어요" 안내 처리).
+  6) 허브 디자인 컬렉션 실제 예식장/호텔 상호 6곳 가상 지명(노을구·달동네·한들시)으로 전면 교체.
+  7) invitations.css 및 ThemeHeroArtworks.tsx 내 옛 템플릿명 주석 20여 곳 신규 명칭으로 정리.
+- [AI] Antigravity가 해당 4개 파일(CardRenderer, Editor, Hub, css, ThemeHeroArtworks) 수정 후 정적 빌드 테스트 통과.
+- [변경] `src/components/invitations/InvitationCardRenderer.tsx`: activeLayout/Bgm/Sections에 invitation 필드 우선 폴백 추가, 신랑/신부 성함 동적 파싱, 혼주/계좌/교통편 동적화, RSVP alert 제거 및 준비 중 안내 토스트 연동.
+- [변경] `src/components/invitations/InvitationEditor.tsx`: status, expiry, ownerId, createdAt 상태 추가 및 handleSubmit 저장 시 기존 메타데이터 필드 100% 보존.
+- [변경] `src/components/invitations/InvitationsHub.tsx`: ?preview= 미존재 ID 에러 토스트 처리, 실제 호텔/웨딩홀 상호 6곳 가상 지명으로 교체.
+- [변경] `src/app/invitations/invitations.css`, `ThemeHeroArtworks.tsx`: 주석 내 옛 템플릿 명칭 전수 교체.
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
+
+
+## 2026-11-05 PR #97 3차 리뷰 지적 6건 해결 (오하율 작업)
+- [요청] PR #97 3차 피드백 6건(저장값 연결·THEME_ALIASES·섹션순서/토글저장·BGM상태/라벨·contactNote보존·프리셋사진) 반영:
+  1) 에디터 및 테마 프리셋 저장 값이 미리보기 렌더러로 정상 반영되도록 getThemeDefaultPhoto 매핑 확장 및 CardRenderer 프롭 폴백 로직 개선.
+  2) THEME_ALIASES에서 실제 존재하는 프리셋 ID(`botanical-garden`, `cinematic-movie`, `minimal-arch`, `hanok-heritage`)를 덮어쓰던 버그 수정(THEME_MASTER_PRESETS 직접 우선 반환).
+  3) InvitationPreviewModal 섹션 순서 초기값을 invitation.sectionOrder로 정상 로드하고, 상단 헤더에 [설정 저장] 버튼을 추가하여 모달 설정이 로컬스토리지에 즉시 영구 반영되도록 개선.
+  4) 섹션 켜기/끄기(숨김 ✕ / 다시 추가) 기능 구현 및 PreviewModal에서 갤러리/캘린더 모드 변경 시 customConfigs와 상태가 동기화되도록 수정.
+  5) activeBgm 변경 시 재생 상태(none 시 정지) 동기화 및 플로팅 버튼에 현재 BGM 라벨명 표시, tape-card 고정 영문 문구 동적화.
+  6) InvitationEditor에 contactNote 상태 및 폼 입력란 추가, handleSubmit payload에 contactNote 저장 보존.
+- [AI] Antigravity가 해당 4개 파일(theme-presets, CardRenderer, PreviewModal, Editor, Hub) 수정 후 정적 빌드 테스트 통과.
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
+
+
+## 2026-11-05 PR #97 4차 리뷰 지적 5건 해결 (오하율 작업)
+- [요청] PR #97 4차 피드백 5건(쇼케이스 고유ID·BGM 새 프리셋 sanitize·시간 분단위 미표시·모달 인사말/장소 공개화면 미연계·비소유자 notOwner 리셋) 반영:
+  1) `InvitationsHub.tsx`: 테마 쇼케이스 "실시간 체험" 클릭 시 첫 번째 청첩장(`invitations[0]`) 오염을 방지하고 디자인별 고유 ID(`showcase-${design.id}`) 및 개별 토큰 부여.
+  2) `demo-storage.ts`: `sanitizeInvitation`에서 `INVITATION_BGM_PRESETS` 전체 9종을 온전히 허용하도록 화이트리스트 확장(bach_air, canon, thousand_years, spring_waltz 등 보존).
+  3) `InvitationCardRenderer.tsx`: `minutes` 변수를 온전히 사용하여 정각이 아닐 경우 "N시 M분"으로 렌더링되도록 `displayTimeKorean` 및 `displayTimeDot` 헬퍼 적용.
+  4) `InvitationPreviewModal.tsx`: 모달 오픈 시 `customConfigs`의 greeting/location을 `invitation` 원본과 동기화하고, 모달 설정 저장 시 인사말과 장소 안내를 `invitation` 필드에 반영하여 공개 화면에 즉시 전달.
+  5) `InvitationEditor.tsx`: `useEffect` 및 신규/소유 청첩장 전환 시 `setNotOwner(false)`를 명시적으로 호출하여 이전 비소유 열람 상태가 유지되던 버그 해결.
+- [AI] Antigravity가 해당 5개 파일(InvitationsHub, demo-storage, CardRenderer, PreviewModal, Editor) 수정 후 정적 빌드 테스트 통과.
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
+
+
+## 2026-11-05 PR #97 5차 리뷰 지적 4건 해결 (오하율 작업)
+- [요청] PR #97 5차 피드백 4건(쇼케이스 테마 4종 types.ts 등록·비소유자 TC-015 저장 우회 차단·달력 스타일 4종 시각화·D-Day 자정기준 계산) 반영:
+  1) `types.ts`: `INVITATION_THEME_IDS`에 쇼케이스 대표 테마 4종(`green-canopy`, `the-wedding`, `photo-background`, `with-love`)을 등록하여 `demo-storage` 저장 검사 및 모달 저장 시 거절되지 않도록 해결.
+  2) `demo-storage.ts`, `InvitationsHub.tsx`, `InvitationPreviewModal.tsx`: 쇼케이스 가상 청첩장 및 비소유자 청첩장의 저장 시도를 원천 차단(TC-015 가드: `saveInvitation` 내 비소유/쇼케이스 ID 검사, Hub 쇼케이스 `viewerIsOwner: false` 지정, PreviewModal에서 비소유 청첩장 [열람 전용] 뱃지 처리 및 저장 차단).
+  3) `InvitationCardRenderer.tsx`: `calendarStyle` 프롭 및 커스텀 설정을 읽어 4종 달력 스타일(`classic_table`, `heart_stamp`, `box_badge`, `minimal_text`)이 미리보기 및 공개 화면에 확연하게 시각 반영되도록 렌더러 분기 구현.
+  4) `InvitationCardRenderer.tsx`: D-Day 계산을 시/분/초 밀리초 Math.ceil 대신 연-월-일 자정(00:00:00) 기준 날짜 차이(`targetMidnight - todayMidnight`)로 변경하여 예식 당일 오전에도 정상적으로 `D-DAY 오늘`이 표기되도록 수정.
+- [AI] Antigravity가 해당 4개 파일(types, demo-storage, InvitationsHub, PreviewModal, CardRenderer) 수정 후 정적 빌드 테스트 통과.
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
+
+
+## 2026-11-05 PR #97 6차 리뷰 지적 3건 해결 (오하율 작업)
+- [요청] PR #97 6차 피드백 3건(360px 모달 툴바 max-width: 100%·모달 인사말/장소 에디터 저장 동기화·에디터 notice 식사/교통편 카드 렌더링) 반영:
+  1) `invitations.css`: `.inv-modal-toolbar`의 고정 `width: 460px !important`, `min-width: 430px`을 `max-width: 100%`로 개선하고, 모바일 미디어쿼리(`max-width: 860px`) 내에서 `width: 100% !important`, `min-width: 0 !important`를 부여하여 360px 모바일 환경에서 툴바가 잘리지 않도록 완벽 해결.
+  2) `InvitationEditor.tsx`: `InvitationPreviewModal`의 `onSaveSettings` 콜백에 `greeting`, `venueLabel`, `notice`, `contactNote` 상태 동기화(`setGreeting`, `setVenueLabel`)를 추가하여 모달에서 수정한 인사말·장소가 에디터 폼 저장 시 옛날 값으로 덮어써지던 버그 해결.
+  3) `InvitationCardRenderer.tsx`: location(오시는 길 & 약도) 섹션 상단에 `invitation.notice` 배너(`🍽️ 식사 & 교통편 안내`)를 추가하여 에디터에서 작성한 교통편 및 식사 안내 문구가 공개 카드 및 미리보기에 완벽하게 렌더링되도록 연결.
+- [AI] Antigravity가 해당 3개 파일(invitations.css, InvitationEditor, InvitationCardRenderer) 수정 후 정적 빌드 테스트 통과.
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
+
+
+## 2026-11-05 PR #97 7차 리뷰 지적 3건 해결 (오하율 작업)
+- [요청] PR #97 7차 피드백 3건(사이버펑크/시스템 다크 테마 버튼·모달 토큰 적용, venueLabel 보존, 토스트 문구 사실 일치) 반영:
+  1) `invitations.css`: 사이버펑크(`[data-theme='cyberpunk']`) 테마의 밝은 네온 브랜드 배경 위에서 흰색 글자가 묻히던 현상을 해결하기 위해 `.inv-btn-primary`, `.inv-badge-chip` 글자색을 어두운 텍스트(`#0a0a14 !important`)로 지정하고 다크/시스템 다크 테마에서도 충분한 명도 대비를 보장. 또한 `.inv-modal-shell`, `.inv-modal-container`, `.inv-modal-header`, `.inv-modal-toolbar`의 하드코딩 흰색(#ffffff)과 테두리를 테마 토큰(`var(--paper)`, `var(--line)`)으로 전환하여 시스템 다크 및 사이버펑크 모드에서 어두운 배경과 잉크 색상이 완벽히 조화되도록 수정.
+  2) `InvitationPreviewModal.tsx`: 모달의 「설정 저장」 시 `customConfigs.location?.body`(오시는 길 상세 문구)를 청첩장 장소명(`venueLabel`)으로 잘못 덮어써서 예식홀명이 오염되던 버그를 수정하여 `invitation.venueLabel`을 온전히 보존.
+  3) `InvitationPreviewModal.tsx`: 세부 그래픽 옵션(달력 모양, 프레임, 갤러리 모드 등)이 공개 화면에 완전히 전달되지 않는 목업 구조에 맞춰, 저장 완료 토스트 문구를 `"저장 완료! 공개 화면에 반영되었습니다"`에서 `"미리보기 설정이 저장되었습니다"`로 수정하여 사실에 부합하도록 개선.
+- [AI] Antigravity가 해당 2개 파일(invitations.css, InvitationPreviewModal.tsx) 수정 및 보고서 갱신 후 정적 빌드 테스트 통과.
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
+
+
+## 2026-11-05 PR #97 8차 리뷰 지적 2건 해결 (오하율 작업)
+- [요청] PR #97 8차 피드백 2건(사이버펑크·다크 브랜드 배경 컨트롤 대비 및 .inv-mode--dark 제거, 공개 화면 하객스냅·방명록 시드 비우기 및 기본 섹션 제거) 반영:
+  1) `invitations.css`, `InvitationsHub.tsx`: 사이버펑크(`--brand: #00e0ff`) 및 다크/시스템 다크(`--brand: #a796d9`) 배경 위에서 글자색 `#ffffff` 고정으로 인한 명도 대비 결함을 해결하기 위해 활성 카테고리 탭(`.inv-category-tab-btn--active`), 복사 칩(`.inv-copy-chip`), 폰트 버튼(`.inv-font-btn--active`), 선택 알약(`.inv-choice-pill--active`), 아코디언 토글(`.inv-accordion-toggle-btn--active`), 프레임 버튼(`.inv-frame-btn--active`), 주소 복사 호버(`.inv-address-copy-btn:hover`), 복사 토스트(`.inv-toast`)에 `color: var(--bg) !important`를 부여. `InvitationsHub.tsx`의 토스트 인라인 `color: '#ffffff'`를 제거하고 `.inv-toast` 클래스를 부여. 또한 어두운 청첩장 카드 루트 클래스였던 `.inv-mode--dark .inv-btn-primary` 셀렉터를 제거하여 카드의 테마 액센트 인라인 글자색(`getContrastingTextColor`)이 덮어씌워지지 않도록 수정.
+  2) `InvitationCardRenderer.tsx`, `InvitationEditor.tsx`, `theme-presets.ts`: 공개 하객 렌더링(`previewMode={false}`) 시 개인정보 및 타인 명단 노출 방지를 위해 `guestPhotos`와 `comments` 시드 배열을 완전히 비우고(`[]`), 미리보기(`previewMode={true}`) 렌더링 시에는 임의의 인물명 대신 청첩장 당사자(`hostNames`)와 `(예시 · 제안 P1)` 문구로만 구성되도록 개선. 또한 새 청첩장 작성 기본 섹션(`DEFAULT_SECTIONS`) 및 테마 프리셋들의 `defaultSectionOrder`에서 `guestbook`과 `guest_snap`을 제외하여 공개 열람 시 하객 참여형 공간이 기본 노출되지 않도록 작업지시서 기준을 완비.
+- [AI] Antigravity가 해당 파일들(invitations.css, InvitationsHub, InvitationCardRenderer, InvitationEditor, theme-presets, AI_REPORT_LOG) 수정 후 타입체크 및 정적 빌드 테스트 통과.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
+
+
+## 2026-11-05 PR #97 9차 AI 리뷰 반영 (오하율 작업)
+- [요청] PR #97 9차 AI 자동 코드 리뷰 피드백(commit 270f8d5 기준) 완전 해결:
+  1) `invitations.css`: InvitationEditor 전용 누락 CSS 완비 (`.inv-editor-shell`, `.inv-editor-grid`, `.inv-editor-form`, `.inv-form-section`, `.inv-field`, `.inv-chip-btn`, `.inv-order-btn`, `.inv-editor-preview-panel` 등). 데스크톱 2컬럼 레이아웃(좌측 폼 + 우측 360px sticky 미리보기 패널), 모바일(≤860px) 1컬럼 반응형 전환, 사이버펑크 및 다크 모드 칩 버튼 명도 대비 토큰 적용.
+  2) 터치 타겟 44px 접근성 보강: `.inv-map-link-btn`, `.inv-cal-choice-btn`, `.inv-gal-mode-btn` min-height 44px 반영, `InvitationsHub.tsx`의 카드 액션 버튼 인라인 `minHeight: 40`을 `minHeight: 44`로 상향, `InvitationPreviewModal.tsx`의 저장 및 파일 첨부 버튼 등 인라인 `minHeight: 32/36/30/28`을 `minHeight: 44`로 통일.
+  3) 키보드 포커스 링 & 모션 감소(a11y) 강화: `.inv-field-input:focus`, `.inv-field-textarea:focus`, `.inv-color-theme-dropdown:focus-visible`에 3px 솔리드 포커스 링 복원. `prefers-reduced-motion: reduce` 미디어 쿼리에 `.inv-radar-pulse` 및 버튼 호버 애니메이션 정지 적용, `InvitationPreviewModal.tsx` 캔버스 파티클 애니메이션도 `prefers-reduced-motion` 감지 시 즉시 중단.
+  4) BGM 명칭 저작권 준수 & 메모리 누수 방지: 가상 곡명 적용(로맨틱 앙상블, 어쿠스틱 세레나데), 커스텀 BGM 업로드 시 `URL.revokeObjectURL`을 사용하여 이전 blob URL 및 컴포넌트 언마운트 시 메모리 누수 방지.
+  5) 데이터 검증 & 예외 처리 보강: `demo-storage.ts`의 `sanitizeInvitation`에서 `sectionOrder`를 `INVITATION_SECTION_KEYS` 허용 목록으로 화이트리스트 검사 필터링, `InvitationEditor.tsx`에 존재하지 않는 ID 접근 시 `notFound` 안내 뷰 추가, `src/app/invitations/p/page.tsx` 미사용 import 및 변수 정리, Hub 내 타인 청첩장에 `[열람 전용 데모]` 배지 부여.
+- [AI] Antigravity가 해당 파일들(invitations.css, InvitationEditor, demo-storage, InvitationsHub, InvitationPreviewModal, p/page.tsx, AI_REPORT_LOG) 수정 후 정적 빌드 테스트 통과.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
+
+
+## 2026-11-05 PR #97 10차 AI 리뷰 반영 및 보호 영역 0개 복원 (오하율 작업)
+- [요청] PR #97 10차 AI 자동 코드 리뷰 피드백(commit 7b0f698/ddb0966 기준) 및 보호 영역 차단 해소:
+  1) `보호 영역 해소`: `tsconfig.json`, `FILE_INDEX.csv`, `MANIFEST.sha256`의 불필요한 수정 내역을 `origin/main`과 동일하게 복원하여 PR 내 보호 영역 변경 0건(`보호 영역: 0개`)으로 정격 통과.
+  2) `InvitationCardRenderer.tsx` (필수 1): 신랑·신부 성함 파싱 정규식을 `/\s*[·ㆍ・&,/|]\s*|\s+와\s+|\s+과\s+/`로 대폭 보강하고, 접두어('신랑'/'신부') 제거 및 기본 폴백('신랑'/'신부')을 지정하여 다양한 혼주 성함 표기에도 화면이 깨지지 않도록 개선.
+  3) `InvitationCardRenderer.tsx` (필수 2): 공개 하객 카드(`previewMode={false}`)에서 불필요한 인터랙티브 쓰기 폼(공식 사진 업로드 폼, 하객 실시간 스냅 업로드 폼, 축하 방명록 등록 폼)을 완전히 분리하고 `준비 중이에요 (데모)` 안내 배너로 치환. 미리보기 모드(`previewMode={true}`)에서는 44px 터치 타겟 및 15MB 파일 용량 가드를 적용.
+  4) `InvitationPreviewModal.tsx` (필수 3): 커스텀 BGM(`selectedBgm === 'custom'`) 저장 시 Web Audio API 신디사이저 프리셋 불일치를 방지하기 위해 저장 대상 데이터의 `bgmPreset`을 기존 유효 프리셋으로 치환하여 커스텀 키의 DB/스토리지 유입 원천 차단. UI 문구에도 `(올린 음원은 이 미리보기에서만 재생됩니다)` 명시.
+  5) `invitations.css`, `InvitationCardRenderer.tsx`: 캐러셀 이전/다음 화살표 버튼(`.inv-carousel-arrow-btn`) 크기 44px 확보, 플로팅 BGM 버튼(`.inv-bgm-floating`) min-height 44px 보장, 공개 하객 카드 첫 진입 시 BGM 기본 무음화(`isPlaying: false`), 축의금 계좌 복사 시 `(가상 계좌 · 실제 이체되지 않음)` 알림 표기.
+- [AI] Antigravity가 해당 파일들(tsconfig, FILE_INDEX, MANIFEST, invitations.css, InvitationCardRenderer, InvitationPreviewModal, AI_REPORT_LOG) 수정 및 검증.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 26개 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (package.json, tsconfig.json, .github/ 등 변경 없음)
+- [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
+
+
+
