@@ -1066,8 +1066,8 @@
 
 [data-theme='cyberpunk'] .invite-demo-flag {
   border: 2px solid var(--line);
-  background: var(--brand);
-  color: var(--ink);
+  background: var(--cta-bg);
+  color: var(--cta-ink);
   font-weight: 900;
 }
 

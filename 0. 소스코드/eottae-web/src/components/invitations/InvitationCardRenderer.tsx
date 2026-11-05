@@ -558,7 +558,7 @@ export default function InvitationCardRenderer({
 
   // ============================================================
   // [사용자 핵심 지적 반영] 섹션 0번: 신랑·신부 메인 웨딩 사진 포토 프레임 렌더러
-  // 아치형(arch), 감성사진형(polaroid), 둥근형(gold_round), 네모형(square), 인생네컷형(life4cut)
+  // 아치형(arch), 감성사진형(polaroid), 둥근형(gold_round), 네모형(square), 4컷 필름형(life4cut)
   // ============================================================
   const renderFramedHeroPhoto = (photoUrl: string) => {
     const resolvedUrl = resolveAssetUrl(photoUrl);
@@ -597,7 +597,7 @@ export default function InvitationCardRenderer({
               style={{ backgroundColor: frameColor, color: cardTextColor }}
             >
               <div className="inv-life4cut-top-logo" style={{ color: cardTextColor }}>
-                ✦ LIFE 4 CUT · OUR SPECIAL DAY ✦
+                ✦ 4-CUT WEDDING · OUR SPECIAL DAY ✦
               </div>
               <div className="inv-life4cut-cells">
                 <div className="inv-life4cut-cell" style={{ backgroundImage: `url(${resolvedUrl})` }} />
@@ -610,7 +610,7 @@ export default function InvitationCardRenderer({
               </div>
               <div className="inv-life4cut-bottom-watermark" style={{ color: cardTextColor }}>
                 <span>{year}. {month < 10 ? `0${month}` : month}. {day < 10 ? `0${day}` : day}</span>
-                <span>WEDDING PHOTOISM</span>
+                <span>OUR WEDDING STORY</span>
               </div>
             </div>
           </div>
@@ -704,7 +704,7 @@ export default function InvitationCardRenderer({
     const rawPhoto = customMainPhoto || defaultThemePhoto;
     const heroPhoto = (defaultImg: string) => resolveAssetUrl(customMainPhoto || defaultImg);
 
-    // 사용자가 'full' 이외의 프레임 스타일(아치형, 감성사진형, 둥근형, 네모형, 인생네컷형)을 선택한 경우
+    // 사용자가 'full' 이외의 프레임 스타일(아치형, 감성사진형, 둥근형, 네모형, 4컷 필름형)을 선택한 경우
     if (frameStyle && frameStyle !== 'full') {
       return (
         <div className="inv-hero-framed-container">
@@ -1217,11 +1217,11 @@ export default function InvitationCardRenderer({
               </div>
             )}
 
-            {/* 인생네컷 필름 모드 */}
+            {/* 4컷 필름 모드 */}
             {activeGalMode === 'life4cut_strip' && (
               <div className="inv-life4cut-strip-wrap">
                 <div className="inv-life4cut-film" style={{ borderColor: frameColor }}>
-                  <div className="inv-life4cut-header">★ LIFE 4 CUT WEDDING ★</div>
+                  <div className="inv-life4cut-header">★ 4-CUT WEDDING ★</div>
                   {officialPhotos.slice(0, 4).map((it, idx) => (
                     <div key={idx} className="inv-life4cut-cell" style={{ height: 110, overflow: 'hidden', padding: 0 }}>
                       <img src={resolveAssetUrl(it.img)} alt={it.caption} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -1387,10 +1387,6 @@ export default function InvitationCardRenderer({
 
       case 'location': {
         const title = custom?.title || '오시는 길 & 약도';
-        const naverUrl = `https://map.naver.com/v5/search/${encodeURIComponent(venueAddress)}`;
-        const kakaoUrl = `https://map.kakao.com/link/search/${encodeURIComponent(venueAddress)}`;
-        const googleUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venueAddress)}`;
-        const tmapUrl = `https://surl.tmobiapi.com/search?query=${encodeURIComponent(venueAddress)}`;
 
         return (
           <section key="location" className="inv-content-section" style={sectionStyle}>
@@ -1438,46 +1434,6 @@ export default function InvitationCardRenderer({
                     📋 주소 복사하기
                   </button>
                 </div>
-              </div>
-
-              {/* 4대 내비게이션/지도 원클릭 연결 버튼 */}
-              <div className="inv-map-btn-row">
-                <a
-                  href={naverUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inv-btn-secondary inv-map-link-btn"
-                  style={{ textDecoration: 'none', color: '#03c75a' }}
-                >
-                  🟢 네이버 지도
-                </a>
-                <a
-                  href={kakaoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inv-btn-secondary inv-map-link-btn"
-                  style={{ textDecoration: 'none', color: '#f59e0b' }}
-                >
-                  🟡 카카오맵
-                </a>
-                <a
-                  href={tmapUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inv-btn-secondary inv-map-link-btn"
-                  style={{ textDecoration: 'none', color: '#0284c7' }}
-                >
-                  🔵 티맵 내비
-                </a>
-                <a
-                  href={googleUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inv-btn-secondary inv-map-link-btn"
-                  style={{ textDecoration: 'none', color: '#2563eb' }}
-                >
-                  🔴 구글 지도
-                </a>
               </div>
 
               {/* 교통편 & 식사 안내 배너 (notice) */}
@@ -1725,39 +1681,22 @@ export default function InvitationCardRenderer({
                   '원활한 예식 준비와 연회 식사 좌석 안내를 위해 참석 여부를 미리 알려주시면 진심으로 감사드리겠습니다.'}
               </p>
               <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
-                {invitation.sharingToken ? (
-                  <a
-                    href={`${basePath}/invitations/rsvp/?t=${encodeURIComponent(invitation.sharingToken)}`}
-                    className="inv-btn-primary"
-                    style={{
-                      minHeight: 44,
-                      fontSize: 13,
-                      padding: '0 20px',
-                      backgroundColor: accent,
-                      color: getContrastingTextColor(accent),
-                      textDecoration: 'none',
-                    }}
-                  >
-                    🌸 참석합니다
-                  </a>
-                ) : (
-                  <button
-                    type="button"
-                    className="inv-btn-primary"
-                    style={{
-                      minHeight: 44,
-                      fontSize: 13,
-                      padding: '0 20px',
-                      backgroundColor: accent,
-                      color: getContrastingTextColor(accent),
-                    }}
-                    onClick={() =>
-                      setCopyNotice(`유효한 공유 토큰이 있을 때 RSVP 폼(${basePath}/invitations/rsvp/)으로 연결됩니다.`)
-                    }
-                  >
-                    🌸 참석합니다
-                  </button>
-                )}
+                <button
+                  type="button"
+                  className="inv-btn-primary"
+                  style={{
+                    minHeight: 44,
+                    fontSize: 13,
+                    padding: '0 20px',
+                    backgroundColor: accent,
+                    color: getContrastingTextColor(accent),
+                  }}
+                  onClick={() =>
+                    setCopyNotice('참석 회신은 하객마다 다른 초대 링크(?t=와 ?g=)로만 열립니다.')
+                  }
+                >
+                  🌸 참석합니다
+                </button>
                 <button
                   type="button"
                   className="inv-btn-secondary"

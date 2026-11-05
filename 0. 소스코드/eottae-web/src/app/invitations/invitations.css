@@ -1767,7 +1767,7 @@
 }
 
 /* ============================================================
- * [인생네컷 / 포토 프레임 테두리 디자인]
+ * [4컷 필름 / 포토 프레임 테두리 디자인]
  * ============================================================ */
 .inv-frame-choices-grid {
   display: grid;
@@ -1828,7 +1828,7 @@
   border: 3px solid #ffffff;
 }
 
-/* 2. 인생네컷 필름 프레임 */
+/* 2. 4컷 필름 프레임 */
 .inv-frame--life4cut {
   border-radius: 4px;
   border: 10px solid #ffffff;
@@ -2110,7 +2110,7 @@
 }
 
 /* ============================================================
- * [갤러리 모드: 캐러셀 / 인생네컷 스트립 / 인스타 그리드]
+ * [갤러리 모드: 캐러셀 / 4컷 필름 스트립 / 그리드]
  * ============================================================ */
 .inv-gallery-carousel-wrap {
   padding: 0 10px;
@@ -2158,7 +2158,7 @@
   border-color: var(--brand);
 }
 
-/* 인생네컷 스트립 */
+/* 4컷 필름 스트립 */
 .inv-life4cut-strip-wrap {
   display: flex;
   justify-content: center;
@@ -4541,6 +4541,11 @@
     transition: none !important;
     transform: none !important;
   }
+  .inv-carousel-arrow-btn,
+  .inv-carousel-arrow-btn:hover {
+    transition: none !important;
+    transform: translateY(-50%) !important;
+  }
 }
 
 /* ============================================================
@@ -5101,7 +5106,7 @@
 }
 
 /* ============================================================
- * [INV-001 고도화] 포토 프레임 5종 (아치, 인생네컷, 폴라로이드, 골드 앤틱, 스퀘어)
+ * [INV-001 고도화] 포토 프레임 5종 (아치, 4컷 필름, 폴라로이드, 골드 앤틱, 스퀘어)
  * ============================================================ */
 .inv-hero-framed-container {
   width: 100%;
@@ -5160,7 +5165,7 @@
   white-space: nowrap;
 }
 
-/* 2. 인생네컷 (Life 4-Cut) 세로 스트립 */
+/* 2. 4컷 필름 (4-Cut Film) 세로 스트립 */
 .inv-framed-life4cut-wrap {
   display: flex;
   justify-content: center;

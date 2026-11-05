@@ -1224,3 +1224,19 @@
 - [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (package.json, tsconfig.json, globals.css, .github/ 등 변경 없음)
 - [미실행] 서버·Supabase 연동 없음 (3차 브라우저 목업 원칙 준수)
 
+## 2026-11-05 PR #102 3차 AI 코드 리뷰 피드백 및 외부 상표명·외부 지도 링크 제거 반영 (Refs #84, Refs #102) (오하율 작업)
+- [요청] PR #102 Grok 3차 AI 코드 리뷰 판정(반드시 고칠 것 2건, 권장 1건) 및 제출물 품질 피드백 완전 해결:
+  1) `InvitationCardRenderer.tsx` (AI 필수 1): 공유 토큰만으로 하객 개별 RSVP 폼 진입 시 `g` 토큰 부재로 인한 거절(또는 데모 전환 노출) 방지. 카드 내 「🌸 참석합니다」 버튼 클릭 시 임의 페이지 이동을 배제하고 하객별 고유 초대 주소 안내 토스트(`참석 회신은 하객마다 다른 초대 링크(?t=와 ?g=)로만 열립니다.`)만 노출하도록 수정.
+  2) `invite-preview.css` (AI 필수 2): 사이버펑크 테마에서 `.invite-demo-flag` 배경(`var(--brand)` #00e0ff)과 글자색(`var(--ink)` #f2f0ff) 대비가 약 1.4:1로 묻히던 결함 수정. 테마 공식 고대비 버튼 쌍인 `background: var(--cta-bg); color: var(--cta-ink); font-weight: 900;` 적용으로 시각 대비 및 가독성 확보.
+  3) `InvitationCardRenderer.tsx` (사용자 요청 1): 공개 산출물 내 외부 상표명 및 외부 상업 지도 링크 제거.
+     - 메인 커버 프레임: `✦ LIFE 4 CUT · OUR SPECIAL DAY ✦` → `✦ 4-CUT WEDDING · OUR SPECIAL DAY ✦`, `WEDDING PHOTOISM` → `OUR WEDDING STORY`
+     - 갤러리 1 4컷 모드: `★ LIFE 4 CUT WEDDING ★` → `★ 4-CUT WEDDING ★`
+     - 오시는 길 섹션: 네이버 지도, 카카오맵, 티맵 내비, 구글 지도 링크 및 `.inv-map-btn-row` 버튼 일체 제거 (자체 완결형 인터랙티브 SVG 약도 및 원클릭 주소 복사 기능 유지).
+  4) `InvitationPreviewModal.tsx`: 프레임 및 갤러리 선택지 라벨의 `인생네컷형`, `인생네컷 필름`을 중립 명칭인 `4컷 필름형`, `4컷 필름`으로 일원화.
+  5) `invitations/page.tsx` (사용자 요청 2): 기능 안내 카드 03·04 문구를 '참석 회신(RSVP 데모)', '개인정보 보호 정책(데모)'으로 보정하여 실데이터·실서버 연동이 아닌 3차 브라우저 목업 데모 시연임을 명시.
+  6) `invitations.css` (AI 권장): `@media (prefers-reduced-motion: reduce)`에 `.inv-carousel-arrow-btn, .inv-carousel-arrow-btn:hover` 트랜지션 해제 및 `transform: translateY(-50%) !important` 추가.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (package.json, tsconfig.json, globals.css, .github/ 등 변경 없음)
+- [미실행] 서버·Supabase 연동 없음 (3차 브라우저 목업 원칙 준수)
+

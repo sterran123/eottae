@@ -188,7 +188,7 @@ export default function InvitationPreviewModal({
   // 모달 진입 시 살짝 반투명 마우스 스크롤 유도 오버레이
   const [isPreviewUnlocked, setIsPreviewUnlocked] = useState<boolean>(false);
 
-  // 섹션 0번 사진 프레임 스타일 (아치형, 감성사진형, 둥근형, 네모형, 인생네컷형, 풀커버형)
+  // 섹션 0번 사진 프레임 스타일 (아치형, 감성사진형, 둥근형, 네모형, 4컷 필름형, 풀커버형)
   const [frameStyle, setFrameStyle] = useState<PhotoFrameStyle>(
     initialPreset.defaultFrameStyle || 'arch'
   );
@@ -773,7 +773,7 @@ export default function InvitationPreviewModal({
                     { id: 'polaroid' as PhotoFrameStyle, label: '감성사진형', icon: '📷' },
                     { id: 'gold_round' as PhotoFrameStyle, label: '둥근형', icon: '⭕' },
                     { id: 'square' as PhotoFrameStyle, label: '네모형', icon: '🖼️' },
-                    { id: 'life4cut' as PhotoFrameStyle, label: '인생네컷형', icon: '🎞️' },
+                    { id: 'life4cut' as PhotoFrameStyle, label: '4컷 필름형', icon: '🎞️' },
                     { id: 'full' as PhotoFrameStyle, label: '풀커버형', icon: '📱' },
                   ].map((fs) => (
                     <button
@@ -1079,7 +1079,7 @@ export default function InvitationPreviewModal({
                             { id: 'polaroid' as PhotoFrameStyle, label: '감성사진형', icon: '📷' },
                             { id: 'gold_round' as PhotoFrameStyle, label: '둥근형', icon: '⭕' },
                             { id: 'square' as PhotoFrameStyle, label: '네모형', icon: '🖼️' },
-                            { id: 'life4cut' as PhotoFrameStyle, label: '인생네컷형', icon: '🎞️' },
+                            { id: 'life4cut' as PhotoFrameStyle, label: '4컷 필름형', icon: '🎞️' },
                             { id: 'full' as PhotoFrameStyle, label: '풀커버형', icon: '📱' },
                           ].map((fs) => (
                             <button
@@ -1249,7 +1249,7 @@ export default function InvitationPreviewModal({
                               <div className="inv-gallery-mode-row">
                                 {[
                                   { id: 'carousel' as GalleryViewMode, label: '슬라이드 캐러셀' },
-                                  { id: 'life4cut_strip' as GalleryViewMode, label: '인생네컷 필름' },
+                                  { id: 'life4cut_strip' as GalleryViewMode, label: '4컷 필름' },
                                   { id: 'grid3x3' as GalleryViewMode, label: '3x3 그리드' },
                                 ].map((gm) => (
                                   <button
