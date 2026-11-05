@@ -20,6 +20,7 @@ import {
   ensureLegibleColor,
   isDarkThemeBg,
 } from '@/lib/invitations/contrast-helper';
+import { resolveRsvpAccess } from '@/lib/invitations/rsvp-access';
 import {
   WaxSealBadgeSVG,
   MaskingTapeSVG,
@@ -49,6 +50,7 @@ interface InvitationCardRendererProps {
   customMainPhoto?: string;
   customBgmUrl?: string;
   customBgmTitle?: string;
+  guestToken?: string;
 }
 
 interface GuestComment {
@@ -169,6 +171,7 @@ export default function InvitationCardRenderer({
   customMainPhoto,
   customBgmUrl,
   customBgmTitle,
+  guestToken,
 }: InvitationCardRendererProps) {
   const activeThemeId = overrideTheme || invitation.themeId || 'wax-seal';
   const themePreset = getThemePreset(activeThemeId);
@@ -1691,9 +1694,22 @@ export default function InvitationCardRenderer({
                     backgroundColor: accent,
                     color: getContrastingTextColor(accent),
                   }}
-                  onClick={() =>
-                    setCopyNotice('참석 회신은 하객마다 다른 초대 링크(?t=와 ?g=)로만 열립니다.')
-                  }
+                  onClick={() => {
+                    if (previewMode) {
+                      setCopyNotice('참석 회신은 하객 전용 초대 링크(t와 g)에서만 열려요. 이 미리보기에서는 이동하지 않아요.');
+                      return;
+                    }
+                    const token = invitation.sharingToken?.trim() || '';
+                    const g = guestToken?.trim() || '';
+                    if (token && g) {
+                      const access = resolveRsvpAccess(token, g);
+                      if (access.ok) {
+                        window.location.href = `${basePath}/invitations/rsvp/?t=${encodeURIComponent(token)}&g=${encodeURIComponent(g)}`;
+                        return;
+                      }
+                    }
+                    setCopyNotice('참석 회신은 하객마다 다른 초대 링크(?t=와 ?g=)로만 열립니다.');
+                  }}
                 >
                   🌸 참석합니다
                 </button>

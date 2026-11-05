@@ -1071,7 +1071,7 @@
   font-weight: 900;
 }
 
-/* (4) 디즈니 테마 */
+/* (4) 캐슬 블루 테마 */
 [data-theme='disney'] .invite-stage {
   background: color-mix(in srgb, var(--brand) 5%, var(--bg));
   border: 1px solid var(--line);

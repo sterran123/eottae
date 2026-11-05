@@ -1226,8 +1226,8 @@
 
 ## 2026-11-05 PR #102 3차 AI 코드 리뷰 피드백 및 외부 상표명·외부 지도 링크 제거 반영 (Refs #84, Refs #102) (오하율 작업)
 - [요청] PR #102 Grok 3차 AI 코드 리뷰 판정(반드시 고칠 것 2건, 권장 1건) 및 제출물 품질 피드백 완전 해결:
-  1) `InvitationCardRenderer.tsx` (AI 필수 1): 공유 토큰만으로 하객 개별 RSVP 폼 진입 시 `g` 토큰 부재로 인한 거절(또는 데모 전환 노출) 방지. 카드 내 「🌸 참석합니다」 버튼 클릭 시 임의 페이지 이동을 배제하고 하객별 고유 초대 주소 안내 토스트(`참석 회신은 하객마다 다른 초대 링크(?t=와 ?g=)로만 열립니다.`)만 노출하도록 수정.
-  2) `invite-preview.css` (AI 필수 2): 사이버펑크 테마에서 `.invite-demo-flag` 배경(`var(--brand)` #00e0ff)과 글자색(`var(--ink)` #f2f0ff) 대비가 약 1.4:1로 묻히던 결함 수정. 테마 공식 고대비 버튼 쌍인 `background: var(--cta-bg); color: var(--cta-ink); font-weight: 900;` 적용으로 시각 대비 및 가독성 확보.
+  1) `InvitationCardRenderer.tsx` & `invitations/p/page.tsx` (AI 필수 1): 공유 토큰만으로 하객 개별 RSVP 폼 진입 시 `g` 토큰 부재로 인한 거절(또는 데모 전환 노출) 방지. `guestToken` prop 추가 및 `resolveRsvpAccess(token, guestToken)` 검증 연동. `previewMode`이거나 `resolveRsvpAccess` 비통과(또는 `g` 부재) 시 임의 페이지 이동을 원천 차단하고 하객별 고유 초대 주소 안내 토스트(`참석 회신은 하객마다 다른 초대 링크(?t=와 ?g=)로만 열립니다.`) 노출. 정상 검증 시에만 서브패스 포함 RSVP 폼으로 이동. 실데이터·본인인증 없이 3차 목업 규칙 준수.
+  2) `invite-preview.css` (AI 필수 2 & 상표명 제거): 사이버펑크 테마에서 `.invite-demo-flag` 배경(`var(--brand)` #00e0ff)과 글자색(`var(--ink)` #f2f0ff) 대비가 약 1.4:1로 묻히던 결함 수정. 테마 공식 고대비 버튼 쌍인 `background: var(--cta-bg); color: var(--cta-ink); font-weight: 900;` 적용으로 시각 대비 및 가독성 확보. 아울러 공개 제출물 기준에 맞춰 파일 내 디즈니 테마 주석(`/* (4) 디즈니 테마 */`)을 중립 명칭인 `/* (4) 캐슬 블루 테마 */`로 정돈.
   3) `InvitationCardRenderer.tsx` (사용자 요청 1): 공개 산출물 내 외부 상표명 및 외부 상업 지도 링크 제거.
      - 메인 커버 프레임: `✦ LIFE 4 CUT · OUR SPECIAL DAY ✦` → `✦ 4-CUT WEDDING · OUR SPECIAL DAY ✦`, `WEDDING PHOTOISM` → `OUR WEDDING STORY`
      - 갤러리 1 4컷 모드: `★ LIFE 4 CUT WEDDING ★` → `★ 4-CUT WEDDING ★`
