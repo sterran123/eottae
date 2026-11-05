@@ -6,6 +6,7 @@ import Link from 'next/link';
 import type { Invitation } from '@/lib/invitations/types';
 import { getInvitationByToken } from '@/lib/invitations/demo-storage';
 import InvitationCardRenderer from '@/components/invitations/InvitationCardRenderer';
+import InvitationExpiredView from '@/components/invitations/InvitationExpiredView';
 import '../invitations.css';
 
 function GuestInvitationContent() {
@@ -35,21 +36,7 @@ function GuestInvitationContent() {
   }
 
   if (!invitation) {
-    return (
-      <div className="shell subpage" style={{ padding: '80px 20px', textAlign: 'center' }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>💌</div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 8px 0', color: 'var(--ink)' }}>
-          초대장을 찾을 수 없거나 열람 기간이 만료되었습니다
-        </h2>
-        <p style={{ fontSize: 14, color: 'var(--muted)', margin: '0 0 24px 0', lineHeight: 1.6 }}>
-          초대 링크의 주소를 다시 한번 확인해 주시거나,<br />
-          신랑·신부님께 새로운 초대 링크를 요청해 주세요.
-        </p>
-        <Link href="/invitations/" className="inv-btn-primary">
-          청첩장 메인으로 가기
-        </Link>
-      </div>
-    );
+    return <InvitationExpiredView reason="expired" />;
   }
 
   return (

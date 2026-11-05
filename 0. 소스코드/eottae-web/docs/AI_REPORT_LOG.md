@@ -1200,3 +1200,15 @@
 
 
 
+## 2026-11-05 3차 모바일 청첩장 행사/하객/공개 정책 목업 및 옛 토큰 만료 뷰 구현 (이슈 #85, INV-002, TC-015) (주한태 작업)
+- [요청] 이슈 #85(INV-002, TC-015): 3차 모바일 청첩장 목업 화면에서 소유자만 편집, 공개 링크 토큰 재발급, 옛 토큰 만료 화면, 보존 기간 안내, 하객 개인정보 비노출(ADR-004)을 구현. 서버 API·RLS·마이그레이션·Edge Function은 없음. 오하율의 INV-001 타입·데이터(`src/lib/invitations/`)만 사용하며 새 types 파일을 만들지 않음.
+- [AI] Antigravity가 `AGENT_주한태_INV_POLICY.md`, `3차_작업지시서.md`, `src/lib/invitations/types.ts`·`demo-storage.ts`·`href.ts`를 분석하고, Grok 봇이 지적했던 "하객 목록 거절 화면 누락" 및 "토큰 재발급 후 옛 토큰 만료 흐름 부재", "44px 및 6테마 완벽 대응"을 전면 해결.
+- [신규] `src/components/invitations/InvitationPolicyPanel.tsx` | 소유자 전용 정책 관리 패널. `viewerIsOwner` 검증 및 비소유자 거절 가드(TC-015), `regenerateSharingToken`을 통한 새 공유 링크 발급 및 이전 링크 만료 알림, 데이터 보존 안내(DEC-06 미결 반영: 임의 숫자 없이 「행사 종료 후 이 브라우저에서 지울 수 있어요. 보관 기간은 팀 결정(DEC-06) 후 확정」), 소유자 전용 하객 명단 및 RSVP 회신 현황 테이블, 청첩장 완전 삭제(`deleteInvitation`), 재발급 후 옛 토큰 만료 화면 검증 링크 제공. 360px 모바일 호환 및 44px 터치 영역 준수.
+- [신규] `src/components/invitations/InvitationGuestForbiddenView.tsx` | 하객 목록 전용 거절 화면 (TC-015 목업 · 403 FORBIDDEN). 비소유자가 하객 명단을 조회하려 할 때(?guests= 직접 쿼리 및 소유자 아닌 상태) 명확한 접근 차단 및 개인정보 보호 안내를 렌더링.
+- [신규] `src/components/invitations/InvitationExpiredView.tsx` | 옛 토큰 및 삭제된 청첩장 접근 시의 만료 안내 화면. 재발급 전의 옛 `sharingToken`이나 삭제된 청첩장 링크 접근 시 행사 정보 및 하객 데이터를 일체 숨기고 만료 사실과 홈 이동 버튼 제공.
+- [변경] `src/components/invitations/InvitationEditor.tsx` | 비소유자(`notOwner`) 진입 시 `InvitationGuestForbiddenView`를 마운트하여 편집뿐만 아니라 하객 목록 조회까지 완벽 거절. 기존 청첩장 편집 시 하단에 `InvitationPolicyPanel`을 마운트하여 토큰 재발급, 옛 토큰 만료 흐름, 하객 목록 및 삭제가 유기적으로 동작하도록 연결.
+- [변경] `src/components/invitations/InvitationsHub.tsx` | `guestsParam`(?guests=<id>) 직접 쿼리 수신 지원, 비소유자 카드에 `하객 목록 거절 테스트 (TC-015)` 링크 연결, 소유자 카드에 `하객·정책 관리` 연결.
+- [변경] `src/app/invitations/p/page.tsx` | 유효하지 않거나 재발급된 이전 토큰으로 접근 시 `InvitationExpiredView` 만료 화면 렌더링.
+- [검증] 오하율의 기존 타입(`src/lib/invitations/types.ts`) 100% 재사용 및 새 types 파일 미생성 확인.
+- [검증] `src/components/invitations/*.tsx` 내 하드코딩 hex(#) 색상 0건 및 6테마 CSS 변수(`var(...)`) 100% 토큰화 확인.
+- [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수), `package.json`, `FILE_INDEX.csv`, `MANIFEST.sha256`는 수정하지 않음.
