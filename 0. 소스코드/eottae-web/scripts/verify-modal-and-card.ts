@@ -329,24 +329,36 @@ assert(
   '.inv-address-copy-btn이 background: var(--soft) 및 호버 시 color: var(--bg)로 globals 테마 토큰을 연동함'
 );
 
-// 13. [PR #102 피드백] 밝은 카드 주소 복사 명도 대비 · 44px · 키보드 포커스 · 왁스 씰 접근성 검증
-console.log('\n[검증 13] 밝은 카드 주소 복사 명도 대비 · 44px · 키보드 포커스 · 왁스 씰 접근성 검증');
+// 13. [PR #102 피드백] 밝은 카드 주소 복사 명도 대비 · 보조 버튼 격리 · 44px · 키보드 포커스 · 왁스 씰 접근성 검증
+console.log('\n[검증 13] 밝은 카드 주소 복사 명도 대비 · 보조 버튼 격리 · 44px · 키보드 포커스 · 왁스 씰 접근성 검증');
 assert(
-  cssCode.includes('.inv-mode--light .inv-address-copy-btn {\n  color: inherit;\n  min-height: 44px;\n}'),
-  '밝은 카드(.inv-mode--light)의 주소 복사 버튼이 color: inherit 및 min-height: 44px을 보유함'
+  cssCode.includes('.inv-mode--light') &&
+  cssCode.includes('--inv-surface: #f8fafc;') &&
+  cssCode.includes('--inv-ink: #1f2937;') &&
+  cssCode.includes('.inv-mode--light .inv-address-copy-btn {\n  background: var(--inv-surface);\n  color: var(--inv-ink);\n  border: 1px solid var(--inv-ink);\n  min-height: 44px;\n}'),
+  '밝은 카드(.inv-mode--light)의 주소 복사 버튼이 카드 전용 토큰(--inv-surface, --inv-ink)으로 전 테마 최적 가독성을 보장함'
 );
 
 assert(
-  cssCode.includes('.inv-mode--light .inv-address-copy-btn:hover {\n  background: var(--brand);\n  color: var(--bg);\n}'),
-  '밝은 카드(.inv-mode--light)의 주소 복사 버튼 호버 시 background: var(--brand) 및 color: var(--bg)로 가독성을 보장함'
+  cssCode.includes('.inv-mode--light .inv-address-copy-btn:hover {\n  background: var(--inv-ink);\n  color: var(--inv-surface);\n}'),
+  '밝은 카드(.inv-mode--light)의 주소 복사 버튼 호버 시 background: var(--inv-ink) 및 color: var(--inv-surface)로 반전 대비를 보장함'
+);
+
+assert(
+  cssCode.includes('.inv-mode--light .inv-btn-secondary') &&
+  cssCode.includes('background: var(--inv-surface) !important;') &&
+  cssCode.includes('color: var(--inv-ink) !important;') &&
+  !cssCode.includes("[data-theme='dark'] .inv-btn-secondary {"),
+  '밝은 카드(.inv-mode--light)의 보조 버튼(마음으로 축하)이 다크 테마 오버라이드 없이 전용 토큰으로 고대비를 보장함'
 );
 
 assert(
   cssCode.includes('.inv-address-copy-btn:focus-visible') &&
   cssCode.includes('.inv-copy-chip:focus-visible') &&
   cssCode.includes('.inv-bgm-floating:focus-visible') &&
-  cssCode.includes('.inv-modal-close-btn:focus-visible'),
-  ':focus-visible 목록에 주소 복사 버튼, 복사 칩, BGM 플로팅 버튼, 모달 닫기 버튼이 포함됨'
+  cssCode.includes('.inv-modal-close-btn:focus-visible') &&
+  cssCode.includes('.wax-seal-interactive-hotspot:focus-visible'),
+  ':focus-visible 목록에 주소 복사 버튼, 복사 칩, BGM 플로팅 버튼, 모달 닫기 버튼, 왁스 씰 핫스팟이 포함됨'
 );
 
 assert(

@@ -724,7 +724,8 @@ export default function InvitationCardRenderer({
     }
 
     // 기본 'full' 풀커버 테마별 시그니처 히어로 (16종 전 테마 완벽 매핑)
-    switch (themePreset.heroType) {
+    const heroKey = activeThemeId || themePreset.heroType;
+    switch (heroKey) {
       case 'forest-fresh':
       case 'green-canopy':
       case 'botanical-garden':

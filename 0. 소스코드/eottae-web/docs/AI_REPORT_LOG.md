@@ -1419,5 +1419,22 @@
 - [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
 - [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
 
+## 2026-11-05 PR #102 밝은 청첩장 카드(--inv-surface/--inv-ink) 버튼 고대비 격리 및 다크 테마 오버라이드 정밀 차단 (Refs #84, Refs #102) (오하율 작업)
+- [요청] 다크·사이버펑크·시스템 다크 테마에서 밝은 청첩장(`inv-mode--light`, 숲속의 싱그러움·사랑을 담아 등)의 「주소 복사하기」 및 「마음으로 축하」 버튼 가독성 결함 해결:
+  1) `invitations.css:4228`: `.inv-mode--light`에 전용 토큰 `--inv-surface: #f8fafc;` 및 `--inv-ink: #1f2937;` 정의. 장소 안내 카드(`.inv-venue-info-card`) 및 주소 복사 버튼(`.inv-address-copy-btn`)이 앱 테마의 다크 토큰(`--soft`)에 영향받지 않고 항상 `--inv-surface` 배경과 `--inv-ink` 글자색/테두리를 사용하도록 격리. 호버 시 `--inv-ink` 배경과 `--inv-surface` 글자색으로 13:1 이상의 완전한 반전 가독성 확보.
+  2) `invitations.css:152`: `.inv-btn-secondary`의 미존재 토큰 `var(--card)`를 `var(--paper, #ffffff)` 및 `color: var(--ink, #111827)`로 안전화.
+  3) `invitations.css:5765`: `[data-theme='dark'] .inv-btn-secondary`의 흰색 반투명 유리 스타일 오버라이드를 카드 영역이 아닌 `.inv-hub`, `.inv-editor-shell`, `.inv-modal-toolbar`, `.inv-mode--dark`로 엄격 한정.
+  4) `invitations.css:4236`: `.inv-mode--light .inv-btn-secondary`에 `background: var(--inv-surface) !important; color: var(--inv-ink) !important; border: 1px solid var(--inv-ink) !important;`를 부여하여 밝은 카드 내부의 「💌 마음으로 축하」 버튼이 전 테마에서 선명하게 유지되도록 보장.
+  5) `invitations.css`: `.inv-copy-chip`에 `min-height: 44px; min-width: 44px; display: inline-flex;` 터치 영역 추가, `:focus-visible` 목록에 `.wax-seal-interactive-hotspot:focus-visible` 추가.
+  6) `InvitationCardRenderer.tsx`: 풀커버 시그니처 히어로 분기 키를 `activeThemeId || themePreset.heroType`로 보강.
+  7) `scripts/verify-modal-and-card.ts`: [검증 13]을 업데이트하여 `--inv-surface`, `--inv-ink`, 보조 버튼 다크 오버라이드 배제 자동 검증(39/39 PASS).
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (39/39 통과)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
+
+
 
 
