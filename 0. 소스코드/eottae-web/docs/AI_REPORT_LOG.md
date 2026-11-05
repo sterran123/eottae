@@ -1240,3 +1240,14 @@
 - [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors).
 - [검증] `npm run build` PASS (Next.js 15.5.28 정적 export 100% 성공).
 - [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수).
+
+## 2026-11-05 PR #104 3차 AI 코드 리뷰 지적 해결 (손준혁 작업, Refs #22, Refs #104)
+- [요청] PR #104 3차 AI 코드 리뷰 지적(입장 중 차단 조회 경쟁 해소 및 세션 로딩 가드) 반영:
+  1) `ChatRoom.tsx` (필수): 방 입장 중 `checkIsBlockedOnServer` 조회가 진행되는 사이에 내가 차단을 확정했을 때, 늦게 도착한 비차단(`clear`) 응답이 내 차단을 덮어쓰고 채널을 재연결하지 않도록 `if (cancelled || blockedRef.current || peerBlockedRef.current) return;` 가드 추가. 내 차단 확정 상태(`blockedRef.current === true`)에서 INSERT 실패(`42501`)가 발생한 경우 `peerBlocked`로 전이되지 않고 채널 정리만 수행하도록 `onChannelRevoked` 분기 보정. `confirmBlockLock` 시 `peerBlockedRef.current = false` 및 `setPeerBlocked(false)`로 상대 차단 상태를 정리하여 내 차단 해제 경로 보장.
+  2) `ChatHub.tsx` (권장): 세션 인증 로딩 중(`auth.status === 'loading'`)에는 데모 방 목록이 깜빡이며 먼저 그려지지 않도록 로딩 문구 유지, 대화 목록 조회 실패 시 「열린 대화가 없어요」 빈 목록 문구를 숨기고 「다시 시도」 안내만 명확히 노출, `Promise.all`에 `.catch()` 핸들러를 추가하여 예외 발생 시 `liveRoomsLoading`이 무한 대기하지 않고 실패 상태로 안전하게 전이되도록 보강.
+  3) `SafetyDemoPanels.tsx` (권장): 로그아웃 상태에서 `?as=<uuid>` 쿼리만으로 서버 조회가 실행되지 않도록 `isLive = !isDemoOverride && sessionUserId !== null`로 엄격히 제한.
+  4) `chat-service.ts` (권장): `fetchMyLiveConversations` JSDoc 주석에서 제거된 `partnerHint` 폴백 설명을 최신 구현(`matches` 기반 확정)에 맞게 현행화.
+- [AI] Antigravity가 해당 파일들 수정 후 TypeScript 컴파일 및 정적 빌드 검증 수행.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors).
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 export 100% 성공).
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수).

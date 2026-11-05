@@ -132,27 +132,37 @@ export default function ChatHub() {
       isUuidRoom && roomParam
         ? checkConversationMembership(roomParam)
         : Promise.resolve('idle' as const),
-    ]).then(([rooms, membership]) => {
-      if (cancelled) return;
-      setLiveRoomsLoading(false);
-      if (rooms === null) {
+    ])
+      .then(([rooms, membership]) => {
+        if (cancelled) return;
+        setLiveRoomsLoading(false);
+        if (rooms === null) {
+          setLiveRooms([]);
+          setLiveRoomsFailed(true);
+        } else {
+          setLiveRooms(rooms);
+          setLiveRoomsFailed(false);
+        }
+
+        if (isUuidRoom) {
+          if (membership === 'member' && rooms === null) {
+            setUuidRoomStatus('error');
+          } else {
+            setUuidRoomStatus(membership);
+          }
+        } else {
+          setUuidRoomStatus('idle');
+        }
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setLiveRoomsLoading(false);
         setLiveRooms([]);
         setLiveRoomsFailed(true);
-      } else {
-        setLiveRooms(rooms);
-        setLiveRoomsFailed(false);
-      }
-
-      if (isUuidRoom) {
-        if (membership === 'member' && rooms === null) {
+        if (isUuidRoom) {
           setUuidRoomStatus('error');
-        } else {
-          setUuidRoomStatus(membership);
         }
-      } else {
-        setUuidRoomStatus('idle');
-      }
-    });
+      });
 
     return () => {
       cancelled = true;
@@ -477,11 +487,11 @@ export default function ChatHub() {
           </section>
         )}
 
-        {(auth.status === 'loading' && (isUuidRoom || isUuidPartner)) || (useLive && liveRoomsLoading) || uuidRoomStatus === 'pending' ? (
+        {auth.status === 'loading' || (useLive && liveRoomsLoading) || uuidRoomStatus === 'pending' ? (
           <p className="mt-report-empty" role="status">
             대화 목록을 불러오는 중이에요…
           </p>
-        ) : visibleRooms.length === 0 ? (
+        ) : (useLive && liveRoomsFailed) || uuidRoomStatus === 'error' ? null : visibleRooms.length === 0 ? (
           <p className="mt-report-empty">
             {useLive ? '열린 대화가 없어요.' : '이 데모 사용자로 열린 대화가 없어요.'}
           </p>

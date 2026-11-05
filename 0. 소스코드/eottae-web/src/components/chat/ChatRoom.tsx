@@ -269,6 +269,12 @@ export default function ChatRoom({
           });
         },
         onChannelRevoked: () => {
+          if (blockedRef.current) {
+            setLiveReadyBoth(false);
+            dataSourceRef.current?.dispose();
+            dataSourceRef.current = null;
+            return;
+          }
           peerBlockedRef.current = true;
           setPeerBlocked(true);
           setTyping(false);
@@ -396,7 +402,7 @@ export default function ChatRoom({
     setLookupFailed(false);
     setSubscriptionLost(false);
     void checkIsBlockedOnServer(partner.id).then((status) => {
-      if (cancelled) return;
+      if (cancelled || blockedRef.current || peerBlockedRef.current) return;
       if (status === 'blocked') {
         blockedRef.current = true;
         setBlocked(true);
@@ -463,7 +469,10 @@ export default function ChatRoom({
   const confirmBlockLock = useCallback(() => {
     blockedRef.current = true;
     setBlocked(true);
+    peerBlockedRef.current = false;
+    setPeerBlocked(false);
     dataSourceRef.current?.dispose();
+    dataSourceRef.current = null;
     setTyping(false);
     setMessages((prev) =>
       prev.map((message) =>

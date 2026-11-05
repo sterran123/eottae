@@ -401,7 +401,7 @@ export async function checkConversationMembership(
  * 실계정 로그인 사용자의 `conversations` 목록을 RLS(`conversations_select_member`)로 조회해
  * `ChatRoomInfo[]`로 반환한다 (MATCH-007 · TC-008).
  * - `matches` 테이블(`matches_select_member`)에서 `user_low`·`user_high`를 함께 읽어 상대방 UUID를 확정한다.
- * - `partnerHint`가 주어지고 `matches` 행에서 상대방이 결정되지 않는 경우 `partnerHint`를 보조로 사용한다.
+ * - `matches` 테이블에서 상대방(user_low / user_high 중 내가 아닌 쪽)이 확정된 방만 목록에 포함한다.
  */
 export async function fetchMyLiveConversations(
   myUserId?: string | null,

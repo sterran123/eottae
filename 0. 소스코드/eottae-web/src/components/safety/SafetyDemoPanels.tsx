@@ -51,10 +51,8 @@ export default function SafetyDemoPanels({
     auth.status === 'signed-in' && isUuid(auth.user?.id) ? auth.user.id : null;
   const effectiveActorId = isDemoOverride
     ? actorId
-    : isUuid(actorId)
-      ? actorId
-      : sessionUserId ?? actorId;
-  const isLive = !isDemoOverride && Boolean(sessionUserId || isUuid(actorId));
+    : sessionUserId ?? actorId;
+  const isLive = !isDemoOverride && sessionUserId !== null;
 
   const [ready, setReady] = useState(false);
   const [reports, setReports] = useState<ReportHistoryItem[]>([]);
