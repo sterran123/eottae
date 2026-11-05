@@ -55,15 +55,18 @@ export default function RecommendCard({
   const itemRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const focusIndex = useRef(0);
 
+  const menuId = `rec-more-menu-${profile.id}`;
+  const totalItems = 2;
+  const lastIndex = totalItems - 1;
+
   useEffect(() => {
     if (!menuOpen) return;
-    const index = Math.min(Math.max(focusIndex.current, 0), 1);
+    const index = Math.min(Math.max(focusIndex.current, 0), lastIndex);
     itemRefs.current[index]?.focus();
 
     function handleClickOutside(e: MouseEvent | TouchEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
-        moreBtnRef.current?.focus();
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -72,7 +75,7 @@ export default function RecommendCard({
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('touchstart', handleClickOutside);
     };
-  }, [menuOpen]);
+  }, [menuOpen, lastIndex]);
 
   const openAt = (index: number) => {
     focusIndex.current = index;
@@ -85,17 +88,19 @@ export default function RecommendCard({
   };
 
   const onButtonKey = (event: React.KeyboardEvent<HTMLButtonElement>) => {
-    if (event.key === 'ArrowDown') {
+    if (event.key === 'Escape' && menuOpen) {
+      event.preventDefault();
+      closeToButton();
+    } else if (event.key === 'ArrowDown') {
       event.preventDefault();
       openAt(0);
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
-      openAt(1);
+      openAt(lastIndex);
     }
   };
 
   const onItemKey = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
-    const last = 1;
     if (event.key === 'Escape') {
       event.preventDefault();
       closeToButton();
@@ -103,16 +108,16 @@ export default function RecommendCard({
     }
     if (event.key === 'ArrowDown') {
       event.preventDefault();
-      itemRefs.current[index === last ? 0 : index + 1]?.focus();
+      itemRefs.current[index === lastIndex ? 0 : index + 1]?.focus();
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
-      itemRefs.current[index === 0 ? last : index - 1]?.focus();
+      itemRefs.current[index === 0 ? lastIndex : index - 1]?.focus();
     } else if (event.key === 'Home') {
       event.preventDefault();
       itemRefs.current[0]?.focus();
     } else if (event.key === 'End') {
       event.preventDefault();
-      itemRefs.current[last]?.focus();
+      itemRefs.current[lastIndex]?.focus();
     }
   };
 
@@ -166,6 +171,7 @@ export default function RecommendCard({
                 aria-label={`${profile.nickname} 더보기 메뉴`}
                 aria-expanded={menuOpen}
                 aria-haspopup="menu"
+                aria-controls={menuOpen ? menuId : undefined}
                 onClick={(e) => {
                   e.stopPropagation();
                   if (menuOpen) closeToButton();
@@ -189,7 +195,14 @@ export default function RecommendCard({
                     }}
                     aria-hidden="true"
                   />
-                  <div className="mt-rec__dropdown-menu" role="menu" onClick={(e) => e.stopPropagation()}>
+                  <div
+                    ref={menuRef}
+                    id={menuId}
+                    className="mt-rec__dropdown-menu"
+                    role="menu"
+                    aria-label="더보기"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <button
                       ref={(el) => {
                         itemRefs.current[0] = el;

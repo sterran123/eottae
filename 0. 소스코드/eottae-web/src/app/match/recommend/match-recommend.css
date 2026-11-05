@@ -276,7 +276,7 @@
 .mt-rec__dropdown-item:focus {
   background: var(--match-soft);
 }
-.mt-rec__dropdown-item:focus-visible {
+.mt-rec-list .mt-rec__dropdown-item:focus-visible {
   outline: 2px solid var(--match-primary);
   outline-offset: -2px;
 }
@@ -773,7 +773,8 @@
 @media (prefers-reduced-motion: reduce) {
   .mt-report-modal-backdrop,
   .mt-report-modal,
-  .mt-rec-floating-toast {
+  .mt-rec-floating-toast,
+  .mt-rec__dropdown-menu {
     animation: none;
   }
 }

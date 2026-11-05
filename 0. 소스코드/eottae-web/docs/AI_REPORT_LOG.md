@@ -911,7 +911,6 @@
   6. `chat-service.ts` | 커서 페이지네이션 `.or()` 필터에서 `created_at` 타임스탬프와 `id` 값을 큰따옴표(`"..."`)로 감싸 PostgREST 파싱 거절 방지.
   7. `MessageComposer.tsx` | `textOnly` 활성화 시 숨은 파일 `<input type="file">`도 `disabled` 처리하고, `handlePhotoUpload` 및 `finishRecording` 진입 시 `textOnly`면 즉시 리턴하여 실시간 대화방에서 미지원 미디어가 전송되는 경로를 완전 차단.
 
-<<<<<<< HEAD
 ## 2026-11-04 INV-001 모바일 청첩장 에디터·미리보기·공개 하객 뼈대 목업 (오하율 작업)
 - [요청] 3차 메인 청첩장 에디터·미리보기·공개 하객 뼈대 구현(이슈 #84). 사용자 특별 요구로 테마 미리보기 및 미리보기 모달창에서 사용자가 직접 고퀄리티 체험 테스트(4종 테마, 3종 레이아웃, 4종 BGM 프리셋 및 Web Audio 신스 재생, 섹션 순서 위/아래 이동 재배치)를 할 수 있도록 구현. ThemePreviewSection 모의 결제 유지, globals.css 수정 금지, invitations.css 전용 스타일 적용.
 - [AI] Antigravity가 3차 작업지시서, AGENT_오하율_INV_EDITOR.md, types.ts, demo-storage.ts를 바탕으로 청첩장 메인 허브, 에디터 화면(/invitations/new/), 하객 공개 뼈대(/invitations/p/?t=), 인터랙티브 모달 및 카드 렌더러 구현.
@@ -1111,5 +1110,16 @@
 - [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
 - [검증] `npm run build` PASS (Next.js 15.5.28 정적 페이지 export 100% 성공)
 - [미실행] 서버·Supabase 연동 없음
+
+
+## 2026-11-05 PR #99 1차 AI 코드 리뷰 지적 해결 (오하율 작업)
+- [요청] PR #99 AI 리뷰 지적(914행 `<<<<<<< HEAD` 잔여 마커 제거 필수, 권장 5건) 완전 해결:
+  1) `AI_REPORT_LOG.md`: 914행의 `<<<<<<< HEAD` 충돌 잔여 마커를 완전 제거.
+  2) `match-recommend.css`: `.mt-rec-list .mt-rec__dropdown-item:focus-visible`로 선택자 특이도를 상향하여 부모 스타일 덮어씀 방지, `prefers-reduced-motion` 미디어 쿼리에 `.mt-rec__dropdown-menu`의 페이드인 애니메이션 해제 추가.
+  3) `RecommendCard.tsx`: 메뉴 항목 수를 `lastIndex`로 동적 계산, 더보기 버튼에 `aria-controls={menuOpen ? menuId : undefined}` 및 `onKeyDown`에 `Escape` 닫기 추가, 메뉴에 `id` 및 `aria-label="더보기"` 부여, 외부 클릭 시 포커스 강탈을 방지하고 메뉴 닫기만 수행하도록 개선.
+  4) `ProfileQna.tsx`: 모달 포커스 트랩의 `useEffect` 의존성을 객체 `openQuestion` 대신 ID `openQid`로 최적화하여 질문 데이터 변경 시 불필요한 포커스 복귀 부작용 차단.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+
 
 

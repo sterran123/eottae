@@ -328,7 +328,7 @@ export default function ProfileQna({
       document.removeEventListener('keydown', onKeyDown);
       previouslyFocused?.focus();
     };
-  }, [openQuestion]);
+  }, [openQid]);
 
   return (
     <section className="mt-qna" aria-label="프로필 문답">
