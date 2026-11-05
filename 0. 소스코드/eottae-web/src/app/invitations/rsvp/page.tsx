@@ -154,9 +154,13 @@ function RsvpPageContent() {
   const guestToken = searchParams.get('g') ?? '';
   const hostId = searchParams.get('host') ?? '';
   const showDemoQuery = searchParams.get('demo') === '1';
-  // 하객 카드에서 t+g를 가지고 진입한 경우 타인 회신/소유자 목록 전환 바를 숨김 (ADR-004 · TC-016 회신 격리 준수, ?demo=1 시에만 노출)
-  const isDirectGuest = Boolean(token && guestToken);
-  const showDemoSwitcher = !isDirectGuest || showDemoQuery;
+  // 하객 RSVP 화면(t 또는 g가 있는 경우)에서는 타인 회신이나 데모 링크 목록을 일체 노출하지 않는다 (ADR-004 · INV-003 · TC-016 회신 격리 준수).
+  // 데모 시연 목록은 파라미터가 없는 상태에서 ?demo=1 일 때만 연다.
+  const showDemoSwitcher =
+    showDemoQuery &&
+    token.trim() === '' &&
+    guestToken.trim() === '' &&
+    hostId.trim() === '';
 
   return (
     <div className="shell subpage rsvp-page">

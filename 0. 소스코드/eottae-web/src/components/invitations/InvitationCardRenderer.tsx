@@ -15,6 +15,7 @@ import type {
   GalleryViewMode,
   ThemeCustomStyle,
 } from '@/lib/invitations/types';
+import { invitationGuestHref } from '@/lib/invitations/href';
 import { getThemePreset } from '@/lib/invitations/theme-presets';
 import {
   getContrastingTextColor,
@@ -1739,11 +1740,22 @@ export default function InvitationCardRenderer({
                     }
                     const token = invitation.sharingToken?.trim() || '';
                     const g = guestToken?.trim() || '';
-                    const params = new URLSearchParams();
-                    if (token) params.set('t', token);
-                    if (g) params.set('g', g);
-                    const qs = params.toString();
-                    router.push(qs ? `/invitations/rsvp/?${qs}` : '/invitations/rsvp/?t=');
+                    if (g) {
+                      // g가 있을 때만 RSVP 회신 폼으로 이동 (INV-003)
+                      const params = new URLSearchParams();
+                      if (token) params.set('t', token);
+                      params.set('g', g);
+                      router.push(`/invitations/rsvp/?${params.toString()}`);
+                    } else {
+                      // g가 없는 공개 카드에서는 회신(/invitations/rsvp/)으로 보내지 않고 공개 경로(/invitations/p/?t=)를 유지
+                      setCopyNotice(
+                        '참석 회신은 청첩장에 동봉된 개인별 하객 링크(g)로 접속했을 때만 가능해요.',
+                      );
+                      setTimeout(() => setCopyNotice(null), 3000);
+                      if (token) {
+                        router.push(invitationGuestHref(token));
+                      }
+                    }
                   }}
                 >
                   🌸 참석합니다
@@ -1752,9 +1764,10 @@ export default function InvitationCardRenderer({
                   type="button"
                   className="inv-btn-secondary"
                   style={{ minHeight: 44, fontSize: 13, padding: '0 18px' }}
-                  onClick={() =>
-                    setCopyNotice('마음으로 축하하기 기능은 현재 준비 중입니다 (제안 · P1)')
-                  }
+                  onClick={() => {
+                    setCopyNotice('마음으로 축하하기 기능은 현재 준비 중입니다 (제안 · P1)');
+                    setTimeout(() => setCopyNotice(null), 3000);
+                  }}
                 >
                   💌 마음으로 축하
                 </button>

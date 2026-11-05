@@ -1184,3 +1184,14 @@
 - [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
 - [검증] `npm run build` PASS (Next.js 15.5.28 정적 페이지 export 100% 성공)
 - [미실행] 서버·Supabase 연동 없음 (3차 목업 단계 원칙 준수)
+
+
+## 2026-11-05 PR #101 2차 AI 코드 리뷰 지적 해결 (손준혁 작업, Refs #86, Refs #101)
+- [요청] PR #101 2차 AI 리뷰 지적(3건) 반영:
+  1) `/invitations/rsvp/page.tsx`: 하객 RSVP 화면(t 또는 g를 가지고 접근한 모든 경로)에서 데모 시나리오 링크 전환 바(`rsvp-demo-switcher`)가 노출되던 결함 완전 해결 (`token.trim() === '' && guestToken.trim() === '' && searchParams.get('demo') === '1'`일 때만 열리도록 제한하여 하객 간 회신 격리 및 ADR-004 준수).
+  2) `InvitationCardRenderer.tsx`: 공개 카드 「🌸 참석합니다」 버튼에서 g가 없을 때 `/invitations/rsvp/?t=` 회신 화면으로 잘못 넘어가던 문제 해결. `invitationGuestHref`를 연동하여 g가 있을 때만 `/invitations/rsvp/?t=&g=` 회신 폼으로 이동하고, g가 없을 때는 회신으로 보내지 않고 `invitationGuestHref(token)` 공개 경로(`/invitations/p/?t=`) 유지 및 안내 토스트 노출. 「💌 마음으로 축하」 토스트에 3초 자동 닫힘 타이머(`setTimeout`) 추가.
+  3) `테스트_케이스_마스터.md`: TC-016 행에서 캡처 스냅샷(22~25번) 불일치 문구 및 360px 실측 주장을 실제 확인된 동작(미리보기 이동 방지, g 유무에 따른 분기 및 공개 경로 유지, 하객 화면 데모 전환 바 비노출 격리) 기준으로 현행화하고 판정을 명확히 분리 기록.
+- [AI] Antigravity가 해당 파일들 수정 후 TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 라우트 정적 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음 (3차 목업 단계 원칙 준수)
