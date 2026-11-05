@@ -1219,3 +1219,15 @@
 - [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors).
 - [검증] `npm run build` PASS (Next.js 15.5.28 정적 export 100% 성공).
 - [미실행] 브라우저 실세션(2계정) 실행 및 원격 Supabase DB E2E 검증 — `테스트_케이스_마스터.md`에 미실행으로 기록.
+
+
+## 2026-11-05 PR #104 2차 AI 코드 리뷰 지적 해결 (손준혁 작업, Refs #22, Refs #104)
+- [요청] PR #104 2차 AI 코드 리뷰 지적(데모 주체·세션 확정 전 UUID 방 송수신 방지 및 3차 목업 범위 일치) 반영:
+  1) `ChatHub.tsx`: `useLive = !isDemoOverride && liveSessionId !== null`을 기준으로 `!useLive`일 때는 서버 목록 조회(`fetchMyLiveConversations`, `checkConversationMembership`)를 일절 실행하지 않고 `visibleRooms`를 순수 `demoVisibleRooms`로 고정하여 데모 actor 화면에 실대화가 병합되지 않도록 격리. `chooseActor`에서 데모 actor 전환 시 UUID `room`·`partner` 쿼리를 자동 제거. `useLive`일 때는 상단 데모 도구(`mt-chat-tools`)를 숨겨 데모-라이브 혼용 방지. `auth.status === 'loading'`일 때 대화 목록 로딩 상태 표시. "다시 시도" 버튼 스타일을 `mt-safety-btn`(min-height 44px)으로 수정.
+  2) `ChatRoom.tsx`: `sessionUserId` prop을 받아 `isLiveRoom = Boolean(isUuid(actorId) && sessionUserId && actorId === sessionUserId && isLiveChatRoom(room.id, partner.id))`로 엄격히 제한하여 데모 actor일 경우 서버 데이터 소스 생성 및 조회를 원천 차단. 상대방 차단(`peerBlocked`) 활성화 시 더보기 메뉴에서 차단 버튼을 disabled('상대방에 의해 차단됨') 처리하고, `releaseBlock` 실행 시 즉시 안내 메시지 노출 및 중단.
+  3) `chat-service.ts`: `resolveUserId` 및 `fetchConversationMessagesPage`에서 `options.myUserId`가 유효한 UUID이고 `auth.getUser()`와 일치할 때만 조회하도록 보강(`myUserId` 누락 시 null 반환). `fetchMyLiveConversations`에서 `matches` 테이블의 `user_low`/`user_high`로 상대방이 확정된 방만 포함하고 URL `partnerHint` 임의 폴백 생성 제거.
+  4) PR 제목 및 3차 목업 범위 일치: PR 제목을 `feat(MATCH-007): 1:1 채팅 차단 채널 회수 목업 가드 및 DTO attachment_path 일치 (Refs #22)`로 수정하여 DEC-10/DEC-11의 3차 목업(예시 데이터) 원칙을 준수.
+- [AI] Antigravity가 해당 파일들 수정 후 TypeScript 컴파일 및 정적 빌드 검증 수행.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors).
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 export 100% 성공).
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수).

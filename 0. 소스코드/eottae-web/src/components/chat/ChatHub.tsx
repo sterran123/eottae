@@ -89,16 +89,17 @@ export default function ChatHub() {
   const initialQuestion = searchParams.get('q');
   const asParam = searchParams.get('as');
 
-  const sessionUserId =
+  const liveSessionId =
     auth.status === 'signed-in' && isUuid(auth.user?.id) ? auth.user.id : null;
   const isDemoOverride = Boolean(asParam && !isUuid(asParam));
-  const isLiveMode = !isDemoOverride && (Boolean(sessionUserId) || isUuid(asParam));
+  const useLive = !isDemoOverride && liveSessionId !== null;
+
   const actor = useMemo(
     () =>
-      isLiveMode && sessionUserId
-        ? { id: sessionUserId, nickname: auth.account?.nickname?.trim() || '내 계정' }
+      useLive && liveSessionId
+        ? { id: liveSessionId, nickname: auth.account?.nickname?.trim() || '내 계정' }
         : actorFromQuery(asParam),
-    [asParam, auth.account?.nickname, isLiveMode, sessionUserId],
+    [asParam, auth.account?.nickname, liveSessionId, useLive],
   );
 
   const isUuidRoom = isUuid(roomParam);
@@ -109,11 +110,11 @@ export default function ChatHub() {
   const [liveRoomsFailed, setLiveRoomsFailed] = useState(false);
   const [uuidRoomStatus, setUuidRoomStatus] = useState<
     'idle' | 'pending' | 'member' | 'forbidden' | 'error'
-  >(() => (isUuid(roomParam) ? 'pending' : 'idle'));
+  >(() => (useLive && isUuid(roomParam) ? 'pending' : 'idle'));
   const [liveRetryNonce, setLiveRetryNonce] = useState(0);
 
   useEffect(() => {
-    if (!isLiveMode && !isUuidRoom && !isUuidPartner) {
+    if (!useLive) {
       setLiveRooms([]);
       setLiveRoomsLoading(false);
       setLiveRoomsFailed(false);
@@ -126,9 +127,8 @@ export default function ChatHub() {
     setLiveRoomsFailed(false);
     setUuidRoomStatus(isUuidRoom ? 'pending' : 'idle');
 
-    const effectiveUserId = sessionUserId ?? (isUuid(actor.id) ? actor.id : null);
     void Promise.all([
-      fetchMyLiveConversations(effectiveUserId, partnerParam),
+      fetchMyLiveConversations(liveSessionId),
       isUuidRoom && roomParam
         ? checkConversationMembership(roomParam)
         : Promise.resolve('idle' as const),
@@ -139,32 +139,7 @@ export default function ChatHub() {
         setLiveRooms([]);
         setLiveRoomsFailed(true);
       } else {
-        const nextRooms = [...rooms];
-        if (
-          membership === 'member' &&
-          isUuidRoom &&
-          roomParam &&
-          !nextRooms.some((r) => r.id === roomParam) &&
-          isUuidPartner &&
-          partnerParam &&
-          effectiveUserId &&
-          partnerParam !== effectiveUserId
-        ) {
-          const mePartner = { id: effectiveUserId, nickname: '나' };
-          const otherPartner = {
-            id: partnerParam,
-            nickname: `회원 (${partnerParam.slice(0, 8)})`,
-          };
-          nextRooms.push({
-            id: roomParam,
-            partner: otherPartner,
-            members: [mePartner, otherPartner],
-            initialMessages: [],
-            timeLabel: '',
-            unread: 0,
-          });
-        }
-        setLiveRooms(nextRooms);
+        setLiveRooms(rooms);
         setLiveRoomsFailed(false);
       }
 
@@ -182,7 +157,7 @@ export default function ChatHub() {
     return () => {
       cancelled = true;
     };
-  }, [actor.id, isLiveMode, isUuidPartner, isUuidRoom, liveRetryNonce, partnerParam, roomParam, sessionUserId]);
+  }, [liveRetryNonce, liveSessionId, roomParam, isUuidRoom, useLive]);
 
   const demoVisibleRooms = useMemo(
     () =>
@@ -192,53 +167,48 @@ export default function ChatHub() {
     [actor.id],
   );
 
-  const visibleRooms = useMemo(() => {
-    if (isLiveMode) return liveRooms;
-    if (isUuidRoom && uuidRoomStatus === 'member') {
-      const matched = liveRooms.filter((r) => r.id === roomParam);
-      if (matched.length > 0) {
-        const demoIds = new Set(demoVisibleRooms.map((r) => r.id));
-        return [...demoVisibleRooms, ...matched.filter((r) => !demoIds.has(r.id))];
-      }
-    }
-    return demoVisibleRooms;
-  }, [demoVisibleRooms, isLiveMode, isUuidRoom, liveRooms, roomParam, uuidRoomStatus]);
+  const visibleRooms = useLive ? liveRooms : demoVisibleRooms;
 
   const requested = roomParam || partnerParam || '';
-  const demoAccess = !isLiveMode && !isUuidRoom ? demoRoomAccess(actor.id, requested || null) : 'none';
+  const demoAccess = !useLive && !isUuidRoom ? demoRoomAccess(actor.id, requested || null) : 'none';
 
   const openedRoomId = useMemo(() => {
+    if (!useLive) {
+      return demoAccess === 'member' ? findDemoRoomId(requested) : null;
+    }
     if (isUuidRoom) {
       if (uuidRoomStatus === 'member' && roomParam && visibleRooms.some((r) => r.id === roomParam)) {
         return roomParam;
       }
       return null;
     }
-    if (isLiveMode) {
-      if (!roomParam && isUuidPartner && partnerParam) {
-        return visibleRooms.find((r) => r.partner.id === partnerParam)?.id ?? null;
-      }
-      return null;
+    if (isUuidPartner && partnerParam) {
+      return visibleRooms.find((r) => r.partner.id === partnerParam)?.id ?? null;
     }
-    return demoAccess === 'member' ? findDemoRoomId(requested) : null;
-  }, [demoAccess, isLiveMode, isUuidPartner, isUuidRoom, partnerParam, requested, roomParam, uuidRoomStatus, visibleRooms]);
+    return null;
+  }, [demoAccess, isUuidPartner, isUuidRoom, partnerParam, requested, roomParam, useLive, uuidRoomStatus, visibleRooms]);
 
   const shouldAutoOpen = Boolean(openedRoomId && (roomParam || partnerParam || initialQuestion));
 
   const forbidden = useMemo(() => {
+    if (auth.status === 'loading' && (isUuidRoom || isUuidPartner)) {
+      return false;
+    }
+    if (!useLive) {
+      if (isUuidRoom || (partnerParam && isUuidPartner)) {
+        return true;
+      }
+      return demoAccess === 'denied';
+    }
     if (isUuidRoom) {
       return uuidRoomStatus === 'forbidden';
     }
-    if (isLiveMode) {
-      if (roomParam) return true;
-      if (partnerParam) {
-        if (!isUuidPartner) return true;
-        return !liveRoomsLoading && !liveRoomsFailed && !visibleRooms.some((r) => r.partner.id === partnerParam);
-      }
-      return false;
+    if (partnerParam) {
+      if (!isUuidPartner) return true;
+      return !liveRoomsLoading && !liveRoomsFailed && !visibleRooms.some((r) => r.partner.id === partnerParam);
     }
-    return demoAccess === 'denied';
-  }, [demoAccess, isLiveMode, isUuidPartner, isUuidRoom, liveRoomsFailed, liveRoomsLoading, partnerParam, roomParam, uuidRoomStatus, visibleRooms]);
+    return false;
+  }, [auth.status, demoAccess, isUuidPartner, isUuidRoom, liveRoomsFailed, liveRoomsLoading, partnerParam, useLive, uuidRoomStatus, visibleRooms]);
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [visited, setVisited] = useState<string[]>([]);
@@ -356,8 +326,8 @@ export default function ChatHub() {
     params.delete('q');
     const room = params.get('room');
     const partner = params.get('partner');
-    if (room && !isUuid(room) && demoRoomAccess(nextId, room) !== 'member') params.delete('room');
-    if (partner && !isUuid(partner) && demoRoomAccess(nextId, partner) !== 'member') params.delete('partner');
+    if (room && (isUuid(room) || demoRoomAccess(nextId, room) !== 'member')) params.delete('room');
+    if (partner && (isUuid(partner) || demoRoomAccess(nextId, partner) !== 'member')) params.delete('partner');
     const query = params.toString();
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }
@@ -449,47 +419,49 @@ export default function ChatHub() {
         <header className="mt-chathub-head">
           <h1 className="mt-chathub-title">채팅</h1>
           <p className="mt-chathub-note" role="note">
-            {isLiveMode
+            {useLive
               ? '매칭된 상대와의 실시간 대화예요. 매칭 구성원만 대화를 열람하고 주고받을 수 있어요.'
               : '데모 · 가상 대화예요. 서버로는 가지 않고 이 브라우저에 남아요. 다른 탭에서 상대 계정을 고르면 메시지를 주고받을 수 있어요.'}
           </p>
         </header>
 
-        <div className="mt-chat-tools">
-          <label className="mt-chat-actor-label">
-            이 탭의 데모 사용자
-            <select
-              className="mt-chat-actor"
-              value={actor.id}
-              onChange={(event) => chooseActor(event.target.value)}
+        {!useLive && (
+          <div className="mt-chat-tools">
+            <label className="mt-chat-actor-label">
+              이 탭의 데모 사용자
+              <select
+                className="mt-chat-actor"
+                value={actor.id}
+                onChange={(event) => chooseActor(event.target.value)}
+              >
+                {actors.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.nickname}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <Link
+              className="mt-chat-tool-link"
+              href={`/match/chat?as=${encodeURIComponent(pair.actorId)}&room=${encodeURIComponent(pair.roomId)}`}
+              target="_blank"
+              rel="noreferrer"
             >
-              {actors.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.nickname}
-                </option>
-              ))}
-            </select>
-          </label>
-          <Link
-            className="mt-chat-tool-link"
-            href={`/match/chat?as=${encodeURIComponent(pair.actorId)}&room=${encodeURIComponent(pair.roomId)}`}
-            target="_blank"
-            rel="noreferrer"
-          >
-            새 탭에서 {pair.nickname} 계정으로 이 대화 열기 (데모)
-          </Link>
-          <Link className="mt-chat-tool-link" href={`/match/chat?${deniedParams.toString()}`}>
-            구성원이 아닌 방 열어보기 (데모)
-          </Link>
-        </div>
+              새 탭에서 {pair.nickname} 계정으로 이 대화 열기 (데모)
+            </Link>
+            <Link className="mt-chat-tool-link" href={`/match/chat?${deniedParams.toString()}`}>
+              구성원이 아닌 방 열어보기 (데모)
+            </Link>
+          </div>
+        )}
 
-        {(uuidRoomStatus === 'error' || (isLiveMode && liveRoomsFailed)) && (
+        {(uuidRoomStatus === 'error' || (useLive && liveRoomsFailed)) && (
           <section className="mt-chat-forbidden" role="status">
             <h2>대화를 불러오지 못했어요</h2>
             <p>네트워크 연결을 확인한 뒤 다시 시도해 주세요.</p>
             <button
               type="button"
-              className="mt-chat-unblock"
+              className="mt-safety-btn"
               onClick={() => setLiveRetryNonce((n) => n + 1)}
             >
               다시 시도
@@ -501,17 +473,17 @@ export default function ChatHub() {
           <section className="mt-chat-forbidden" role="status" aria-labelledby={forbiddenTitleId}>
             <h2 id={forbiddenTitleId}>볼 수 없는 대화</h2>
             <p>이 방의 매칭 구성원이 아니라 메시지를 볼 수 없어요.</p>
-            {!isLiveMode && !isUuidRoom && <p className="mt-chat-demo">데모</p>}
+            {!useLive && !isUuidRoom && <p className="mt-chat-demo">데모</p>}
           </section>
         )}
 
-        {(isLiveMode && liveRoomsLoading) || uuidRoomStatus === 'pending' ? (
+        {(auth.status === 'loading' && (isUuidRoom || isUuidPartner)) || (useLive && liveRoomsLoading) || uuidRoomStatus === 'pending' ? (
           <p className="mt-report-empty" role="status">
             대화 목록을 불러오는 중이에요…
           </p>
         ) : visibleRooms.length === 0 ? (
           <p className="mt-report-empty">
-            {isLiveMode ? '열린 대화가 없어요.' : '이 데모 사용자로 열린 대화가 없어요.'}
+            {useLive ? '열린 대화가 없어요.' : '이 데모 사용자로 열린 대화가 없어요.'}
           </p>
         ) : (
           <ChatList rooms={visibleRooms} previews={previews} activeId={activeId} onOpen={openRoom} />
@@ -535,6 +507,7 @@ export default function ChatHub() {
           <ChatRoom
             room={viewed}
             actorId={actor.id}
+            sessionUserId={liveSessionId}
             active={activeId === viewed.id}
             initialQuestion={viewed.id === openedRoomId ? initialQuestion : null}
             onQuestionConsumed={consumeQuestion}

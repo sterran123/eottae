@@ -178,10 +178,13 @@ export function createSupabaseChatDataSource(
   async function resolveUserId(): Promise<string | null> {
     if (cachedUserId) return cachedUserId;
     if (!supabase) return null;
+    if (!options.myUserId || !isUuid(options.myUserId)) {
+      return null;
+    }
     const { data, error } = await supabase.auth.getUser();
     const uid = data.user?.id ?? null;
     if (!error && isUuid(uid)) {
-      if (options.myUserId && isUuid(options.myUserId) && options.myUserId !== uid) {
+      if (options.myUserId !== uid) {
         return null;
       }
       cachedUserId = uid;
@@ -402,18 +405,16 @@ export async function checkConversationMembership(
  */
 export async function fetchMyLiveConversations(
   myUserId?: string | null,
-  partnerHint?: string | null,
 ): Promise<ChatRoomInfo[] | null> {
   const supabase = getSupabase();
   if (!supabase) return null;
+  if (!myUserId || !isUuid(myUserId)) return [];
 
-  let effectiveUserId: string | null = isUuid(myUserId) ? myUserId : null;
-  if (!effectiveUserId) {
-    const { data: authData, error: authError } = await supabase.auth.getUser();
-    if (authError) return null;
-    effectiveUserId = isUuid(authData.user?.id) ? authData.user.id : null;
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError || !authData.user?.id || authData.user.id !== myUserId) {
+    return null;
   }
-  if (!effectiveUserId) return [];
+  const effectiveUserId = myUserId;
 
   const { data: convRows, error: convErr } = await supabase
     .from('conversations')
@@ -447,9 +448,7 @@ export async function fetchMyLiveConversations(
         : m.user_high === effectiveUserId
           ? m.user_low
           : null
-      : isUuid(partnerHint) && partnerHint !== effectiveUserId
-        ? partnerHint
-        : null;
+      : null;
     if (!isUuid(partnerId)) continue;
     const mePartner: ChatPartner = { id: effectiveUserId, nickname: '나' };
     const otherPartner: ChatPartner = {
@@ -481,17 +480,16 @@ export async function fetchConversationMessagesPage(
   if (!supabase || !isUuid(conversationId)) {
     return null;
   }
+  if (!options.myUserId || !isUuid(options.myUserId)) {
+    return null;
+  }
 
-  let resolvedUserId: string | null = null;
   const { data: authData, error: authError } = await supabase.auth.getUser();
   const uid = authData.user?.id ?? null;
-  if (!authError && isUuid(uid)) {
-    if (options.myUserId && isUuid(options.myUserId) && options.myUserId !== uid) {
-      return null;
-    }
-    resolvedUserId = uid;
+  if (authError || !isUuid(uid) || options.myUserId !== uid) {
+    return null;
   }
-  if (!resolvedUserId) return null;
+  const resolvedUserId = uid;
 
   const pageSize = Math.min(Math.max(options.limit ?? 50, 1), 100);
   let query = supabase

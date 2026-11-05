@@ -78,6 +78,7 @@ function mergeLiveHistory(prev: ChatMessage[], loaded: ChatMessage[]): ChatMessa
 interface ChatRoomProps {
   room: ChatRoomInfo;
   actorId: string;
+  sessionUserId?: string | null;
   /** 패널이 열려 있는지 — 닫힌 채 유지되는 방은 스크롤 보정을 건너뛴다 */
   active: boolean;
   /** 추천 카드의 "가볍게 물어보기"로 진입했을 때 즉시 보낼 질문 */
@@ -92,6 +93,7 @@ interface ChatRoomProps {
 export default function ChatRoom({
   room,
   actorId,
+  sessionUserId,
   active,
   initialQuestion,
   onQuestionConsumed,
@@ -101,7 +103,12 @@ export default function ChatRoom({
   const menuId = useId();
   const forbiddenTitleId = useId();
   const partner = room.partner;
-  const isLiveRoom = isLiveChatRoom(room.id, partner.id);
+  const isLiveRoom = Boolean(
+    isUuid(actorId) &&
+      sessionUserId &&
+      actorId === sessionUserId &&
+      isLiveChatRoom(room.id, partner.id),
+  );
   const questionToken = useRef<string | null>(null);
 
   // 실계정 방은 예시 메시지로 시작하지 않는다 — 화면에는 서버 기록만 보인다.
@@ -496,7 +503,11 @@ export default function ChatRoom({
   }, [actorId, confirmBlockLock, isLiveRoom, partner.id, pushSystem]);
 
   const releaseBlock = useCallback(() => {
-    if (!blockedRef.current || peerBlockedRef.current) return;
+    if (peerBlockedRef.current) {
+      pushSystem('상대방에 의해 차단된 상태에서는 대화를 다시 열 수 없어요.');
+      return;
+    }
+    if (!blockedRef.current) return;
 
     if (!isLiveRoom) {
       blockedRef.current = false;
@@ -508,7 +519,8 @@ export default function ChatRoom({
     }
 
     void removeServerBlock(partner.id).then((res) => {
-      if (!blockedRef.current || peerBlockedRef.current) return;
+      if (peerBlockedRef.current) return;
+      if (!blockedRef.current) return;
       if (!res.ok || res.mode !== 'supabase') {
         pushSystem(
           res.error?.message ??
@@ -691,12 +703,13 @@ export default function ChatRoom({
               <li>
                 <button
                   type="button"
+                  disabled={peerBlocked}
                   onClick={() => {
                     setMenuOpen(false);
-                    openBlockConfirm();
+                    if (!peerBlocked) openBlockConfirm();
                   }}
                 >
-                  {blocked ? '차단 해제하기' : '상대방 차단하기'}
+                  {peerBlocked ? '상대방에 의해 차단됨' : blocked ? '차단 해제하기' : '상대방 차단하기'}
                 </button>
               </li>
               <li>
