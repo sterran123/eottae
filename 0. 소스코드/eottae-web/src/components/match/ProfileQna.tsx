@@ -273,6 +273,62 @@ export default function ProfileQna({
   }
 
   const openQuestion = openQid ? byId.get(openQid) ?? null : null;
+  const qnaModalRef = useRef<HTMLDivElement | null>(null);
+
+  // 답하기 모달 키보드 접근성 (Esc 닫기, 탭 가두기, 열릴 때 포커스 이동, 닫힐 때 복귀)
+  useEffect(() => {
+    if (!openQuestion) return;
+    const previouslyFocused =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const dialog = qnaModalRef.current;
+
+    function focusableIn(root: HTMLElement | null): HTMLElement[] {
+      if (!root) return [];
+      return Array.from(
+        root.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), a[href]',
+        ),
+      );
+    }
+
+    const initial = focusableIn(dialog);
+    if (initial[0]) initial[0].focus();
+    else dialog?.focus();
+
+    function onKeyDown(event: globalThis.KeyboardEvent) {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setOpenQid(null);
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const root = qnaModalRef.current;
+      if (!root) return;
+      const focusable = focusableIn(root);
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+      if (!(active instanceof HTMLElement) || !focusable.includes(active)) {
+        event.preventDefault();
+        first.focus();
+        return;
+      }
+      if (event.shiftKey && active === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      previouslyFocused?.focus();
+    };
+  }, [openQid]);
 
   return (
     <section className="mt-qna" aria-label="프로필 문답">
@@ -417,10 +473,12 @@ export default function ProfileQna({
       {/* 질문 답하기 모달 */}
       {openQuestion && (
         <div
+          ref={qnaModalRef}
           className="mt-qna__modal"
           role="dialog"
           aria-modal="true"
           aria-label={openQuestion.question}
+          tabIndex={-1}
         >
           <div
             className="mt-qna__modal-dim"

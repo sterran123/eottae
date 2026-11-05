@@ -1088,4 +1088,66 @@
 - [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
 
 
+## 2026-11-05 INV-003 모바일 청첩장 RSVP 응답·접근 제어 목업 및 QA 캡처 (손준혁 작업)
+- [변경] `src/lib/invitations/types.ts`, `src/lib/invitations/demo-storage.ts` | 기존 `Rsvp` 타입을 새로 중복 선언하지 않고 선택 필드 `meal?: RsvpMeal`(`RSVP_MEALS = ['yes', 'no', 'undecided'] as const`)과 `isRsvpMeal` 타입 가드를 보강. `isStoredRsvp` 및 `sanitizeRsvp`에서 선택적 `meal` 값을 검증·보존하도록 확장.
+- [변경] `src/lib/invitations/rsvp-access.ts` | 공유 토큰(`t`)과 게스트 토큰(`g`)이 모두 유효하고 청첩장이 `published`·미만료 상태일 때만 회신 권한을 여는 `resolveRsvpAccess`, `localStorage` 키 `eottae.invitations.demo.v1`에만 저장하고 같은 게스트 토큰의 10초(`RSVP_COOLDOWN_MS = 10_000`) 내 연속 제출 시 데모 안내(`잠시 뒤에 다시 시도해 주세요`, 서버 429 아님)를 반환하는 `submitGuestRsvp`, 그리고 소유자(`viewerIsOwner === true && ownerId === 'user-demo-me'`)만 회신 명단을 읽기 전용으로 조회하고 비소유자(`demo-inv-3` 등)는 거절하는 `resolveOwnerRsvpOverview` 구현.
+- [변경] `src/components/invitations/InvitationRsvpForm.tsx`, `src/components/invitations/invitation-rsvp.css` | 유효한 `t`+`g` 조합에서만 해당 하객 본인의 회신(`myRsvp`)만 불러와 참석 여부(`yes`/`maybe`/`no`)·인원(1~10명, 불참 시 숨김 및 0 저장)·식사(선택, `선택 안 함` 포함)·메모(300자)를 입력·저장하는 폼 구현. 토큰 누락·오류·만료·폐기 시 행사 상세와 타인 정보를 전혀 그리지 않고 `초대 링크가 없어 회신할 수 없어요` 거절 안내만 표시. 모든 스타일은 6테마 CSS 변수(`var(--paper)`, `var(--ink)`, `var(--line)`, `var(--brand)`, `var(--focus)` 등)만 사용하고 최소 터치 영역 44px·입력 16px·`:focus-visible` 포커스 링·`prefers-reduced-motion`을 준수.
+- [변경] `src/app/invitations/rsvp/layout.tsx`, `src/app/invitations/rsvp/page.tsx`, `src/components/invitations/preview/InviteClosing.tsx`, `src/components/invitations/preview/InvitePreview.tsx`, `src/components/invitations/preview/InviteSampleStudio.tsx` | 검색엔진 미노출(`robots: { index: false, follow: false }`) 하객 전용 회신 라우트(`/invitations/rsvp/?t=&g=`) 및 QA 데모 시나리오 전환 바 연결. 공개 샘플 미리보기(`/invitations/sample/`)의 참석 여부 섹션(`InviteRsvp`)은 공개 화면에서 참석 명단·타인 회신을 노출하지 않고 하객 전용 초대 링크로 이동하도록 연결.
+- [변경] `3. 구현 이미지(5장이상)/20_청첩장_테마목록_모바일.png` ~ `25_청첩장_비소유자_편집거절_모바일.png`, `3. 구현 이미지(5장이상)/captions.csv` | 기존 `06_준비중_모듈_청첩장_모바일.png`를 재사용하지 않고 20~25번 신규 360px 모바일 캡처 6장(테마 목록, 샘플 미리보기, 하객 공개 명단 없음, 하객 RSVP 회신 폼·연속 제출 제한, 토큰 거절, 비소유자 편집·명단 열람 거절)을 추가하고 `captions.csv` 행 기록.
+- [검증] `npm --prefix "0. 소스코드/eottae-web" run typecheck` (`tsc --noEmit`) PASS (에러 0건)
+- [검증] `npm --prefix "0. 소스코드/eottae-web" run build` (`next build`, `/invitations/rsvp` 포함 25개 정적 페이지 export) PASS
+- [검증] 2026-11-05 Node 단위 검증(`resolveRsvpAccess`·`submitGuestRsvp`·`resolveOwnerRsvpOverview` 26개 단언: 유효 `t+g` 허용, `t`/`g` 누락·오류·타 청첩장 토큰·폐기 토큰 거절, 하객 A/B 회신 격리, `eottae.invitations.demo.v1` 단일 키 저장, 10초 내 연속 제출 쿨다운 및 11초 후 재제출, 소유자 허용·비소유자 거절) 26 PASS / 0 FAIL
+- [검증] 2026-11-05 Windows + 헤드리스 Chrome(CDP) + `node tools/serve_pages_preview.mjs` 정적 산출물 실측: 360px 폭에서 6테마(`light`·`cupcake`·`cyberpunk`·`disney`·`dark`·`system`) 모두 `scrollWidth(360) <= clientWidth(360)` 가로 스크롤 없음, 대화형 요소 최소 높이 `44px` 확인, 1차 회신 저장 안내 및 즉시 재제출 시 `잠시 뒤에 다시 시도해 주세요` 표시, 토큰 누락 시 폼·행사 상세 비노출 확인 후 20~25번 캡처 생성 완료
+- [미실행] 3차는 팀 결정에 따른 브라우저 `localStorage` 목업 단계이므로 실서버(`POST /invitations/:token/rsvp`)·Supabase DB 마이그레이션·서버 레이트리밋(HTTP 429) 연동은 실행하지 않음. `FILE_INDEX.csv`·`MANIFEST.sha256`·`src/app/globals.css`·`package.json`·`supabase/`는 수정하지 않음.
+
+
+## 2026-11-05 fix(MATCH): 문답 모달 키보드 접근성·추천 더보기 44px (이슈 #89, Refs #89, Refs #83) (오하율 작업)
+- [요청] 이슈 #89(디자인 검토 P0·P1) 반영:
+  1) `ProfileQna.tsx`: 문답 답하기 모달(`mt-qna__modal`)에 키보드 접근성 완비 (`RecommendList.tsx` 신고 모달 기준 준수). Esc 키 누름 시 모달 닫기, Tab 및 Shift+Tab 시 모달 내 포커스 가두기(focus trap), 모달 열림 시 첫 번째 대화형 요소(`initial[0]`)로 자동 포커스 이동, 모달 닫힘 시 직전 활성 요소(`previouslyFocused`)로 포커스 복귀.
+  2) `RecommendCard.tsx`: 추천 카드 더보기 메뉴(`mt-rec__dropdown-menu`)에 키보드 내비게이션(화살표 키 `ArrowDown`/`ArrowUp`, `Home`/`End`, `Escape` 닫기) 및 포커스 관리 적용. `mt-rec__more-btn`에 `aria-haspopup="menu"` 추가 및 키보드/마우스 닫힘 시 더보기 버튼으로 포커스 복귀.
+  3) `match-recommend.css`: `.mt-rec__dropdown-item`에 `min-height: 44px`, `font-size: 16px`, `white-space: normal`, `padding: 10px 14px`, `:focus-visible` 포커스 링 적용. `.mt-rec__dropdown-menu`의 `min-width: 130px`, `max-width: calc(100vw - 32px)`, `right: 0` 설정으로 360px 모바일 화면에서도 카드를 벗어나지 않도록 보장.
+- [AI] Antigravity가 해당 파일들(ProfileQna.tsx, RecommendCard.tsx, match-recommend.css, AI_REPORT_LOG.md) 수정 후 타입체크 및 정적 빌드 테스트 통과.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 페이지 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음
+
+
+## 2026-11-05 PR #99 1차 AI 코드 리뷰 지적 해결 (오하율 작업)
+- [요청] PR #99 AI 리뷰 지적(914행 `<<<<<<< HEAD` 잔여 마커 제거 필수, 권장 5건) 완전 해결:
+  1) `AI_REPORT_LOG.md`: 914행의 `<<<<<<< HEAD` 충돌 잔여 마커를 완전 제거.
+  2) `match-recommend.css`: `.mt-rec-list .mt-rec__dropdown-item:focus-visible`로 선택자 특이도를 상향하여 부모 스타일 덮어씀 방지, `prefers-reduced-motion` 미디어 쿼리에 `.mt-rec__dropdown-menu`의 페이드인 애니메이션 해제 추가.
+  3) `RecommendCard.tsx`: 메뉴 항목 수를 `lastIndex`로 동적 계산, 더보기 버튼에 `aria-controls={menuOpen ? menuId : undefined}` 및 `onKeyDown`에 `Escape` 닫기 추가, 메뉴에 `id` 및 `aria-label="더보기"` 부여, 외부 클릭 시 포커스 강탈을 방지하고 메뉴 닫기만 수행하도록 개선.
+  4) `ProfileQna.tsx`: 모달 포커스 트랩의 `useEffect` 의존성을 객체 `openQuestion` 대신 ID `openQid`로 최적화하여 질문 데이터 변경 시 불필요한 포커스 복귀 부작용 차단.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+
+
+## 2026-11-05 PR #99 2차 AI 코드 리뷰 지적 해결 (오하율 작업)
+- [요청] PR #99 2차 AI 리뷰 지적(포커스 링 미표시 결함 필수 해결 및 권장 사항 3건) 반영:
+  1) `match-recommend.css` (필수): `.mt-rec-list .mt-rec__dropdown-item:focus-visible`의 `outline` 색상을 존재하지 않는 변수 `var(--match-primary)` 대신 매칭 시스템 공식 포커스 토큰인 `var(--match-focus)`로 수정하여 키보드 탐색 시 포커스 링이 선명하게 그려지도록 완벽 해결.
+  2) `RecommendCard.tsx`: `menuRef` 중복 바인딩을 제거하고 래퍼(`.mt-rec__more-wrapper`) 단일 ref로 정돈. 백드롭 클릭 시 포커스를 뺏지 않고 닫기만 수행(`setMenuOpen(false)`). 메뉴가 이미 열린 상태에서 더보기 버튼 `ArrowDown`/`ArrowUp` 입력 시 해당 항목으로 즉시 포커스 이동 처리. 메뉴 항목 수를 `MORE_ACTIONS` 배열 기준으로 관리.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+
+
+## 2026-11-05 PR #99 3차 AI 코드 리뷰 지적 해결 (오하율 작업)
+- [요청] PR #99 3차 AI 리뷰 지적(포인터 닫기 시 포커스 복원 결함 필수 해결 및 모션 감소 a11y 보강) 반영:
+  1) `RecommendCard.tsx` (필수): 백드롭 클릭 시 `closeToButton()`을 호출하여 메뉴 언마운트 시 포커스가 body로 떨어져 키보드 흐름이 끊기는 문제 해결. 문서 레벨 outside 리스너는 포커스를 받을 수 있는 대화형 컨트롤 클릭 시에만 `setMenuOpen(false)`로 두고, 일반 표면 클릭 시에는 `closeToButton()`으로 복원.
+  2) `match-qna.css`: `prefers-reduced-motion` 미디어 쿼리에 `.mt-qna__modal` 애니메이션 해제 및 `.mt-qna__modal-close` 트랜지션 해제 추가.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+
+
+## 2026-11-05 PR #99 4차 AI 코드 리뷰 지적 해결 (오하율 작업)
+- [요청] PR #99 4차 AI 리뷰 지적(더보기 메뉴 벗어남 백드롭 잔여·Escape 누락 해결 및 QnA 모달 슬라이드 바디 애니메이션 해제) 완전 해결:
+  1) `RecommendCard.tsx` (필수 1): 더보기 메뉴가 열린 동안 `focusout` 이벤트를 등록하여 Tab 등으로 포커스가 메뉴 밖으로 벗어날 때 메뉴와 백드롭을 즉시 닫도록 보장. 메뉴가 열린 상태에서 포커스가 래퍼 내에 있으면 문서 레벨 `Escape` 키 감지로 `closeToButton()` 호출. 메뉴 버튼에 `tabIndex={-1}`을 적용하여 화살표 키로만 포커스 이동하도록 수정. `MORE_ACTIONS` 배열 map 렌더링으로 동적 안전성 확보.
+  2) `match-qna.css` (필수 2): `prefers-reduced-motion` 대상 셀렉터를 슬라이드 애니메이션(`mt-modal-slide-up`)이 실제로 지정된 `.mt-qna__modal-body`로 정확히 수정하고, `.mt-qna__modal-close:hover`에 `transform: none`을 추가하여 모션 감소 설정 시 모든 슬라이드/스케일 변형을 완전 중단.
+  3) `match-recommend.css`: 더보기 메뉴 `max-width`를 `min(240px, calc(100vw - 32px))`로 최적화.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+
+
+
+
+
 
