@@ -239,7 +239,7 @@
   right: 0;
   z-index: 30;
   min-width: 130px;
-  max-width: calc(100vw - 32px);
+  max-width: min(240px, calc(100vw - 32px));
   background: var(--match-paper);
   border: 1px solid var(--match-line);
   border-radius: 10px;

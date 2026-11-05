@@ -1138,6 +1138,16 @@
 - [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
 
 
+## 2026-11-05 PR #99 4차 AI 코드 리뷰 지적 해결 (오하율 작업)
+- [요청] PR #99 4차 AI 리뷰 지적(더보기 메뉴 벗어남 백드롭 잔여·Escape 누락 해결 및 QnA 모달 슬라이드 바디 애니메이션 해제) 완전 해결:
+  1) `RecommendCard.tsx` (필수 1): 더보기 메뉴가 열린 동안 `focusout` 이벤트를 등록하여 Tab 등으로 포커스가 메뉴 밖으로 벗어날 때 메뉴와 백드롭을 즉시 닫도록 보장. 메뉴가 열린 상태에서 포커스가 래퍼 내에 있으면 문서 레벨 `Escape` 키 감지로 `closeToButton()` 호출. 메뉴 버튼에 `tabIndex={-1}`을 적용하여 화살표 키로만 포커스 이동하도록 수정. `MORE_ACTIONS` 배열 map 렌더링으로 동적 안전성 확보.
+  2) `match-qna.css` (필수 2): `prefers-reduced-motion` 대상 셀렉터를 슬라이드 애니메이션(`mt-modal-slide-up`)이 실제로 지정된 `.mt-qna__modal-body`로 정확히 수정하고, `.mt-qna__modal-close:hover`에 `transform: none`을 추가하여 모션 감소 설정 시 모든 슬라이드/스케일 변형을 완전 중단.
+  3) `match-recommend.css`: 더보기 메뉴 `max-width`를 `min(240px, calc(100vw - 32px))`로 최적화.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+
+
+
 
 
 
