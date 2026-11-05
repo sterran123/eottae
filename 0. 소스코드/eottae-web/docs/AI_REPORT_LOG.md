@@ -1318,21 +1318,21 @@
 
 ## 2026-11-05 ACT-002 데모 증빙(TC-013) 및 목업 최종 TC 판정 장부 정리 (이슈 #105, Refs #105) (주한태 작업)
 - [요청] 이슈 #105([주한태] 남은 작업 정리 — ACT-002 데모 증빙(TC-013) + TC 판정 마무리 (목업 최종)):
-  1) **TC-013 데모 증빙 (ACT-002)**: 소모임 참가 요청 토스트 알림(`26_소모임_참가신청_중복방지_모바일.png`) 및 상세 화면(`/activities/?tab=gatherings&gathering=meet-walk`)의 '요청 취소' 전환·타인 개설 모임(`viewerIsHost=false`) 더보기 메뉴에서 수정/삭제 항목이 배제된 화면(`27_소모임_타인모임_수정삭제불가_모바일.png`, 모임장 시점 전환 토글 포함) 캡처 증빙 확보, `captions.csv` 및 `README_캡처_체크리스트.md` 최신화.
-  2) **TC 장부 판정 정리 (DEC-11 목업 최종 기준)**:
-     - TC-013: 참가 신청 시 '요청 취소' 전환(진행 중 단일 요청) 및 타인 모임 수정·삭제 메뉴 미노출 확인으로 `PASS (데모 판정)` 기록.
-     - TC-003: 데모 로그인 기록 없이 `/match` 및 자식 경로 진입 시 「로그인이 필요해요」 안내 화면 표시(성인 확인(시연)은 로그인 후 바이패스 1일 때만 동작, 04번 캡처 증빙 제외) 확인을 반영하여 `미실행 (게이트 재캡처 전) / 서버 세션 서버 단계 없음(DEC-11)`으로 정정.
-     - TC-004: `DemoAdultStep`에서 만 19세 미만 생년월일 입력 시 거절 확인으로 `PASS (데모 판정) / 실인증 API 서버 단계 없음(DEC-11)` 정리 (증빙 경로 `src/components/demo/DemoAdultStep.tsx` 현행화).
-     - TC-006: 브라우저 로컬 환경의 동시성 트랜잭션 경쟁 조건은 `서버 단계 없음(DEC-11)`으로 판정 마무리.
-     - TC-007: `demoRecommendationView`에서 차단(`exclude: 'blocked'`) 또는 휴면 또는 탈퇴 후보의 추천 목록 제외 확인으로 `PASS (데모 판정)` 기록 (마크다운 표 열 분리 파이프 제거).
-     - TC-005, TC-008, TC-009, TC-010, TC-016: 기존 서버 BLOCKED 항목들을 3차 목업 최종 제출 기준에 맞춰 `서버 단계 없음(DEC-11)`으로 마무리 문구 통일.
-  3) **공통 보안 스캔 (TC-017 / SEC-001)**: public 리포 전체 및 `supabase/`, `.env.example` 스캔 결과 실키·실토큰·실사용자 데이터 0건, 플레이스홀더(`REPLACE_ME`)만 존재함을 검증하여 `PASS (코드 스캔 완료)` 기록.
-- [AI] Antigravity가 Chrome DevTools Protocol 헤드리스 환경에서 실제 26·27번 증빙 캡처 생성, `captions.csv` 27개 행 등록, `테스트_케이스_마스터.md` TC-013·003·004·006·007·017 행 추가 및 기존 서버 BLOCKED 행을 `서버 단계 없음(DEC-11)`으로 정직하게 현행화.
-- [검증] `3. 구현 이미지(5장이상)/captions.csv` 27개 행 정합성 확인.
+  1) **TC-013 데모 증빙 (ACT-002)**: 소모임 상세 화면(`/activities/?tab=gatherings&gathering=meet-walk`, `GatheringDetail.tsx`)에서 참가 요청 클릭 직후 버튼이 '요청 취소'로 전환되고 '요청됨 · 데모' 배지 및 하단 토스트가 함께 노출되는 상세 화면(`26_소모임_참가신청_중복방지_모바일.png`)과, 타인 개설 모임(`viewerIsHost=false`·`mine=false`) 상세 더보기 메뉴에서 '신고하기'·'링크 복사' 2개 항목만 노출되고 주최자 전용 '수정'·'삭제'가 배제된 화면(`27_소모임_타인모임_수정삭제불가_모바일.png`) 캡처 증빙 확보, `captions.csv` 및 `README_캡처_체크리스트.md` 최신화.
+  2) **TC 장부 판정 정리 (DEC-10·DEC-11 목업 최종 기준 및 PR #107 AI 리뷰 권장사항 반영)**:
+     - TC-013: 참가 요청 시 `applyJoin`이 모임 ID당 단일 요청(`requests`/`joins`)만 유지하며 '요청 취소'로 전환(취소 후 재요청 가능) 및 타인 모임 수정·삭제 메뉴 미노출 확인으로 `PASS (데모 판정) / 서버 권한·중복 검증 서버 단계 없음(DEC-11)` 기록.
+     - TC-003: 데모 로그인 기록 없이 `/match/recommend` 진입 시 `DemoEntryGuard`(`status: 'login'`)가 매칭 본문 대신 「로그인이 필요해요」(`DemoLoginNotice`) 안내 화면만 표시함을 캡처(`28_매칭_비로그인_접근차단_모바일.png`)하여 `PASS (데모 판정) / 서버 세션 서버 단계 없음(DEC-11)`으로 마감.
+     - TC-004: `DemoAdultStep`(`NEXT_PUBLIC_DEMO_ADULT_BYPASS=1`)에서 만 19세 미만 생년월일(`2010-05-05`) 입력 시 「만 19세 이상만 이용할 수 있어요」 거절 화면 캡처(`29_매칭_미성년_성인확인거절_모바일.png`) 및 `minAgeConfirmed`만 저장·원본 미저장 확인으로 `PASS (데모 판정) / 실인증 API 서버 단계 없음(DEC-11)` 정리.
+     - TC-006: 브라우저 로컬 환경의 동시성 트랜잭션 경쟁 조건은 이번 3차 목업 제출에서는 서버 검증을 하지 않으며 실데이터 단계(DEC-10의 최종 제출 전 과제)에서 다시 열기로 하고 `서버 단계 없음(DEC-11)`으로 마감.
+     - TC-007: `demoRecommendationView`에서 차단(`rec_blocked_demo`)·휴면(`rec_dormant_demo`)·탈퇴(`rec_withdrawn_demo`)·본인·미성년 후보의 추천 제외 및 상단 `DemoFilterNote` 안내 캡처(`30_매칭_추천_차단휴면제외_모바일.png`)로 `PASS (데모 판정)` 기록.
+     - TC-005, TC-008, TC-009, TC-010: 손준혁·오하율 담당자와 합의하여 이번 3차 목업 제출에서는 서버 검증을 하지 않고 실데이터 단계(DEC-10의 최종 제출 전 과제)에서 다시 연다는 문구와 함께 서버분을 `서버 단계 없음(DEC-11)`으로 마무리 통일.
+  3) **공통 보안 스캔 (TC-017 / SEC-001)**: public 리포 전체 및 `supabase/`, `src/lib/`, `.env.example` 스캔 결과 실키·실토큰·실사용자 데이터 0건, 플레이스홀더(`REPLACE_ME`)만 존재함을 검증하여 `PASS (코드 스캔 완료) / 런타임 로그 서버 단계 없음(DEC-11)` 기록.
+- [AI] Antigravity가 Chrome DevTools Protocol 헤드리스 환경(360px 3x 전체 높이)에서 실제 26~30번 증빙 캡처 생성, `captions.csv` 30개 행 등록, `테스트_케이스_마스터.md` TC-013·003·004·006·007·017 및 TC-005·008·009·010 행을 DEC-10·DEC-11에 맞춰 정직하게 현행화.
+- [검증] `3. 구현 이미지(5장이상)/captions.csv` 30개 행 정합성 확인.
 - [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors).
-- [검증] `npm run build` PASS (Next.js 15.5.28 정적 페이지 export 100% 성공).
+- [검증] `NEXT_PUBLIC_DEMO_ADULT_BYPASS=1 npm run build` PASS (Next.js 15.5.28 정적 페이지 27/27 export 100% 성공).
 - [보호영역] `git diff --name-only origin/main` 기준 보호 파일(globals.css, package.json 등) 무수정 원칙 준수.
-- [미실행] 서버 실연동 없음 (3차 목업 최종 제출 원칙 준수).
+- [미실행] 서버 실연동 없음 (이번 3차 목업 제출에서는 서버 검증을 하지 않으며 DEC-10 실데이터 단계 과제로 유지).
 
 ## 2026-11-05 PR #102 AI 리뷰 지적 해결 및 main 충돌 해결 (오하율 작업)
 - [요청] PR #102 main 충돌 해결 및 AI 코드 리뷰 FAIL 2건(공개 하객 화면 참석 회신 버튼 미노출·TC-016 클릭 동작 불일치) 및 권장사항 5건 해결:
@@ -1461,9 +1461,4 @@
 - [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
 - [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
 - [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
-
-
-
-
-
 
