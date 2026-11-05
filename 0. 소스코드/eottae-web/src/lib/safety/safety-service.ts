@@ -15,10 +15,13 @@ import { isUuid, type ApiErrorDetail } from '@/lib/chat/types';
 import { getSupabase } from '@/lib/supabase/client';
 import {
   toBlockInsertRow,
+  toReportHistoryItem,
   toReportInsertRow,
   type BlockRequest,
   type ReportCreatedResponse,
+  type ReportHistoryItem,
   type ReportRequest,
+  type ReportRow,
 } from './types';
 
 /**
@@ -218,4 +221,68 @@ export async function submitReport(req: ReportRequest): Promise<SafetyActionResu
     mode: 'supabase',
     reportId: created.reportId,
   };
+}
+
+/**
+ * 실계정 내 신고 내역 조회 (`public.reports` SELECT).
+ * RLS 정책 `reports_select_own`(0003_match_core.sql:1261)에 의해 본인이 접수한 행만 반환된다.
+ */
+export async function fetchMyReports(): Promise<ReportHistoryItem[] | null> {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+
+  const reporterId = await resolveAuthenticatedUserId();
+  if (!reporterId) return null;
+
+  const { data, error } = await supabase
+    .from('reports')
+    .select('id, reporter_id, reported_user_id, category, description, status, created_at')
+    .order('created_at', { ascending: false });
+
+  if (error || !data) return null;
+
+  return (data as ReportRow[]).map((row) =>
+    toReportHistoryItem(
+      row,
+      row.reported_user_id ? `회원 (${row.reported_user_id.slice(0, 8)})` : '회원',
+      row.reporter_id || reporterId,
+    ),
+  );
+}
+
+export interface ReportQueueResult {
+  ok: boolean;
+  status: number;
+  items: ReportHistoryItem[];
+  error?: string;
+}
+
+/**
+ * 실계정 신고 관리 큐 조회 (`public.list_reports()` RPC).
+ * operator 역할이 없는 일반 계정은 SQLSTATE 42501 (403 FORBIDDEN)로 거부된다 (TC-010).
+ */
+export async function fetchReportQueue(): Promise<ReportQueueResult> {
+  const supabase = getSupabase();
+  if (!supabase) return { ok: false, status: 0, items: [], error: 'REPORT_QUEUE_FAILED' };
+
+  const { data, error } = await supabase.rpc('list_reports');
+  if (error) {
+    const forbidden = (error as { code?: string }).code === '42501';
+    return {
+      ok: false,
+      status: forbidden ? 403 : 0,
+      items: [],
+      error: forbidden ? 'INSUFFICIENT_PRIVILEGE' : 'REPORT_QUEUE_FAILED',
+    };
+  }
+
+  const items = ((data as ReportRow[]) || []).map((row) =>
+    toReportHistoryItem(
+      row,
+      row.reported_user_id ? `회원 (${row.reported_user_id.slice(0, 8)})` : '회원',
+      row.reporter_id || '알 수 없음',
+    ),
+  );
+
+  return { ok: true, status: 200, items };
 }
