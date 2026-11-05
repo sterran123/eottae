@@ -117,7 +117,6 @@
 [data-theme='cyberpunk'] .inv-choice-pill--active,
 [data-theme='cyberpunk'] .inv-accordion-toggle-btn--active,
 [data-theme='cyberpunk'] .inv-frame-btn--active,
-[data-theme='cyberpunk'] .inv-address-copy-btn:hover,
 [data-theme='cyberpunk'] .inv-toast,
 [data-theme='cyberpunk'] .inv-chip-btn--active,
 [data-theme='dark'] .inv-category-tab-btn--active,
@@ -126,7 +125,6 @@
 [data-theme='dark'] .inv-choice-pill--active,
 [data-theme='dark'] .inv-accordion-toggle-btn--active,
 [data-theme='dark'] .inv-frame-btn--active,
-[data-theme='dark'] .inv-address-copy-btn:hover,
 [data-theme='dark'] .inv-toast,
 [data-theme='dark'] .inv-chip-btn--active {
   color: var(--bg) !important;
@@ -139,7 +137,6 @@
   :root[data-theme='system'] .inv-choice-pill--active,
   :root[data-theme='system'] .inv-accordion-toggle-btn--active,
   :root[data-theme='system'] .inv-frame-btn--active,
-  :root[data-theme='system'] .inv-address-copy-btn:hover,
   :root[data-theme='system'] .inv-toast,
   :root[data-theme='system'] .inv-chip-btn--active {
     color: var(--bg) !important;
@@ -4127,8 +4124,8 @@
 }
 
 .inv-mode--dark .inv-address-copy-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
 }
 
 .inv-mode--dark .inv-map-link-btn {
@@ -5764,6 +5761,11 @@
   background: rgba(255, 255, 255, 0.14) !important;
   color: #ffffff !important;
   border: 1px solid rgba(255, 255, 255, 0.26) !important;
+}
+
+.inv-mode--dark .inv-address-copy-btn:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
 }
 
 .inv-mode--dark .inv-map-link-btn {

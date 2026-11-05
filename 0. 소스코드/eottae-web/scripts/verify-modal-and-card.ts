@@ -300,6 +300,21 @@ assert(
   'THE WEDDING OF, OUR WEDDING DAY 등 상용 템플릿/샘플 문구가 전면 제거되고 고유 문구로 대체됨'
 );
 
+// 11. [PR #102 피드백] 어두운 청첩장 카드 주소 복사하기 호버 대비 검증
+console.log('\n[검증 11] 어두운 청첩장 카드 주소 복사하기 호버 명도 대비 검증');
+assert(
+  !cssCode.includes("[data-theme='cyberpunk'] .inv-address-copy-btn:hover") &&
+  !cssCode.includes("[data-theme='dark'] .inv-address-copy-btn:hover") &&
+  !cssCode.includes(":root[data-theme='system'] .inv-address-copy-btn:hover"),
+  '.inv-address-copy-btn:hover가 color: var(--bg) !important 오버라이드 목록에서 완전 배제됨'
+);
+
+assert(
+  cssCode.includes('.inv-mode--dark .inv-address-copy-btn:hover') &&
+  cssCode.includes('.inv-mode--dark .inv-address-copy-btn:hover {\n  background: rgba(255, 255, 255, 0.25) !important;\n  color: #ffffff !important;\n}'),
+  '어두운 카드(.inv-mode--dark)의 주소 복사하기 버튼 호버 시 color: #ffffff !important로 밝은 글자색이 보장됨'
+);
+
 console.log('\n============================================================');
 console.log(` 검증 결과: 총 ${passCount + failCount}개 중 ${passCount}개 통과 (실패: ${failCount}개)`);
 console.log('============================================================');

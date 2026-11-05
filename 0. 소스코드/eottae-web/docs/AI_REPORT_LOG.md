@@ -1378,4 +1378,17 @@
 - [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 무수정 원칙 준수
 - [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
 
+## 2026-11-05 PR #102 어두운 청첩장 카드 주소 복사하기 호버 명도 대비 해결 (Refs #84, Refs #102) (오하율 작업)
+- [요청] PR #102 AI 리뷰 지적(다크·사이버펑크·시스템 다크에서 어두운 카드의 「주소 복사하기」 호버 시 글자 식별 불가 및 반투명 배경 명도 대비 깨짐) 해결:
+  1) `invitations.css`: `:114-146`의 다크/사이버펑크/시스템 다크 `color: var(--bg) !important` 일괄 규칙에서 `.inv-address-copy-btn:hover` 셀렉터를 완전히 제거. 어두운 배경에서 글자색이 `var(--bg)`(어두운 색)으로 덮여 마우스 호버 시 글자가 사라지는 결함 원천 차단.
+  2) `invitations.css`: 어두운 카드(`.inv-mode--dark`)의 `.inv-address-copy-btn:hover`에 `background: rgba(255, 255, 255, 0.25) !important`, `color: #ffffff !important`를 명시적으로 부여하여 호버 시 항상 선명한 흰색 텍스트와 확실한 명도 대비를 보장.
+  3) `scripts/verify-modal-and-card.ts`: [검증 11] 신설하여 `.inv-address-copy-btn:hover`의 `var(--bg)` 배제 및 `.inv-mode--dark` 호버 시 `color: #ffffff !important` 보장을 자동 검증(32/32 PASS).
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (32/32 통과)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 무수정 원칙 준수
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
+
+
 
