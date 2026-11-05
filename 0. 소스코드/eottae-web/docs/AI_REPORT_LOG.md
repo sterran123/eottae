@@ -1261,3 +1261,21 @@
 - [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors).
 - [검증] `npm run build` PASS (Next.js 15.5.28 정적 export 100% 성공).
 - [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수).
+
+## 2026-11-05 ACT-002 데모 증빙(TC-013) 및 목업 최종 TC 판정 장부 정리 (이슈 #105, Refs #105) (주한태 작업)
+- [요청] 이슈 #105([주한태] 남은 작업 정리 — ACT-002 데모 증빙(TC-013) + TC 판정 마무리 (목업 최종)):
+  1) **TC-013 데모 증빙 (ACT-002)**: 소모임 상세 화면(`/activities/?tab=gatherings&gathering=meet-walk`)에서 참가 신청 시 버튼이 '요청 취소'로 바뀌며 동일 계정의 재신청을 방지하는 상태 머신 동작(`26_소모임_참가신청_중복방지_모바일.png`) 및 타인 개설 모임(`viewerIsHost=false`)의 더보기 메뉴에서 수정/삭제 항목이 원천 배제되는 화면(`27_소모임_타인모임_수정삭제불가_모바일.png`) 캡처 증빙 확보, `captions.csv` 및 `README_캡처_체크리스트.md` 최신화.
+  2) **TC 장부 판정 정리 (DEC-11 목업 최종 기준)**:
+     - TC-013: 중복 신청 불가 및 타인 모임 수정·삭제 메뉴 미노출 확인으로 `PASS (데모 판정)` 기록.
+     - TC-003: 세션 부재 시 `DemoEntryGuard`를 통한 성인인증 시연 확인 게이트 표출 및 실API 차단으로 `PASS (데모 판정) / 서버 세션 검증 서버 단계 없음(DEC-11)` 정리.
+     - TC-004: `DemoAdultStep`에서 만 19세 미만 생년월일 입력 시 거절 확인으로 `PASS (데모 판정) / 실인증 API 서버 단계 없음(DEC-11)` 정리.
+     - TC-006: 브라우저 로컬 환경의 동시성 트랜잭션 경쟁 조건은 `서버 단계 없음(DEC-11)`으로 판정 마무리.
+     - TC-007: `demoRecommendationView`에서 차단(`exclude: 'blocked'`) 및 휴면 계정의 추천 목록 원천 제외 확인으로 `PASS (데모 판정)` 기록.
+     - TC-005, TC-008, TC-009, TC-010, TC-016: 기존 서버 BLOCKED 항목들을 3차 목업 최종 제출 기준에 맞춰 `서버 단계 없음(DEC-11)`으로 마무리 문구 통일.
+  3) **공통 보안 스캔 (TC-017 / SEC-001)**: public 리포 전체 및 `supabase/`, `.env.example` 스캔 결과 실키·실토큰·실사용자 데이터 0건, 플레이스홀더(`REPLACE_ME`)만 존재함을 검증하여 `PASS (코드 스캔 완료)` 기록.
+- [AI] Antigravity가 Chrome DevTools Protocol 헤드리스 환경에서 실제 26·27번 증빙 캡처 생성, `captions.csv` 27개 행 등록, `테스트_케이스_마스터.md` TC-013·003·004·006·007·017 행 추가 및 기존 서버 BLOCKED 행을 `서버 단계 없음(DEC-11)`으로 정직하게 현행화.
+- [검증] `3. 구현 이미지(5장이상)/captions.csv` 27개 행 정합성 확인.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors).
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 페이지 export 100% 성공).
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일(globals.css, package.json 등) 무수정 원칙 준수.
+- [미실행] 서버 실연동 없음 (3차 목업 최종 제출 원칙 준수).
