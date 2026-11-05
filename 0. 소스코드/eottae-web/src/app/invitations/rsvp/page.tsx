@@ -153,6 +153,10 @@ function RsvpPageContent() {
   const token = searchParams.get('t') ?? '';
   const guestToken = searchParams.get('g') ?? '';
   const hostId = searchParams.get('host') ?? '';
+  const showDemoQuery = searchParams.get('demo') === '1';
+  // 하객 카드에서 t+g를 가지고 진입한 경우 타인 회신/소유자 목록 전환 바를 숨김 (ADR-004 · TC-016 회신 격리 준수, ?demo=1 시에만 노출)
+  const isDirectGuest = Boolean(token && guestToken);
+  const showDemoSwitcher = !isDirectGuest || showDemoQuery;
 
   return (
     <div className="shell subpage rsvp-page">
@@ -162,30 +166,32 @@ function RsvpPageContent() {
         <InvitationRsvpForm token={token} guestToken={guestToken} />
       )}
 
-      <nav className="rsvp-demo-switcher" aria-label="RSVP 데모 링크 전환">
-        <p className="rsvp-demo-switcher-title">데모 링크 전환 (INV-003 · TC-015 · TC-016 시연)</p>
-        <p className="rsvp-muted">
-          공유 토큰(t)·하객 토큰(g) 조합에 따른 접근 제어, 하객 간 회신 격리, 비소유자 거절을 바로 확인할 수 있어요.
-        </p>
-        <div className="rsvp-demo-links">
-          {DEMO_SCENARIOS.map((item) => {
-            const active =
-              item.host !== ''
-                ? hostId === item.host
-                : hostId === '' && token === item.t && guestToken === item.g;
-            return (
-              <Link
-                key={item.id}
-                href={item.href}
-                className="rsvp-demo-link"
-                aria-current={active ? 'page' : undefined}
-              >
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
+      {showDemoSwitcher && (
+        <nav className="rsvp-demo-switcher" aria-label="RSVP 데모 링크 전환">
+          <p className="rsvp-demo-switcher-title">데모 링크 전환 (INV-003 · TC-015 · TC-016 시연)</p>
+          <p className="rsvp-muted">
+            공유 토큰(t)·하객 토큰(g) 조합에 따른 접근 제어, 하객 간 회신 격리, 비소유자 거절을 바로 확인할 수 있어요.
+          </p>
+          <div className="rsvp-demo-links">
+            {DEMO_SCENARIOS.map((item) => {
+              const active =
+                item.host !== ''
+                  ? hostId === item.host
+                  : hostId === '' && token === item.t && guestToken === item.g;
+              return (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  className="rsvp-demo-link"
+                  aria-current={active ? 'page' : undefined}
+                >
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+      )}
 
       <div className="rsvp-nav-row">
         <Link className="rsvp-back-link" href="/invitations/sample/">
