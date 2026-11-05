@@ -96,11 +96,11 @@ const imgHanbok = `${basePath}/invitations/wedding-hanbok.jpg`;
 const imgLuxuryHotel = `${basePath}/invitations/wedding-luxury-hotel.jpg`;
 
 export const BGM_LABEL_MAP: Record<string, string> = {
-  romantic: '축혼 행진곡',
-  piano: '쇼팽 야상곡',
+  romantic: '가상 축혼 행진곡',
+  piano: '가상 로맨틱 피아노',
   acoustic: '어쿠스틱 선율',
-  bach_air: 'G선상의 아리아',
-  canon: '파헬벨 캐논',
+  bach_air: '가상 클래식 스트링',
+  canon: '가상 캐논 피아노',
   thousand_years: '로맨틱 앙상블',
   spring_waltz: '봄날의 왈츠',
   none: '무음',
@@ -109,12 +109,14 @@ export const BGM_LABEL_MAP: Record<string, string> = {
 
 export function getThemeDefaultPhoto(themeId: string): string {
   switch (themeId) {
+    case 'forest-fresh':
     case 'green-canopy':
     case 'botanical-garden':
     case 'botanical':
     case 'typo-frame':
     case 'script-card':
       return imgGreenCanopy;
+    case 'our-vow':
     case 'the-wedding':
     case 'cinematic-movie':
     case 'center-line':
@@ -122,6 +124,7 @@ export function getThemeDefaultPhoto(themeId: string): string {
       return imgSunset;
     case 'photo-background':
     case 'minimal-arch':
+    case 'warm-heart':
     case 'with-love':
     case 'photo-only':
     case 'cover-a':
@@ -172,11 +175,15 @@ export default function InvitationCardRenderer({
 
   const activeLayout = overrideLayout || invitation.layoutStyle || themePreset.defaultLayout || 'classic';
   const activeBgm = overrideBgm || invitation.bgmPreset || themePreset.defaultBgm || 'romantic';
-  const activeSections = overrideSectionOrder || invitation.sectionOrder || themePreset.defaultSectionOrder;
+  const baseSections = overrideSectionOrder || invitation.sectionOrder || themePreset.defaultSectionOrder;
+  // 공개 하객 화면(/invitations/p/?t=, previewMode === false)은 순수 행사 정보만 노출 (인수 조건: 행사 정보만, 명단·RSVP 목록 없음)
+  const activeSections = previewMode
+    ? baseSections
+    : baseSections.filter((sec) => sec === 'greeting' || sec === 'schedule' || sec === 'location');
 
   const activeEffect = propEffect || themePreset.defaultEffect || 'petals';
   const frameStyle = propFrameStyle || themePreset.defaultFrameStyle || 'arch';
-  const frameColor = propFrameColor || '#ffffff';
+  const frameColor = propFrameColor || 'var(--paper, #ffffff)';
   const calendarStyle = propCalendarStyle || themePreset.defaultCalendarStyle || 'classic_table';
   const galleryMode = propGalleryMode || themePreset.defaultGalleryMode || 'carousel';
 
@@ -521,9 +528,9 @@ export default function InvitationCardRenderer({
   const brideName = parts[1] || '신부';
 
   // 현재 적용 색상 및 폰트 (WCAG 명도 대비 자동 보정 적용)
-  const effectiveBgColor = customThemeStyle?.bgColor || themePreset.defaultBgColor || '#ffffff';
-  const rawThemeTextColor = customThemeStyle?.textColor || themePreset.defaultTextColor || '#1f2937';
-  const rawThemeAccentColor = customThemeStyle?.accentColor || themePreset.defaultAccentColor || '#e11d48';
+  const effectiveBgColor = customThemeStyle?.bgColor || themePreset.defaultBgColor || 'var(--paper, #ffffff)';
+  const rawThemeTextColor = customThemeStyle?.textColor || themePreset.defaultTextColor || 'var(--ink, #1f2937)';
+  const rawThemeAccentColor = customThemeStyle?.accentColor || themePreset.defaultAccentColor || 'var(--brand, #e11d48)';
 
   const isDarkTheme = isDarkThemeBg(effectiveBgColor);
   const effectiveTextColor = ensureLegibleColor(rawThemeTextColor, effectiveBgColor, 4.5);
@@ -556,8 +563,8 @@ export default function InvitationCardRenderer({
   const renderFramedHeroPhoto = (photoUrl: string) => {
     const resolvedUrl = resolveAssetUrl(photoUrl);
     const captionColor = effectiveTextColor;
-    const subCaptionColor = isDarkTheme ? 'rgba(248, 250, 252, 0.78)' : '#64748b';
-    const cardTextColor = isDarkThemeBg(frameColor || '#ffffff') ? '#f8fafc' : '#1e293b';
+    const subCaptionColor = isDarkTheme ? 'rgba(248, 250, 252, 0.78)' : 'var(--muted, #64748b)';
+    const cardTextColor = isDarkThemeBg(frameColor || 'var(--paper, #ffffff)') ? 'var(--paper, #f8fafc)' : 'var(--ink, #1e293b)';
 
     switch (frameStyle) {
       case 'arch':
@@ -708,6 +715,7 @@ export default function InvitationCardRenderer({
 
     // 기본 'full' 풀커버 테마별 시그니처 히어로 (16종 전 테마 완벽 매핑)
     switch (themePreset.heroType) {
+      case 'forest-fresh':
       case 'green-canopy':
       case 'botanical-garden':
         return (
@@ -732,6 +740,7 @@ export default function InvitationCardRenderer({
           </div>
         );
 
+      case 'our-vow':
       case 'the-wedding':
       case 'cinematic-movie':
         return (
@@ -773,6 +782,7 @@ export default function InvitationCardRenderer({
           </div>
         );
 
+      case 'warm-heart':
       case 'with-love':
         return (
           <div className="inv-hero-sig inv-hero-sig--withlove">
@@ -1715,22 +1725,39 @@ export default function InvitationCardRenderer({
                   '원활한 예식 준비와 연회 식사 좌석 안내를 위해 참석 여부를 미리 알려주시면 진심으로 감사드리겠습니다.'}
               </p>
               <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
-                <button
-                  type="button"
-                  className="inv-btn-primary"
-                  style={{
-                    minHeight: 44,
-                    fontSize: 13,
-                    padding: '0 20px',
-                    backgroundColor: accent,
-                    color: getContrastingTextColor(accent),
-                  }}
-                  onClick={() =>
-                    setCopyNotice('RSVP 회신 폼은 현재 준비 중입니다 (손준혁 #86 목업 연동 예정)')
-                  }
-                >
-                  🌸 참석합니다
-                </button>
+                {invitation.sharingToken ? (
+                  <a
+                    href={`/invitations/rsvp/?t=${encodeURIComponent(invitation.sharingToken)}`}
+                    className="inv-btn-primary"
+                    style={{
+                      minHeight: 44,
+                      fontSize: 13,
+                      padding: '0 20px',
+                      backgroundColor: accent,
+                      color: getContrastingTextColor(accent),
+                      textDecoration: 'none',
+                    }}
+                  >
+                    🌸 참석합니다
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    className="inv-btn-primary"
+                    style={{
+                      minHeight: 44,
+                      fontSize: 13,
+                      padding: '0 20px',
+                      backgroundColor: accent,
+                      color: getContrastingTextColor(accent),
+                    }}
+                    onClick={() =>
+                      setCopyNotice('유효한 공유 토큰이 있을 때 RSVP 폼(/invitations/rsvp/)으로 연결됩니다.')
+                    }
+                  >
+                    🌸 참석합니다
+                  </button>
+                )}
                 <button
                   type="button"
                   className="inv-btn-secondary"
@@ -1779,10 +1806,21 @@ export default function InvitationCardRenderer({
         <div className="inv-envelope-intro-overlay">
           <div className="inv-envelope-intro-box">
             <div className="inv-envelope-top-flap" />
-            <div className="inv-envelope-seal" onClick={() => setEnvelopeOpened(true)}>
+            <button
+              type="button"
+              className="inv-envelope-seal"
+              onClick={() => setEnvelopeOpened(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setEnvelopeOpened(true);
+                }
+              }}
+              aria-label="봉투 열기"
+            >
               <span className="inv-envelope-seal__wax">💍</span>
               <span className="inv-envelope-seal__click-text">탭하여 봉투 열기</span>
-            </div>
+            </button>
             <div className="inv-envelope-body">
               <div style={{ fontFamily: 'serif', fontSize: 14, fontWeight: 700 }}>
                 WEDDING INVITATION

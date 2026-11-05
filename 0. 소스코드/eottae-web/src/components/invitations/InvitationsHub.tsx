@@ -46,12 +46,12 @@ const imgLuxuryHotel = `${basePath}/invitations/wedding-luxury-hotel.jpg`;
 const DESIGN_COLLECTION: DesignCoverItem[] = [
   // 1열: 최신 웨딩 트렌드 (실사 포토/타이포)
   {
-    id: 'green-canopy',
+    id: 'forest-fresh',
     name: '숲속의 싱그러움',
     category: 'photo',
-    themeId: 'green-canopy',
+    themeId: 'forest-fresh',
     layoutStyle: 'classic',
-    coverClass: 'inv-cover--green-canopy',
+    coverClass: 'inv-cover--forest-fresh',
     tag: 'BEST',
     hostNames: '차진우 · 황슬기',
     renderCover: () => (
@@ -71,12 +71,12 @@ const DESIGN_COLLECTION: DesignCoverItem[] = [
     ),
   },
   {
-    id: 'the-wedding',
+    id: 'our-vow',
     name: '우리 둘의 서약',
     category: 'photo',
-    themeId: 'the-wedding',
+    themeId: 'our-vow',
     layoutStyle: 'modern',
-    coverClass: 'inv-cover--the-wedding',
+    coverClass: 'inv-cover--our-vow',
     tag: 'CINEMA',
     hostNames: '이시우 · 정유린',
     renderCover: () => (
@@ -119,12 +119,12 @@ const DESIGN_COLLECTION: DesignCoverItem[] = [
     ),
   },
   {
-    id: 'with-love',
+    id: 'warm-heart',
     name: '사랑을 담아',
     category: 'emotional',
-    themeId: 'with-love',
+    themeId: 'warm-heart',
     layoutStyle: 'classic',
-    coverClass: 'inv-cover--with-love',
+    coverClass: 'inv-cover--warm-heart',
     tag: 'ROMANTIC',
     hostNames: '홍민석 · 표하영',
     renderCover: () => (

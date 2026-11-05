@@ -1037,7 +1037,7 @@
 
 /* (2) 컵케이크 테마 */
 [data-theme='cupcake'] .invite-stage {
-  background: color-mix(in srgb, #ec4899 5%, var(--bg));
+  background: color-mix(in srgb, var(--brand) 5%, var(--bg));
   border: 1px solid var(--line);
 }
 
@@ -1049,31 +1049,31 @@
 [data-theme='cupcake'] .invite-demo-flag {
   border-color: var(--line);
   background: var(--paper);
-  color: var(--brand-dark);
+  color: var(--brand-dark, var(--brand));
 }
 
 /* (3) 사이버펑크 테마 */
 [data-theme='cyberpunk'] .invite-stage {
-  background: color-mix(in srgb, #000000 8%, var(--bg));
-  border: 2px solid #000000;
-  box-shadow: 4px 4px 0 #000000;
+  background: color-mix(in srgb, var(--ink) 8%, var(--bg));
+  border: 2px solid var(--line);
+  box-shadow: 4px 4px 0 var(--line);
 }
 
 [data-theme='cyberpunk'] .invite-sample-set {
-  border: 2px solid #000000;
+  border: 2px solid var(--line);
   background: var(--paper);
 }
 
 [data-theme='cyberpunk'] .invite-demo-flag {
-  border: 2px solid #000000;
-  background: #ffee00;
-  color: #000000;
+  border: 2px solid var(--line);
+  background: var(--brand);
+  color: var(--ink);
   font-weight: 900;
 }
 
 /* (4) 디즈니 테마 */
 [data-theme='disney'] .invite-stage {
-  background: color-mix(in srgb, #1e40af 5%, var(--bg));
+  background: color-mix(in srgb, var(--brand) 5%, var(--bg));
   border: 1px solid var(--line);
 }
 
@@ -1084,7 +1084,7 @@
 
 /* (5) 다크 테마 */
 [data-theme='dark'] .invite-stage {
-  background: color-mix(in srgb, #000000 35%, var(--bg));
+  background: color-mix(in srgb, var(--ink) 35%, var(--bg));
   border: 1px solid var(--line);
 }
 
@@ -1107,7 +1107,7 @@
 /* (6) 시스템 테마 (다크 모드 연동) */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']):not([data-theme='cupcake']):not([data-theme='cyberpunk']):not([data-theme='disney']) .invite-stage {
-    background: color-mix(in srgb, #000000 35%, var(--bg));
+    background: color-mix(in srgb, var(--ink) 35%, var(--bg));
     border: 1px solid var(--line);
   }
 

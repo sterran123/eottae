@@ -173,10 +173,10 @@ assert(
 // 6. 테마 허브 카드 인물과 모달 미리보기 인물 100% 일치 검증
 console.log('\n[검증 6] 테마 카드 인물과 미리보기 모달 인물 100% 일치 검증');
 const all16Themes = [
-  'green-canopy',
-  'the-wedding',
+  'forest-fresh',
+  'our-vow',
   'photo-background',
-  'with-love',
+  'warm-heart',
   'wax-seal',
   'tape-card',
   'typo-frame',

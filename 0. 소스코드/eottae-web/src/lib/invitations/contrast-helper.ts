@@ -4,7 +4,10 @@
  */
 
 export function parseHex(hexColor: string): [number, number, number] {
-  let hex = hexColor.trim().replace('#', '');
+  if (!hexColor) return [255, 255, 255];
+  // CSS var(--..., #hex) 형태 지원
+  const varMatch = hexColor.match(/#([0-9a-fA-F]{3,6})/);
+  let hex = varMatch ? varMatch[1] : hexColor.trim().replace('#', '');
   if (hex.length === 3) {
     hex = hex.split('').map((c) => c + c).join('');
   }
@@ -39,13 +42,13 @@ export function isDarkThemeBg(hexColor?: string): boolean {
 }
 
 /**
- * 주어진 배경색 위에 올릴 최적의 텍스트 색상 (#ffffff 또는 #111827)을 반환합니다.
+ * 주어진 배경색 위에 올릴 최적의 텍스트 색상 (CSS 토큰 var(--paper, #ffffff) 또는 var(--ink, #111827))을 반환합니다.
  */
-export function getContrastingTextColor(bgHex: string): '#ffffff' | '#111827' {
-  if (!bgHex) return '#ffffff';
+export function getContrastingTextColor(bgHex: string): string {
+  if (!bgHex) return 'var(--paper, #ffffff)';
   const ratioWhite = getContrastRatio(bgHex, '#ffffff');
   const ratioDark = getContrastRatio(bgHex, '#111827');
-  return ratioWhite >= ratioDark ? '#ffffff' : '#111827';
+  return ratioWhite >= ratioDark ? 'var(--paper, #ffffff)' : 'var(--ink, #111827)';
 }
 
 /**

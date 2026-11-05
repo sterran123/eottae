@@ -36,7 +36,7 @@
   gap: 4px;
   padding: 4px 10px;
   background: var(--brand);
-  color: #ffffff;
+  color: var(--primary-content, var(--bg, #ffffff));
   font-size: 11px;
   font-weight: 700;
   border-radius: 20px;
@@ -45,19 +45,19 @@
 
 /* 사이버펑크 및 다크 테마에서 밝은 브랜드 색상 위의 텍스트 묻힘 방지 */
 [data-theme='cyberpunk'] .inv-badge-chip {
-  color: #0a0a14 !important;
+  color: var(--bg, #0a0a14) !important;
   font-weight: 800;
 }
 
 [data-theme='dark'] .inv-badge-chip,
 .inv-mode--dark .inv-badge-chip {
-  color: #161423 !important;
+  color: var(--bg, #161423) !important;
   font-weight: 800;
 }
 
 @media (prefers-color-scheme: dark) {
   :root[data-theme='system'] .inv-badge-chip {
-    color: #161423 !important;
+    color: var(--bg, #161423) !important;
     font-weight: 800;
   }
 }
@@ -95,7 +95,7 @@
   min-height: 44px;
   padding: 0 22px;
   background: var(--brand);
-  color: #ffffff;
+  color: var(--primary-content, var(--bg, #ffffff));
   font-weight: 600;
   font-size: 14px;
   border-radius: 12px;
@@ -106,16 +106,21 @@
   transition: all 0.2s ease;
 }
 
-/* 사이버펑크 및 다크/시스템 다크 테마에서 버튼 글자색 대비 보장 (밝은 브랜드색 배경) */
-/* .inv-mode--dark 는 제외: 카드 다크 모드가 아닌 앱 다크 테마의 브랜드 버튼만 어둡게 */
-[data-theme='dark'] .inv-btn-primary,
-[data-theme='cyberpunk'] .inv-btn-primary {
+/* 사이버펑크 및 다크/시스템 다크 테마에서 버튼 글자색 대비 보장 (허브 배너·헤더·모달 툴바 버튼만 한정하여 카드 인라인 액센트 보존) */
+[data-theme='dark'] .inv-hub-shell .inv-btn-primary,
+[data-theme='dark'] .inv-section-header-row .inv-btn-primary,
+[data-theme='dark'] .inv-modal-toolbar .inv-btn-primary,
+[data-theme='cyberpunk'] .inv-hub-shell .inv-btn-primary,
+[data-theme='cyberpunk'] .inv-section-header-row .inv-btn-primary,
+[data-theme='cyberpunk'] .inv-modal-toolbar .inv-btn-primary {
   color: var(--bg) !important;
   font-weight: 700;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root[data-theme='system'] .inv-btn-primary {
+  :root[data-theme='system'] .inv-hub-shell .inv-btn-primary,
+  :root[data-theme='system'] .inv-section-header-row .inv-btn-primary,
+  :root[data-theme='system'] .inv-modal-toolbar .inv-btn-primary {
     color: var(--bg) !important;
     font-weight: 700;
   }
@@ -1971,12 +1976,13 @@
 
 /* 화살표 버튼 완전 제거! 직관적인 편집/닫기 토글 버튼 */
 .inv-accordion-toggle-btn {
-  padding: 6px 12px;
+  min-height: 44px;
+  padding: 6px 14px;
   border-radius: 8px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
+  border: 1px solid var(--line, #cbd5e1);
+  background: var(--paper, #ffffff);
   color: var(--ink);
   cursor: pointer;
   white-space: nowrap;
@@ -1985,8 +1991,8 @@
 }
 
 [data-theme='dark'] .inv-accordion-toggle-btn {
-  background: #1e293b;
-  border-color: #475569;
+  background: var(--paper, #1e293b);
+  border-color: var(--line, #475569);
 }
 
 .inv-accordion-toggle-btn:hover {
@@ -2841,8 +2847,17 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  background: transparent;
+  border: none;
+  padding: 0;
   cursor: pointer;
   transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.inv-envelope-seal:focus-visible {
+  outline: 3px solid var(--focus, var(--brand));
+  outline-offset: 4px;
+  border-radius: 8px;
 }
 
 .inv-envelope-seal:hover {
@@ -4344,12 +4359,14 @@
 }
 
 /* --- 2. Our Wedding & 시네마틱 무비 (Sunset / Dark Cinema - 다크 모드 전용 스코핑) --- */
+.inv-mode--dark.inv-theme--our-vow,
 .inv-mode--dark.inv-theme--the-wedding,
 .inv-mode--dark.inv-theme--cinematic-movie {
   background-color: #09090b;
   color: #f4f4f5;
 }
 
+.inv-mode--dark.inv-theme--our-vow.inv-layout--modern .inv-content-section,
 .inv-mode--dark.inv-theme--the-wedding.inv-layout--modern .inv-content-section,
 .inv-mode--dark.inv-theme--cinematic-movie.inv-layout--modern .inv-content-section {
   background: rgba(24, 24, 27, 0.88) !important;
@@ -4972,27 +4989,41 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
-/* 동적 인디케이터 점 */
+/* 동적 인디케이터 점 (접근성 터치 영역 44x44px 보장, 시각 점 7px/22px) */
 .inv-carousel-indicator-dots {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
+  gap: 2px;
   margin-top: 12px;
 }
 
 .inv-carousel-indicator-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 9999px;
-  background: #cbd5e1;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
+  background: transparent;
   border: none;
   padding: 0;
   cursor: pointer;
+}
+
+.inv-carousel-indicator-dot::before {
+  content: '';
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: var(--line, #cbd5e1);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.inv-carousel-indicator-dot--active {
+.inv-carousel-indicator-dot--active::before {
   width: 22px;
   background: var(--brand, #7c3aed);
 }
@@ -5548,13 +5579,15 @@
 }
 
 .inv-emoji-chip {
-  width: 32px;
-  height: 32px;
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  border: 1.5px solid #e2e8f0;
-  background: #ffffff;
-  font-size: 16px;
-  display: flex;
+  border: 1.5px solid var(--line, #e2e8f0);
+  background: var(--paper, #ffffff);
+  font-size: 18px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
@@ -5567,8 +5600,8 @@
 
 .inv-emoji-chip--active {
   border-color: var(--brand, #e11d48) !important;
-  background: #ffe4e6 !important;
-  transform: scale(1.2);
+  background: var(--soft, #ffe4e6) !important;
+  transform: scale(1.15);
 }
 
 .inv-badge-new {
@@ -6385,6 +6418,161 @@
   flex-direction: column;
   align-items: center;
   gap: 12px;
+}
+
+/* ============================================================
+ * 6테마 완벽 지원 (globals.css 수정 없음, invitations.css 스코핑)
+ * 1) light (기본) 2) cupcake 3) cyberpunk 4) disney 5) dark 6) system
+ * ============================================================ */
+:root[data-theme='cupcake'] .inv-hub-shell,
+:root[data-theme='cupcake'] .inv-editor-shell,
+:root[data-theme='cupcake'] .inv-preview-modal-overlay {
+  --inv-theme-badge-bg: var(--brand);
+  --inv-theme-badge-color: var(--brand-dark, var(--ink));
+}
+
+:root[data-theme='cupcake'] .inv-design-card,
+:root[data-theme='cupcake'] .inv-my-card,
+:root[data-theme='cupcake'] .inv-form-section,
+:root[data-theme='cupcake'] .inv-modal-toolbar {
+  border-color: var(--line);
+  background: var(--paper);
+}
+
+:root[data-theme='cupcake'] .inv-field-input,
+:root[data-theme='cupcake'] .inv-field-select,
+:root[data-theme='cupcake'] .inv-field-textarea {
+  background: var(--paper);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+:root[data-theme='disney'] .inv-hub-shell,
+:root[data-theme='disney'] .inv-editor-shell,
+:root[data-theme='disney'] .inv-preview-modal-overlay {
+  --inv-theme-badge-bg: var(--brand);
+  --inv-theme-badge-color: var(--primary-content, #ffffff);
+}
+
+:root[data-theme='disney'] .inv-design-card,
+:root[data-theme='disney'] .inv-my-card,
+:root[data-theme='disney'] .inv-form-section,
+:root[data-theme='disney'] .inv-modal-toolbar {
+  border-color: var(--line);
+  background: var(--paper);
+}
+
+:root[data-theme='disney'] .inv-field-input,
+:root[data-theme='disney'] .inv-field-select,
+:root[data-theme='disney'] .inv-field-textarea {
+  background: var(--paper);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+:root[data-theme='cyberpunk'] .inv-design-card,
+:root[data-theme='cyberpunk'] .inv-my-card,
+:root[data-theme='cyberpunk'] .inv-form-section {
+  border-color: var(--line);
+}
+
+:root[data-theme='dark'] .inv-design-card,
+:root[data-theme='dark'] .inv-my-card,
+:root[data-theme='dark'] .inv-form-section {
+  border-color: var(--line);
+}
+
+/* ============================================================
+ * 버튼 및 인터랙티브 요소 공통 키보드 포커스 링 (접근성 WCAG 2.1 AA)
+ * ============================================================ */
+.inv-btn-primary:focus-visible,
+.inv-btn-secondary:focus-visible,
+.inv-accordion-toggle-btn:focus-visible,
+.inv-choice-pill:focus-visible,
+.inv-envelope-seal:focus-visible,
+.inv-emoji-chip:focus-visible,
+.inv-carousel-indicator-dot:focus-visible,
+.inv-field-input:focus-visible,
+.inv-field-select:focus-visible,
+.inv-field-textarea:focus-visible,
+.inv-card-action-btn:focus-visible,
+.inv-category-tab-btn:focus-visible,
+.inv-font-btn:focus-visible,
+.inv-frame-btn:focus-visible {
+  outline: 2px solid var(--focus, var(--brand, #ff6b81)) !important;
+  outline-offset: 2px !important;
+}
+
+/* ============================================================
+ * 360px 초소형 모바일 뷰포트 완벽 대응 (수평 스크롤 방지, 터치 영역 44px)
+ * ============================================================ */
+@media (max-width: 360px) {
+  .inv-hub-shell,
+  .inv-editor-shell,
+  .inv-preview-modal-overlay,
+  .inv-card-screen {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  .inv-btn-primary,
+  .inv-btn-secondary,
+  .inv-choice-pill,
+  .inv-accordion-toggle-btn {
+    min-height: 44px !important;
+    font-size: 13px !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    box-sizing: border-box !important;
+  }
+
+  .inv-editor-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .inv-phone-mockup {
+    width: 100% !important;
+    max-width: 320px !important;
+  }
+
+  .inv-modal-toolbar {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    padding: 8px 10px !important;
+  }
+
+  .inv-modal-phone-shell {
+    width: 100% !important;
+    max-width: 320px !important;
+  }
+
+  .inv-section-header-row h2 {
+    font-size: 20px !important;
+  }
+
+  .inv-section-header-row p {
+    font-size: 13px !important;
+  }
+
+  .inv-palette-dots {
+    gap: 3px !important;
+  }
+
+  .inv-carousel-indicator-dot {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+
+  .inv-emoji-chip {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
 }
 
 

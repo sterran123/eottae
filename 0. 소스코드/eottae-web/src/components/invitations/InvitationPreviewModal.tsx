@@ -42,10 +42,10 @@ const LAYOUT_OPTIONS: { id: InvitationLayoutStyle; label: string; desc: string }
 ];
 
 const BGM_OPTIONS: { id: InvitationBgmpreset; label: string; icon: string; desc: string }[] = [
-  { id: 'romantic', label: '멘델스존: 축혼 행진곡 (Wedding March)', icon: '🎺', desc: '결혼식의 정석 웅장한 행진곡' },
-  { id: 'bach_air', label: '바흐: G선상의 아리아 (Air on G String)', icon: '🎻', desc: '고결하고 우아한 클래식 현악' },
-  { id: 'canon', label: '파헬벨: 캐논 변주곡 (Pachelbel Canon)', icon: '🎼', desc: '맑고 감미로운 감성 피아노' },
-  { id: 'piano', label: '쇼팽: 녹턴 Op.9 No.2 (Chopin Nocturne)', icon: '🎹', desc: '낭만적인 야상곡 피아노' },
+  { id: 'romantic', label: '가상 축혼 행진곡 (Wedding March Synth)', icon: '🎺', desc: '결혼식 무드의 가상 합성음 선율' },
+  { id: 'bach_air', label: '가상 클래식 스트링 (Classic String Synth)', icon: '🎻', desc: '우아한 무드의 가상 현악 합성음' },
+  { id: 'canon', label: '가상 캐논 피아노 (Canon Piano Synth)', icon: '🎼', desc: '맑고 감미로운 가상 피아노 합성음' },
+  { id: 'piano', label: '가상 로맨틱 피아노 (Romantic Piano Synth)', icon: '🎹', desc: '낭만적인 가상 야상곡 피아노' },
   { id: 'thousand_years', label: '로맨틱 앙상블 (Romantic Ensemble)', icon: '💖', desc: '영원을 약속하는 로맨틱 현악 선율' },
   { id: 'acoustic', label: '어쿠스틱 세레나데 (Acoustic Serenade)', icon: '🎸', desc: '따뜻하고 포근한 어쿠스틱 선율' },
   { id: 'spring_waltz', label: '봄날의 왈츠 (Spring Waltz)', icon: '🌸', desc: '경쾌하고 설레는 웨딩 왈츠' },
@@ -90,7 +90,7 @@ const PRESET_COUPLE_PHOTOS = [
     desc: '네이비 슬림 턱시도 & 화이트 실크 드레스 20대 커플',
   },
   {
-    id: 'green-canopy',
+    id: 'forest-fresh',
     label: '숲속의 싱그러움',
     tag: '내추럴 가든',
     url: `${basePath}/invitations/wedding-green-canopy.jpg`,
@@ -99,9 +99,9 @@ const PRESET_COUPLE_PHOTOS = [
   {
     id: 'sunset',
     label: '노을 로맨스',
-    tag: '시네마틱 한강',
+    tag: '시네마틱 노을강',
     url: `${basePath}/invitations/wedding-sunset.jpg`,
-    desc: '황금빛 한강 일몰 빛을 등진 20대 커플 포옹',
+    desc: '황금빛 노을강 일몰 빛을 등진 20대 커플 포옹',
   },
   {
     id: 'cherry-blossom',
@@ -313,7 +313,7 @@ export default function InvitationPreviewModal({
       title: '오시는 길 & 약도',
       body:
         invitation.venueLabel ||
-        '서울특별시 노을구 달빛로 123 (노을역 3번 출구 도보 5분)',
+        '한들시 노을구 달빛로 123 (노을역 3번 출구 도보 5분)',
       fontFamily: 'sans',
     },
     guestbook: {
@@ -608,7 +608,7 @@ export default function InvitationPreviewModal({
                   const updated: Invitation = {
                     ...invitation,
                     greeting: customConfigs.greeting?.body || invitation.greeting,
-                    venueLabel: invitation.venueLabel,
+                    venueLabel: customConfigs.location?.body || invitation.venueLabel,
                     themeId: selectedTheme,
                     layoutStyle: selectedLayout,
                     bgmPreset: saveBgm,

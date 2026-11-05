@@ -35,14 +35,14 @@ export interface ThemePreset {
 }
 
 export const THEME_MASTER_PRESETS: Record<string, ThemePreset> = {
-  'green-canopy': {
-    id: 'green-canopy' as InvitationThemeId,
+  'forest-fresh': {
+    id: 'forest-fresh' as InvitationThemeId,
     name: '숲속의 싱그러움',
     sub: '싱그러운 야외 숲속 캐노피 가든',
     icon: '🌿',
     tag: 'SIGNATURE',
     category: 'photo',
-    heroType: 'green-canopy',
+    heroType: 'forest-fresh',
     defaultLayout: 'classic',
     defaultFont: 'script',
     defaultEffect: 'petals',
@@ -55,14 +55,14 @@ export const THEME_MASTER_PRESETS: Record<string, ThemePreset> = {
     defaultBgm: 'acoustic',
     defaultSectionOrder: ['greeting', 'schedule', 'gallery', 'location', 'account'],
   },
-  'the-wedding': {
-    id: 'the-wedding' as InvitationThemeId,
+  'our-vow': {
+    id: 'our-vow' as InvitationThemeId,
     name: '우리 둘의 서약',
     sub: '노을빛 강변 시네마틱 로맨스',
     icon: '🌅',
     tag: 'CINEMA',
     category: 'photo',
-    heroType: 'the-wedding',
+    heroType: 'our-vow',
     defaultLayout: 'modern',
     defaultFont: 'script',
     defaultEffect: 'sparkles',
@@ -95,14 +95,14 @@ export const THEME_MASTER_PRESETS: Record<string, ThemePreset> = {
     defaultBgm: 'acoustic',
     defaultSectionOrder: ['greeting', 'schedule', 'location', 'gallery', 'account'],
   },
-  'with-love': {
-    id: 'with-love' as InvitationThemeId,
+  'warm-heart': {
+    id: 'warm-heart' as InvitationThemeId,
     name: '사랑을 담아',
     sub: '소프트 페이드 핑크빛 캘리그라피',
     icon: '🌸',
     tag: 'ROMANTIC',
     category: 'emotional',
-    heroType: 'with-love',
+    heroType: 'warm-heart',
     defaultLayout: 'classic',
     defaultFont: 'script',
     defaultEffect: 'petals',
@@ -443,7 +443,10 @@ const THEME_ALIASES: Record<string, string> = {
   'hanji': 'traditional-hanji',
   'star-table': 'starlight-banquet',
   'sunset-center-line': 'center-line',
-  'botanical': 'green-canopy',
+  'botanical': 'forest-fresh',
+  'green-canopy': 'forest-fresh',
+  'the-wedding': 'our-vow',
+  'with-love': 'warm-heart',
 };
 
 export function getThemePreset(themeId?: string): ThemePreset {

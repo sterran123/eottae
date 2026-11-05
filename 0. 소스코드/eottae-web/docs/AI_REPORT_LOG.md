@@ -1147,6 +1147,42 @@
 - [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
 
 
+## 2026-11-05 청첩장 테마 ID 3종 고유화 및 이슈 #84 잔여 4개 항목 완결 (오하율 작업)
+- [요청] 이슈 #84 체크리스트 미완료 4개 항목(미리보기 테마 CSS 토큰만·globals.css 수정 없음, 공개 하객 행사 정보만·명단/RSVP 없음, 360px·44px·키보드·6테마, Refs #84 PR 머지) 및 상용 유사 테마 ID 3종(`the-wedding`, `green-canopy`, `with-love`) 고유화 피드백 반영:
+  1) **테마 ID 3종 고유화 및 하위 호환성 보장**:
+     - `the-wedding` -> `our-vow` ('우리 둘의 서약')
+     - `green-canopy` -> `forest-fresh` ('숲속의 싱그러움')
+     - `with-love` -> `warm-heart` ('사랑을 담아')
+     - `src/lib/invitations/types.ts`: 신규 테마 ID 등록 및 레거시 ID 하위 호환 배열 보존.
+     - `src/lib/invitations/theme-presets.ts`: `THEME_MASTER_PRESETS` 키 및 `heroType` 변경, `THEME_ALIASES`에 구 테마 ID 등록으로 기존 데이터 마이그레이션 호환 보장.
+     - `src/components/invitations/InvitationsHub.tsx`: `DESIGN_COLLECTION` ID, `themeId`, `coverClass` 매핑 갱신.
+     - `src/components/invitations/InvitationCardRenderer.tsx`: `getThemeDefaultPhoto`, 시그니처 히어로 분기에 신규 테마 ID 매핑.
+     - `src/components/invitations/InvitationPreviewModal.tsx`, `scripts/verify-modal-and-card.ts`: 테마 ID 갱신.
+  2) **공개 하객 화면(/invitations/p/?t=) 행사 정보 한정 렌더링**:
+     - `InvitationCardRenderer.tsx`: `previewMode === false` 시 `activeSections`를 `['greeting', 'schedule', 'location']`으로 엄격 필터링하여 행사 정보만 노출하고, 계좌·갤러리·RSVP 섹션 및 하객 명단을 완전 배제(인수 조건 충족).
+     - `rsvp_preview` 섹션 내 참석 회신 버튼을 유효한 공유 토큰이 있을 경우 `/invitations/rsvp/?t=${token}`으로 직결 링크.
+  3) **미리보기 테마 CSS 토큰만 사용 및 globals.css 수정 금지 준수**:
+     - `globals.css` 절대 미수정 (0 변경).
+     - `invitations.css`, `invite-preview.css`, `InvitationCardRenderer.tsx`, `InvitationPreviewModal.tsx`, `contrast-helper.ts`: 하드코딩된 hex 색상(#ffffff, #1f2937, #64748b 등)을 CSS 테마 토큰(`var(--paper)`, `var(--ink)`, `var(--brand)`, `var(--line)`, `var(--soft)`, `var(--muted)`)으로 전면 전환.
+     - `invitations.css`: 사이버펑크·다크 테마의 `.inv-btn-primary` 글자색 오버라이드를 카드 내부 버튼에 영향 주지 않도록 허브 및 모달 툴바로 스코프 한정.
+  4) **360px 뷰포트·44px 터치 타겟·키보드 접근성·6테마 완비**:
+     - `invitations.css`: `:root[data-theme='cupcake']`, `:root[data-theme='disney']`, `cyberpunk`, `dark`, `system`, `light` 6개 앱 테마를 자체 스코핑하여 완전 연동.
+     - `invitations.css`: `@media (max-width: 360px)` 쿼리를 신설하여 초소형 모바일 화면에서 가로 스크롤을 방지하고 입력창·버튼·패널 크기 100% 최적화.
+     - `invitations.css`: 모든 버튼, 링크, 입력창, 칩, 인디케이터에 공통 `:focus-visible` 키보드 포커스 링(`outline: 2px solid var(--focus)`) 일괄 적용.
+     - `InvitationEditor.tsx`: 「전체 화면으로 보기」 버튼 인라인 `minHeight: 36` -> `44` 상향.
+     - `invitations.css`: `.inv-accordion-toggle-btn`에 `min-height: 44px`, `.inv-carousel-indicator-dot`에 44x44px 터치 영역(7px/22px 시각 점 가상 요소 유지), `.inv-emoji-chip`에 `min-width: 44px; min-height: 44px;` 적용.
+     - `InvitationCardRenderer.tsx`: 봉투 오버레이(`.inv-envelope-seal`)를 `div`에서 `button`으로 전환하고 `onKeyDown`(Enter/Space) 및 `aria-label="봉투 열기"`, 키보드 포커스 링 적용.
+  5) **권장 사항 및 보안·데이터 무결성 강화**:
+     - `InvitationPreviewModal.tsx`: BGM 라벨을 가상 합성음 명칭(가상 축혼 행진곡, 가상 클래식 스트링 등)으로 변경, 노을 로맨스 설명 내 한강을 가상 지명 '노을강'으로 변경, 기본 약도 주소를 '한들시 노을구 달빛로 123'으로 변경, 모달 설정 저장 시 장소 상세 문구를 `venueLabel`에 보존.
+     - `demo-storage.ts`: `deleteInvitation` 및 `regenerateSharingToken`에 `viewerIsOwner === true` 및 `showcase-` 거절 검증 가드를 추가하여 비소유자 우회 차단.
+     - `new/page.tsx`, `p/page.tsx`: SubpageHero 및 상단 안내 띠에 `데모 데이터로 동작하는 3차 미리보기` 표준 배지 통일.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (package.json, tsconfig.json, globals.css, .github/ 등 변경 없음)
+- [미실행] 서버·Supabase 연동 없음 (3차 브라우저 목업 원칙 준수)
+
+
+
 
 
 
