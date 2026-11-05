@@ -69,9 +69,18 @@ export default function RecommendCard({
     itemRefs.current[index]?.focus();
 
     function handleClickOutside(e: MouseEvent | TouchEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
+      const root = menuRef.current;
+      if (!root || root.contains(e.target as Node)) return;
+      const target = e.target;
+      const landedOnControl =
+        target instanceof Element &&
+        Boolean(
+          target.closest(
+            'button, a[href], input, textarea, select, [tabindex]:not([tabindex="-1"])',
+          ),
+        );
+      if (landedOnControl) setMenuOpen(false);
+      else closeToButton();
     }
     document.addEventListener('mousedown', handleClickOutside);
     document.addEventListener('touchstart', handleClickOutside);
@@ -203,7 +212,7 @@ export default function RecommendCard({
                     className="mt-rec__dropdown-backdrop"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setMenuOpen(false);
+                      closeToButton();
                     }}
                     aria-hidden="true"
                   />

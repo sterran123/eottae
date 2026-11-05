@@ -1130,5 +1130,14 @@
 - [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
 
 
+## 2026-11-05 PR #99 3차 AI 코드 리뷰 지적 해결 (오하율 작업)
+- [요청] PR #99 3차 AI 리뷰 지적(포인터 닫기 시 포커스 복원 결함 필수 해결 및 모션 감소 a11y 보강) 반영:
+  1) `RecommendCard.tsx` (필수): 백드롭 클릭 시 `closeToButton()`을 호출하여 메뉴 언마운트 시 포커스가 body로 떨어져 키보드 흐름이 끊기는 문제 해결. 문서 레벨 outside 리스너는 포커스를 받을 수 있는 대화형 컨트롤 클릭 시에만 `setMenuOpen(false)`로 두고, 일반 표면 클릭 시에는 `closeToButton()`으로 복원.
+  2) `match-qna.css`: `prefers-reduced-motion` 미디어 쿼리에 `.mt-qna__modal` 애니메이션 해제 및 `.mt-qna__modal-close` 트랜지션 해제 추가.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+
+
+
 
 

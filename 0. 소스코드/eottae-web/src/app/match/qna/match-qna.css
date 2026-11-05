@@ -552,4 +552,10 @@
   .mt-noscroll {
     scroll-behavior: auto;
   }
+  .mt-qna__modal {
+    animation: none;
+  }
+  .mt-qna__modal-close {
+    transition: none;
+  }
 }
