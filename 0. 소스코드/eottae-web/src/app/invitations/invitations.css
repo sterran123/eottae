@@ -107,9 +107,11 @@
 }
 
 /* 사이버펑크 및 다크/시스템 다크 테마에서 버튼 글자색 대비 보장 (허브 배너·헤더·모달 툴바 버튼만 한정하여 카드 인라인 액센트 보존) */
+[data-theme='dark'] .inv-hub .inv-btn-primary,
 [data-theme='dark'] .inv-hub-shell .inv-btn-primary,
 [data-theme='dark'] .inv-section-header-row .inv-btn-primary,
 [data-theme='dark'] .inv-modal-toolbar .inv-btn-primary,
+[data-theme='cyberpunk'] .inv-hub .inv-btn-primary,
 [data-theme='cyberpunk'] .inv-hub-shell .inv-btn-primary,
 [data-theme='cyberpunk'] .inv-section-header-row .inv-btn-primary,
 [data-theme='cyberpunk'] .inv-modal-toolbar .inv-btn-primary {
@@ -118,6 +120,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-hub .inv-btn-primary,
   :root[data-theme='system'] .inv-hub-shell .inv-btn-primary,
   :root[data-theme='system'] .inv-section-header-row .inv-btn-primary,
   :root[data-theme='system'] .inv-modal-toolbar .inv-btn-primary {
@@ -4530,7 +4533,10 @@
   .inv-radar-pulse,
   .inv-btn-primary:hover,
   .inv-btn-secondary:hover,
-  .inv-cover-viewport:hover {
+  .inv-cover-viewport:hover,
+  .inv-carousel-indicator-dot::before,
+  .inv-envelope-seal,
+  .inv-envelope-seal:hover {
     animation: none !important;
     transition: none !important;
     transform: none !important;
@@ -6424,14 +6430,18 @@
  * 6테마 완벽 지원 (globals.css 수정 없음, invitations.css 스코핑)
  * 1) light (기본) 2) cupcake 3) cyberpunk 4) disney 5) dark 6) system
  * ============================================================ */
+:root[data-theme='cupcake'] .inv-hub,
 :root[data-theme='cupcake'] .inv-hub-shell,
 :root[data-theme='cupcake'] .inv-editor-shell,
+:root[data-theme='cupcake'] .inv-modal-overlay,
 :root[data-theme='cupcake'] .inv-preview-modal-overlay {
   --inv-theme-badge-bg: var(--brand);
   --inv-theme-badge-color: var(--brand-dark, var(--ink));
 }
 
+:root[data-theme='cupcake'] .inv-design-cover-card,
 :root[data-theme='cupcake'] .inv-design-card,
+:root[data-theme='cupcake'] .inv-my-card-row,
 :root[data-theme='cupcake'] .inv-my-card,
 :root[data-theme='cupcake'] .inv-form-section,
 :root[data-theme='cupcake'] .inv-modal-toolbar {
@@ -6447,14 +6457,18 @@
   color: var(--ink);
 }
 
+:root[data-theme='disney'] .inv-hub,
 :root[data-theme='disney'] .inv-hub-shell,
 :root[data-theme='disney'] .inv-editor-shell,
+:root[data-theme='disney'] .inv-modal-overlay,
 :root[data-theme='disney'] .inv-preview-modal-overlay {
   --inv-theme-badge-bg: var(--brand);
   --inv-theme-badge-color: var(--primary-content, #ffffff);
 }
 
+:root[data-theme='disney'] .inv-design-cover-card,
 :root[data-theme='disney'] .inv-design-card,
+:root[data-theme='disney'] .inv-my-card-row,
 :root[data-theme='disney'] .inv-my-card,
 :root[data-theme='disney'] .inv-form-section,
 :root[data-theme='disney'] .inv-modal-toolbar {
@@ -6470,13 +6484,17 @@
   color: var(--ink);
 }
 
+:root[data-theme='cyberpunk'] .inv-design-cover-card,
 :root[data-theme='cyberpunk'] .inv-design-card,
+:root[data-theme='cyberpunk'] .inv-my-card-row,
 :root[data-theme='cyberpunk'] .inv-my-card,
 :root[data-theme='cyberpunk'] .inv-form-section {
   border-color: var(--line);
 }
 
+:root[data-theme='dark'] .inv-design-cover-card,
 :root[data-theme='dark'] .inv-design-card,
+:root[data-theme='dark'] .inv-my-card-row,
 :root[data-theme='dark'] .inv-my-card,
 :root[data-theme='dark'] .inv-form-section {
   border-color: var(--line);
@@ -6499,7 +6517,7 @@
 .inv-category-tab-btn:focus-visible,
 .inv-font-btn:focus-visible,
 .inv-frame-btn:focus-visible {
-  outline: 2px solid var(--focus, var(--brand, #ff6b81)) !important;
+  outline: 2px solid var(--focus, var(--brand)) !important;
   outline-offset: 2px !important;
 }
 
@@ -6507,9 +6525,12 @@
  * 360px 초소형 모바일 뷰포트 완벽 대응 (수평 스크롤 방지, 터치 영역 44px)
  * ============================================================ */
 @media (max-width: 360px) {
+  .inv-hub,
   .inv-hub-shell,
   .inv-editor-shell,
+  .inv-modal-overlay,
   .inv-preview-modal-overlay,
+  .inv-render-canvas,
   .inv-card-screen {
     width: 100% !important;
     max-width: 100% !important;

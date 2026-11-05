@@ -1182,6 +1182,19 @@
 - [미실행] 서버·Supabase 연동 없음 (3차 브라우저 목업 원칙 준수)
 
 
+## 2026-11-05 PR #102 1차 AI 코드 리뷰 반영 — 실측 hex 반환·venueLabel 길이 가드·클래스 선택자 보정 (Refs #84, Refs #102) (오하율 작업)
+- [요청] PR #102 Grok AI 리뷰 지적(반드시 고칠 것 2건 및 권장 3건) 완전 해결:
+  1) `contrast-helper.ts` & `InvitationCardRenderer.tsx` (필수 1): `getContrastingTextColor()`가 CSS 변수(`var(--paper)`, `var(--ink)`) 대신 실측 hex 리터럴(`'#ffffff' | '#111827'`)을 반환하도록 수정. 다크/사이버펑크 테마 등에서 부모 토큰 반전 시 카드 위 텍스트 명도 대비가 역전되는 현상을 근본 방지. `InvitationCardRenderer.tsx`에서 프레임 배경 밝기 기준 `cardTextColor = isDarkThemeBg(frameColor) ? '#f8fafc' : '#1e293b'`와 서브 캡션 색상을 안전하게 분리.
+  2) `InvitationPreviewModal.tsx` (필수 2): 설정 저장 시 `customConfigs.location.body`(오시는 길 상세 문구)를 `venueLabel`에 무조건 덮어쓰지 않고, 2~80자 단일행 요건을 충족할 때만 반영하도록 가드(`locationBody.length >= 2 && locationBody.length <= 80 && !locationBody.includes('\n') ? locationBody : invitation.venueLabel`) 적용. `demo-storage.ts`의 스키마 유효성 검증(최대 80자) 위반으로 저장이 거부되는 문제를 원천 차단하고, 상세 본문 `textarea`에 `maxLength={300}` 추가.
+  3) `invitations.css`: 6테마 및 360px 미디어 쿼리 선택자에 실제 렌더링 클래스(`.inv-hub`, `.inv-design-cover-card`, `.inv-my-card-row`, `.inv-modal-overlay`, `.inv-render-canvas`)를 추가 매핑. 포커스 링의 `#ff6b81` 레거시 폴백을 제거하여 순수 CSS 토큰(`var(--focus, var(--brand))`)으로 통일. `prefers-reduced-motion`에 `.inv-carousel-indicator-dot::before` 및 `.inv-envelope-seal` 애니메이션/트랜지션 해제 추가.
+  4) `InviteSampleStudio.tsx`: 테마 선택 탭 렌더링 대상을 `INVITATION_THEME_IDS` 대신 4대 프리셋 샘플인 `DEMO_THEMES`로 직접 매핑하여 중복 라디오 버튼 노출 방지.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (package.json, tsconfig.json, globals.css, .github/ 등 변경 없음)
+- [미실행] 서버·Supabase 연동 없음 (3차 브라우저 목업 원칙 준수)
+
+
+
 
 
 

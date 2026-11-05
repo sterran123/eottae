@@ -53,8 +53,7 @@ export default function InviteSampleStudio() {
       <fieldset className="invite-sample-set">
         <legend>청첩장 테마</legend>
         <div className="invite-choices">
-          {INVITATION_THEME_IDS.map((id) => {
-            const name = DEMO_THEMES.find((theme) => theme.id === id)?.name ?? id;
+          {DEMO_THEMES.map(({ id, name }) => {
             return (
               <label className="invite-choice" key={id}>
                 <input
@@ -62,12 +61,12 @@ export default function InviteSampleStudio() {
                   name="invite-sample-theme"
                   value={id}
                   checked={themeId === id}
-                  onChange={() => setThemeId(id)}
+                  onChange={() => setThemeId(id as InvitationThemeId)}
                 />
                 <span className="invite-tone" data-invite-theme={id} aria-hidden="true" />
                 <span>
                   <span className="invite-choice-label">
-                    {name} · {THEME_TONE[id]}
+                    {name} · {THEME_TONE[id as InvitationThemeId] ?? '내추럴'}
                   </span>
                 </span>
               </label>

@@ -183,7 +183,7 @@ export default function InvitationCardRenderer({
 
   const activeEffect = propEffect || themePreset.defaultEffect || 'petals';
   const frameStyle = propFrameStyle || themePreset.defaultFrameStyle || 'arch';
-  const frameColor = propFrameColor || 'var(--paper, #ffffff)';
+  const frameColor = propFrameColor || '#ffffff';
   const calendarStyle = propCalendarStyle || themePreset.defaultCalendarStyle || 'classic_table';
   const galleryMode = propGalleryMode || themePreset.defaultGalleryMode || 'carousel';
 
@@ -563,8 +563,8 @@ export default function InvitationCardRenderer({
   const renderFramedHeroPhoto = (photoUrl: string) => {
     const resolvedUrl = resolveAssetUrl(photoUrl);
     const captionColor = effectiveTextColor;
-    const subCaptionColor = isDarkTheme ? 'rgba(248, 250, 252, 0.78)' : 'var(--muted, #64748b)';
-    const cardTextColor = isDarkThemeBg(frameColor || 'var(--paper, #ffffff)') ? 'var(--paper, #f8fafc)' : 'var(--ink, #1e293b)';
+    const subCaptionColor = isDarkTheme ? 'rgba(248, 250, 252, 0.78)' : '#64748b';
+    const cardTextColor = isDarkThemeBg(frameColor) ? '#f8fafc' : '#1e293b';
 
     switch (frameStyle) {
       case 'arch':

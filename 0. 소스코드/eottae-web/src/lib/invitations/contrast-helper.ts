@@ -42,13 +42,13 @@ export function isDarkThemeBg(hexColor?: string): boolean {
 }
 
 /**
- * 주어진 배경색 위에 올릴 최적의 텍스트 색상 (CSS 토큰 var(--paper, #ffffff) 또는 var(--ink, #111827))을 반환합니다.
+ * 주어진 배경색 위에 올릴 최적의 텍스트 색상 (#ffffff 또는 #111827)을 반환합니다.
  */
-export function getContrastingTextColor(bgHex: string): string {
-  if (!bgHex) return 'var(--paper, #ffffff)';
+export function getContrastingTextColor(bgHex: string): '#ffffff' | '#111827' {
+  if (!bgHex) return '#ffffff';
   const ratioWhite = getContrastRatio(bgHex, '#ffffff');
   const ratioDark = getContrastRatio(bgHex, '#111827');
-  return ratioWhite >= ratioDark ? 'var(--paper, #ffffff)' : 'var(--ink, #111827)';
+  return ratioWhite >= ratioDark ? '#ffffff' : '#111827';
 }
 
 /**

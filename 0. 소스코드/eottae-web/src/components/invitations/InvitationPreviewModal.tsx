@@ -605,10 +605,15 @@ export default function InvitationPreviewModal({
                 style={{ minHeight: 44, padding: '0 16px', fontSize: 13 }}
                 onClick={() => {
                   const saveBgm = selectedBgm === 'custom' ? (invitation.bgmPreset || 'romantic') : selectedBgm;
+                  const locationBody = customConfigs.location?.body?.trim() ?? '';
+                  const venueLabel =
+                    locationBody.length >= 2 && locationBody.length <= 80 && !locationBody.includes('\n')
+                      ? locationBody
+                      : invitation.venueLabel;
                   const updated: Invitation = {
                     ...invitation,
                     greeting: customConfigs.greeting?.body || invitation.greeting,
-                    venueLabel: customConfigs.location?.body || invitation.venueLabel,
+                    venueLabel: venueLabel,
                     themeId: selectedTheme,
                     layoutStyle: selectedLayout,
                     bgmPreset: saveBgm,
@@ -1269,6 +1274,7 @@ export default function InvitationPreviewModal({
                             <textarea
                               className="inv-field-textarea"
                               rows={3}
+                              maxLength={300}
                               value={config.body || ''}
                               onChange={(e) => updateCustomField(secKey, 'body', e.target.value)}
                               placeholder="표시될 문구를 입력하세요"
