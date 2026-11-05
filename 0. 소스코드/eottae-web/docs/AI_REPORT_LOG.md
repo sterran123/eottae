@@ -1212,3 +1212,15 @@
 - [검증] 오하율의 기존 타입(`src/lib/invitations/types.ts`) 100% 재사용 및 새 types 파일 미생성 확인.
 - [검증] `src/components/invitations/*.tsx` 내 하드코딩 hex(#) 색상 0건 및 6테마 CSS 변수(`var(...)`) 100% 토큰화 확인.
 - [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수), `package.json`, `FILE_INDEX.csv`, `MANIFEST.sha256`는 수정하지 않음.
+
+## 2026-11-05 PR #102 2차 AI 코드 리뷰 피드백 반영 — basePath RSVP 링크 연결·미사용 import 정리 (Refs #84, Refs #102) (오하율 작업)
+- [요청] PR #102 Grok 2차 AI 리뷰 지적(반드시 고칠 것 1건 및 권장 사항) 반영:
+  1) `InvitationCardRenderer.tsx` (필수): 「🌸 참석합니다」 링크 `href`에 `next.config.mjs`의 `basePath`(`${basePath}/invitations/rsvp/?t=...`)를 명시하여 GitHub Pages 및 로컬 서브패스 환경에서 루트 404 이탈 없이 정상 라우팅되도록 수정. 토큰 부재 시 복사 안내에도 `${basePath}` 적용.
+  2) `InviteSampleStudio.tsx`: 미사용 `INVITATION_THEME_IDS` import 제거하여 `noUnusedLocals` 타입 안전성 확보.
+  3) `contrast-helper.ts`: `parseHex` 정규식을 `/#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/`로 엄격화하여 4·5자리 비정상 hex 매칭 방지.
+  4) `invitations.css`: 존재하지 않는 `--primary-content` 토큰 및 하드코딩 hex 폴백을 제거하고 공식 배경 토큰 `var(--bg)`로 일원화.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (package.json, tsconfig.json, globals.css, .github/ 등 변경 없음)
+- [미실행] 서버·Supabase 연동 없음 (3차 브라우저 목업 원칙 준수)
+

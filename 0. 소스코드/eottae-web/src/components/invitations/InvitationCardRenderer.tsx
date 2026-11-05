@@ -1727,7 +1727,7 @@ export default function InvitationCardRenderer({
               <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
                 {invitation.sharingToken ? (
                   <a
-                    href={`/invitations/rsvp/?t=${encodeURIComponent(invitation.sharingToken)}`}
+                    href={`${basePath}/invitations/rsvp/?t=${encodeURIComponent(invitation.sharingToken)}`}
                     className="inv-btn-primary"
                     style={{
                       minHeight: 44,
@@ -1752,7 +1752,7 @@ export default function InvitationCardRenderer({
                       color: getContrastingTextColor(accent),
                     }}
                     onClick={() =>
-                      setCopyNotice('유효한 공유 토큰이 있을 때 RSVP 폼(/invitations/rsvp/)으로 연결됩니다.')
+                      setCopyNotice(`유효한 공유 토큰이 있을 때 RSVP 폼(${basePath}/invitations/rsvp/)으로 연결됩니다.`)
                     }
                   >
                     🌸 참석합니다

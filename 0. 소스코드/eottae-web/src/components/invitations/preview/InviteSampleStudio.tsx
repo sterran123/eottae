@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { DEMO_THEMES } from '@/lib/demo/demo-themes';
 import { DEMO_INVITATIONS } from '@/lib/invitations/demo-data';
-import { INVITATION_THEME_IDS, type InvitationThemeId } from '@/lib/invitations/types';
+import type { InvitationThemeId } from '@/lib/invitations/types';
 import InvitePreview from './InvitePreview';
 import { INVITE_PRESET_OPTIONS, type InvitePresetId } from './presets';
 import './invite-preview.css';
