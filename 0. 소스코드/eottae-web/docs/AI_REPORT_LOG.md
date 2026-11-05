@@ -1448,6 +1448,20 @@
 - [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
 - [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
 
+## 2026-11-06 PR #102 모달 툴바 라벨 토큰화·테마 칩 전 테마 연동·히어로 별칭 정규화 (Refs #84, Refs #102) (오하율 작업)
+- [요청] PR #102 AI 리뷰 지적(모달 툴바 라벨 테마 토큰화, 테마 칩/아이콘 배경 전 테마 연동, 별칭 테마 히어로 분기 정규화) 해결:
+  1) `invitations.css:5058`: 미리보기 모달 좌측 툴바 라벨(`.inv-ctrl-label`)의 `color: #0f172a !important` 고정 색상을 `color: var(--ink) !important`로, 필드 라벨(`.inv-field-label`)의 고정 색상을 `color: var(--muted) !important`로 전환하여 다크·사이버펑크·시스템 다크 테마 배경(`var(--paper)`) 위에서 최적의 가독성 확보.
+  2) `invitations.css:1546, :5940`: 테마 선택 칩(`.inv-theme-choice-btn`)의 고정 배경색(`#f8fafc`) 및 테두리(`#e2e8f0`)를 `var(--soft)` 및 `var(--line)` 테마 토큰으로 전환하고, `[data-theme='dark']`, `[data-theme='cyberpunk']`, `@media (prefers-color-scheme: dark) :root[data-theme='system']` 명시 규칙 연동. 세그먼트 버튼(`.inv-segment-group`, `.inv-segment-btn--active`), 효과 칩(`.inv-fx-card-btn`, `.inv-fx-card-btn--active`), 테마 아이콘(`.inv-theme-icon`), 프리셋 카드(`.inv-color-preset-card`, `.inv-color-preset-name`), 레이아웃 버튼(`.inv-layout-choice-btn`, `.inv-layout-choice-title`, `.inv-layout-choice-desc`) 전반에 일관된 테마 토큰 연동.
+  3) `InvitationCardRenderer.tsx:727`: 풀커버 히어로 분기에서 `activeThemeId` 기본값(`wax-seal`)으로 인해 별칭 테마(`spring-card`, `moon-garden`, `hanji` 등)가 `default:`로 누락되던 결함을 해결. `DIRECT_HERO_IDS` Set을 정의하여 스위치에 직접 존재하는 ID만 `activeThemeId`를 타고, 나머지는 정규화된 `themePreset.heroType`을 타도록 분기 정규화.
+  4) `invitations.css`: `:focus-visible` 목록에 `.inv-account-row:focus-visible` 추가하여 계좌 아코디언 행 키보드 포커스 링 접근성 보강.
+  5) `scripts/verify-modal-and-card.ts`: [검증 14] 신설하여 모달 툴바 라벨 토큰화, 테마/효과/아이콘 칩 전 테마 연동, `DIRECT_HERO_IDS` 정규 분기 자동 검증(42/42 PASS 달성).
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (42/42 통과)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
+
 
 
 

@@ -724,7 +724,18 @@ export default function InvitationCardRenderer({
     }
 
     // 기본 'full' 풀커버 테마별 시그니처 히어로 (16종 전 테마 완벽 매핑)
-    const heroKey = activeThemeId || themePreset.heroType;
+    const DIRECT_HERO_IDS = new Set([
+      'forest-fresh', 'green-canopy', 'botanical-garden',
+      'our-vow', 'the-wedding', 'cinematic-movie',
+      'warm-heart', 'with-love', 'photo-background',
+      'minimal-arch', 'cover-a', 'wax-seal', 'tape-card',
+      'typo-frame', 'script-card', 'center-line', 'quiet',
+      'spring-blossom', 'moonlight-garden', 'traditional-hanji',
+      'hanok-heritage', 'starlight-banquet', 'photo-only',
+    ]);
+    const heroKey = DIRECT_HERO_IDS.has(activeThemeId)
+      ? activeThemeId
+      : themePreset.heroType;
     switch (heroKey) {
       case 'forest-fresh':
       case 'green-canopy':

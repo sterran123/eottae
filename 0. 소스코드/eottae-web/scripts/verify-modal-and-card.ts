@@ -360,14 +360,39 @@ assert(
   cssCode.includes('.inv-copy-chip:focus-visible') &&
   cssCode.includes('.inv-bgm-floating:focus-visible') &&
   cssCode.includes('.inv-modal-close-btn:focus-visible') &&
-  cssCode.includes('.wax-seal-interactive-hotspot:focus-visible'),
-  ':focus-visible 목록에 주소 복사 버튼, 복사 칩, BGM 플로팅 버튼, 모달 닫기 버튼, 왁스 씰 핫스팟이 포함됨'
+  cssCode.includes('.wax-seal-interactive-hotspot:focus-visible') &&
+  cssCode.includes('.inv-account-row:focus-visible'),
+  ':focus-visible 목록에 주소 복사 버튼, 복사 칩, BGM 플로팅 버튼, 모달 닫기 버튼, 왁스 씰 핫스팟, 계좌 아코디언 행이 포함됨'
 );
 
 assert(
   rendererCode.includes('aria-label="왁스 씰 개봉"') &&
   rendererCode.includes("e.key === 'Enter' || e.key === ' '"),
   '왁스 씰 인터랙티브 핫스팟에 키보드 접근성(Enter/Space onKeyDown 및 aria-label)이 적용됨'
+);
+
+// 14. [PR #102 피드백] 모달 툴바 라벨 토큰화 · 테마 칩 전 테마 연동 · 히어로 별칭 정규화 검증
+console.log('\n[검증 14] 모달 툴바 라벨 토큰화 · 테마 칩 전 테마 연동 · 히어로 별칭 정규화 검증');
+assert(
+  cssCode.includes('.inv-ctrl-label {\n  font-size: 13px !important;\n  font-weight: 700 !important;\n  color: var(--ink) !important;') &&
+  cssCode.includes('.inv-field-label {\n  font-size: 12px !important;\n  font-weight: 700 !important;\n  color: var(--muted) !important;'),
+  '미리보기 모달 툴바 라벨(.inv-ctrl-label, .inv-field-label)이 고정 hex 대신 테마 토큰(var(--ink), var(--muted))을 사용함'
+);
+
+assert(
+  cssCode.includes("[data-theme='cyberpunk'] .inv-theme-choice-btn") &&
+  cssCode.includes(":root[data-theme='system'] .inv-theme-choice-btn") &&
+  cssCode.includes('.inv-theme-choice-btn {\n  min-height: 54px;\n  padding: 8px 12px;\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  border-radius: 12px;\n  border: 1px solid var(--line);\n  background: var(--soft);\n  color: var(--ink);') &&
+  cssCode.includes('.inv-theme-icon {\n  font-size: 20px;\n  line-height: 1;\n  flex-shrink: 0;\n  width: 28px;\n  height: 28px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  background: var(--soft);') &&
+  cssCode.includes("[data-theme='cyberpunk'] .inv-theme-icon") &&
+  cssCode.includes("[data-theme='cyberpunk'] .inv-color-preset-card"),
+  '테마 선택 칩, 테마 아이콘, 프리셋 카드가 var(--soft)/var(--paper)/var(--ink)를 사용하고 사이버펑크 및 시스템 다크 테마와 완벽 연동됨'
+);
+
+assert(
+  rendererCode.includes('const DIRECT_HERO_IDS = new Set(') &&
+  rendererCode.includes('const heroKey = DIRECT_HERO_IDS.has(activeThemeId)\n      ? activeThemeId\n      : themePreset.heroType;'),
+  '풀커버 시그니처 히어로 분기가 DIRECT_HERO_IDS를 통해 별칭 테마(spring-card 등)를 정규 테마로 올바르게 분기함'
 );
 
 console.log('\n============================================================');
