@@ -329,6 +329,32 @@ assert(
   '.inv-address-copy-btn이 background: var(--soft) 및 호버 시 color: var(--bg)로 globals 테마 토큰을 연동함'
 );
 
+// 13. [PR #102 피드백] 밝은 카드 주소 복사 명도 대비 · 44px · 키보드 포커스 · 왁스 씰 접근성 검증
+console.log('\n[검증 13] 밝은 카드 주소 복사 명도 대비 · 44px · 키보드 포커스 · 왁스 씰 접근성 검증');
+assert(
+  cssCode.includes('.inv-mode--light .inv-address-copy-btn {\n  color: inherit;\n  min-height: 44px;\n}'),
+  '밝은 카드(.inv-mode--light)의 주소 복사 버튼이 color: inherit 및 min-height: 44px을 보유함'
+);
+
+assert(
+  cssCode.includes('.inv-mode--light .inv-address-copy-btn:hover {\n  background: var(--brand);\n  color: var(--bg);\n}'),
+  '밝은 카드(.inv-mode--light)의 주소 복사 버튼 호버 시 background: var(--brand) 및 color: var(--bg)로 가독성을 보장함'
+);
+
+assert(
+  cssCode.includes('.inv-address-copy-btn:focus-visible') &&
+  cssCode.includes('.inv-copy-chip:focus-visible') &&
+  cssCode.includes('.inv-bgm-floating:focus-visible') &&
+  cssCode.includes('.inv-modal-close-btn:focus-visible'),
+  ':focus-visible 목록에 주소 복사 버튼, 복사 칩, BGM 플로팅 버튼, 모달 닫기 버튼이 포함됨'
+);
+
+assert(
+  rendererCode.includes('aria-label="왁스 씰 개봉"') &&
+  rendererCode.includes("e.key === 'Enter' || e.key === ' '"),
+  '왁스 씰 인터랙티브 핫스팟에 키보드 접근성(Enter/Space onKeyDown 및 aria-label)이 적용됨'
+);
+
 console.log('\n============================================================');
 console.log(` 검증 결과: 총 ${passCount + failCount}개 중 ${passCount}개 통과 (실패: ${failCount}개)`);
 console.log('============================================================');

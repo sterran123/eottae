@@ -857,8 +857,15 @@ export default function InvitationCardRenderer({
             <div
               className="wax-seal-interactive-hotspot"
               onClick={() => setEnvelopeOpened(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setEnvelopeOpened(true);
+                }
+              }}
               role="button"
               tabIndex={0}
+              aria-label="왁스 씰 개봉"
               title="클릭하여 왁스 씰 개봉"
             />
             <div className="inv-wax-envelope-bottom-text">

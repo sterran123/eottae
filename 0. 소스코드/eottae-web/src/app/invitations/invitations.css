@@ -2300,6 +2300,8 @@
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
+  min-height: 44px;
+  box-sizing: border-box;
 }
 
 .inv-address-copy-btn:hover {
@@ -4221,6 +4223,16 @@
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   color: #1f2937;
+}
+
+.inv-mode--light .inv-address-copy-btn {
+  color: inherit;
+  min-height: 44px;
+}
+
+.inv-mode--light .inv-address-copy-btn:hover {
+  background: var(--brand);
+  color: var(--bg);
 }
 
 .inv-mode--light .inv-transport-guide {
@@ -6505,7 +6517,11 @@
 .inv-card-action-btn:focus-visible,
 .inv-category-tab-btn:focus-visible,
 .inv-font-btn:focus-visible,
-.inv-frame-btn:focus-visible {
+.inv-frame-btn:focus-visible,
+.inv-address-copy-btn:focus-visible,
+.inv-copy-chip:focus-visible,
+.inv-bgm-floating:focus-visible,
+.inv-modal-close-btn:focus-visible {
   outline: 2px solid var(--focus, var(--brand)) !important;
   outline-offset: 2px !important;
 }

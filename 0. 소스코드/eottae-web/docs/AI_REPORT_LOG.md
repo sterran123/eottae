@@ -1159,7 +1159,7 @@
      - `src/components/invitations/InvitationCardRenderer.tsx`: `getThemeDefaultPhoto`, 시그니처 히어로 분기에 신규 테마 ID 매핑.
      - `src/components/invitations/InvitationPreviewModal.tsx`, `scripts/verify-modal-and-card.ts`: 테마 ID 갱신.
   2) **공개 하객 화면(/invitations/p/?t=) 행사 정보 한정 렌더링**:
-     - `InvitationCardRenderer.tsx`: `previewMode === false` 시 `activeSections`를 `['greeting', 'schedule', 'location']`으로 엄격 필터링하여 행사 정보만 노출하고, 계좌·갤러리·RSVP 섹션 및 하객 명단을 완전 배제(인수 조건 충족).
+     - `InvitationCardRenderer.tsx`: `previewMode === false` 시 `guestbook`·`guest_snap`(방명록·타인 스냅 사진 목록)을 엄격 제외하고, 하객 본인의 참석 회신(`rsvp_preview`) 및 기본 행사 정보(일정·장소·신랑신부)만 렌더링하여 개인정보 보호 및 인수 조건 충족.
      - `rsvp_preview` 섹션 내 참석 회신 버튼을 유효한 공유 토큰이 있을 경우 `/invitations/rsvp/?t=${token}`으로 직결 링크.
   3) **미리보기 테마 CSS 토큰만 사용 및 globals.css 수정 금지 준수**:
      - `globals.css` 절대 미수정 (0 변경).
@@ -1399,6 +1399,21 @@
   5) `scripts/verify-modal-and-card.ts`: [검증 12] 신설하여 지도·장소 카드 고정 색 부재 및 테마 토큰 연동 자동 검증(34/34 PASS).
 - [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
 - [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (34/34 통과)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
+
+## 2026-11-05 PR #102 청첩장 밝은 카드 주소 복사 대비·키보드 포커스 및 왁스 씰 접근성 보강 (Refs #84, Refs #102) (오하율 작업)
+- [요청] 청첩장 밝은 카드 주소 복사 버튼 명도 대비(`color: inherit`), 44px 터치 영역, 키보드 포커스 링(`.inv-address-copy-btn:focus-visible`, `.inv-copy-chip:focus-visible`, `.inv-bgm-floating:focus-visible`, `.inv-modal-close-btn:focus-visible`) 및 왁스 씰 키보드 조작 접근성 완비:
+  1) `invitations.css`: `.inv-mode--light .inv-address-copy-btn`에 `color: inherit; min-height: 44px;`, 호버 시 `background: var(--brand); color: var(--bg);` 지정으로 다크/사이버 테마 토큰 하에서도 밝은 카드 위 명도 대비 완전 보장.
+  2) `invitations.css`: `.inv-address-copy-btn` 기본 스타일에 `min-height: 44px; box-sizing: border-box;` 보장.
+  3) `invitations.css`: `:focus-visible` 공통 포커스 링 대상에 `.inv-address-copy-btn`, `.inv-copy-chip`, `.inv-bgm-floating`, `.inv-modal-close-btn` 추가.
+  4) `InvitationCardRenderer.tsx`: 왁스 씰 인터랙티브 핫스팟에 `onKeyDown`(Enter/Space) 및 `aria-label="왁스 씰 개봉"` 추가.
+  5) `AI_REPORT_LOG.md:1161`: 공개 화면 섹션 설명 정정(코드와 일치).
+  6) `scripts/verify-modal-and-card.ts`: [검증 13] 신설하여 밝은 카드 주소 복사 버튼, 44px, 키보드 포커스 링, 왁스 씰 접근성 자동 검증 (38/38 PASS).
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (38/38 통과)
 - [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
 - [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
 - [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
