@@ -93,6 +93,7 @@ export default function ChatHub() {
     auth.status === 'signed-in' && isUuid(auth.user?.id) ? auth.user.id : null;
   const isDemoOverride = Boolean(asParam && !isUuid(asParam));
   const useLive = !isDemoOverride && liveSessionId !== null;
+  const authPending = auth.status === 'loading' && !isDemoOverride;
 
   const actor = useMemo(
     () =>
@@ -177,12 +178,16 @@ export default function ChatHub() {
     [actor.id],
   );
 
-  const visibleRooms = useLive ? liveRooms : demoVisibleRooms;
+  const visibleRooms = authPending ? [] : useLive ? liveRooms : demoVisibleRooms;
 
   const requested = roomParam || partnerParam || '';
-  const demoAccess = !useLive && !isUuidRoom ? demoRoomAccess(actor.id, requested || null) : 'none';
+  const demoAccess =
+    !useLive && !isUuidRoom && !authPending
+      ? demoRoomAccess(actor.id, requested || null)
+      : 'none';
 
   const openedRoomId = useMemo(() => {
+    if (authPending) return null;
     if (!useLive) {
       return demoAccess === 'member' ? findDemoRoomId(requested) : null;
     }
@@ -196,12 +201,12 @@ export default function ChatHub() {
       return visibleRooms.find((r) => r.partner.id === partnerParam)?.id ?? null;
     }
     return null;
-  }, [demoAccess, isUuidPartner, isUuidRoom, partnerParam, requested, roomParam, useLive, uuidRoomStatus, visibleRooms]);
+  }, [authPending, demoAccess, isUuidPartner, isUuidRoom, partnerParam, requested, roomParam, useLive, uuidRoomStatus, visibleRooms]);
 
   const shouldAutoOpen = Boolean(openedRoomId && (roomParam || partnerParam || initialQuestion));
 
   const forbidden = useMemo(() => {
-    if (auth.status === 'loading' && (isUuidRoom || isUuidPartner)) {
+    if (authPending || (auth.status === 'loading' && (isUuidRoom || isUuidPartner))) {
       return false;
     }
     if (!useLive) {
@@ -218,7 +223,7 @@ export default function ChatHub() {
       return !liveRoomsLoading && !liveRoomsFailed && !visibleRooms.some((r) => r.partner.id === partnerParam);
     }
     return false;
-  }, [auth.status, demoAccess, isUuidPartner, isUuidRoom, liveRoomsFailed, liveRoomsLoading, partnerParam, useLive, uuidRoomStatus, visibleRooms]);
+  }, [auth.status, authPending, demoAccess, isUuidPartner, isUuidRoom, liveRoomsFailed, liveRoomsLoading, partnerParam, useLive, uuidRoomStatus, visibleRooms]);
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [visited, setVisited] = useState<string[]>([]);
@@ -429,13 +434,15 @@ export default function ChatHub() {
         <header className="mt-chathub-head">
           <h1 className="mt-chathub-title">채팅</h1>
           <p className="mt-chathub-note" role="note">
-            {useLive
-              ? '매칭된 상대와의 실시간 대화예요. 매칭 구성원만 대화를 열람하고 주고받을 수 있어요.'
-              : '데모 · 가상 대화예요. 서버로는 가지 않고 이 브라우저에 남아요. 다른 탭에서 상대 계정을 고르면 메시지를 주고받을 수 있어요.'}
+            {authPending
+              ? '대화 목록을 준비하는 중이에요…'
+              : useLive
+                ? '매칭된 상대와의 실시간 대화예요. 매칭 구성원만 대화를 열람하고 주고받을 수 있어요.'
+                : '데모 · 가상 대화예요. 서버로는 가지 않고 이 브라우저에 남아요. 다른 탭에서 상대 계정을 고르면 메시지를 주고받을 수 있어요.'}
           </p>
         </header>
 
-        {!useLive && (
+        {!useLive && !authPending && (
           <div className="mt-chat-tools">
             <label className="mt-chat-actor-label">
               이 탭의 데모 사용자
@@ -487,19 +494,22 @@ export default function ChatHub() {
           </section>
         )}
 
-        {auth.status === 'loading' || (useLive && liveRoomsLoading) || uuidRoomStatus === 'pending' ? (
+        {authPending || (useLive && liveRoomsLoading) || uuidRoomStatus === 'pending' ? (
           <p className="mt-report-empty" role="status">
             대화 목록을 불러오는 중이에요…
           </p>
-        ) : (useLive && liveRoomsFailed) || uuidRoomStatus === 'error' ? null : visibleRooms.length === 0 ? (
-          <p className="mt-report-empty">
-            {useLive ? '열린 대화가 없어요.' : '이 데모 사용자로 열린 대화가 없어요.'}
-          </p>
-        ) : (
-          <ChatList rooms={visibleRooms} previews={previews} activeId={activeId} onOpen={openRoom} />
+        ) : (useLive && liveRoomsFailed) || uuidRoomStatus === 'error' ? null : (
+          <>
+            {visibleRooms.length === 0 ? (
+              <p className="mt-report-empty">
+                {useLive ? '열린 대화가 없어요.' : '이 데모 사용자로 열린 대화가 없어요.'}
+              </p>
+            ) : (
+              <ChatList rooms={visibleRooms} previews={previews} activeId={activeId} onOpen={openRoom} />
+            )}
+            <SafetyDemoPanels actorId={actor.id} isDemoOverride={isDemoOverride} />
+          </>
         )}
-
-        <SafetyDemoPanels actorId={actor.id} isDemoOverride={isDemoOverride} />
       </div>
 
       {activeId && <div className="mt-chat-backdrop" aria-hidden="true" onClick={closeRoom} />}

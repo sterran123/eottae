@@ -1211,7 +1211,7 @@
 ## 2026-11-05 feat(MATCH-007): 실계정 1:1 채팅 RLS 가드·차단 채널 회수 및 DTO attachment_path 일치 (이슈 #22, Refs #22) (손준혁 작업)
 - [요청] 이슈 #22([손준혁] 채팅·신고/차단 남은 작업 + QA 증빙, MATCH-007·008, SEC-002) 지시 및 리뷰 피드백 완비:
   1) MATCH-007 (실시간 1:1 채팅, TC-008): 실계정(UUID) 1:1 채팅 진입 시 매칭 구성원(`conversations`) RLS 정책(`conversations_select_member`)을 사전 검증하여 비구성원은 빈 대화로 진입하지 않고 즉시 채널 생성을 중단한 채 「볼 수 없는 대화」 화면 표출. Supabase Realtime 채널 구독 상태 콜백(`onSubscriptionStatus`) 연동. DTO 불일치 해결(`MessageRow`에 `attachment_path` 추가 및 `messages` SELECT 쿼리에 일치).
-  2) MATCH-008 (신고·차단 서버 효력, TC-009): 실계정 대화 중 상대 차단 등으로 `messages` INSERT 실패 시 SQLSTATE `42501`(또는 HTTP status 403)을 감지하여 `onChannelRevoked` 호출 → 새로고침 없이 즉시 `removeChannel`로 실시간 채널 회수 및 전송창 disabled 잠금 처리.
+  2) MATCH-008 (신고·차단 서버 효력, TC-009): 실계정 대화 중 상대 차단 등으로 `messages` INSERT 실패 시 SQLSTATE `42501`을 감지하여 `onChannelRevoked` 호출 → 새로고침 없이 즉시 `removeChannel`로 실시간 채널 회수 및 전송창 disabled 잠금 처리.
   3) 신고 관리 큐 및 내 신고 내역 (TC-010): `SafetyDemoPanels`에서 실계정(UUID) `fetchMyReports()`(`reports_select_own` RLS) 연동. 일반 계정이 관리자 시점 토글 시 `fetchReportQueue()` RPC(`list_reports`) 호출 결과 42501/403 거부를 감지하여 「일반 계정은 볼 수 없어요 (403 FORBIDDEN · 운영자 전용)」 에러 상태 표출 및 큐 목록 0건 격리.
 - [AI] Antigravity가 해당 파일들(`ChatRoom.tsx`, `SafetyDemoPanels.tsx`, `chat-service.ts`, `safety-service.ts`, `types.ts`, `테스트_케이스_마스터.md`, `AI_REPORT_LOG.md`) 수정 후 TypeScript 컴파일 및 Next.js 빌드 성공.
 - [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors).
@@ -1247,6 +1247,16 @@
   2) `ChatHub.tsx` (권장): 세션 인증 로딩 중(`auth.status === 'loading'`)에는 데모 방 목록이 깜빡이며 먼저 그려지지 않도록 로딩 문구 유지, 대화 목록 조회 실패 시 「열린 대화가 없어요」 빈 목록 문구를 숨기고 「다시 시도」 안내만 명확히 노출, `Promise.all`에 `.catch()` 핸들러를 추가하여 예외 발생 시 `liveRoomsLoading`이 무한 대기하지 않고 실패 상태로 안전하게 전이되도록 보강.
   3) `SafetyDemoPanels.tsx` (권장): 로그아웃 상태에서 `?as=<uuid>` 쿼리만으로 서버 조회가 실행되지 않도록 `isLive = !isDemoOverride && sessionUserId !== null`로 엄격히 제한.
   4) `chat-service.ts` (권장): `fetchMyLiveConversations` JSDoc 주석에서 제거된 `partnerHint` 폴백 설명을 최신 구현(`matches` 기반 확정)에 맞게 현행화.
+- [AI] Antigravity가 해당 파일들 수정 후 TypeScript 컴파일 및 정적 빌드 검증 수행.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors).
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 export 100% 성공).
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수).
+
+## 2026-11-05 PR #104 4차 AI 코드 리뷰 지적 해결 (손준혁 작업, Refs #22, Refs #104)
+- [요청] PR #104 4차 AI 코드 리뷰 필수 지적(세션 확정 전 데모 화면·도구·신고패널 노출 방지 및 세션 불일치 조회 차단) 반영:
+  1) `ChatHub.tsx` (필수): `useAuth()` 초기 로딩 중(`auth.status === 'loading'`) 데모 오버라이드(`as` 데모 id)가 아닐 때는 `authPending = true`로 정의하여 세션 확정 전까지 `visibleRooms`를 빈 배열(`[]`)로 유지하고, 상단 데모 도구(`mt-chat-tools`) 렌더링을 완전히 차단. `SafetyDemoPanels` 또한 `authPending` 중에는 마운트하지 않도록 분기하여 로그인 사용자가 진입 시 데모 화면이나 데모 선택창이 순간 노출되는 결함 원천 해결. 헤더 안내 문구도 세션 확인 중에는 대기 문구로 표시.
+  2) `SafetyDemoPanels.tsx` (권장): 실조회 조건(`isLive`)을 `!isDemoOverride && sessionUserId !== null && actorId === sessionUserId`로 강화하여 로그인 세션 사용자와 현재 actorId가 일치할 때만 서버 조회가 발생하도록 보장.
+  3) `AI_REPORT_LOG.md` (권장): MATCH-008 설명에서 불일치 문구 「또는 HTTP status 403」을 제거하고 코드와 일치하는 SQLSTATE `42501`로 단일화.
 - [AI] Antigravity가 해당 파일들 수정 후 TypeScript 컴파일 및 정적 빌드 검증 수행.
 - [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors).
 - [검증] `npm run build` PASS (Next.js 15.5.28 정적 export 100% 성공).
