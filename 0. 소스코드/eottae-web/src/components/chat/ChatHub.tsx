@@ -7,9 +7,14 @@
 //        구성원이 아닌 방은 열지 않는다.
 // ============================================================
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useAuth } from '@/lib/auth/use-auth';
+import {
+  checkConversationMembership,
+  fetchMyLiveConversations,
+} from '@/lib/chat/chat-service';
 import {
   DEMO_ACTORS,
   DEMO_ROOMS,
@@ -21,7 +26,7 @@ import {
   viewRoomForActor,
 } from '@/lib/chat/demo-data';
 import { ensureChatSeed, loadVisibleMessages, subscribeChatDemo } from '@/lib/chat/demo-store';
-import type { ChatMessage, ChatRoomInfo } from '@/lib/chat/types';
+import { isUuid, type ChatMessage, type ChatRoomInfo } from '@/lib/chat/types';
 import { subscribeSafetyDemo } from '@/lib/safety/demo-store';
 import SafetyDemoPanels from '@/components/safety/SafetyDemoPanels';
 import ChatList, { type ChatRoomPreview } from './ChatList';
@@ -76,23 +81,164 @@ export default function ChatHub() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const auth = useAuth();
+  const forbiddenTitleId = useId();
+
   const roomParam = searchParams.get('room');
   const partnerParam = searchParams.get('partner');
   const initialQuestion = searchParams.get('q');
-  const actor = actorFromQuery(searchParams.get('as'));
-  const requested = roomParam || partnerParam || '';
-  const access = demoRoomAccess(actor.id, requested || null);
-  const openedRoomId = access === 'member' ? findDemoRoomId(requested) : null;
-  const shouldAutoOpen = Boolean(openedRoomId && (roomParam || initialQuestion));
-  const forbidden = access === 'denied';
+  const asParam = searchParams.get('as');
 
-  const visibleRooms = useMemo(
+  const sessionUserId =
+    auth.status === 'signed-in' && isUuid(auth.user?.id) ? auth.user.id : null;
+  const isDemoOverride = Boolean(asParam && !isUuid(asParam));
+  const isLiveMode = !isDemoOverride && (Boolean(sessionUserId) || isUuid(asParam));
+  const actor = useMemo(
+    () =>
+      isLiveMode && sessionUserId
+        ? { id: sessionUserId, nickname: auth.account?.nickname?.trim() || '내 계정' }
+        : actorFromQuery(asParam),
+    [asParam, auth.account?.nickname, isLiveMode, sessionUserId],
+  );
+
+  const isUuidRoom = isUuid(roomParam);
+  const isUuidPartner = isUuid(partnerParam);
+
+  const [liveRooms, setLiveRooms] = useState<ChatRoomInfo[]>([]);
+  const [liveRoomsLoading, setLiveRoomsLoading] = useState(false);
+  const [liveRoomsFailed, setLiveRoomsFailed] = useState(false);
+  const [uuidRoomStatus, setUuidRoomStatus] = useState<
+    'idle' | 'pending' | 'member' | 'forbidden' | 'error'
+  >(() => (isUuid(roomParam) ? 'pending' : 'idle'));
+  const [liveRetryNonce, setLiveRetryNonce] = useState(0);
+
+  useEffect(() => {
+    if (!isLiveMode && !isUuidRoom && !isUuidPartner) {
+      setLiveRooms([]);
+      setLiveRoomsLoading(false);
+      setLiveRoomsFailed(false);
+      setUuidRoomStatus('idle');
+      return;
+    }
+
+    let cancelled = false;
+    setLiveRoomsLoading(true);
+    setLiveRoomsFailed(false);
+    setUuidRoomStatus(isUuidRoom ? 'pending' : 'idle');
+
+    const effectiveUserId = sessionUserId ?? (isUuid(actor.id) ? actor.id : null);
+    void Promise.all([
+      fetchMyLiveConversations(effectiveUserId, partnerParam),
+      isUuidRoom && roomParam
+        ? checkConversationMembership(roomParam)
+        : Promise.resolve('idle' as const),
+    ]).then(([rooms, membership]) => {
+      if (cancelled) return;
+      setLiveRoomsLoading(false);
+      if (rooms === null) {
+        setLiveRooms([]);
+        setLiveRoomsFailed(true);
+      } else {
+        const nextRooms = [...rooms];
+        if (
+          membership === 'member' &&
+          isUuidRoom &&
+          roomParam &&
+          !nextRooms.some((r) => r.id === roomParam) &&
+          isUuidPartner &&
+          partnerParam &&
+          effectiveUserId &&
+          partnerParam !== effectiveUserId
+        ) {
+          const mePartner = { id: effectiveUserId, nickname: '나' };
+          const otherPartner = {
+            id: partnerParam,
+            nickname: `회원 (${partnerParam.slice(0, 8)})`,
+          };
+          nextRooms.push({
+            id: roomParam,
+            partner: otherPartner,
+            members: [mePartner, otherPartner],
+            initialMessages: [],
+            timeLabel: '',
+            unread: 0,
+          });
+        }
+        setLiveRooms(nextRooms);
+        setLiveRoomsFailed(false);
+      }
+
+      if (isUuidRoom) {
+        if (membership === 'member' && rooms === null) {
+          setUuidRoomStatus('error');
+        } else {
+          setUuidRoomStatus(membership);
+        }
+      } else {
+        setUuidRoomStatus('idle');
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [actor.id, isLiveMode, isUuidPartner, isUuidRoom, liveRetryNonce, partnerParam, roomParam, sessionUserId]);
+
+  const demoVisibleRooms = useMemo(
     () =>
       DEMO_ROOMS.map((room) => viewRoomForActor(room, actor.id)).filter(
         (room): room is ChatRoomInfo => room !== null,
       ),
     [actor.id],
   );
+
+  const visibleRooms = useMemo(() => {
+    if (isLiveMode) return liveRooms;
+    if (isUuidRoom && uuidRoomStatus === 'member') {
+      const matched = liveRooms.filter((r) => r.id === roomParam);
+      if (matched.length > 0) {
+        const demoIds = new Set(demoVisibleRooms.map((r) => r.id));
+        return [...demoVisibleRooms, ...matched.filter((r) => !demoIds.has(r.id))];
+      }
+    }
+    return demoVisibleRooms;
+  }, [demoVisibleRooms, isLiveMode, isUuidRoom, liveRooms, roomParam, uuidRoomStatus]);
+
+  const requested = roomParam || partnerParam || '';
+  const demoAccess = !isLiveMode && !isUuidRoom ? demoRoomAccess(actor.id, requested || null) : 'none';
+
+  const openedRoomId = useMemo(() => {
+    if (isUuidRoom) {
+      if (uuidRoomStatus === 'member' && roomParam && visibleRooms.some((r) => r.id === roomParam)) {
+        return roomParam;
+      }
+      return null;
+    }
+    if (isLiveMode) {
+      if (!roomParam && isUuidPartner && partnerParam) {
+        return visibleRooms.find((r) => r.partner.id === partnerParam)?.id ?? null;
+      }
+      return null;
+    }
+    return demoAccess === 'member' ? findDemoRoomId(requested) : null;
+  }, [demoAccess, isLiveMode, isUuidPartner, isUuidRoom, partnerParam, requested, roomParam, uuidRoomStatus, visibleRooms]);
+
+  const shouldAutoOpen = Boolean(openedRoomId && (roomParam || partnerParam || initialQuestion));
+
+  const forbidden = useMemo(() => {
+    if (isUuidRoom) {
+      return uuidRoomStatus === 'forbidden';
+    }
+    if (isLiveMode) {
+      if (roomParam) return true;
+      if (partnerParam) {
+        if (!isUuidPartner) return true;
+        return !liveRoomsLoading && !liveRoomsFailed && !visibleRooms.some((r) => r.partner.id === partnerParam);
+      }
+      return false;
+    }
+    return demoAccess === 'denied';
+  }, [demoAccess, isLiveMode, isUuidPartner, isUuidRoom, liveRoomsFailed, liveRoomsLoading, partnerParam, roomParam, uuidRoomStatus, visibleRooms]);
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [visited, setVisited] = useState<string[]>([]);
@@ -158,7 +304,7 @@ export default function ChatHub() {
     if (auto) {
       linkRoomRef.current = auto;
       activeRef.current = auto;
-      rememberSeen(seenRef.current, actor.id, auto);
+      if (!isUuid(auto)) rememberSeen(seenRef.current, actor.id, auto);
       setStoredPreviews((current) => {
         if (!current?.[auto]) return current;
         return { ...current, [auto]: { ...current[auto], unread: 0 } };
@@ -179,7 +325,7 @@ export default function ChatHub() {
   function openRoom(id: string) {
     linkRoomRef.current = id;
     activeRef.current = id;
-    rememberSeen(seenRef.current, actor.id, id);
+    if (!isUuid(id)) rememberSeen(seenRef.current, actor.id, id);
     setActiveId(id);
     setVisited((current) => (current.includes(id) ? current : [...current, id]));
     setStoredPreviews((current) => {
@@ -210,8 +356,8 @@ export default function ChatHub() {
     params.delete('q');
     const room = params.get('room');
     const partner = params.get('partner');
-    if (room && demoRoomAccess(nextId, room) !== 'member') params.delete('room');
-    if (partner && demoRoomAccess(nextId, partner) !== 'member') params.delete('partner');
+    if (room && !isUuid(room) && demoRoomAccess(nextId, room) !== 'member') params.delete('room');
+    if (partner && !isUuid(partner) && demoRoomAccess(nextId, partner) !== 'member') params.delete('partner');
     const query = params.toString();
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }
@@ -303,8 +449,9 @@ export default function ChatHub() {
         <header className="mt-chathub-head">
           <h1 className="mt-chathub-title">채팅</h1>
           <p className="mt-chathub-note" role="note">
-            데모 · 가상 대화예요. 서버로는 가지 않고 이 브라우저에 남아요. 다른 탭에서 상대 계정을 고르면
-            메시지를 주고받을 수 있어요.
+            {isLiveMode
+              ? '매칭된 상대와의 실시간 대화예요. 매칭 구성원만 대화를 열람하고 주고받을 수 있어요.'
+              : '데모 · 가상 대화예요. 서버로는 가지 않고 이 브라우저에 남아요. 다른 탭에서 상대 계정을 고르면 메시지를 주고받을 수 있어요.'}
           </p>
         </header>
 
@@ -336,50 +483,66 @@ export default function ChatHub() {
           </Link>
         </div>
 
-        {forbidden && (
-          <section className="mt-chat-forbidden" role="status" aria-labelledby="mt-chat-forbidden-title">
-            <h2 id="mt-chat-forbidden-title">볼 수 없는 대화</h2>
-            <p>이 방의 매칭 구성원이 아니라 메시지를 볼 수 없어요.</p>
-            <p className="mt-chat-demo">데모</p>
+        {(uuidRoomStatus === 'error' || (isLiveMode && liveRoomsFailed)) && (
+          <section className="mt-chat-forbidden" role="status">
+            <h2>대화를 불러오지 못했어요</h2>
+            <p>네트워크 연결을 확인한 뒤 다시 시도해 주세요.</p>
+            <button
+              type="button"
+              className="mt-chat-unblock"
+              onClick={() => setLiveRetryNonce((n) => n + 1)}
+            >
+              다시 시도
+            </button>
           </section>
         )}
 
-        {visibleRooms.length === 0 ? (
-          <p className="mt-report-empty">이 데모 사용자로 열린 대화가 없어요.</p>
+        {forbidden && (
+          <section className="mt-chat-forbidden" role="status" aria-labelledby={forbiddenTitleId}>
+            <h2 id={forbiddenTitleId}>볼 수 없는 대화</h2>
+            <p>이 방의 매칭 구성원이 아니라 메시지를 볼 수 없어요.</p>
+            {!isLiveMode && !isUuidRoom && <p className="mt-chat-demo">데모</p>}
+          </section>
+        )}
+
+        {(isLiveMode && liveRoomsLoading) || uuidRoomStatus === 'pending' ? (
+          <p className="mt-report-empty" role="status">
+            대화 목록을 불러오는 중이에요…
+          </p>
+        ) : visibleRooms.length === 0 ? (
+          <p className="mt-report-empty">
+            {isLiveMode ? '열린 대화가 없어요.' : '이 데모 사용자로 열린 대화가 없어요.'}
+          </p>
         ) : (
           <ChatList rooms={visibleRooms} previews={previews} activeId={activeId} onOpen={openRoom} />
         )}
 
-        <SafetyDemoPanels actorId={actor.id} />
+        <SafetyDemoPanels actorId={actor.id} isDemoOverride={isDemoOverride} />
       </div>
 
       {activeId && <div className="mt-chat-backdrop" aria-hidden="true" onClick={closeRoom} />}
 
-      {DEMO_ROOMS.filter((room) => visited.includes(room.id)).map((room) => {
-        const viewed = viewRoomForActor(room, actor.id);
-        if (!viewed) return null;
-        return (
-          <div
-            key={`${actor.id}-${room.id}`}
-            id={`mt-chat-panel-${room.id}`}
-            className="mt-chat-panel"
-            role="dialog"
-            aria-modal="true"
-            aria-label={`${viewed.partner.nickname}님과의 채팅`}
-            hidden={activeId !== room.id}
-          >
-            <ChatRoom
-              room={viewed}
-              actorId={actor.id}
-              active={activeId === room.id}
-              initialQuestion={room.id === openedRoomId ? initialQuestion : null}
-              onQuestionConsumed={consumeQuestion}
-              onClose={closeRoom}
-              onLastMessage={handleLastMessage}
-            />
-          </div>
-        );
-      })}
+      {visibleRooms.filter((room) => visited.includes(room.id)).map((viewed) => (
+        <div
+          key={`${actor.id}-${viewed.id}`}
+          id={`mt-chat-panel-${viewed.id}`}
+          className="mt-chat-panel"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${viewed.partner.nickname}님과의 채팅`}
+          hidden={activeId !== viewed.id}
+        >
+          <ChatRoom
+            room={viewed}
+            actorId={actor.id}
+            active={activeId === viewed.id}
+            initialQuestion={viewed.id === openedRoomId ? initialQuestion : null}
+            onQuestionConsumed={consumeQuestion}
+            onClose={closeRoom}
+            onLastMessage={handleLastMessage}
+          />
+        </div>
+      ))}
     </>
   );
 }

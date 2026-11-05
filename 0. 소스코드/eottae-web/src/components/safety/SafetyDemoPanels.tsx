@@ -2,9 +2,10 @@
 
 // 내 신고 내역과 신고 관리 큐 데모/실계정.
 // - 데모 계정: 이 기기 로컬 스토리지에만 저장/표시.
-// - 실계정 (UUID): `public.reports` 조회(내 신고) 및 `public.list_reports()` RPC(신고 큐: operator 권한 검사 및 42501 거부).
+// - 실계정 (로그인 세션 또는 UUID): `public.reports` 조회(내 신고) 및 `public.list_reports()` RPC(신고 큐: operator 권한 검사 및 42501 거부).
 
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
+import { useAuth } from '@/lib/auth/use-auth';
 import { formatDemoWhen } from '@/lib/demo/demo-adult';
 import { nicknameForDemoId } from '@/lib/chat/demo-data';
 import { listDemoReports, subscribeSafetyDemo } from '@/lib/safety/demo-store';
@@ -37,53 +38,91 @@ function ReportItem({ item, showReporter }: { item: ReportHistoryItem; showRepor
   );
 }
 
-export default function SafetyDemoPanels({ actorId }: { actorId: string }) {
+export default function SafetyDemoPanels({
+  actorId,
+  isDemoOverride = false,
+}: {
+  actorId: string;
+  isDemoOverride?: boolean;
+}) {
   const hintId = useId();
-  const isLive = isUuid(actorId);
+  const auth = useAuth();
+  const sessionUserId =
+    auth.status === 'signed-in' && isUuid(auth.user?.id) ? auth.user.id : null;
+  const effectiveActorId = isDemoOverride
+    ? actorId
+    : isUuid(actorId)
+      ? actorId
+      : sessionUserId ?? actorId;
+  const isLive = !isDemoOverride && Boolean(sessionUserId || isUuid(actorId));
+
   const [ready, setReady] = useState(false);
   const [reports, setReports] = useState<ReportHistoryItem[]>([]);
+  const [myReportsFailed, setMyReportsFailed] = useState(false);
   const [adminActor, setAdminActor] = useState<string | null>(null);
-  const admin = adminActor === actorId;
+  const admin = adminActor === effectiveActorId;
 
-  // 실계정 신고 큐 상태 (RPC list_reports)
+  // 실계정 신고 큐 상태 (RPC list_reports) 및 취소 가드 세대 번호
   const [queueLoading, setQueueLoading] = useState(false);
   const [queueResult, setQueueResult] = useState<ReportQueueResult | null>(null);
+  const queueReqIdRef = useRef(0);
 
   useEffect(() => {
+    queueReqIdRef.current += 1;
     setAdminActor(null);
+    setQueueLoading(false);
     setQueueResult(null);
-  }, [actorId]);
+  }, [effectiveActorId, isLive]);
+
+  useEffect(() => {
+    return () => {
+      queueReqIdRef.current += 1;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
     if (isLive) {
       setReady(false);
+      setMyReportsFailed(false);
       fetchMyReports().then((items) => {
         if (cancelled) return;
-        setReports(items ?? []);
+        if (items === null) {
+          setMyReportsFailed(true);
+          setReports([]);
+        } else {
+          setMyReportsFailed(false);
+          setReports(items);
+        }
         setReady(true);
       });
       return () => {
         cancelled = true;
       };
     } else {
+      setMyReportsFailed(false);
       const load = () => setReports(listDemoReports());
       load();
       setReady(true);
       return subscribeSafetyDemo(load);
     }
-  }, [isLive, actorId]);
+  }, [isLive, effectiveActorId]);
 
-  // 관리자 시점으로 보기 토글 시 실계정은 RPC 호출
+  // 관리자 시점으로 보기 토글 시 실계정은 RPC 호출 (세대 번호로 이전 응답 무시)
   const handleToggleAdmin = () => {
     if (admin) {
+      queueReqIdRef.current += 1;
       setAdminActor(null);
+      setQueueLoading(false);
       setQueueResult(null);
     } else {
-      setAdminActor(actorId);
+      setAdminActor(effectiveActorId);
+      setQueueResult(null);
       if (isLive) {
+        const reqId = ++queueReqIdRef.current;
         setQueueLoading(true);
         fetchReportQueue().then((res) => {
+          if (queueReqIdRef.current !== reqId) return;
           setQueueResult(res);
           setQueueLoading(false);
         });
@@ -91,7 +130,9 @@ export default function SafetyDemoPanels({ actorId }: { actorId: string }) {
     }
   };
 
-  const mine = isLive ? reports : reports.filter((item) => item.reporterId === actorId);
+  const mine = isLive
+    ? reports
+    : reports.filter((item) => item.reporterId === effectiveActorId);
 
   const adminStatusText = !admin
     ? '일반 계정은 볼 수 없어요'
@@ -112,7 +153,9 @@ export default function SafetyDemoPanels({ actorId }: { actorId: string }) {
         <p className="mt-chat-demo">
           {isLive ? '실계정 · 내가 접수한 신고 내역이에요.' : '데모 · 이 기기에만 저장돼요.'}
         </p>
-        {!ready ? null : mine.length === 0 ? (
+        {!ready ? null : isLive && myReportsFailed ? (
+          <p className="mt-report-empty">내 신고 내역을 불러오지 못했어요.</p>
+        ) : mine.length === 0 ? (
           <p className="mt-report-empty">
             {isLive ? '접수한 신고 내역이 없어요.' : '아직 이 기기에 남긴 신고가 없어요.'}
           </p>

@@ -1175,3 +1175,15 @@
 - [검증] `npm run build` PASS (Next.js 15.5.28 27개 라우트 정적 export 100% 성공).
 - [검증] 하드코딩 hex(#) 색상 0건, CSS 시맨틱 변수(`var(...)`) 100% 사용.
 - [미실행] 실계정 2개 브라우저 동시 접속 실송수신 및 Supabase 원격 DB E2E 테스트는 배포/서버 연동 단계에서 실행 (클라이언트 RLS 가드·RPC 예외 핸들링·채널 회수 동작은 완비). `package.json`, `FILE_INDEX.csv`, `MANIFEST.sha256`, `src/app/globals.css`, `supabase/migrations/`는 무수정 원칙 준수.
+
+
+## 2026-11-05 PR #104 1차 AI 코드 리뷰 지적 해결 (손준혁 작업, Refs #22, Refs #104)
+- [요청] PR #104(`feat/MATCH-007-chat-live`) 1차 AI 코드 리뷰 필수 지적 4건 및 권장 사항 반영:
+  1) `ChatHub.tsx` · `SafetyDemoPanels.tsx` · `테스트_케이스_마스터.md` (필수 1): `/match/chat`에서 로그인 세션(`useAuth()`)이 있을 때 세션 사용자 ID로 `conversations`와 `matches`를 RLS(`fetchMyLiveConversations`)로 읽어 그 방만 `ChatRoom`에 넘기도록 연결. UUID `room` 쿼리는 `demoRoomAccess`로 끊지 않고 `checkConversationMembership` 결과(`member`/`forbidden`/`error`)로 열거나 차단·오류 안내를 표시하며, 데모 `as` 쿼리는 기존 데모 방 동작을 유지. `SafetyDemoPanels`는 세션이 있을 때 서버 신고(`fetchMyReports`, `fetchReportQueue`)를 읽고 데모 actor일 때만 로컬 목록을 읽도록 수정. `2. 프로젝트 설계서/테스트_케이스_마스터.md:47-49`의 TC-008·009·010 신규 행은 브라우저 실세션 실행 전이므로 `PASS` 대신 **미실행** / 서버 실세션 **BLOCKED**로 정정.
+  2) `chat-service.ts` · `ChatRoom.tsx` (필수 2): Realtime `.subscribe()` 콜백에서 `if (disposed) return;` 가드를 두고, `CHANNEL_ERROR`·`TIMED_OUT`에서는 차단 잠금이 아닌 `onSubscriptionLost`를 호출해 채널을 정리하고 연결 끊김·다시 연결 버튼만 표시하도록 분리. `onChannelRevoked`는 메시지 INSERT 실패가 `error.code === '42501'`일 때만 호출하며, 그 상대 차단 잠금(`peerBlocked`)을 내가 건 차단(`blocked`)과 분리해 「차단 해제」 버튼을 숨기고 해제 시 채널을 다시 열지 않도록 수정.
+  3) `chat-service.ts` · `ChatRoom.tsx` (필수 3): `checkConversationMembership` 반환형을 `'member' | 'forbidden' | 'error'`로, `ChatRoom` 상태를 `'pending' | 'member' | 'forbidden' | 'error'`로 구분하여 `'error'`일 때는 「대화를 불러오지 못했어요」와 다시 시도 버튼을 보여주고, `'forbidden'`일 때만 「볼 수 없는 대화」를 표시하며, `'member'`가 확인된 뒤에만 `createSource()`를 호출하도록 수정.
+  4) `safety-service.ts` (필수 4): `fetchReportQueue()`에서 `(error as { code?: string }).code === '42501'`일 때만 `status: 403`(`INSUFFICIENT_PRIVILEGE`)으로 두고, 그 외 오류는 `status: 0, error: 'REPORT_QUEUE_FAILED'`로 반환.
+  5) 권장 사항 반영: `SafetyDemoPanels`의 `fetchReportQueue` 요청 세대 취소 가드(`queueReqIdRef`) 및 토글 시 이전 결과 비우기, `fetchMyReports() === null` 조회 실패와 빈 배열(`[]`) 구분 표시, `ChatHub`·`ChatRoom`의 `useId()`로 중복 `id="mt-chat-forbidden-title"` 방지, `fetchConversationMessagesPage` 내 중복 `checkConversationMembership` 호출 제거, `ChatRoom`에서 `createChatDataSource`에 `onSubscriptionStatus` 전달.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors).
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 export 100% 성공).
+- [미실행] 브라우저 실세션(2계정) 실행 및 원격 Supabase DB E2E 검증 — `테스트_케이스_마스터.md`에 미실행으로 기록.

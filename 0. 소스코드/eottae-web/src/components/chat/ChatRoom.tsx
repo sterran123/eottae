@@ -99,6 +99,7 @@ export default function ChatRoom({
   onLastMessage,
 }: ChatRoomProps) {
   const menuId = useId();
+  const forbiddenTitleId = useId();
   const partner = room.partner;
   const isLiveRoom = isLiveChatRoom(room.id, partner.id);
   const questionToken = useRef<string | null>(null);
@@ -119,7 +120,12 @@ export default function ChatRoom({
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [historyFailed, setHistoryFailed] = useState(false);
   const [historyTick, setHistoryTick] = useState(0);
-  const [forbidden, setForbidden] = useState(false);
+  const [membership, setMembership] = useState<'pending' | 'member' | 'forbidden' | 'error'>(
+    isLiveRoom ? 'pending' : 'member',
+  );
+  const forbidden = isLiveRoom && membership === 'forbidden';
+  const [subscriptionLost, setSubscriptionLost] = useState(false);
+  const [, setSubscriptionStatus] = useState<string>('IDLE');
 
   const setLiveReadyBoth = useCallback((ready: boolean) => {
     liveReadyRef.current = ready;
@@ -128,6 +134,9 @@ export default function ChatRoom({
 
   const [blocked, setBlocked] = useState(false);
   const blockedRef = useRef(false);
+  // 상대방 차단 등으로 INSERT가 42501 거부된 잠금 (내가 차단한 상태와 분리하여 해제 버튼으로 되돌리지 않음)
+  const [peerBlocked, setPeerBlocked] = useState(false);
+  const peerBlockedRef = useRef(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [blockOpen, setBlockOpen] = useState(false);
   const [confirmMode, setConfirmMode] = useState<'block' | 'unblock'>('block');
@@ -234,7 +243,7 @@ export default function ChatRoom({
           setTyping(blockedRef.current ? false : isTyping);
         },
         onIncomingMessage: (incoming) => {
-          if (blockedRef.current) return;
+          if (blockedRef.current || peerBlockedRef.current) return;
           if (!isLiveRoom) {
             appendDemoMessage({
               id: `auto-${actorId}-${incoming.id}`,
@@ -253,12 +262,26 @@ export default function ChatRoom({
           });
         },
         onChannelRevoked: () => {
-          blockedRef.current = true;
-          setBlocked(true);
+          peerBlockedRef.current = true;
+          setPeerBlocked(true);
+          setTyping(false);
           setLiveReadyBoth(false);
           dataSourceRef.current?.dispose();
           dataSourceRef.current = null;
           pushSystem('대화가 종료되었거나 차단되어 더 이상 메시지를 보낼 수 없어요.');
+        },
+        onSubscriptionLost: () => {
+          setSubscriptionLost(true);
+          setTyping(false);
+          setLiveReadyBoth(false);
+          dataSourceRef.current?.dispose();
+          dataSourceRef.current = null;
+        },
+        onSubscriptionStatus: (status) => {
+          setSubscriptionStatus(status);
+          if (status === 'SUBSCRIBED') {
+            setSubscriptionLost(false);
+          }
         },
       },
     );
@@ -298,20 +321,28 @@ export default function ChatRoom({
   // 실계정 대화방(UUID): RLS 범위 내 과거 메시지 초기 로드 및 구성원 자격 검증 (TC-008).
   // 비구성원(제3자)은 빈 방으로 열리지 않고 채널 생성 전에 차단하여 '볼 수 없는 대화'로 둔다.
   useEffect(() => {
-    if (!isLiveRoom) return;
+    if (!isLiveRoom) {
+      setMembership('member');
+      return;
+    }
     let cancelled = false;
     setHistoryLoaded(false);
     setHistoryFailed(false);
-    setForbidden(false);
+    setMembership('pending');
 
     void (async () => {
-      const isMember = await checkConversationMembership(room.id);
+      const memberStatus = await checkConversationMembership(room.id);
       if (cancelled) return;
-      if (!isMember) {
-        setForbidden(true);
+      if (memberStatus === 'forbidden') {
+        setMembership('forbidden');
+        return;
+      }
+      if (memberStatus === 'error') {
+        setMembership('error');
         setHistoryFailed(true);
         return;
       }
+      setMembership('member');
 
       const loaded = await fetchConversationMessages(room.id, isUuid(actorId) ? actorId : null);
       if (cancelled) return;
@@ -344,7 +375,9 @@ export default function ChatRoom({
       };
     }
 
-    if (forbidden) {
+    // 실계정: 구성원 자격이 'member'로 확정된 뒤에만 차단 조회 및 채널 생성을 진행한다 (TC-008).
+    if (membership !== 'member' || peerBlockedRef.current) {
+      setLiveReadyBoth(false);
       dataSourceRef.current?.dispose();
       dataSourceRef.current = null;
       return;
@@ -354,6 +387,7 @@ export default function ChatRoom({
     let cancelled = false;
     setLiveReadyBoth(false);
     setLookupFailed(false);
+    setSubscriptionLost(false);
     void checkIsBlockedOnServer(partner.id).then((status) => {
       if (cancelled) return;
       if (status === 'blocked') {
@@ -384,7 +418,7 @@ export default function ChatRoom({
       dataSourceRef.current?.dispose();
       dataSourceRef.current = null;
     };
-  }, [actorId, createSource, forbidden, isLiveRoom, lookupTick, partner.id, setLiveReadyBoth]);
+  }, [actorId, createSource, isLiveRoom, lookupTick, membership, partner.id, setLiveReadyBoth]);
 
   // 데모 방: 다른 탭이나 설정에서 차단 상태가 바뀌었을 때 동기화
   useEffect(() => {
@@ -462,7 +496,7 @@ export default function ChatRoom({
   }, [actorId, confirmBlockLock, isLiveRoom, partner.id, pushSystem]);
 
   const releaseBlock = useCallback(() => {
-    if (!blockedRef.current) return;
+    if (!blockedRef.current || peerBlockedRef.current) return;
 
     if (!isLiveRoom) {
       blockedRef.current = false;
@@ -474,7 +508,7 @@ export default function ChatRoom({
     }
 
     void removeServerBlock(partner.id).then((res) => {
-      if (!blockedRef.current) return;
+      if (!blockedRef.current || peerBlockedRef.current) return;
       if (!res.ok || res.mode !== 'supabase') {
         pushSystem(
           res.error?.message ??
@@ -567,7 +601,7 @@ export default function ChatRoom({
 
   const sendMessage = useCallback(
     (body: string) => {
-      if (blockedRef.current) return;
+      if (blockedRef.current || peerBlockedRef.current) return;
       if (!isLiveRoom && isDemoBlocked(actorId, partner.id)) return;
       // 실계정은 차단 조회가 끝나 데이터 소스가 생긴 뒤에만 보낸다 (입력도 그때까지 disabled).
       if (isLiveRoom && !liveReadyRef.current) return;
@@ -600,7 +634,7 @@ export default function ChatRoom({
     if (!hydrated || !initialQuestion) return;
     // 실계정은 차단 조회·데이터 소스·기록 로드가 끝난 뒤에 보낸다. 그 전에는 질문을 소모하지 않는다.
     // 차단으로 판정되면 보내지 않고 소모한다.
-    if (isLiveRoom && !blocked && !(liveReady && historyLoaded)) return;
+    if (isLiveRoom && !blocked && !peerBlocked && !(liveReady && historyLoaded)) return;
     const token = `${room.id}|${actorId}|${initialQuestion}`;
     if (questionToken.current === token) return;
     questionToken.current = token;
@@ -609,7 +643,7 @@ export default function ChatRoom({
       : loadVisibleMessages(room.id, actorId).some(
           (message) => message.senderId === actorId && message.body === initialQuestion,
         );
-    if (!already) sendMessage(initialQuestion);
+    if (!already && !peerBlocked) sendMessage(initialQuestion);
     onQuestionConsumed?.();
   }, [
     actorId,
@@ -621,6 +655,7 @@ export default function ChatRoom({
     liveReady,
     messages,
     onQuestionConsumed,
+    peerBlocked,
     room.id,
     sendMessage,
   ]);
@@ -634,7 +669,7 @@ export default function ChatRoom({
         <div className="mt-chat-head-text">
           <h2 className="mt-chat-title">{partner.nickname}</h2>
           <span className="mt-chat-demo">
-            {blocked ? '차단됨 · ' : ''}
+            {blocked || peerBlocked ? '차단됨 · ' : ''}
             {isLiveRoom ? '실시간 1:1 대화' : '데모 · 이 브라우저 안에서만 대화해요'}
           </span>
         </div>
@@ -720,7 +755,22 @@ export default function ChatRoom({
         </div>
       )}
 
-      {isLiveRoom && lookupFailed && !blocked && (
+      {peerBlocked && !blocked && (
+        <div className="mt-chat-blocked-bar" role="status">
+          <span>상대방과의 대화가 제한되어 메시지를 보낼 수 없어요</span>
+        </div>
+      )}
+
+      {isLiveRoom && subscriptionLost && !blocked && !peerBlocked && !forbidden && (
+        <div className="mt-chat-blocked-bar" role="status">
+          <span>실시간 연결이 끊어졌어요</span>
+          <button type="button" onClick={() => setLookupTick((tick) => tick + 1)}>
+            다시 연결
+          </button>
+        </div>
+      )}
+
+      {isLiveRoom && lookupFailed && !blocked && !peerBlocked && (
         <div className="mt-chat-blocked-bar" role="status">
           <span>차단 상태를 확인하지 못해 보내기를 잠시 닫았어요</span>
           <button type="button" onClick={() => setLookupTick((tick) => tick + 1)}>
@@ -730,13 +780,13 @@ export default function ChatRoom({
       )}
 
       {isLiveRoom && forbidden && (
-        <section className="mt-chat-forbidden" role="status" aria-labelledby="mt-chat-forbidden-title">
-          <h2 id="mt-chat-forbidden-title">볼 수 없는 대화</h2>
+        <section className="mt-chat-forbidden" role="status" aria-labelledby={forbiddenTitleId}>
+          <h2 id={forbiddenTitleId}>볼 수 없는 대화</h2>
           <p>이 방의 매칭 구성원이 아니라 메시지를 볼 수 없어요.</p>
         </section>
       )}
 
-      {isLiveRoom && historyFailed && !blocked && !forbidden && (
+      {isLiveRoom && historyFailed && !blocked && !peerBlocked && !forbidden && (
         <div className="mt-chat-blocked-bar" role="status">
           <span>대화를 불러오지 못했어요</span>
           <button type="button" onClick={() => setHistoryTick((tick) => tick + 1)}>
@@ -749,23 +799,28 @@ export default function ChatRoom({
         onSend={sendMessage}
         disabled={
           blocked ||
+          peerBlocked ||
           !active ||
-          (isLiveRoom && (forbidden || !liveReady || !historyLoaded || historyFailed))
+          (isLiveRoom && (forbidden || subscriptionLost || !liveReady || !historyLoaded || historyFailed))
         }
         disabledReason={
           blocked
             ? '차단한 상대와는 대화할 수 없어요'
-            : isLiveRoom && (forbidden || !liveReady || !historyLoaded || historyFailed)
-              ? forbidden
-                ? '구성원이 아니라 메시지를 보낼 수 없어요'
-                : historyFailed
-                  ? '대화를 불러오지 못해 보내기를 닫았어요'
-                  : lookupFailed
-                    ? '차단 상태를 확인한 뒤에 보낼 수 있어요'
-                    : !historyLoaded
-                      ? '이전 대화를 불러오고 있어요'
-                      : '대화방을 준비하고 있어요'
-              : undefined
+            : peerBlocked
+              ? '상대방과의 대화가 제한되어 메시지를 보낼 수 없어요'
+              : isLiveRoom && (forbidden || subscriptionLost || !liveReady || !historyLoaded || historyFailed)
+                ? forbidden
+                  ? '구성원이 아니라 메시지를 보낼 수 없어요'
+                  : subscriptionLost
+                    ? '실시간 연결이 끊어져 보내기를 닫았어요'
+                    : historyFailed
+                      ? '대화를 불러오지 못해 보내기를 닫았어요'
+                      : lookupFailed
+                        ? '차단 상태를 확인한 뒤에 보낼 수 있어요'
+                        : !historyLoaded
+                          ? '이전 대화를 불러오고 있어요'
+                          : '대화방을 준비하고 있어요'
+                : undefined
         }
         textOnly={isLiveRoom}
       />

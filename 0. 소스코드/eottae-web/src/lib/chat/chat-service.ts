@@ -16,6 +16,8 @@ import {
   MAX_MESSAGE_LENGTH,
   toChatMessage,
   type ChatMessage,
+  type ChatPartner,
+  type ChatRoomInfo,
   type MessageInsertRow,
   type MessageRow,
   type MessagesCursorPage,
@@ -60,8 +62,10 @@ export interface ChatDataSourceCallbacks {
   onTypingChange: (typing: boolean) => void;
   /** 상대방 새 메시지가 도착했을 때 (데모 자동응답 또는 Supabase Realtime INSERT) */
   onIncomingMessage: (message: ChatMessage) => void;
-  /** 차단·권한 취소 등으로 인해 서버 채널이 회수되었을 때 (TC-009) */
+  /** 차단·권한 취소(INSERT 42501)로 인해 서버 채널이 회수되었을 때 (TC-009) */
   onChannelRevoked?: () => void;
+  /** Realtime 채널 연결 오류·시간 초과(CHANNEL_ERROR, TIMED_OUT) 시 콜백 */
+  onSubscriptionLost?: (status: string) => void;
   /** Realtime 채널 구독 상태 변경 콜백 (TC-008 검증용) */
   onSubscriptionStatus?: (status: string, error?: Error | null) => void;
 }
@@ -262,9 +266,10 @@ export function createSupabaseChatDataSource(
       },
     )
     .subscribe((status, err) => {
+      if (disposed) return;
       callbacks.onSubscriptionStatus?.(status, err ?? null);
       if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-        callbacks.onChannelRevoked?.();
+        callbacks.onSubscriptionLost?.(status);
       }
     });
 
@@ -323,10 +328,9 @@ export function createSupabaseChatDataSource(
 
         if (error) {
           callbacks.onMessageFailed?.(messageId);
-          // RLS 거부(42501, 403, 또는 차단 등으로 인한 실패) 시 새로고침 없이 채널 즉시 회수 (TC-009)
+          // RLS 거부(42501: 상대 차단 등으로 인한 실패) 시 새로고침 없이 채널 즉시 회수 (TC-009)
           const errCode = (error as { code?: string }).code;
-          const status = (error as { status?: number }).status;
-          if (errCode === '42501' || status === 403) {
+          if (errCode === '42501') {
             callbacks.onChannelRevoked?.();
             doDispose();
           }
@@ -368,21 +372,100 @@ function parseCursor(cursor: string | null | undefined): { createdAt: string; id
   return match ? { createdAt: match[1], id: match[2] } : null;
 }
 
+export type ConversationMembershipStatus = 'member' | 'forbidden' | 'error';
+
 /**
  * 실계정 대화방(`conversations`)의 구성원인지 RLS를 통해 검증한다 (TC-008).
  * `conversations` 테이블의 `conversations_select_member` 정책(ADR-003, 0003_match_core.sql:1235)을 활용하여,
- * 매칭 구성원이 아니면 RLS에 의해 행이 조회되지 않는다.
+ * 매칭 구성원이 아니면 RLS에 의해 행이 조회되지 않는다 (`forbidden`).
+ * 네트워크·세션 등 조회 자체 오류는 `error`로 구분한다.
  */
-export async function checkConversationMembership(conversationId: string): Promise<boolean> {
+export async function checkConversationMembership(
+  conversationId: string,
+): Promise<ConversationMembershipStatus> {
   const supabase = getSupabase();
-  if (!supabase || !isUuid(conversationId)) return false;
+  if (!supabase || !isUuid(conversationId)) return 'error';
   const { data, error } = await supabase
     .from('conversations')
     .select('id')
     .eq('id', conversationId)
     .maybeSingle();
-  if (error || !data) return false;
-  return true;
+  if (error) return 'error';
+  return data ? 'member' : 'forbidden';
+}
+
+/**
+ * 실계정 로그인 사용자의 `conversations` 목록을 RLS(`conversations_select_member`)로 조회해
+ * `ChatRoomInfo[]`로 반환한다 (MATCH-007 · TC-008).
+ * - `matches` 테이블(`matches_select_member`)에서 `user_low`·`user_high`를 함께 읽어 상대방 UUID를 확정한다.
+ * - `partnerHint`가 주어지고 `matches` 행에서 상대방이 결정되지 않는 경우 `partnerHint`를 보조로 사용한다.
+ */
+export async function fetchMyLiveConversations(
+  myUserId?: string | null,
+  partnerHint?: string | null,
+): Promise<ChatRoomInfo[] | null> {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+
+  let effectiveUserId: string | null = isUuid(myUserId) ? myUserId : null;
+  if (!effectiveUserId) {
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError) return null;
+    effectiveUserId = isUuid(authData.user?.id) ? authData.user.id : null;
+  }
+  if (!effectiveUserId) return [];
+
+  const { data: convRows, error: convErr } = await supabase
+    .from('conversations')
+    .select('id, match_id');
+  if (convErr || !convRows) return null;
+  if (convRows.length === 0) return [];
+
+  const matchIds = convRows
+    .map((r) => (r as { match_id?: string }).match_id)
+    .filter(isUuid);
+  const matchMap = new Map<string, { id: string; user_low: string; user_high: string }>();
+
+  if (matchIds.length > 0) {
+    const { data: matchRows, error: matchErr } = await supabase
+      .from('matches')
+      .select('id, user_low, user_high')
+      .in('id', matchIds);
+    if (matchErr || !matchRows) return null;
+    for (const m of matchRows as Array<{ id: string; user_low: string; user_high: string }>) {
+      matchMap.set(m.id, m);
+    }
+  }
+
+  const rooms: ChatRoomInfo[] = [];
+  for (const c of convRows as Array<{ id: string; match_id: string }>) {
+    if (!isUuid(c.id)) continue;
+    const m = matchMap.get(c.match_id);
+    const partnerId = m
+      ? m.user_low === effectiveUserId
+        ? m.user_high
+        : m.user_high === effectiveUserId
+          ? m.user_low
+          : null
+      : isUuid(partnerHint) && partnerHint !== effectiveUserId
+        ? partnerHint
+        : null;
+    if (!isUuid(partnerId)) continue;
+    const mePartner: ChatPartner = { id: effectiveUserId, nickname: '나' };
+    const otherPartner: ChatPartner = {
+      id: partnerId,
+      nickname: `회원 (${partnerId.slice(0, 8)})`,
+    };
+    rooms.push({
+      id: c.id,
+      partner: otherPartner,
+      members: [mePartner, otherPartner],
+      initialMessages: [],
+      timeLabel: '',
+      unread: 0,
+    });
+  }
+  return rooms;
 }
 
 /**
@@ -409,10 +492,6 @@ export async function fetchConversationMessagesPage(
     resolvedUserId = uid;
   }
   if (!resolvedUserId) return null;
-
-  // 제3자(비구성원)의 빈 방 렌더링 방지 (TC-008). conversations 조회가 실패하면 권한 없음(null)으로 반환.
-  const isMember = await checkConversationMembership(conversationId);
-  if (!isMember) return null;
 
   const pageSize = Math.min(Math.max(options.limit ?? 50, 1), 100);
   let query = supabase

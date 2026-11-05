@@ -263,17 +263,16 @@ export interface ReportQueueResult {
  */
 export async function fetchReportQueue(): Promise<ReportQueueResult> {
   const supabase = getSupabase();
-  if (!supabase) return { ok: false, status: 0, items: [] };
+  if (!supabase) return { ok: false, status: 0, items: [], error: 'REPORT_QUEUE_FAILED' };
 
   const { data, error } = await supabase.rpc('list_reports');
   if (error) {
-    const errCode = (error as { code?: string }).code;
-    const status = (error as { status?: number }).status ?? 403;
+    const forbidden = (error as { code?: string }).code === '42501';
     return {
       ok: false,
-      status: errCode === '42501' || status === 403 ? 403 : status,
+      status: forbidden ? 403 : 0,
       items: [],
-      error: 'INSUFFICIENT_PRIVILEGE',
+      error: forbidden ? 'INSUFFICIENT_PRIVILEGE' : 'REPORT_QUEUE_FAILED',
     };
   }
 
