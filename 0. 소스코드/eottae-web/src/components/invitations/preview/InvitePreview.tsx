@@ -140,7 +140,7 @@ export default function InvitePreview({ invitation, preset = 'full', content }: 
       case 'guide':
         return <InviteGuide key={key} guides={extra.guides} />;
       case 'rsvp':
-        return <InviteRsvp key={key} />;
+        return <InviteRsvp key={key} invitation={invitation} />;
       case 'gift':
         return <InviteGift key={key} accounts={extra.accounts} />;
       case 'guestbook':
