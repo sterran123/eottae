@@ -1654,3 +1654,18 @@
 ### 검증
 - `npm run typecheck` 통과.
 - 미실행: 실결제·정산(DEC-11 목업 범위 외), 서버·Supabase.
+
+## 2026-11-06 작업자 루프 작업 완료 시 카카오톡 "나에게 보내기" 알림 (김민기 작업)
+
+### 요청
+- 루프 작업(tools/grok_review_worker.mjs의 큐 작업)이 하나 완료될 때마다 카카오톡 전송.
+
+### 변경
+- `tools/kakao_notify.mjs`(신규): 카카오 REST API "나에게 보내기" 모듈 — access_token은 `REVIEW_ROOT/kakao_token.json`(클론 밖)에 두고 만료 전 재사용·refresh_token으로 갱신 저장. 설정 없음·전송 실패는 로그만(미설정 큐잉·재시도 없음), 작업자는 계속. DRY_RUN이면 미전송 출력만. CLI: `--code {인증코드}` 토큰 교환·저장, 임의 인자 시험 전송, 인자 없으면 설정 안내.
+- `tools/grok_review_worker.mjs`: 큐 작업 종료 직후 `notifyKakao`(성공 ✅/실패 ⚠️·대상·종료 코드·소요, `link`는 PR·댓글 html_url) 호출 — 종료 3(계정 문제) 알림도 멈추기 전에 간다. `runIn` 반환을 `{code, sec}`로 바꿔 소요 시간을 알림에 쓴다. 준비 실패(체크아웃 등)도 끝난 것으로 알린다. 머리말 선택 항목에 알림 설정 안내 추가.
+- 설정: 카카오 디벨로퍼스 앱(talk_message 동의)·`KAKAO_REST_API_KEY`(.env·환경변수) 필요 — 없으면 한 줄 로그만 남기고 조용히 건너뜀(선택 기능).
+
+### 검증
+- `node --check` 두 파일 통과.
+- `node tools/kakao_notify.mjs` 인자 없음 → 설정 안내 출력, `DRY_RUN=2 ... "테스트"` → 전송 없이 출력만, 미설정 상태 전송 시도 → 한 줄 로그 후 정상 종료(예외 없음), import 시 부작용 없음 확인.
+- 미실행: 실제 카카오톡 발송(앱 등록·계정 동의 등 최초 한 번 설정 필요 — 머리말 절차), 작업자 실사이클 종단 확인.
