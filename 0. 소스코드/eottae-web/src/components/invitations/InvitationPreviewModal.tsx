@@ -86,56 +86,56 @@ const PRESET_COUPLE_PHOTOS = [
     id: 'studio-peach',
     label: '스튜디오 피치',
     tag: '아이돌 비주얼',
-    url: `${basePath}/invitations/wedding-studio-peach.jpg`,
+    url: `${basePath}/invitations/scene-table.svg`,
     desc: '네이비 슬림 턱시도 & 화이트 실크 드레스 20대 커플',
   },
   {
     id: 'forest-fresh',
     label: '숲속의 싱그러움',
     tag: '내추럴 가든',
-    url: `${basePath}/invitations/wedding-green-canopy.jpg`,
+    url: `${basePath}/invitations/scene-path.svg`,
     desc: '야외 플라워 아치 아래 환하게 웃는 20대 신랑신부',
   },
   {
     id: 'sunset',
     label: '노을 로맨스',
     tag: '시네마틱 노을강',
-    url: `${basePath}/invitations/wedding-sunset.jpg`,
+    url: `${basePath}/invitations/cover-evening.svg`,
     desc: '황금빛 노을강 일몰 빛을 등진 20대 커플 포옹',
   },
   {
     id: 'cherry-blossom',
     label: '봄날 벚꽃',
     tag: '화사한 핑크',
-    url: `${basePath}/invitations/wedding-cherry-blossom.jpg`,
+    url: `${basePath}/invitations/scene-arch.svg`,
     desc: '만개한 벚꽃길 아래 다정한 눈맞춤 20대 신랑신부',
   },
   {
     id: 'night-garden',
     label: '달빛 정원',
     tag: '야간 조명',
-    url: `${basePath}/invitations/wedding-night-garden.jpg`,
+    url: `${basePath}/invitations/scene-night.svg`,
     desc: '로맨틱한 페어리 전구 가든 20대 커플',
   },
   {
     id: 'bench-quiet',
     label: '고요한 산책',
     tag: '세련된 미니멀',
-    url: `${basePath}/invitations/wedding-bench-quiet.jpg`,
+    url: `${basePath}/invitations/scene-bouquet.svg`,
     desc: '정갈한 원목 벤치에 나란히 앉은 20대 커플',
   },
   {
     id: 'tape-bw',
     label: '흑백 필름',
     tag: '클래식 빈티지',
-    url: `${basePath}/invitations/wedding-tape-bw.jpg`,
+    url: `${basePath}/invitations/scene-window.svg`,
     desc: '감각적인 빈티지 흑백 스튜디오 스냅',
   },
   {
     id: 'luxury-hotel',
     label: '럭셔리 호텔',
     tag: '그랜드볼룸',
-    url: `${basePath}/invitations/wedding-luxury-hotel.jpg`,
+    url: `${basePath}/invitations/map-hall.svg`,
     desc: '웅장한 샹들리에 버진로드 20대 커플',
   },
 ];
@@ -1186,8 +1186,7 @@ export default function InvitationPreviewModal({
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                           <button
                             type="button"
-                            className="inv-accordion-toggle-btn"
-                            style={{ fontSize: 11, padding: '2px 6px', color: 'var(--warn-ink)' }}
+                            className="inv-accordion-toggle-btn inv-accordion-toggle-btn--warn"
                             onClick={(e) => {
                               e.stopPropagation();
                               setSectionOrder((prev) => prev.filter((k) => k !== secKey));

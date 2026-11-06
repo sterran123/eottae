@@ -1680,3 +1680,119 @@
 ### 검증
 - `node --check` 통과. `DRY_RUN=2` 시험 전송 → `[DRY] ... → https://github.com/sterran123/eottae` 링크 대체 확인, `GITHUB_REPOSITORY=foo/bar` → 해당 주소로 대체 확인.
 - 미실행: 실제 카카오톡 발송(최초 한 번 설정 필요 — 머리말 절차).
+## 2026-11-06 청첩장 웨딩 사진 출처 기록·미확인 사진 일러스트 교체 (김민기 작업, Refs #118)
+
+### 요청
+- #118: `public/invitations/wedding-*.jpg` 11장의 출처·라이선스 기록, 확인 불가 시 일러스트 교체.
+
+### 판단
+- PR #97에서 추가된 실사 부부 사진 — 본문·커밋·로그·캡션 어디에도 출처가 없고, PR AI 리뷰에서도 「포토리얼 인물 — 출처 미확인」 지적이 두 차례 있었다. AI 생성 여부도 저장소 자료로는 확인 불가 → 이슈 기준대로 「출처 확인 불가 = 실존 인물로 간주해 교체」.
+
+### 변경
+- `public/invitations/wedding-*.jpg` 11장 삭제 — `InvitationsHub`·`InvitationPreviewModal`·`InvitationCardRenderer`의 `img*` 상수를 자체 일러스트(`scene-*.svg`·`cover-evening.svg`·`map-hall.svg`, PR #93 제작)로 일대일 교체.
+- `public/invitations/CREDITS.md` 신설 — 현재 파일 전원의 출처·라이선스와 제거 사진·대체 매핑 기록. 하율님이 출처를 확인하면 기록 후 되돌릴 수 있게 안내.
+- 후속: 청첩장 캡처 20~24번(2026-11-05)이 교체 전 화면이라 재촬영 필요 — CREDITS.md에 도구·절차 기록.
+
+### 검증
+- `grep` JPG 참조 잔여 없음 확인.
+## 2026-11-06 청첩장 공개 화면·편집기 접근성 마무리 (김민기 작업, Refs #117)
+
+### 요청
+- #117: 하객 공개 화면·편집기의 접근성 4건 — noindex 칩 평문, 44px 터치 대상, h1 부재, `/invitations/new/` 탭 제목.
+
+### 변경
+- `src/app/invitations/p/page.tsx`: 하객 안내 띠의 `robots: noindex` 기술 칩 → 평문 「검색엔진에 노출되지 않는 링크예요」(메타데이터 noindex는 `p/layout.tsx`에 그대로). 「허브로 가기 →」 링크를 `inline-flex`·`min-height:44px`로.
+- `src/app/invitations/new/layout.tsx`(신규): `new/page.tsx`가 클라이언트 페이지라 metadata가 없던 것을 레이아웃에서 `title: '새 청첩장 만들기'`로 보강.
+- `invitations.css`: `.inv-reset-btn` 44px·13px(11px·약 20px이던 것), `.inv-category-tab-btn` 44px(약 37px이던 것), `.inv-accordion-toggle-btn--warn` 신설(13px·`--warn-ink`).
+- `InvitationPreviewModal.tsx` 「숨김 ✕」: 인라인 11px·작은 패딩 제거 → `inv-accordion-toggle-btn--warn` 클래스(기본 44px 높이 상속).
+- `InvitationCardRenderer.tsx`: 공개 화면 `<h1>` 부재 — 히어로 변형(시그니처 13·프레임 5·스플릿·왁스·테이프·4컷)마다 신랑·신부 이름 줄을 `<h1>`으로. 클래스가 글꼴·여백을 모두 정한 곳은 태그만, 나머지는 `margin:0`·`font:inherit`로 UA 기본값을 비활성화해 시각 변화 없이 구조만 바꿈. 히어로는 변형당 하나만 렌더되므로 페이지 h1도 하나. 섹션 본문의 이름 언급(1294·1854행 등)은 그대로.
+- 리뷰 반영: `typo-frame`·`script-card` 히어로에는 장식용 `<h1 class="inv-typo-headline">결혼합니다/Our Day</h1>`이 선존재해 이름 줄과 h1이 둘로 겹쳤음 → 헤드라인을 `div`로 내려 h1은 이름 줄 하나만 유지(`.inv-typo-headline`은 클래스가 글꼴·여백을 다 정해서 시각 변화 없음). `polaroid-caption-names` 등 훅 전용 클래스는 CSS 규칙이 없어 `font:inherit` 인라인이 상속 글꼴을 지키는 올바른 선택임을 확인. 렌더러 쓰임새 조사: `/invitations/p/` 공개 화면과 `InvitationPreviewModal` 다이얼로그뿐 — 각각 독립 문서·대화상자라 h1 하나씩으로 올바름(허브·편집기 페이지는 렌더러 미사용).
+
+### 검증
+- `npm run typecheck`·`npm run build`(정적 27페이지) 통과.
+- 미실행: 360px 헤드리스 Chrome 실측·다크모드 대비 육안 확인(개발 서버 미기동) — 클래스 기반 스타일이라 시각 회귀 위험은 낮음.
+
+
+## 2026-11-06 life4cut 히어로 h1 스타일 회귀 수정 — 리뷰 반영 (김민기 작업, Refs #117)
+
+### 요청
+- 코드 리뷰 지적: `life4cut` 프레임 변형에서 이름 줄 `<strong>`→`<h1>` 교체 후 `.inv-life4cut-cell--quote strong` 선택자가 어긋나 브랜드색·11.5px·상단 4px 여백이 사라지는 시각 회귀 발생.
+
+### 변경
+- `invitations.css`: `.inv-life4cut-cell--quote strong` → `.inv-life4cut-cell--quote h1`(해당 셀에 strong 잔재 없음 확인), `margin-top: 4px` → `margin: 4px 0 0`으로 h1 UA 하단 여백까지 중화 — 교체 전 렌더와 동일 값.
+- `InvitationCardRenderer.tsx`: life4cut 이름 h1의 인라인 `margin:0·font:inherit` 제거 — 클래스가 여백·크기·색상을 모두 정하므로 불필요.
+- 히어로 컨테이너(`inv-sig-content`·`inv-cover-top-names`·`inv-polaroid-names-date`·`inv-framed-caption`·`inv-split-info-header`·`inv-wax-envelope-bottom-text`)의 요소 한정 선택자 전수 조사 — 회귀는 life4cut 한 곳뿐임을 확인.
+- 정정: 직전 로그의 「편집기 페이지는 렌더러 미사용」은 오기 — `InvitationEditor.tsx:579`가 미리보기로 렌더러를 사용(모달과 동일하게 h1 하나로 정상).
+
+### 검증
+- `npm run typecheck` 통과.
+- 미실행: life4cut 실제 렌더 육안 확인(개발 서버 미기동) — 원래 strong 규칙과 동일 값이라 시각 회귀 없음.
+
+
+## 2026-11-06 검증 스크립트 `.inv-reset-btn` 단언 갱신 — 리뷰 반영 (김민기 작업, Refs #117)
+
+### 요청
+- 코드 리뷰 지적: #117의 `.inv-reset-btn` 44px·13px 보강(57cb681) 이후 `verify-modal-and-card.ts` [검증 17]이 구 규칙 본문(`font-size: 11px; padding: 3px 8px`)을 그대로 단언해 51개 중 1개 FAIL — 저장소 표준 검증 게이트가 깨진 상태.
+
+### 변경
+- `scripts/verify-modal-and-card.ts`: [검증 17]의 `.inv-reset-btn` 기대 문자열을 현행 규칙(`min-height: 44px; font-size: 13px; padding: 8px 12px` + 기존 토큰 부분)으로 갱신, 단언 문구에 44px 터치 대상·13px(#117) 명시.
+- 전수 점검: 스크립트 내 `noindex`·`robots`·`inv-category-tab-btn`·`inv-accordion-toggle`·`life4cut`·`inv-sig-names`·`inv-framed-names`·`polaroid-caption`·`inv-typo` 관련 단언 없음 확인 — 추가 갱신 대상 없음.
+
+### 검증
+- `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (51/51 통과 — 갱신 전 50/51).
+- `npm run typecheck` 통과, `npm run build`(정적 27페이지) 통과.
+- 미실행: `verify-theme-contrast.ts`는 `theme-presets` 모듈 해석 실패(ERR_MODULE_NOT_FOUND)로 기존부터 미동작 — 본 변경과 무관, 별도 확인 필요.
+## 2026-11-06 3차 최종 제출 — README·홈·설정 문구를 최종 상태로 정리 (김민기 작업)
+
+### 요청
+- 최종 제출 점검(데이터봇 감사) P0 1·2, P2 11·12: README가 「중간 점검 1차」에 멈춰 있고, 홈·설정이 청첩장을 「준비 중」으로 표시, 3차 작업지시서 마감 빈칸, plan_v3의 실연동 계획이 DEC-11과 모순.
+
+### 변경
+- `README.md`: 단계 배너를 「3차 최종 제출(목업, DEC-11)」로, 서비스 표 3개 모두 🟢 데모. 「데모 체험 방법」(데모 로그인 → 시연용 성인 확인, `LoginForm`·`DemoEntryGuard` 문구 기준), 화면 표에 데이트·소모임·청첩장·하객/RSVP·로그인 경로 추가. 스크린샷을 최신 캡처 20~30 중심으로 재구성하고 옛 준비중 캡처 05·06 제거. 팀 표를 1·2·3차·공통 역할로 확장(`요구사항_마스터.md` 담당 열, 이슈 #84~#87 기준).
+- `README_처음읽기.md`: 단계·마감·서비스 상태·폴더 설명을 최종 상태로.
+- `src/app/page.tsx`: 청첩장 카드 `live`·「3차 · 데모 체험」·CTA 「데모 둘러보기」, 로드맵 3단계 모두 데모 체험 표시, FAQ(매칭 데모 진입 방법·청첩장 독립 이용) 및 ROADMAP 문장 교정.
+- `src/app/settings/page.tsx`: 앱 정보 3차 행 「준비 중」 문구 제거, 2·3차 라벨에 서비스 이름.
+- `1. 프로젝트 계획서/3차_작업지시서.md`: 마감 2026-11-06 22:00(KST) 기입. `plan_v3.md`: DEC-11로 대체됨 한 줄.
+
+### 검증
+- `npm run typecheck`, `npm run build` 통과(로컬).
+- 미실행: `MANIFEST.sha256`·`FILE_INDEX.csv` 재생성(모든 수정 머지 후 마지막에 실행 예정), 청첩장 에디터·공개 화면 파일은 수정하지 않음(오하율 담당 이슈로 분리).
+
+## 2026-11-06 3차 최종 제출 후속 — PR #116 AI 리뷰 권장 사항 반영 (김민기 작업)
+
+### 요청
+- PR #116 AI 리뷰 권장 1~6: 홈 히어로 안내의 「중간 점검·서버 연동 후」 문구, README의 RSVP 조건·캡처 22 부제, `plan_v3.md` 상태 줄·목표 3행, 앱 README 단계 문장, 마감 시각 근거, Supabase 실가입 문장·캡처 20 뱃지 확인.
+
+### 변경
+- `src/app/page.tsx`: 히어로 안내를 「3차 최종 제출(목업) — 세 서비스 데모, 데모 기록은 이 브라우저, 실결제·본인 확인 미연결」로.
+- `README.md`: RSVP는 `t`와 `g`가 모두 유효할 때만(`rsvp/page.tsx`, `InvitationCardRenderer.tsx` 대조), 샘플 링크는 행사 화면까지라고 명시. 캡처 22 부제 「샘플 미리보기 · 명단 비공개」(`captions.csv` 경로 `/invitations/sample`), 캡처 24 부제 「하객 토큰 누락」. 단계 배너의 「모든 입력은 브라우저에만·회원 데이터 미수집」을 데모 경로로 좁히고 이메일 가입은 인증 서버·`/privacy`로 안내(근거 아래). 로그인 행 설명 교정.
+- `README_처음읽기.md`: 같은 범위 교정, 마감 근거 DEC-14.
+- `0. 소스코드/eottae-web/README.md`: 2행 단계를 3차 최종 제출로, 세 서비스 구현 범위, 「실연동은 최종 전」→「이번 제출 범위에 없음(DEC-11)」.
+- `plan_v3.md`: 상태 줄·목표 ①②③ 행을 최종 상태로.
+- `실행_결정대기_로그.md`: DEC-14(팀장 지시 마감 2026-11-06 22:00 KST, 매니페스트·QA 재생성은 마지막). `3차_작업지시서.md` 마감 근거를 DEC-14로.
+
+### 확인한 것 (권장 6)
+- Supabase: 배포 사이트 JS 청크(`/eottae/_next/static/chunks/…`)에 `*.supabase.co` 프로젝트 URL이 들어 있고, 정적 로그인 페이지 버튼이 「로그인 준비 중 (비활성화)」가 아닌 「로그인」 → `deploy-pages.yml`의 Secrets가 설정된 빌드. 따라서 「실제 회원 데이터는 수집하지 않습니다」는 이메일 가입 경로에 맞지 않아 문장을 좁힘. (Secrets API는 권한 밖이라 직접 조회는 미실행.)
+- 캡처 20(`20_청첩장_테마목록_모바일.png`, 2026-11-05): 상단 뱃지가 옛 「3차 MVP · 준비 중」, 본문도 옛 입구 페이지 — 현재 허브와 다름. 캡처 재촬영은 이번 PR 범위 밖(보고만).
+
+### 검증
+- `npm run typecheck`, `npm run build` 통과(로컬).
+- 미실행: 매니페스트 재생성(마지막 단계), 청첩장 에디터·공개 화면 파일 수정 없음.
+
+## 2026-11-06 3차 최종 제출 정리 — PR #121 AI 리뷰 권장 반영·캡처 20·24 재촬영 (김민기 작업)
+
+### 요청
+- PR #121 AI 리뷰 권장: `plan_v3.md` 범위·일정 행의 옛 문구, 앱 README 라우트 줄, README 소유자 회신 경로, 홈 안내 `/privacy` 링크, DEC-02→DEC-14 연결, 옛 화면이 찍힌 캡처 20·24 재촬영.
+
+### 변경
+- `plan_v3.md`: 범위 제목·1항(3차 청첩장 목업 구현 범위), 일정 4(완료)·5(완료)·6(최종 제출 ← 현재, DEC-14), 실연동 계획 줄에 DEC-11 범위 밖 표기.
+- `0. 소스코드/eottae-web/README.md`: 라우트 줄의 `/invitations` 설명을 허브·만들기·편집·샘플·공개 `?t=`·RSVP `?t=&g=`·`?host=` 소유자 목록으로.
+- `README.md`: 표에 `/invitations/rsvp/?host=demo-inv-1` 소유자 회신 목록(읽기 전용) 행 추가(`rsvp/page.tsx`의 `hostId` 분기 대조), 캡처 20 부제 「청첩장 허브 · 테마 컬렉션」.
+- `src/app/page.tsx`: 히어로 안내에 이메일 가입 저장 범위 `/privacy` 링크.
+- `실행_결정대기_로그.md`: DEC-02 칸에 DEC-14 마감 연결.
+- `3. 구현 이미지(5장이상)/20_청첩장_테마목록_모바일.png`, `24_청첩장_RSVP_토큰거절_모바일.png`: 배포 사이트(main 266e89d)를 Linux 헤드리스 Chrome 156, 360px·3x로 재촬영. 20은 테마 16종이 세로로 이어져 전체 높이가 45,297px·23MB라, 기존 캡처와 같은 높이(10,836px, 테마 4종까지)로 잘라 256색 PNG(1.7MB)로 저장. 24는 `?t=<공유 토큰>`만(g 누락) 전체 높이 — 데모 링크 목록 없이 거절 안내만 보이는 현재 화면. `captions.csv` 20·24 행 갱신.
+
+### 검증
+- `npm run typecheck`, `npm run build` 통과(로컬).
+- 미실행: 매니페스트 재생성(마지막 단계). 청첩장 에디터·공개 화면 코드 수정 없음.
+- 관찰(코드 미수정): 24 화면에서 거절 카드 아래 빈 공간이 크고 「← 샘플 청첩장 미리보기로」·「← 청첩장 입구로」 버튼이 세로로 길게 늘어남 — RSVP 페이지 레이아웃(오하율·손준혁 영역) 후속 확인 필요.

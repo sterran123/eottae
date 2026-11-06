@@ -85,17 +85,17 @@ const resolveAssetUrl = (url?: string): string => {
   return `${basePath}/${url}`;
 };
 
-const imgGreenCanopy = `${basePath}/invitations/wedding-green-canopy.jpg`;
-const imgSunset = `${basePath}/invitations/wedding-sunset.jpg`;
-const imgStudioPeach = `${basePath}/invitations/wedding-studio-peach.jpg`;
-const imgCherryBlossom = `${basePath}/invitations/wedding-cherry-blossom.jpg`;
-const imgWaxEnvelope = `${basePath}/invitations/wedding-wax-envelope.jpg`;
-const imgTapeBw = `${basePath}/invitations/wedding-tape-bw.jpg`;
-const imgForestLaugh = `${basePath}/invitations/wedding-forest-laugh.jpg`;
-const imgBenchQuiet = `${basePath}/invitations/wedding-bench-quiet.jpg`;
-const imgNightGarden = `${basePath}/invitations/wedding-night-garden.jpg`;
-const imgHanbok = `${basePath}/invitations/wedding-hanbok.jpg`;
-const imgLuxuryHotel = `${basePath}/invitations/wedding-luxury-hotel.jpg`;
+const imgGreenCanopy = `${basePath}/invitations/scene-path.svg`;
+const imgSunset = `${basePath}/invitations/cover-evening.svg`;
+const imgStudioPeach = `${basePath}/invitations/scene-table.svg`;
+const imgCherryBlossom = `${basePath}/invitations/scene-arch.svg`;
+const imgWaxEnvelope = `${basePath}/invitations/scene-paper.svg`;
+const imgTapeBw = `${basePath}/invitations/scene-window.svg`;
+const imgForestLaugh = `${basePath}/invitations/scene-chairs.svg`;
+const imgBenchQuiet = `${basePath}/invitations/scene-bouquet.svg`;
+const imgNightGarden = `${basePath}/invitations/scene-night.svg`;
+const imgHanbok = `${basePath}/invitations/scene-door.svg`;
+const imgLuxuryHotel = `${basePath}/invitations/map-hall.svg`;
 
 export const BGM_LABEL_MAP: Record<string, string> = {
   romantic: '가상 축혼 행진곡',
@@ -590,7 +590,7 @@ export default function InvitationCardRenderer({
               <div className="inv-framed-arch-badge">SAVE THE DATE</div>
             </div>
             <div className="inv-framed-caption" style={{ color: captionColor }}>
-              <span className="inv-framed-names" style={{ color: captionColor }}>{hostNames}</span>
+              <h1 className="inv-framed-names" style={{ margin: 0, color: captionColor }}>{hostNames}</h1>
               <span className="inv-framed-meta" style={{ color: subCaptionColor }}>
                 {year}. {month < 10 ? `0${month}` : month}. {day < 10 ? `0${day}` : day} · {venueTitle}
               </span>
@@ -614,7 +614,7 @@ export default function InvitationCardRenderer({
                 <div className="inv-life4cut-cell" style={{ backgroundImage: `url(${imgStudioPeach})` }} />
                 <div className="inv-life4cut-cell inv-life4cut-cell--quote">
                   <span>사랑하는 사람과 함께 걷는 길</span>
-                  <strong>{hostNames}</strong>
+                  <h1>{hostNames}</h1>
                 </div>
               </div>
               <div className="inv-life4cut-bottom-watermark" style={{ color: cardTextColor }}>
@@ -642,7 +642,7 @@ export default function InvitationCardRenderer({
                   The First Day of Us
                 </div>
                 <div className="inv-polaroid-names-date" style={{ color: cardTextColor }}>
-                  <span>{hostNames}</span>
+                  <h1 style={{ margin: 0, font: 'inherit' }}>{hostNames}</h1>
                   <span>{year}. {month}. {day}</span>
                 </div>
               </div>
@@ -665,9 +665,9 @@ export default function InvitationCardRenderer({
               <span className="inv-gold-royal-title" style={{ color: effectiveAccentColor }}>
                 CELEBRATION OF LOVE
               </span>
-              <span className="inv-framed-names" style={{ fontFamily: 'serif', color: captionColor }}>
+              <h1 className="inv-framed-names" style={{ margin: 0, fontFamily: 'serif', color: captionColor }}>
                 {hostNames}
-              </span>
+              </h1>
               <span className="inv-framed-meta" style={{ color: subCaptionColor }}>
                 {year}년 {month}월 {day}일 · {venueTitle}
               </span>
@@ -691,7 +691,7 @@ export default function InvitationCardRenderer({
               />
             </div>
             <div className="inv-framed-caption" style={{ color: captionColor }}>
-              <span className="inv-framed-names" style={{ color: captionColor }}>{hostNames}</span>
+              <h1 className="inv-framed-names" style={{ margin: 0, color: captionColor }}>{hostNames}</h1>
               <span className="inv-framed-meta" style={{ color: subCaptionColor }}>
                 {displayTimeDot}
               </span>
@@ -752,7 +752,7 @@ export default function InvitationCardRenderer({
               결혼합니다
             </div>
             <div className="inv-sig-content inv-sig-content--floating">
-              <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
+              <h1 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h1>
               <div className="inv-sig-date" style={{ color: '#fef08a' }}>
                 {displayTimeKorean}
               </div>
@@ -768,7 +768,7 @@ export default function InvitationCardRenderer({
             <div className="inv-cover-top-center-names">OUR SACRED VOW</div>
             <div className="inv-cover-center-script-huge">Our Vow</div>
             <div className="inv-sig-content inv-sig-content--floating">
-              <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
+              <h1 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h1>
               <div className="inv-sig-date" style={{ color: '#fed7aa' }}>
                 {displayTimeDot}
               </div>
@@ -784,7 +784,7 @@ export default function InvitationCardRenderer({
             <div className="inv-cover-top-center-names">WEDDING INVITATION</div>
             <div className="inv-cover-center-script-huge">우리 둘의 약속</div>
             <div className="inv-sig-content inv-sig-content--floating">
-              <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
+              <h1 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h1>
               <div className="inv-sig-date" style={{ color: '#fed7aa' }}>
                 {displayTimeDot}
               </div>
@@ -800,7 +800,7 @@ export default function InvitationCardRenderer({
             <div className="inv-cover-top-center-names">CINEMATIC MOMENT</div>
             <div className="inv-cover-center-script-huge">우리만의 상영</div>
             <div className="inv-sig-content inv-sig-content--floating">
-              <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
+              <h1 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h1>
               <div className="inv-sig-date" style={{ color: '#fed7aa' }}>
                 {displayTimeDot}
               </div>
@@ -817,7 +817,7 @@ export default function InvitationCardRenderer({
             <div className="inv-hero-split-photo" style={{ backgroundImage: `url(${heroPhoto(imgStudioPeach)})` }} />
             <div className="inv-hero-split-info">
               <div className="inv-split-info-header">
-                <span className="inv-split-names">{hostNames}</span>
+                <h1 className="inv-split-names" style={{ margin: 0 }}>{hostNames}</h1>
                 <span className="inv-split-sub">The First Day of Us</span>
               </div>
               <div className="inv-split-divider" />
@@ -846,7 +846,7 @@ export default function InvitationCardRenderer({
             </div>
             <div className="inv-withlove-body">
               <div className="inv-script-with-love">warm heart</div>
-              <h2 className="inv-sig-names" style={{ fontFamily: 'serif', marginTop: 6 }}>{hostNames}</h2>
+              <h1 className="inv-sig-names" style={{ fontFamily: 'serif', marginTop: 6 }}>{hostNames}</h1>
               <div className="inv-sig-date">
                 {displayTimeKorean}
               </div>
@@ -880,7 +880,7 @@ export default function InvitationCardRenderer({
               title="클릭하여 왁스 씰 개봉"
             />
             <div className="inv-wax-envelope-bottom-text">
-              <div className="inv-wax-calligraphy-names">{hostNames}</div>
+              <h1 className="inv-wax-calligraphy-names" style={{ margin: 0 }}>{hostNames}</h1>
               <div className="inv-wax-calligraphy-venue">{venueTitle}</div>
               <div className="inv-wax-calligraphy-date">
                 {displayTimeDot}
@@ -900,7 +900,7 @@ export default function InvitationCardRenderer({
                 <span className="polaroid-caption-date">
                   {year}. {month < 10 ? `0${month}` : month}. {day < 10 ? `0${day}` : day}
                 </span>
-                <span className="polaroid-caption-names">{hostNames}</span>
+                <h1 className="polaroid-caption-names" style={{ margin: 0, font: 'inherit' }}>{hostNames}</h1>
               </div>
             </div>
             <div className="inv-sig-content" style={{ marginTop: 14 }}>
@@ -917,10 +917,10 @@ export default function InvitationCardRenderer({
             <div className="inv-real-photo-overlay inv-overlay--forest" />
             <div className="inv-typo-top-group">
               <div className="inv-typo-sub-lead">{themePreset.heroType === 'script-card' ? 'OUR SPECIAL DAY' : 'WEDDING INVITATION'}</div>
-              <h1 className="inv-typo-headline">{themePreset.heroType === 'script-card' ? 'Our Day' : '결혼합니다'}</h1>
+              <div className="inv-typo-headline">{themePreset.heroType === 'script-card' ? 'Our Day' : '결혼합니다'}</div>
             </div>
             <div className="inv-sig-content inv-sig-content--floating">
-              <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
+              <h1 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h1>
               <div className="inv-sig-date" style={{ color: '#fefae0' }}>
                 {displayTimeKorean}
               </div>
@@ -935,7 +935,7 @@ export default function InvitationCardRenderer({
             <div className="inv-real-photo-overlay inv-overlay--sunset" />
             <div className="inv-cover-top-center-names">SAVE THE DATE</div>
             <div className="inv-sig-content inv-sig-content--floating">
-              <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
+              <h1 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h1>
               <div className="inv-sig-date" style={{ color: '#fed7aa' }}>
                 {displayTimeDot}
               </div>
@@ -950,7 +950,7 @@ export default function InvitationCardRenderer({
             <div className="inv-real-photo-overlay inv-overlay--subtle" />
             <div className="inv-sig-content inv-sig-content--floating">
               <span className="inv-photo-only-sub">INVITATION</span>
-              <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
+              <h1 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h1>
               <div className="inv-sig-date" style={{ color: '#f8fafc' }}>
                 {displayTimeDot}
               </div>
@@ -965,7 +965,7 @@ export default function InvitationCardRenderer({
             <div className="inv-real-photo-overlay inv-overlay--cherry" />
             <div className="inv-cover-top-center-names">SPRING BLOSSOM 🌸</div>
             <div className="inv-sig-content inv-sig-content--floating">
-              <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
+              <h1 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h1>
               <div className="inv-sig-date" style={{ color: '#ffe4e6' }}>
                 {displayTimeKorean}
               </div>
@@ -980,7 +980,7 @@ export default function InvitationCardRenderer({
             <div className="inv-real-photo-overlay inv-overlay--night" />
             <div className="inv-cover-top-center-names">MOONLIGHT GARDEN 🌙</div>
             <div className="inv-sig-content inv-sig-content--floating">
-              <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
+              <h1 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h1>
               <div className="inv-sig-date" style={{ color: '#fde047' }}>
                 {displayTimeKorean}
               </div>
@@ -996,7 +996,7 @@ export default function InvitationCardRenderer({
             <div className="inv-real-photo-overlay inv-overlay--subtle" />
             <div className="inv-cover-top-center-names">백년가약 (百年佳約)</div>
             <div className="inv-sig-content inv-sig-content--floating">
-              <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
+              <h1 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h1>
               <div className="inv-sig-date" style={{ color: '#fef08a' }}>
                 {displayTimeKorean}
               </div>
@@ -1011,7 +1011,7 @@ export default function InvitationCardRenderer({
             <div className="inv-real-photo-overlay inv-overlay--luxury" />
             <div className="inv-cover-top-center-names">HOTEL GRAND BALLROOM ✨</div>
             <div className="inv-sig-content inv-sig-content--floating">
-              <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
+              <h1 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h1>
               <div className="inv-sig-date" style={{ color: '#fde047' }}>
                 {displayTimeKorean}
               </div>
@@ -1027,7 +1027,7 @@ export default function InvitationCardRenderer({
             <div className="inv-real-photo-overlay inv-overlay--subtle" />
             <div className="inv-sig-content inv-sig-content--floating">
               <span className="inv-photo-only-sub">OUR BEGINNING</span>
-              <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
+              <h1 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h1>
               <div className="inv-sig-date" style={{ color: '#f8fafc' }}>
                 {displayTimeDot}
               </div>
