@@ -1672,3 +1672,18 @@
 - `npm run typecheck`·`npm run build`(정적 27페이지) 통과.
 - 미실행: 360px 헤드리스 Chrome 실측·다크모드 대비 육안 확인(개발 서버 미기동) — 클래스 기반 스타일이라 시각 회귀 위험은 낮음.
 
+
+## 2026-11-06 life4cut 히어로 h1 스타일 회귀 수정 — 리뷰 반영 (김민기 작업, Refs #117)
+
+### 요청
+- 코드 리뷰 지적: `life4cut` 프레임 변형에서 이름 줄 `<strong>`→`<h1>` 교체 후 `.inv-life4cut-cell--quote strong` 선택자가 어긋나 브랜드색·11.5px·상단 4px 여백이 사라지는 시각 회귀 발생.
+
+### 변경
+- `invitations.css`: `.inv-life4cut-cell--quote strong` → `.inv-life4cut-cell--quote h1`(해당 셀에 strong 잔재 없음 확인), `margin-top: 4px` → `margin: 4px 0 0`으로 h1 UA 하단 여백까지 중화 — 교체 전 렌더와 동일 값.
+- `InvitationCardRenderer.tsx`: life4cut 이름 h1의 인라인 `margin:0·font:inherit` 제거 — 클래스가 여백·크기·색상을 모두 정하므로 불필요.
+- 히어로 컨테이너(`inv-sig-content`·`inv-cover-top-names`·`inv-polaroid-names-date`·`inv-framed-caption`·`inv-split-info-header`·`inv-wax-envelope-bottom-text`)의 요소 한정 선택자 전수 조사 — 회귀는 life4cut 한 곳뿐임을 확인.
+- 정정: 직전 로그의 「편집기 페이지는 렌더러 미사용」은 오기 — `InvitationEditor.tsx:579`가 미리보기로 렌더러를 사용(모달과 동일하게 h1 하나로 정상).
+
+### 검증
+- `npm run typecheck` 통과.
+- 미실행: life4cut 실제 렌더 육안 확인(개발 서버 미기동) — 원래 strong 규칙과 동일 값이라 시각 회귀 없음.

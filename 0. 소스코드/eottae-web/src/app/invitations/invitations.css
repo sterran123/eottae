@@ -5354,8 +5354,8 @@
   line-height: 1.4;
 }
 
-.inv-life4cut-cell--quote strong {
-  margin-top: 4px;
+.inv-life4cut-cell--quote h1 {
+  margin: 4px 0 0;
   font-size: 11.5px;
   color: var(--brand);
 }

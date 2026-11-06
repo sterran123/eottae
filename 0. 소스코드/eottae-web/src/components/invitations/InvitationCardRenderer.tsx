@@ -614,7 +614,7 @@ export default function InvitationCardRenderer({
                 <div className="inv-life4cut-cell" style={{ backgroundImage: `url(${imgStudioPeach})` }} />
                 <div className="inv-life4cut-cell inv-life4cut-cell--quote">
                   <span>사랑하는 사람과 함께 걷는 길</span>
-                  <h1 style={{ margin: 0, fontSize: 'inherit', fontFamily: 'inherit' }}>{hostNames}</h1>
+                  <h1>{hostNames}</h1>
                 </div>
               </div>
               <div className="inv-life4cut-bottom-watermark" style={{ color: cardTextColor }}>
