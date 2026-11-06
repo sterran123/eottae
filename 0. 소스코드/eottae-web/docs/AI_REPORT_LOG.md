@@ -1591,3 +1591,24 @@
 - [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
 - [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
 - [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
+
+## 2026-11-06 최종 제출 폴리시 — 청첩장 잔여 결함 정리 (김민기 작업)
+
+### 요청
+- 3차(최종) 제출 전 AI 리뷰 권장 사항 중 실제 결함만 선별해 정리. 재설계 없이 기존 6테마 토큰 체계 유지.
+
+### 변경
+- `invitations.css`: 마크업과 다른 죽은 규칙 `.inv-carousel-indicator-dots`를 `.inv-carousel-indicators`로 병합(margin-top 유지).
+- `invitations.css`: `var(--토큰, #hex)` 폴백 hex 38건 제거 — globals.css 토큰만 참조하도록 정리(팀 규칙: css hex 금지의 폴백 축).
+- `invitations.css`: `.inv-badge-new` 고정색(#ef4444/#ffffff) → `--warn-*` 토큰.
+- `invitations.css`: `.inv-emoji-selector-row`에 `flex-wrap: wrap` — 360px에서 칩 6개 넘침 방지.
+- `invitations.css`: `prefers-reduced-motion`에 `.inv-emoji-chip`(+hover, --active) 추가.
+- `InvitationPreviewModal.tsx`: 경고 텍스트 `#dc2626` → `var(--warn-ink)`.
+
+### 확인한 것
+- AI 리뷰가 지적한 나머지 권장 사항 대부분은 머지된 #102 팁에서 이미 해소됨을 확인: `--primary-content` 참조 없음, 화살표 호버 reduced-motion 포함, `ownerId` 조건 일치(demo-storage.ts:282/308/323), contrast-helper 3/6자리 hex만 파싱, 유명 곡 라벨 이미 가상명, 미사용 import 없음.
+- `.inv-calendar-table th:first-child`의 `#ef4444`는 일요일 표기 관례로 유지.
+
+### 검증
+- `npm run typecheck` 통과, `npm run build`(정적) 통과.
+- 미실행: 브라우저 360px 수동 점검, 서버·Supabase(DEC-11 목업 범위).
