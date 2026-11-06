@@ -1612,3 +1612,19 @@
 ### 검증
 - `npm run typecheck` 통과, `npm run build`(정적) 통과.
 - 미실행: 브라우저 360px 수동 점검, 서버·Supabase(DEC-11 목업 범위).
+
+## 2026-11-06 개인정보 안내 서버 저장 문구를 스키마 검증 사실로 확정 (김민기 작업)
+
+### 요청
+- 이슈 #90 잔여: `(확인 필요)` 문구를 실제 코드·스키마 대조 결과로 확정.
+
+### 확인한 것
+- `signUpWithEmail`→`sanitize_new_auth_user`→`activate_user`(0002:205-211) 경로: 가입 시 `public.users`에 `full_name`·`birth_year` 저장, `birth_date` 원본은 메타데이터에서 제거. 동의 3건은 `public.consents`.
+- `nickname`은 가입 경로에서 채우지 않고 `updateNickname` 시에만 저장.
+- 화면의 성인 확인은 `demo-adult.ts`(브라우저)만 사용 — `adult_verified` 서버 기록 없음. 공개 빌드는 `NEXT_PUBLIC_DEMO_ADULT_BYPASS=1`이라 방문자는 전원 시연 경로.
+- 시연 모드의 프로필·취향·관심·신고·차단은 브라우저 저장소(`match-service` demo 분기).
+- 1차 문장(닉네임·성인 확인 뒤 서버 저장)은 스키마와 불일치 → AI 리뷰 제시 문구로 교체.
+
+### 미실행
+- 클라우드 DB에 0002 트리거 적용 여부는 이 저장소 기록으로 미확인(`실제진행현황_기록부`에 db push 기록 없음). 문장은 코드 계약 기준.
+- 서버·Supabase 실연동 없음 (DEC-11 목업).
