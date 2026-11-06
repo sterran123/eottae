@@ -33,12 +33,13 @@ const cards: ServiceCardProps[] = [
     index: '03',
     title: '모바일 청첩장',
     english: 'INVITATIONS',
-    tag: '3차 · 데모 미리보기',
-    desc: '모바일 청첩장 테마를 미리 볼 수 있어요. 에디터·공유 링크·RSVP는 아직 준비 중이에요.',
-    href: '/invitations',
+    tag: '3차 · 데모 체험',
+    live: true,
+    desc: '테마 고르기부터 에디터·공개 링크·참석 회신(RSVP)까지 데모로 체험해요.',
+    href: '/invitations/',
     color: 'pink',
     motif: 'mail',
-    cta: '서비스 소개 보기',
+    cta: '데모 둘러보기',
   },
 ];
 
@@ -51,8 +52,8 @@ const steps = [
 
 const roadmap = [
   { phase: '1차', title: '매칭', desc: '취향 온보딩·추천·문답·1:1 채팅', now: true, motif: 'heart' },
-  { phase: '2차', title: '데이트·소모임', desc: '코스 탐색·모임 참가·일정 투표', motif: 'spark' },
-  { phase: '3차', title: '모바일 청첩장', desc: '에디터·공유 링크·참석 회신', motif: 'mail' },
+  { phase: '2차', title: '데이트·소모임', desc: '코스 탐색·모임 참가·일정 투표', now: true, motif: 'spark' },
+  { phase: '3차', title: '모바일 청첩장', desc: '에디터·공유 링크·참석 회신', now: true, motif: 'mail' },
 ] as const;
 
 export default function Home() {
@@ -87,8 +88,9 @@ export default function Home() {
             </a>
           </div>
           <div className="notice">
-            팀 프로젝트 중간 점검 — 매칭과 데이트·소모임은 데모 데이터로 체험할 수 있어요. 실제 회원
-            매칭·대화는 로그인·성인 인증 후, 모임 참가는 서버 연동 후 열립니다.
+            팀 프로젝트 3차 최종 제출(목업) — 매칭·데이트·소모임·모바일 청첩장 모두 데모 데이터로
+            체험할 수 있어요. 데모 기록은 이 브라우저에만 남고, 실제 결제·본인 확인은 연결하지 않았어요.
+            이메일 가입 시 저장 범위는 <Link href="/privacy">개인정보 안내</Link>에서 확인할 수 있어요.
           </div>
         </div>
       </section>
@@ -158,16 +160,16 @@ export default function Home() {
           <details>
             <summary>지금 바로 매칭을 이용할 수 있나요?</summary>
             <p>
-              온보딩·추천·문답·채팅 화면은 데모 데이터로 미리 체험할 수 있어요. 실제 회원 매칭과
-              대화는 로그인·만 19세 이상 성인 확인·쌍방 동의 기능이 구현되고 안전 검증을 통과한 뒤
-              1차 MVP에서 개통합니다.
+              네, 데모로 체험할 수 있어요. 상단 「로그인」에서 「데모로 로그인」을 누르고 시연용 성인
+              확인(만 19세)을 거치면 온보딩·추천·문답·채팅이 열려요. 실제 회원 매칭과 대화는 실제
+              본인 확인·서버 연동과 안전 검증을 마친 뒤 개통합니다.
             </p>
           </details>
           <details>
             <summary>청첩장만 따로 이용할 수 있나요?</summary>
             <p>
-              3차 개통 후에는 매칭 이용 이력과 관계없이 누구나 독립적으로 이용할 수 있도록
-              설계하고 있습니다.
+              네, 모바일 청첩장은 매칭 이용 이력과 관계없이 누구나 독립적으로 이용할 수 있어요.
+              「어때?」에서 커플이 되면 무료로 연계해 쓸 수 있도록 설계했습니다 (지금은 데모).
             </p>
           </details>
           <details>
@@ -193,10 +195,10 @@ export default function Home() {
       <section className="shell section bottom">
         <div className="section-head" data-reveal>
           <span className="eyebrow dark">ROADMAP</span>
-          <h2>나중에는 함께 즐기는 기능도</h2>
+          <h2>만남에서 결혼까지, 세 단계 모두 체험</h2>
           <p>
-            선택의 방 질문 기능은 매칭 이후, 모임장 비서의 일정 투표는 2차, 모바일 청첩장은 3차에
-            확장합니다.
+            1차 매칭, 2차 데이트·소모임, 3차 모바일 청첩장까지 모두 데모 데이터로 체험할 수 있어요.
+            실제 회원 연동과 결제는 안전 검증을 마친 뒤 이어갑니다.
           </p>
         </div>
         <ol className="roadmap">
@@ -212,7 +214,7 @@ export default function Home() {
               </span>
               <span className="roadmap-phase">
                 {r.phase}
-                {'now' in r && r.now ? ' · 지금' : ''}
+                {'now' in r && r.now ? ' · 데모 체험' : ''}
               </span>
               <b>{r.title}</b>
               <small>{r.desc}</small>
