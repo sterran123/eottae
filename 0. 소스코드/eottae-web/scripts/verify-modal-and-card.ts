@@ -396,7 +396,7 @@ assert(
 );
 
 // 15. [PR #102 추가 피드백] 일정 box_badge 배지 명도 대비 & 공개 사진 실루엣 색상 검증
-console.log('\n[검증 15] 일정 box_badge 명도 대비(badgeInk) & 매칭 공개 사진 실루엣 검증');
+console.log('\n[검증 15] 일정 box_badge 명도 대비(badgeInk & badgeLabel) & 매칭 공개 사진 실루엣 검증');
 const matchCssPath = path.resolve(process.cwd(), 'src/app/match/recommend/match-recommend.css');
 const matchCssCode = fs.readFileSync(matchCssPath, 'utf-8');
 const matchTokensPath = path.resolve(process.cwd(), 'src/app/match/match-tokens.css');
@@ -406,9 +406,11 @@ assert(
   rendererCode.includes("const badgeSurface = isDarkTheme ? '#161423' : '#ffffff';") &&
   rendererCode.includes('const badgeBg = badgeSurface;') &&
   rendererCode.includes('const badgeInk = ensureLegibleColor(accent, badgeSurface, 4.5);') &&
+  rendererCode.includes('const badgeLabel = getContrastingTextColor(badgeSurface);') &&
   rendererCode.includes('background: badgeBg') &&
-  rendererCode.includes('color: badgeInk'),
-  '일정 box_badge 실제 칠해지는 배경(badgeSurface, #161423/#ffffff) 기준으로 badgeInk = ensureLegibleColor(accent, badgeSurface, 4.5) 및 background: badgeBg 일치 적용됨'
+  rendererCode.includes('color: badgeInk') &&
+  rendererCode.includes('color: badgeLabel'),
+  '일정 box_badge 실제 칠해지는 배경(badgeSurface) 기준으로 badgeInk 및 badgeLabel(YEAR/DATE/TIME) 일치 적용됨'
 );
 
 assert(
@@ -417,6 +419,35 @@ assert(
   matchTokensCode.includes('--match-avatar-on-photo: #6b2d45;') &&
   matchTokensCode.includes('--match-avatar-on-photo: #fff5f7;'),
   '공개 사진 실루엣이 라이트에서는 #6b2d45(약 6.6:1), 다크에서는 #fff5f7로 전 테마 가독성 보장'
+);
+
+// 16. [PR #102 데이터봇 리뷰] var(--card) 미정의 토큰 제거, 공개 하객 ?t 누락 분기, prefers-reduced-motion 보강 검증
+console.log('\n[검증 16] var(--card) 토큰 정규화 · 공개 하객 t 누락 분기 · 애니메이션 감축 모션 검증');
+const pPagePath = path.resolve(process.cwd(), 'src/app/invitations/p/page.tsx');
+const pPageCode = fs.readFileSync(pPagePath, 'utf-8');
+const expiredViewPath = path.resolve(process.cwd(), 'src/components/invitations/InvitationExpiredView.tsx');
+const expiredViewCode = fs.readFileSync(expiredViewPath, 'utf-8');
+
+assert(
+  !cssCode.includes('var(--card)') &&
+  !pPageCode.includes('var(--card)') &&
+  pPageCode.includes("background: 'var(--soft)'"),
+  'globals.css에 정의되지 않은 var(--card)가 invitations.css 및 p/page.tsx에서 전면 제거되고 var(--soft)/var(--paper)로 정규화됨'
+);
+
+assert(
+  pPageCode.includes('if (!token)') &&
+  pPageCode.includes('reason="not-found"') &&
+  expiredViewCode.includes("reason === 'not-found'") &&
+  expiredViewCode.includes('초대 링크 토큰이 누락되었습니다'),
+  '공개 하객 화면(/invitations/p/)에서 ?t= 토큰 누락 시 만료(expired) 대신 전용 안내(not-found)로 명확히 분기됨'
+);
+
+assert(
+  cssCode.includes('.inv-accordion-drawer') &&
+  cssCode.includes('.inv-toast') &&
+  cssCode.includes('@media (prefers-reduced-motion: reduce)'),
+  'prefers-reduced-motion 미디어 쿼리에 아코디언 드로어(.inv-accordion-drawer) 및 토스트(.inv-toast) 애니메이션 감축 규칙 적용됨'
 );
 
 console.log('\n============================================================');

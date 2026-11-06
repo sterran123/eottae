@@ -1080,6 +1080,7 @@ export default function InvitationCardRenderer({
         const badgeSurface = isDarkTheme ? '#161423' : '#ffffff';
         const badgeBg = badgeSurface;
         const badgeInk = ensureLegibleColor(accent, badgeSurface, 4.5);
+        const badgeLabel = getContrastingTextColor(badgeSurface);
 
         return (
           <section key="schedule" className="inv-content-section" style={sectionStyle}>
@@ -1093,15 +1094,15 @@ export default function InvitationCardRenderer({
               {activeCalendarStyle === 'box_badge' && (
                 <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 14 }}>
                   <div style={{ padding: '8px 12px', background: badgeBg, border: `2px solid ${accent}`, borderRadius: 8, textAlign: 'center' }}>
-                    <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600 }}>YEAR</div>
+                    <div style={{ fontSize: 10, color: badgeLabel, opacity: 0.75, fontWeight: 700, letterSpacing: '0.04em' }}>YEAR</div>
                     <div style={{ fontSize: 16, fontWeight: 800, color: badgeInk }}>{year}</div>
                   </div>
                   <div style={{ padding: '8px 12px', background: badgeBg, border: `2px solid ${accent}`, borderRadius: 8, textAlign: 'center' }}>
-                    <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600 }}>DATE</div>
+                    <div style={{ fontSize: 10, color: badgeLabel, opacity: 0.75, fontWeight: 700, letterSpacing: '0.04em' }}>DATE</div>
                     <div style={{ fontSize: 16, fontWeight: 800, color: badgeInk }}>{month}월 {day}일</div>
                   </div>
                   <div style={{ padding: '8px 12px', background: badgeBg, border: `2px solid ${accent}`, borderRadius: 8, textAlign: 'center' }}>
-                    <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600 }}>TIME</div>
+                    <div style={{ fontSize: 10, color: badgeLabel, opacity: 0.75, fontWeight: 700, letterSpacing: '0.04em' }}>TIME</div>
                     <div style={{ fontSize: 16, fontWeight: 800, color: badgeInk }}>{ampm} {displayHour}시{minutes > 0 ? ` ${minutes}분` : ''}</div>
                   </div>
                 </div>

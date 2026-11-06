@@ -1562,3 +1562,18 @@
 - [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
 - [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
 - [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
+
+
+## 2026-11-06 PR #102 box_badge 라벨 표면 대비 일치·--card 토큰 정규화·공개 하객 ?t 누락 분기 및 모션 감축 보강 (Refs #84, Refs #102) (오하율 작업)
+- [요청] PR #102 데이터봇 리뷰 지적 사항 및 잔여 품질 보강:
+  1) `InvitationCardRenderer.tsx:1096, 1100, 1104`: `box_badge` YEAR/DATE/TIME 라벨이 앱 테마의 `var(--muted)`를 참조하여 다크 앱 테마 + 밝은 카드(또는 반대) 조합에서 배지 배경과 명도 대비가 무너지던 결함 해결. 배지 표면색 기준 `badgeLabel = getContrastingTextColor(badgeSurface)`를 도입하고 라벨에 `color: badgeLabel, opacity: 0.75, fontWeight: 700, letterSpacing: '0.04em'`를 적용하여 모든 카드/앱 테마 조합에서 WCAG 2.1 AA 기준을 만족하도록 보장.
+  2) `p/page.tsx:48` 및 `invitations.css:25, 1244, 1316, 3388`: `globals.css`에 정의되어 있지 않아 투명 배경으로 렌더링되던 `var(--card)` 토큰을 전면 제거하고 전역 시맨틱 토큰(`var(--soft)`, `var(--paper)`)으로 정규화.
+  3) `p/page.tsx:40` 및 `InvitationExpiredView.tsx:15, 23`: 초대 링크에서 `?t=` 토큰 파라미터가 누락된 경우 단순 만료(`expired`) 대신 전용 `not-found` 상태로 분기하고, 하객에게 공유받은 전체 링크를 다시 확인하도록 명확한 안내 문구 제공.
+  4) `invitations.css:4627`: `@media (prefers-reduced-motion: reduce)` 미디어 쿼리에 `.inv-accordion-drawer` 및 `.inv-toast`를 추가하여 애니메이션 및 전환 효과가 축소 모드에서 올바르게 비활성화되도록 웹 접근성 보강.
+  5) `verify-modal-and-card.ts`: `[검증 15]`에 `badgeLabel` 배지 표면 대비 검증을 추가하고, `[검증 16]`(var(--card) 완전 제거, ?t 누락 분기, 감축 모션 셀렉터)를 신규 작성하여 회귀 방지 자동화.
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (47/47 통과)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)

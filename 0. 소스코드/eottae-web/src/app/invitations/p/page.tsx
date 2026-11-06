@@ -36,6 +36,15 @@ function GuestInvitationContent() {
     );
   }
 
+  if (!token) {
+    return (
+      <InvitationExpiredView
+        reason="not-found"
+        message="초대 링크에 토큰(?t=...)이 포함되어 있지 않습니다. 전달받으신 초대장 전체 링크를 다시 확인해 주세요."
+      />
+    );
+  }
+
   if (!invitation) {
     return <InvitationExpiredView reason="expired" />;
   }
@@ -45,7 +54,7 @@ function GuestInvitationContent() {
       {/* 상단 하객 열람 안내 띠 (검색엔진 미노출 robots: noindex + 하객 명단 비공개) */}
       <div style={{
         width: '100%',
-        background: 'var(--card)',
+        background: 'var(--soft)',
         borderBottom: '1px solid var(--line)',
         padding: '8px 16px',
         fontSize: 12,
