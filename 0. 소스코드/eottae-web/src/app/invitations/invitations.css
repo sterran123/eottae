@@ -2470,23 +2470,51 @@
 }
 
 /* ============================================================
- * [사용자 레포 WeddingPlatform 반영] 색상 테마 16종 프리셋
+ * [색상 테마 16종 프리셋] 청첩장 배경 및 텍스트 커스텀
  * ============================================================ */
 .inv-reset-btn {
   font-size: 11px;
   font-weight: 700;
   padding: 3px 8px;
   border-radius: 6px;
-  border: 1px solid #cbd5e1;
-  background: #f1f5f9;
+  border: 1px solid var(--line);
+  background: var(--soft);
   color: var(--muted);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .inv-reset-btn:hover {
-  background: #e2e8f0;
+  border-color: var(--brand);
+  background: var(--paper);
   color: var(--ink);
+}
+
+[data-theme='dark'] .inv-reset-btn,
+[data-theme='cyberpunk'] .inv-reset-btn {
+  border-color: var(--line);
+  background: var(--soft);
+  color: var(--muted);
+}
+
+[data-theme='dark'] .inv-reset-btn:hover,
+[data-theme='cyberpunk'] .inv-reset-btn:hover {
+  border-color: var(--brand);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-reset-btn {
+    border-color: var(--line);
+    background: var(--soft);
+    color: var(--muted);
+  }
+  :root[data-theme='system'] .inv-reset-btn:hover {
+    border-color: var(--brand);
+    background: var(--paper);
+    color: var(--ink);
+  }
 }
 
 .inv-color-theme-grid {
@@ -6161,11 +6189,11 @@
   min-height: 44px;
   padding: 8px 10px;
   border-radius: 10px;
-  border: 1.5px solid #e2e8f0;
-  background: #ffffff;
+  border: 1.5px solid var(--line);
+  background: var(--paper);
   font-size: 12px;
   font-weight: 700;
-  color: #334155;
+  color: var(--ink);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -6176,16 +6204,65 @@
 
 .inv-cal-choice-btn:hover,
 .inv-gal-mode-btn:hover {
-  border-color: #cbd5e1;
-  background: #f8fafc;
+  border-color: var(--brand);
+  background: var(--soft);
+  color: var(--ink);
 }
 
 .inv-cal-choice-btn--active,
 .inv-gal-mode-btn--active {
-  border-color: var(--brand) !important;
-  background: #faf5ff !important;
+  border: 1.5px solid var(--brand) !important;
+  background: var(--soft) !important;
   color: var(--brand) !important;
-  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.14);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 20%, transparent);
+}
+
+[data-theme='dark'] .inv-cal-choice-btn,
+[data-theme='cyberpunk'] .inv-cal-choice-btn,
+[data-theme='dark'] .inv-gal-mode-btn,
+[data-theme='cyberpunk'] .inv-gal-mode-btn {
+  border: 1.5px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+[data-theme='dark'] .inv-cal-choice-btn:hover,
+[data-theme='cyberpunk'] .inv-cal-choice-btn:hover,
+[data-theme='dark'] .inv-gal-mode-btn:hover,
+[data-theme='cyberpunk'] .inv-gal-mode-btn:hover {
+  border-color: var(--brand);
+  background: var(--soft);
+  color: var(--ink);
+}
+
+[data-theme='dark'] .inv-cal-choice-btn--active,
+[data-theme='cyberpunk'] .inv-cal-choice-btn--active,
+[data-theme='dark'] .inv-gal-mode-btn--active,
+[data-theme='cyberpunk'] .inv-gal-mode-btn--active {
+  border: 1.5px solid var(--brand) !important;
+  background: var(--soft) !important;
+  color: var(--brand) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-cal-choice-btn,
+  :root[data-theme='system'] .inv-gal-mode-btn {
+    border: 1.5px solid var(--line);
+    background: var(--paper);
+    color: var(--ink);
+  }
+  :root[data-theme='system'] .inv-cal-choice-btn:hover,
+  :root[data-theme='system'] .inv-gal-mode-btn:hover {
+    border-color: var(--brand);
+    background: var(--soft);
+    color: var(--ink);
+  }
+  :root[data-theme='system'] .inv-cal-choice-btn--active,
+  :root[data-theme='system'] .inv-gal-mode-btn--active {
+    border: 1.5px solid var(--brand) !important;
+    background: var(--soft) !important;
+    color: var(--brand) !important;
+  }
 }
 
 /* 6. 렌더러 본문 섹션 제목 / 인사말 / 혼주 / 달력 / 캐러셀 스타일 */
@@ -6686,6 +6763,9 @@
  * ============================================================ */
 .inv-btn-primary:focus-visible,
 .inv-btn-secondary:focus-visible,
+.inv-reset-btn:focus-visible,
+.inv-cal-choice-btn:focus-visible,
+.inv-gal-mode-btn:focus-visible,
 .inv-accordion-toggle-btn:focus-visible,
 .inv-choice-pill:focus-visible,
 .inv-envelope-seal:focus-visible,

@@ -450,6 +450,36 @@ assert(
   'prefers-reduced-motion 미디어 쿼리에 아코디언 드로어(.inv-accordion-drawer) 및 토스트(.inv-toast) 애니메이션 감축 규칙 적용됨'
 );
 
+// 17. [PR #102 청첩장 테마 AI 리뷰] .inv-reset-btn 및 달력/갤러리 선택 토큰화 & WeddingPlatform 제거 검증
+console.log('\n[검증 17] 초기화 버튼·달력/갤러리 선택 테마 토큰화 & WeddingPlatform 제거 검증');
+
+assert(
+  cssCode.includes('.inv-reset-btn {\n  font-size: 11px;\n  font-weight: 700;\n  padding: 3px 8px;\n  border-radius: 6px;\n  border: 1px solid var(--line);\n  background: var(--soft);\n  color: var(--muted);') &&
+  cssCode.includes("[data-theme='dark'] .inv-reset-btn,") &&
+  cssCode.includes("[data-theme='cyberpunk'] .inv-reset-btn") &&
+  cssCode.includes(":root[data-theme='system'] .inv-reset-btn"),
+  '.inv-reset-btn이 밝은 고정색 대신 시맨틱 토큰(var(--line), var(--soft), var(--muted)) 및 다크·사이버펑크·시스템 다크 고대비 규칙을 적용함'
+);
+
+assert(
+  modalCode.includes('setCustomThemeStyle({\n                      bgColor: preset.defaultBgColor,\n                      textColor: preset.defaultTextColor,\n                      accentColor: preset.defaultAccentColor,\n                      primaryColor: preset.defaultTextColor,\n                    });') &&
+  !modalCode.includes("bgColor: '#ffffff',\n                      primaryColor: '#111827'"),
+  'InvitationPreviewModal 기본색 초기화 시 하드코딩된 #ffffff 대신 현재 선택된 테마의 defaultBgColor/defaultTextColor로 정확히 초기화됨'
+);
+
+assert(
+  cssCode.includes('.inv-cal-choice-btn,\n.inv-gal-mode-btn {\n  min-height: 44px;\n  padding: 8px 10px;\n  border-radius: 10px;\n  border: 1.5px solid var(--line);\n  background: var(--paper);') &&
+  cssCode.includes('.inv-cal-choice-btn--active,\n.inv-gal-mode-btn--active {\n  border: 1.5px solid var(--brand) !important;\n  background: var(--soft) !important;') &&
+  cssCode.includes("[data-theme='dark'] .inv-cal-choice-btn--active,"),
+  '달력·갤러리 선택(.inv-cal-choice-btn, .inv-gal-mode-btn)이 border: 1.5px solid var(--line) 및 active 시 var(--brand)/var(--soft)로 전 테마 토큰화됨'
+);
+
+assert(
+  !cssCode.includes('WeddingPlatform') &&
+  !modalCode.includes('WeddingPlatform'),
+  'invitations.css 및 InvitationPreviewModal.tsx 주석에서 WeddingPlatform 키워드가 완전히 제거됨'
+);
+
 console.log('\n============================================================');
 console.log(` 검증 결과: 총 ${passCount + failCount}개 중 ${passCount}개 통과 (실패: ${failCount}개)`);
 console.log('============================================================');

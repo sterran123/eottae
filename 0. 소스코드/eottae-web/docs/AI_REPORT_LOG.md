@@ -823,7 +823,7 @@
 
 ## 2026-11-03 INV-001 모바일 청첩장 타입·데이터·스토리지 첫 PR (오하율 작업)
 - [요청] 3차(모바일 청첩장) INV-001 메인 담당. 주한태(#85)·손준혁(#86) 작업의 선행 조건인 `src/lib/invitations/`의 타입(`types.ts`), 예시 데이터(`demo-data.ts`), 브라우저 데모 스토리지(`demo-storage.ts`), URL 헬퍼(`href.ts`)를 작성하고 `clear-demo-device.ts`에 청첩장 데모 키를 등록하는 첫 PR.
-- [AI] Antigravity가 지시서(`3차_작업지시서.md`, `AGENT_오하율_INV_EDITOR.md`), DB 논리모델(INVITATION, GUEST, RSVP), 2차 활동 데모 패턴(`src/lib/activities/`), `clear-demo-device.ts`, `demo-themes.ts`를 분석. `WeddingPlatform`의 청첩장 데이터 구조(신랑신부, 장소, 일시, 인사말 등)를 참고하여 목업 스토리지/타입을 설계.
+- [AI] Antigravity가 지시서(`3차_작업지시서.md`, `AGENT_오하율_INV_EDITOR.md`), DB 논리모델(INVITATION, GUEST, RSVP), 2차 활동 데모 패턴(`src/lib/activities/`), `clear-demo-device.ts`, `demo-themes.ts`를 분석. 모바일 청첩장 데이터 구조(신랑신부, 장소, 일시, 인사말 등)를 참고하여 목업 스토리지/타입을 설계.
 - [신규] src/lib/invitations/types.ts | `Invitation`, `Guest`, `Rsvp`, `InvitationStatus`, `InvitationVisibility`, `RsvpResponse`, `InvitationThemeId` 및 타입 가드 정의. 전화번호 없는 개인정보 최소화 준수.
 - [신규] src/lib/invitations/demo-data.ts | 예시 청첩장 3건(내 청첩장 2건, 타인 열람용 1건 — DEMO_THEMES 연동), 예시 하객 4건, 예시 RSVP 3건. 실존 인물·실주소 배제(가상 지역 노을구·달동네·한들시 재사용).
 - [신규] src/lib/invitations/demo-storage.ts | localStorage 키 `eottae.invitations.demo.v1` 기반 CRUD 및 이벤트 구독. `loadInvitationsDemo`, `saveInvitationsDemo`, `resetInvitationsDemo`, `regenerateSharingToken`(INV-002 연동), `submitRsvp`(INV-003 연동) 헬퍼 제공.
@@ -1573,6 +1573,20 @@
   5) `verify-modal-and-card.ts`: `[검증 15]`에 `badgeLabel` 배지 표면 대비 검증을 추가하고, `[검증 16]`(var(--card) 완전 제거, ?t 누락 분기, 감축 모션 셀렉터)를 신규 작성하여 회귀 방지 자동화.
 - [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
 - [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (47/47 통과)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
+
+
+## 2026-11-06 PR #102 초기화 버튼·달력/갤러리 선택 테마 토큰화 및 공개 문서 주석 정제 (Refs #84, Refs #102) (오하율 작업)
+- [요청] PR #102 청첩장 테마 AI 코드 리뷰 지적 사항 3건 완전 해결:
+  1) `invitations.css:2475`, `InvitationPreviewModal.tsx:678, :851`: 「기본 사진 복원」「기본색 초기화」(`.inv-reset-btn`)에 존재하던 밝은 고정색(`#f1f5f9`, `#cbd5e1`, `#e2e8f0`)을 제거하고 시맨틱 토큰(`var(--line)`, `var(--soft)`, `var(--muted)`, `var(--paper)`, `var(--ink)`)으로 전환. 다크, 사이버펑크, 시스템 다크 테마(`[data-theme='dark']`, `[data-theme='cyberpunk']`, `:root[data-theme='system']`)에 고대비 규칙을 추가. 또한 「기본색 초기화」 클릭 시 고정된 `#ffffff`가 아닌 현재 선택된 테마의 `preset.defaultBgColor`, `preset.defaultTextColor`, `preset.defaultAccentColor`로 복원되도록 보정.
+  2) `invitations.css:6183`: 미리보기 모달의 달력 및 갤러리 선택 버튼(`.inv-cal-choice-btn`, `.inv-gal-mode-btn`)의 고정 테두리(`#e2e8f0`) 및 배경(`#ffffff`, `#faf5ff`)을 `border: 1.5px solid var(--line)`, `background: var(--paper)`, 활성 상태 시 `border: 1.5px solid var(--brand) !important; background: var(--soft) !important;`로 토큰화하고, 다크/사이버펑크/시스템 다크 테마 오버라이드를 적용.
+  3) `invitations.css`, `InvitationPreviewModal.tsx`, `AI_REPORT_LOG.md`: 공개 제출물 기준에 부합하도록 코드 내에 잔존하던 `WeddingPlatform` 및 `사용자 레포` 주석 키워드를 전면 정제 (0건 달성).
+  4) `verify-modal-and-card.ts`: `[검증 17]`을 신규 추가하여 초기화 버튼 토큰화, 동적 테마 기본색 복원, 달력/갤러리 선택 버튼 1.5px 토큰 및 WeddingPlatform 부재 검증 자동화.
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (51/51 통과)
 - [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
 - [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
 - [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)

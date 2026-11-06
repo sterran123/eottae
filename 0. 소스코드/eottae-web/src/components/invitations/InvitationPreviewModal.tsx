@@ -60,7 +60,7 @@ const ANIMATION_OPTIONS: { id: AnimationEffectType; label: string; icon: string;
   { id: 'none', label: '효과 끔', icon: '🚫', desc: '시각 효과 없음' },
 ];
 
-// 사용자 레포지토리(WeddingPlatform)의 16종 색상 프리셋
+// 청첩장 디자인 16종 색상 프리셋
 const COLOR_THEME_PRESETS = [
   { id: 'minimal', name: 'Minimal', bg: '#FFFFFF', primary: '#111827', text: '#111827', accent: '#4B5563' },
   { id: 'classic', name: 'Classic', bg: '#FDFBFB', primary: '#633231', text: '#1f2937', accent: '#8B5E5C' },
@@ -205,7 +205,7 @@ export default function InvitationPreviewModal({
     initialPreset.defaultGalleryMode || 'carousel'
   );
 
-  // 사용자 레포 색상 테마 커스텀 상태 (선택 테마 기본 배경/글자색과 즉시 동기화)
+  // 색상 테마 커스텀 상태 (선택 테마 기본 배경/글자색과 즉시 동기화)
   const [customThemeStyle, setCustomThemeStyle] = useState<ThemeCustomStyle>({
     bgColor: initialPreset.defaultBgColor || '#ffffff',
     primaryColor: initialPreset.defaultTextColor || '#111827',
@@ -851,14 +851,16 @@ export default function InvitationPreviewModal({
                 <button
                   type="button"
                   className="inv-reset-btn"
-                  onClick={() =>
+                  onClick={() => {
+                    const preset = getThemePreset(selectedTheme);
                     setCustomThemeStyle({
-                      bgColor: '#ffffff',
-                      primaryColor: '#111827',
-                      textColor: '#1f2937',
-                      accentColor: '#e11d48',
-                    })
-                  }
+                      bgColor: preset.defaultBgColor,
+                      textColor: preset.defaultTextColor,
+                      accentColor: preset.defaultAccentColor,
+                      primaryColor: preset.defaultTextColor,
+                    });
+                  }}
+                  title="현재 테마 기본 색상으로 초기화"
                 >
                   기본색 초기화
                 </button>
