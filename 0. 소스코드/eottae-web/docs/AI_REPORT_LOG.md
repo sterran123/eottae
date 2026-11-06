@@ -1500,3 +1500,16 @@
 - [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
 - [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
 
+## 2026-11-06 매칭 허브 MATCH 태그 제거·예시 조건 문구 정비 및 추천 CSS 테마 토큰화 (오하율 작업, Refs #83, Refs #84)
+- [요청] 디자인 검토(PR #83) 및 3차 목업 기준에 따른 매칭 허브/추천 화면 정비:
+  1) `src/app/match/page.tsx:19, :117`: 각 기능 카드 상단 칩의 내부 요구사항 티켓 번호(`MATCH-001`·`002`·`009`·`007`·`003`)를 제거하고 한국어 상태 표기(「데모」)로 일치화.
+  2) `src/app/match/page.tsx:26`: 카드 추천 설명의 입증되지 않은 알고리즘 수치 표현(「취향 일치율」)을 목업 및 브랜드 가이드 기준에 맞춰 「성인 확인과 취향 조건에 맞춰 고른 예시 상대 카드를 둘러봅니다.」로 정비.
+  3) `src/app/match/page.tsx:52, :82`: 허브 카드의 인라인 12px 스타일(`entryLinkStyle`)을 제거하고 공통 `.btn.outline` 스타일을 따르도록 일원화. 히어로 캐릭터 이미지의 미로딩 토큰(`var(--match-toast-shadow)`)을 공통 셸 토큰 `var(--shadow-card)`로 전환.
+  4) `src/app/match/recommend/match-recommend.css:147, :153, :164, :246`: 사진 공개 아바타 글자색을 `var(--match-on-accent)`로, 블러 오버레이 배경을 `color-mix(in srgb, var(--match-bg) 70%, transparent)`로, 태그 및 더보기 드롭다운 메뉴의 검은 그림자를 `var(--match-toast-shadow)`로 전환하여 다크/사이버펑크 테마에서 하드코딩 색상이 노출되지 않도록 전면 토큰화.
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (42/42 통과)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
+

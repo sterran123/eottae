@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import SubpageHero from '@/components/shared/subpage-hero';
 import MatchHomeGate from '@/components/demo/MatchHomeGate';
@@ -16,16 +15,16 @@ const modules = [
     title: '취향 온보딩',
     desc: '나를 설명하는 관심사(음악·음식·여행·스타일)와 대화 스타일을 선택합니다.',
     href: '/match/onboarding',
-    tag: 'MATCH-001',
+    tag: '데모',
     cta: '온보딩 시작',
     gate: 'onboarding',
   },
   {
     num: '02',
     title: '카드 추천',
-    desc: '성인 검증 및 취향 일치율을 바탕으로 엄선된 상대 카드를 둘러봅니다.',
+    desc: '성인 확인과 취향 조건에 맞춰 고른 예시 상대 카드를 둘러봅니다.',
     href: '/match/recommend',
-    tag: 'MATCH-002',
+    tag: '데모',
     cta: '추천 카드 보기',
     gate: 'recommend',
   },
@@ -34,7 +33,7 @@ const modules = [
     title: '프로필 문답',
     desc: '가치관 질문에 답하고 서로의 생각을 비교해보며 깊이 있는 대화를 준비합니다.',
     href: '/match/qna',
-    tag: 'MATCH-009',
+    tag: '데모',
     cta: '문답 작성하기',
     gate: 'qna',
   },
@@ -43,22 +42,11 @@ const modules = [
     title: '1:1 채팅',
     desc: '쌍방 동의 후에만 열리는 안전하고 프라이빗한 1:1 실시간 대화방입니다.',
     href: '/match/chat',
-    tag: 'MATCH-007',
+    tag: '데모',
     cta: '채팅방 체험',
     gate: 'chat',
   },
 ] as const;
-
-const entryLinkStyle: CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  fontSize: '12px',
-  height: '44px',
-  minHeight: '44px',
-  padding: '0 14px',
-  lineHeight: '1',
-};
 
 export default function MatchPage() {
   return (
@@ -79,7 +67,7 @@ export default function MatchPage() {
               borderRadius: '50%',
               objectFit: 'cover',
               display: 'block',
-              boxShadow: '0 2px 8px var(--match-toast-shadow)',
+              boxShadow: 'var(--shadow-card)',
             }}
           />
         }
@@ -100,11 +88,11 @@ export default function MatchPage() {
               <p>{desc}</p>
               <div style={{ marginTop: '14px' }}>
                 {gate ? (
-                  <DemoGatedLink className="btn outline" href={href} intent={gate} style={entryLinkStyle}>
+                  <DemoGatedLink className="btn outline" href={href} intent={gate}>
                     {cta} →
                   </DemoGatedLink>
                 ) : (
-                  <Link className="btn outline" href={href} style={entryLinkStyle}>
+                  <Link className="btn outline" href={href}>
                     {cta} →
                   </Link>
                 )}
@@ -114,12 +102,12 @@ export default function MatchPage() {
           <article className="feature">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <span>05</span>
-              <span className="chip" style={{ fontSize: '11px', padding: '2px 8px' }}>MATCH-003</span>
+              <span className="chip" style={{ fontSize: '11px', padding: '2px 8px' }}>데모</span>
             </div>
             <h3>내 프로필</h3>
             <p>데모 계정의 표시 이름과 연령 기준만 보여 줍니다. 로그아웃하면 열리지 않아요.</p>
             <div style={{ marginTop: '14px' }}>
-              <Link className="btn outline" href="/profile" style={entryLinkStyle}>
+              <Link className="btn outline" href="/profile">
                 내 프로필 →
               </Link>
             </div>

@@ -144,13 +144,13 @@
   color: var(--match-avatar-ink);
 }
 .mt-rec__photo--revealed .mt-rec__avatar {
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--match-on-accent);
 }
 .mt-rec__blur {
   position: absolute;
   inset: 0;
   backdrop-filter: blur(2px);
-  background: rgba(251, 233, 239, 0.3);
+  background: color-mix(in srgb, var(--match-bg) 70%, transparent);
 }
 .mt-rec__preview-tag {
   position: absolute;
@@ -161,7 +161,7 @@
   align-items: center;
   gap: 3px;
   background: var(--match-tag-bg);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 4px var(--match-toast-shadow);
   border-radius: 99px;
   padding: 3px 8px;
   font-size: 9px;
@@ -243,7 +243,7 @@
   background: var(--match-paper);
   border: 1px solid var(--match-line);
   border-radius: 10px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 16px var(--match-toast-shadow);
   padding: 4px;
   display: flex;
   flex-direction: column;
