@@ -15,6 +15,7 @@
 //   DRY_RUN=2를 주면 Grok까지 실행하고 GitHub에는 쓰지 않는다.
 // 필요: grok 로그인(grok login), GitHub 토큰(GITHUB_TOKEN 없으면 `gh auth token`).
 // 선택: INTERVAL_MIN(기본 5), MAX_PER_CYCLE(기본 3), REVIEW_ROOT(worktree·기록 위치), GROK_MODEL
+//   카카오 완료 알림 — 큐 작업이 하나 끝날 때마다 카카오톡 "나에게 보내기"(tools/kakao_notify.mjs, 최초 한 번 설정)
 // 종료 코드: 3 로그인·사용량 문제, 4 잠금·클론 상태 문제, 0 작업자 코드 갱신(다시 띄우면 됨)
 //
 // 사용량 절약: 대기 표시가 있는 작업만 본다(처리하면 표시가 바뀌어 다시 잡히지 않는다),
@@ -24,6 +25,7 @@ import { execFileSync, spawn } from "node:child_process";
 import { appendFileSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { notifyKakao } from "./kakao_notify.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const REPO = process.env.GITHUB_REPOSITORY || "sterran123/eottae";
@@ -287,7 +289,7 @@ async function runIn({ label, fetchRef, sha, script, env }) {
   } catch (e) {
     console.error(`${label} 준비 실패 — 건너뜀: ${e.message.split("\n")[0]}`);
     removeWorktree(wt);
-    return 1;
+    return { code: 1, sec: null }; // 준비 실패도 끝난 것으로 알린다 — 건너뛴 작업을 조용히 놓치지 않게
   }
   const started = Date.now();
   return new Promise((resolve) => {
@@ -313,7 +315,7 @@ async function runIn({ label, fetchRef, sha, script, env }) {
         verdict: out.match(/^verdict: (\w+)/m)?.[1] ?? null,
       };
       appendFileSync(join(REVIEW_ROOT, "runs.jsonl"), JSON.stringify(rec) + "\n");
-      resolve(code);
+      resolve({ code, sec: rec.sec });
     });
   });
 }
@@ -425,9 +427,9 @@ process.on("SIGINT", () => process.exit(130));
 
 const QUEUES = [
   // @grok을 가장 먼저 본다 — 멘션은 사람이 기다리는 대화라, 확인 신호(👀·접수 댓글)가 리뷰 작업 뒤로 밀리지 않게
-  { name: "@grok", find: waitingMentions, run: mention, show: (j) => `#${j.number} 댓글 ${j.comment.id}` },
-  { name: "AI 리뷰", find: waitingReviews, run: review, show: (j) => `PR #${j.pr.number} @ ${j.pr.head.sha.slice(0, 7)}${j.force ? " (재리뷰)" : ""}` },
-  { name: "이슈 진행", find: waitingProgress, run: progress, show: (j) => `PR #${j.pr.number} 머지 ${j.pr.merge_commit_sha.slice(0, 7)}` },
+  { name: "@grok", find: waitingMentions, run: mention, show: (j) => `#${j.number} 댓글 ${j.comment.id}`, link: (j) => j.comment.html_url },
+  { name: "AI 리뷰", find: waitingReviews, run: review, show: (j) => `PR #${j.pr.number} @ ${j.pr.head.sha.slice(0, 7)}${j.force ? " (재리뷰)" : ""}`, link: (j) => j.pr.html_url },
+  { name: "이슈 진행", find: waitingProgress, run: progress, show: (j) => `PR #${j.pr.number} 머지 ${j.pr.merge_commit_sha.slice(0, 7)}`, link: (j) => j.pr.html_url },
 ];
 for (;;) {
   for (const q of QUEUES) {
@@ -439,7 +441,12 @@ for (;;) {
     }
     for (const job of jobs) {
       console.log(`▶ ${q.name}: ${q.show(job)}`);
-      const code = await q.run(job);
+      const { code, sec } = await q.run(job);
+      // 끝날 때마다 카카오톡 "나에게 보내기" — 미설정·전송 실패는 로그만 남기고 작업자는 계속 돈다
+      await notifyKakao(
+        `[어때 작업자] ${q.name} ${code === 0 ? "완료 ✅" : "실패 ⚠️"}\n${q.show(job)}\n종료 ${code ?? "신호"}${sec != null ? ` · ${sec}초` : ""}`,
+        q.link?.(job),
+      );
       if (code === 3) {
         console.error("Grok 로그인·사용량 문제 — 작업자를 멈춥니다. `grok login` 또는 사용량을 확인한 뒤 다시 실행하세요.");
         process.exit(3);
