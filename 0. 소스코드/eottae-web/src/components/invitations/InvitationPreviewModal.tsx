@@ -691,6 +691,10 @@ export default function InvitationPreviewModal({
                 내 PC/스마트폰의 실제 웨딩 사진을 첨부하거나, 세련된 20대 비주얼 프리셋으로 즉시 교체해 보세요.
               </p>
 
+              <p style={{ fontSize: 11, color: 'var(--muted)', margin: '0 0 8px', lineHeight: 1.45 }}>
+                무료 체험: 사진 업로드 {customMainPhoto ? 1 : 0}/10장 (시연) — 일정 수 초과 시 유료 전환. 「어때?」 커플 성사 연계 시 무료 이용 가능.
+              </p>
+
               {/* 파일 직접 첨부 업로드 박스 */}
               <div
                 className="inv-photo-upload-dropzone"
