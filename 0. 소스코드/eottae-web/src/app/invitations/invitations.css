@@ -1240,6 +1240,7 @@
 }
 
 .inv-category-tab-btn {
+  min-height: 44px;
   padding: 8px 18px;
   background: var(--paper);
   color: var(--muted);
@@ -2040,6 +2041,12 @@
   border-color: var(--brand) !important;
 }
 
+/* 숨기기·되돌리기 같은 경고성 토글 — 기본 44px 높이에 경고색 글자만 더한다 (#117) */
+.inv-accordion-toggle-btn--warn {
+  font-size: 13px;
+  color: var(--warn-ink);
+}
+
 /* 아코디언 커스텀 서랍 */
 .inv-accordion-drawer {
   padding: 16px;
@@ -2473,9 +2480,10 @@
  * [색상 테마 16종 프리셋] 청첩장 배경 및 텍스트 커스텀
  * ============================================================ */
 .inv-reset-btn {
-  font-size: 11px;
+  min-height: 44px;
+  font-size: 13px;
   font-weight: 700;
-  padding: 3px 8px;
+  padding: 8px 12px;
   border-radius: 6px;
   border: 1px solid var(--line);
   background: var(--soft);

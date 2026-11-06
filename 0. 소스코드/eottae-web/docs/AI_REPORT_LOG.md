@@ -1654,3 +1654,20 @@
 ### 검증
 - `npm run typecheck` 통과.
 - 미실행: 실결제·정산(DEC-11 목업 범위 외), 서버·Supabase.
+
+## 2026-11-06 청첩장 공개 화면·편집기 접근성 마무리 (김민기 작업, Refs #117)
+
+### 요청
+- #117: 하객 공개 화면·편집기의 접근성 4건 — noindex 칩 평문, 44px 터치 대상, h1 부재, `/invitations/new/` 탭 제목.
+
+### 변경
+- `src/app/invitations/p/page.tsx`: 하객 안내 띠의 `robots: noindex` 기술 칩 → 평문 「검색엔진에 노출되지 않는 링크예요」(메타데이터 noindex는 `p/layout.tsx`에 그대로). 「허브로 가기 →」 링크를 `inline-flex`·`min-height:44px`로.
+- `src/app/invitations/new/layout.tsx`(신규): `new/page.tsx`가 클라이언트 페이지라 metadata가 없던 것을 레이아웃에서 `title: '새 청첩장 만들기'`로 보강.
+- `invitations.css`: `.inv-reset-btn` 44px·13px(11px·약 20px이던 것), `.inv-category-tab-btn` 44px(약 37px이던 것), `.inv-accordion-toggle-btn--warn` 신설(13px·`--warn-ink`).
+- `InvitationPreviewModal.tsx` 「숨김 ✕」: 인라인 11px·작은 패딩 제거 → `inv-accordion-toggle-btn--warn` 클래스(기본 44px 높이 상속).
+- `InvitationCardRenderer.tsx`: 공개 화면 `<h1>` 부재 — 히어로 변형(시그니처 13·프레임 5·스플릿·왁스·테이프·4컷)마다 신랑·신부 이름 줄을 `<h1>`으로. 클래스가 글꼴·여백을 모두 정한 곳은 태그만, 나머지는 `margin:0`·`font:inherit`로 UA 기본값을 비활성화해 시각 변화 없이 구조만 바꿈. 히어로는 변형당 하나만 렌더되므로 페이지 h1도 하나. 섹션 본문의 이름 언급(1294·1854행 등)은 그대로.
+
+### 검증
+- `npm run typecheck`·`npm run build`(정적 27페이지) 통과.
+- 미실행: 360px 헤드리스 Chrome 실측·다크모드 대비 육안 확인(개발 서버 미기동) — 클래스 기반 스타일이라 시각 회귀 위험은 낮음.
+
