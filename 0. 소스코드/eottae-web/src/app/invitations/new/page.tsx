@@ -15,7 +15,7 @@ function InvitationEditorContent() {
     <>
       <SubpageHero
         eyebrow="MODULE 03 · EDITOR"
-        status={{ label: editId ? '청첩장 수정' : '새 청첩장 만들기' }}
+        status={{ label: editId ? '청첩장 수정 (데모)' : '새 청첩장 만들기 (데모)' }}
         title={editId ? '모바일 청첩장 정보 수정' : '나만의 특별한 모바일 청첩장'}
         motif={<MotifIcon name="mail" size={56} />}
       >

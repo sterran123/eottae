@@ -12,10 +12,13 @@ export const RSVP_RESPONSES = ['yes', 'no', 'maybe'] as const;
 export type RsvpResponse = (typeof RSVP_RESPONSES)[number];
 
 export const INVITATION_THEME_IDS = [
-  'green-canopy',
-  'the-wedding',
+  'forest-fresh',
+  'our-vow',
   'photo-background',
-  'with-love',
+  'warm-heart',
+  'green-canopy', // 레거시 하위호환
+  'the-wedding',  // 레거시 하위호환
+  'with-love',    // 레거시 하위호환
   'spring-card',
   'moon-garden',
   'hanji',

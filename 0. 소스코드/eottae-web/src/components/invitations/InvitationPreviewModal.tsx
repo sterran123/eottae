@@ -42,10 +42,10 @@ const LAYOUT_OPTIONS: { id: InvitationLayoutStyle; label: string; desc: string }
 ];
 
 const BGM_OPTIONS: { id: InvitationBgmpreset; label: string; icon: string; desc: string }[] = [
-  { id: 'romantic', label: '멘델스존: 축혼 행진곡 (Wedding March)', icon: '🎺', desc: '결혼식의 정석 웅장한 행진곡' },
-  { id: 'bach_air', label: '바흐: G선상의 아리아 (Air on G String)', icon: '🎻', desc: '고결하고 우아한 클래식 현악' },
-  { id: 'canon', label: '파헬벨: 캐논 변주곡 (Pachelbel Canon)', icon: '🎼', desc: '맑고 감미로운 감성 피아노' },
-  { id: 'piano', label: '쇼팽: 녹턴 Op.9 No.2 (Chopin Nocturne)', icon: '🎹', desc: '낭만적인 야상곡 피아노' },
+  { id: 'romantic', label: '가상 축혼 행진곡 (Wedding March Synth)', icon: '🎺', desc: '결혼식 무드의 가상 합성음 선율' },
+  { id: 'bach_air', label: '가상 클래식 스트링 (Classic String Synth)', icon: '🎻', desc: '우아한 무드의 가상 현악 합성음' },
+  { id: 'canon', label: '가상 캐논 피아노 (Canon Piano Synth)', icon: '🎼', desc: '맑고 감미로운 가상 피아노 합성음' },
+  { id: 'piano', label: '가상 로맨틱 피아노 (Romantic Piano Synth)', icon: '🎹', desc: '낭만적인 가상 야상곡 피아노' },
   { id: 'thousand_years', label: '로맨틱 앙상블 (Romantic Ensemble)', icon: '💖', desc: '영원을 약속하는 로맨틱 현악 선율' },
   { id: 'acoustic', label: '어쿠스틱 세레나데 (Acoustic Serenade)', icon: '🎸', desc: '따뜻하고 포근한 어쿠스틱 선율' },
   { id: 'spring_waltz', label: '봄날의 왈츠 (Spring Waltz)', icon: '🌸', desc: '경쾌하고 설레는 웨딩 왈츠' },
@@ -60,7 +60,7 @@ const ANIMATION_OPTIONS: { id: AnimationEffectType; label: string; icon: string;
   { id: 'none', label: '효과 끔', icon: '🚫', desc: '시각 효과 없음' },
 ];
 
-// 사용자 레포지토리(WeddingPlatform)의 16종 색상 프리셋
+// 청첩장 디자인 16종 색상 프리셋
 const COLOR_THEME_PRESETS = [
   { id: 'minimal', name: 'Minimal', bg: '#FFFFFF', primary: '#111827', text: '#111827', accent: '#4B5563' },
   { id: 'classic', name: 'Classic', bg: '#FDFBFB', primary: '#633231', text: '#1f2937', accent: '#8B5E5C' },
@@ -90,7 +90,7 @@ const PRESET_COUPLE_PHOTOS = [
     desc: '네이비 슬림 턱시도 & 화이트 실크 드레스 20대 커플',
   },
   {
-    id: 'green-canopy',
+    id: 'forest-fresh',
     label: '숲속의 싱그러움',
     tag: '내추럴 가든',
     url: `${basePath}/invitations/wedding-green-canopy.jpg`,
@@ -99,9 +99,9 @@ const PRESET_COUPLE_PHOTOS = [
   {
     id: 'sunset',
     label: '노을 로맨스',
-    tag: '시네마틱 한강',
+    tag: '시네마틱 노을강',
     url: `${basePath}/invitations/wedding-sunset.jpg`,
-    desc: '황금빛 한강 일몰 빛을 등진 20대 커플 포옹',
+    desc: '황금빛 노을강 일몰 빛을 등진 20대 커플 포옹',
   },
   {
     id: 'cherry-blossom',
@@ -188,7 +188,7 @@ export default function InvitationPreviewModal({
   // 모달 진입 시 살짝 반투명 마우스 스크롤 유도 오버레이
   const [isPreviewUnlocked, setIsPreviewUnlocked] = useState<boolean>(false);
 
-  // 섹션 0번 사진 프레임 스타일 (아치형, 감성사진형, 둥근형, 네모형, 인생네컷형, 풀커버형)
+  // 섹션 0번 사진 프레임 스타일 (아치형, 감성사진형, 둥근형, 네모형, 4컷 필름형, 풀커버형)
   const [frameStyle, setFrameStyle] = useState<PhotoFrameStyle>(
     initialPreset.defaultFrameStyle || 'arch'
   );
@@ -205,7 +205,7 @@ export default function InvitationPreviewModal({
     initialPreset.defaultGalleryMode || 'carousel'
   );
 
-  // 사용자 레포 색상 테마 커스텀 상태 (선택 테마 기본 배경/글자색과 즉시 동기화)
+  // 색상 테마 커스텀 상태 (선택 테마 기본 배경/글자색과 즉시 동기화)
   const [customThemeStyle, setCustomThemeStyle] = useState<ThemeCustomStyle>({
     bgColor: initialPreset.defaultBgColor || '#ffffff',
     primaryColor: initialPreset.defaultTextColor || '#111827',
@@ -313,7 +313,7 @@ export default function InvitationPreviewModal({
       title: '오시는 길 & 약도',
       body:
         invitation.venueLabel ||
-        '서울특별시 노을구 달빛로 123 (노을역 3번 출구 도보 5분)',
+        '한들시 노을구 달빛로 123 (노을역 3번 출구 도보 5분)',
       fontFamily: 'sans',
     },
     guestbook: {
@@ -605,10 +605,15 @@ export default function InvitationPreviewModal({
                 style={{ minHeight: 44, padding: '0 16px', fontSize: 13 }}
                 onClick={() => {
                   const saveBgm = selectedBgm === 'custom' ? (invitation.bgmPreset || 'romantic') : selectedBgm;
+                  const locationBody = customConfigs.location?.body?.trim() ?? '';
+                  const venueLabel =
+                    locationBody.length >= 2 && locationBody.length <= 80 && !locationBody.includes('\n')
+                      ? locationBody
+                      : invitation.venueLabel;
                   const updated: Invitation = {
                     ...invitation,
                     greeting: customConfigs.greeting?.body || invitation.greeting,
-                    venueLabel: invitation.venueLabel,
+                    venueLabel: venueLabel,
                     themeId: selectedTheme,
                     layoutStyle: selectedLayout,
                     bgmPreset: saveBgm,
@@ -682,7 +687,7 @@ export default function InvitationPreviewModal({
                 )}
               </div>
 
-              <p style={{ fontSize: 11, color: '#4b5563', margin: '0 0 10px', lineHeight: 1.45 }}>
+              <p style={{ fontSize: 11, color: 'var(--muted)', margin: '0 0 10px', lineHeight: 1.45 }}>
                 내 PC/스마트폰의 실제 웨딩 사진을 첨부하거나, 세련된 20대 비주얼 프리셋으로 즉시 교체해 보세요.
               </p>
 
@@ -724,7 +729,7 @@ export default function InvitationPreviewModal({
 
               {/* 20대 세련된 신랑신부 비주얼 프리셋 */}
               <div style={{ marginTop: 12 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#1f2937', display: 'block', marginBottom: 6 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink)', display: 'block', marginBottom: 6 }}>
                   ✨ 20대 세련된 신랑신부 비주얼 프리셋 (클릭 시 즉시 교체)
                 </span>
                 <div className="inv-preset-photos-grid">
@@ -758,8 +763,8 @@ export default function InvitationPreviewModal({
               </div>
 
               {/* [사용자 핵심 요구] 사진 프레임 형태 (아치형, 감성사진형, 둥근형, 네모형 등) & 테두리 색상 선택 */}
-              <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid #e5e7eb' }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#1f2937', display: 'block', marginBottom: 6 }}>
+              <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--line)' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink)', display: 'block', marginBottom: 6 }}>
                   🖼️ 섹션 0번 포토 프레임 스타일 (6종) &amp; 테두리 색상
                 </span>
                 <div className="inv-frame-style-grid">
@@ -768,7 +773,7 @@ export default function InvitationPreviewModal({
                     { id: 'polaroid' as PhotoFrameStyle, label: '감성사진형', icon: '📷' },
                     { id: 'gold_round' as PhotoFrameStyle, label: '둥근형', icon: '⭕' },
                     { id: 'square' as PhotoFrameStyle, label: '네모형', icon: '🖼️' },
-                    { id: 'life4cut' as PhotoFrameStyle, label: '인생네컷형', icon: '🎞️' },
+                    { id: 'life4cut' as PhotoFrameStyle, label: '4컷 필름형', icon: '🎞️' },
                     { id: 'full' as PhotoFrameStyle, label: '풀커버형', icon: '📱' },
                   ].map((fs) => (
                     <button
@@ -788,7 +793,7 @@ export default function InvitationPreviewModal({
                 </div>
 
                 <div className="inv-frame-color-picker-row" style={{ marginTop: 8 }}>
-                  <span style={{ fontSize: 11, color: '#4b5563', marginRight: 6 }}>프레임 테두리:</span>
+                  <span style={{ fontSize: 11, color: 'var(--muted)', marginRight: 6 }}>프레임 테두리:</span>
                   {[
                     { color: '#ffffff', label: '화이트' },
                     { color: '#0f172a', label: '블랙' },
@@ -846,14 +851,16 @@ export default function InvitationPreviewModal({
                 <button
                   type="button"
                   className="inv-reset-btn"
-                  onClick={() =>
+                  onClick={() => {
+                    const preset = getThemePreset(selectedTheme);
                     setCustomThemeStyle({
-                      bgColor: '#ffffff',
-                      primaryColor: '#111827',
-                      textColor: '#1f2937',
-                      accentColor: '#e11d48',
-                    })
-                  }
+                      bgColor: preset.defaultBgColor,
+                      textColor: preset.defaultTextColor,
+                      accentColor: preset.defaultAccentColor,
+                      primaryColor: preset.defaultTextColor,
+                    });
+                  }}
+                  title="현재 테마 기본 색상으로 초기화"
                 >
                   기본색 초기화
                 </button>
@@ -1048,7 +1055,7 @@ export default function InvitationPreviewModal({
                         if (e.key === 'Enter') setHeroSectionExpanded(!heroSectionExpanded);
                       }}
                     >
-                      <span className="inv-section-name" style={{ fontWeight: 800, color: '#4f46e5' }}>
+                      <span className="inv-section-name" style={{ fontWeight: 800, color: 'var(--brand)' }}>
                         0. 신랑·신부 메인 웨딩 사진 &amp; 프레임 (아치/감성/둥근/네모)
                       </span>
                     </div>
@@ -1074,7 +1081,7 @@ export default function InvitationPreviewModal({
                             { id: 'polaroid' as PhotoFrameStyle, label: '감성사진형', icon: '📷' },
                             { id: 'gold_round' as PhotoFrameStyle, label: '둥근형', icon: '⭕' },
                             { id: 'square' as PhotoFrameStyle, label: '네모형', icon: '🖼️' },
-                            { id: 'life4cut' as PhotoFrameStyle, label: '인생네컷형', icon: '🎞️' },
+                            { id: 'life4cut' as PhotoFrameStyle, label: '4컷 필름형', icon: '🎞️' },
                             { id: 'full' as PhotoFrameStyle, label: '풀커버형', icon: '📱' },
                           ].map((fs) => (
                             <button
@@ -1176,7 +1183,7 @@ export default function InvitationPreviewModal({
                           <button
                             type="button"
                             className="inv-accordion-toggle-btn"
-                            style={{ fontSize: 11, padding: '2px 6px', color: '#dc2626' }}
+                            style={{ fontSize: 11, padding: '2px 6px', color: 'var(--warn-ink)' }}
                             onClick={(e) => {
                               e.stopPropagation();
                               setSectionOrder((prev) => prev.filter((k) => k !== secKey));
@@ -1244,7 +1251,7 @@ export default function InvitationPreviewModal({
                               <div className="inv-gallery-mode-row">
                                 {[
                                   { id: 'carousel' as GalleryViewMode, label: '슬라이드 캐러셀' },
-                                  { id: 'life4cut_strip' as GalleryViewMode, label: '인생네컷 필름' },
+                                  { id: 'life4cut_strip' as GalleryViewMode, label: '4컷 필름' },
                                   { id: 'grid3x3' as GalleryViewMode, label: '3x3 그리드' },
                                 ].map((gm) => (
                                   <button
@@ -1269,6 +1276,7 @@ export default function InvitationPreviewModal({
                             <textarea
                               className="inv-field-textarea"
                               rows={3}
+                              maxLength={300}
                               value={config.body || ''}
                               onChange={(e) => updateCustomField(secKey, 'body', e.target.value)}
                               placeholder="표시될 문구를 입력하세요"
@@ -1304,8 +1312,8 @@ export default function InvitationPreviewModal({
 
                 {/* 숨겨진 섹션 다시 추가 */}
                 {ALL_AVAILABLE_SECTIONS.filter((s) => !sectionOrder.includes(s)).length > 0 && (
-                  <div style={{ marginTop: 12, padding: '10px 12px', background: '#f8fafc', borderRadius: 8, border: '1px dashed #cbd5e1' }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', marginBottom: 6 }}>
+                  <div style={{ marginTop: 12, padding: '10px 12px', background: 'var(--soft)', borderRadius: 8, border: '1px dashed var(--line)' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', marginBottom: 6 }}>
                       숨겨진 섹션 다시 추가
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>

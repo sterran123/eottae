@@ -302,7 +302,10 @@ export function saveInvitation(invitation: Invitation): boolean {
 }
 
 export function deleteInvitation(id: string): boolean {
+  if (id.startsWith('showcase-')) return false;
   const state = loadInvitationsDemo();
+  const target = state.invitations.find((item) => item.id === id);
+  if (!target || target.viewerIsOwner !== true || (target.ownerId && target.ownerId !== 'user-demo-me')) return false;
   const nextInvitations = state.invitations.filter((item) => item.id !== id);
   if (nextInvitations.length === state.invitations.length) return false;
   return saveInvitationsDemo({
@@ -314,9 +317,10 @@ export function deleteInvitation(id: string): boolean {
 
 /** 공유 토큰 재발급 (주한태 INV-002 지원용) */
 export function regenerateSharingToken(id: string): string | null {
+  if (id.startsWith('showcase-')) return null;
   const state = loadInvitationsDemo();
   const target = state.invitations.find((item) => item.id === id);
-  if (!target) return null;
+  if (!target || target.viewerIsOwner !== true || (target.ownerId && target.ownerId !== 'user-demo-me')) return null;
 
   // 불규칙 토큰 생성
   const randSuffix = Math.random().toString(36).substring(2, 10);

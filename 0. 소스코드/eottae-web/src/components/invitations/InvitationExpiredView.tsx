@@ -12,14 +12,18 @@ export default function InvitationExpiredView({
   message,
 }: InvitationExpiredViewProps) {
   const title =
-    reason === 'deleted'
+    reason === 'not-found'
+      ? '초대 링크 토큰이 누락되었습니다'
+      : reason === 'deleted'
       ? '삭제된 청첩장입니다'
       : reason === 'revoked'
       ? '폐기된 초대 링크입니다'
       : '만료되었거나 유효하지 않은 초대 링크입니다';
 
   const defaultDescription =
-    reason === 'deleted'
+    reason === 'not-found'
+      ? '공개 초대 링크에 토큰(?t=...)이 포함되어 있지 않습니다. 공유받으신 전체 링크를 다시 확인해 주세요.'
+      : reason === 'deleted'
       ? '소유자에 의해 삭제된 청첩장으로, 더 이상 상세 내용이나 회신을 확인할 수 없습니다.'
       : '소유자가 공개 링크 토큰을 재발급하였거나 보존 기간이 만료되어 이전 링크는 접속이 차단되었습니다.';
 

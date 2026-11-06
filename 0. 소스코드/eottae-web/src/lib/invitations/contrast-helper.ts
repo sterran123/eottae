@@ -4,7 +4,10 @@
  */
 
 export function parseHex(hexColor: string): [number, number, number] {
-  let hex = hexColor.trim().replace('#', '');
+  if (!hexColor) return [255, 255, 255];
+  // CSS var(--..., #hex) 형태 지원
+  const varMatch = hexColor.match(/#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/);
+  let hex = varMatch ? varMatch[1] : hexColor.trim().replace('#', '');
   if (hex.length === 3) {
     hex = hex.split('').map((c) => c + c).join('');
   }

@@ -15,7 +15,6 @@ import type {
   GalleryViewMode,
   ThemeCustomStyle,
 } from '@/lib/invitations/types';
-import { invitationGuestHref } from '@/lib/invitations/href';
 import { getThemePreset } from '@/lib/invitations/theme-presets';
 import {
   getContrastingTextColor,
@@ -99,11 +98,11 @@ const imgHanbok = `${basePath}/invitations/wedding-hanbok.jpg`;
 const imgLuxuryHotel = `${basePath}/invitations/wedding-luxury-hotel.jpg`;
 
 export const BGM_LABEL_MAP: Record<string, string> = {
-  romantic: '축혼 행진곡',
-  piano: '쇼팽 야상곡',
+  romantic: '가상 축혼 행진곡',
+  piano: '가상 로맨틱 피아노',
   acoustic: '어쿠스틱 선율',
-  bach_air: 'G선상의 아리아',
-  canon: '파헬벨 캐논',
+  bach_air: '가상 클래식 스트링',
+  canon: '가상 캐논 피아노',
   thousand_years: '로맨틱 앙상블',
   spring_waltz: '봄날의 왈츠',
   none: '무음',
@@ -112,12 +111,14 @@ export const BGM_LABEL_MAP: Record<string, string> = {
 
 export function getThemeDefaultPhoto(themeId: string): string {
   switch (themeId) {
+    case 'forest-fresh':
     case 'green-canopy':
     case 'botanical-garden':
     case 'botanical':
     case 'typo-frame':
     case 'script-card':
       return imgGreenCanopy;
+    case 'our-vow':
     case 'the-wedding':
     case 'cinematic-movie':
     case 'center-line':
@@ -125,6 +126,7 @@ export function getThemeDefaultPhoto(themeId: string): string {
       return imgSunset;
     case 'photo-background':
     case 'minimal-arch':
+    case 'warm-heart':
     case 'with-love':
     case 'photo-only':
     case 'cover-a':
@@ -177,7 +179,16 @@ export default function InvitationCardRenderer({
 
   const activeLayout = overrideLayout || invitation.layoutStyle || themePreset.defaultLayout || 'classic';
   const activeBgm = overrideBgm || invitation.bgmPreset || themePreset.defaultBgm || 'romantic';
-  const activeSections = overrideSectionOrder || invitation.sectionOrder || themePreset.defaultSectionOrder;
+  const baseSections: InvitationSectionKey[] =
+    overrideSectionOrder || invitation.sectionOrder || themePreset.defaultSectionOrder;
+  const PUBLIC_HIDDEN = new Set<InvitationSectionKey>(['guestbook', 'guest_snap']);
+  // 공개 하객 화면(/invitations/p/?t=, previewMode === false)에서도 하객이 참석 여부를 회신할 수 있도록 rsvp_preview 섹션 포함 보장 (타 하객 명단/방명록은 격리)
+  const baseList: InvitationSectionKey[] = baseSections.includes('rsvp_preview')
+    ? baseSections
+    : [...baseSections, 'rsvp_preview'];
+  const activeSections: InvitationSectionKey[] = previewMode
+    ? baseSections
+    : baseList.filter((sec) => !PUBLIC_HIDDEN.has(sec));
 
   const activeEffect = propEffect || themePreset.defaultEffect || 'petals';
   const frameStyle = propFrameStyle || themePreset.defaultFrameStyle || 'arch';
@@ -526,9 +537,9 @@ export default function InvitationCardRenderer({
   const brideName = parts[1] || '신부';
 
   // 현재 적용 색상 및 폰트 (WCAG 명도 대비 자동 보정 적용)
-  const effectiveBgColor = customThemeStyle?.bgColor || themePreset.defaultBgColor || '#ffffff';
-  const rawThemeTextColor = customThemeStyle?.textColor || themePreset.defaultTextColor || '#1f2937';
-  const rawThemeAccentColor = customThemeStyle?.accentColor || themePreset.defaultAccentColor || '#e11d48';
+  const effectiveBgColor = customThemeStyle?.bgColor || themePreset.defaultBgColor || 'var(--paper, #ffffff)';
+  const rawThemeTextColor = customThemeStyle?.textColor || themePreset.defaultTextColor || 'var(--ink, #1f2937)';
+  const rawThemeAccentColor = customThemeStyle?.accentColor || themePreset.defaultAccentColor || 'var(--brand, #e11d48)';
 
   const isDarkTheme = isDarkThemeBg(effectiveBgColor);
   const effectiveTextColor = ensureLegibleColor(rawThemeTextColor, effectiveBgColor, 4.5);
@@ -556,13 +567,13 @@ export default function InvitationCardRenderer({
 
   // ============================================================
   // [사용자 핵심 지적 반영] 섹션 0번: 신랑·신부 메인 웨딩 사진 포토 프레임 렌더러
-  // 아치형(arch), 감성사진형(polaroid), 둥근형(gold_round), 네모형(square), 인생네컷형(life4cut)
+  // 아치형(arch), 감성사진형(polaroid), 둥근형(gold_round), 네모형(square), 4컷 필름형(life4cut)
   // ============================================================
   const renderFramedHeroPhoto = (photoUrl: string) => {
     const resolvedUrl = resolveAssetUrl(photoUrl);
     const captionColor = effectiveTextColor;
     const subCaptionColor = isDarkTheme ? 'rgba(248, 250, 252, 0.78)' : '#64748b';
-    const cardTextColor = isDarkThemeBg(frameColor || '#ffffff') ? '#f8fafc' : '#1e293b';
+    const cardTextColor = isDarkThemeBg(frameColor) ? '#f8fafc' : '#1e293b';
 
     switch (frameStyle) {
       case 'arch':
@@ -595,7 +606,7 @@ export default function InvitationCardRenderer({
               style={{ backgroundColor: frameColor, color: cardTextColor }}
             >
               <div className="inv-life4cut-top-logo" style={{ color: cardTextColor }}>
-                ✦ LIFE 4 CUT · OUR SPECIAL DAY ✦
+                ✦ 4-CUT WEDDING · OUR SPECIAL DAY ✦
               </div>
               <div className="inv-life4cut-cells">
                 <div className="inv-life4cut-cell" style={{ backgroundImage: `url(${resolvedUrl})` }} />
@@ -608,7 +619,7 @@ export default function InvitationCardRenderer({
               </div>
               <div className="inv-life4cut-bottom-watermark" style={{ color: cardTextColor }}>
                 <span>{year}. {month < 10 ? `0${month}` : month}. {day < 10 ? `0${day}` : day}</span>
-                <span>WEDDING PHOTOISM</span>
+                <span>SPECIAL MOMENT</span>
               </div>
             </div>
           </div>
@@ -652,7 +663,7 @@ export default function InvitationCardRenderer({
             </div>
             <div className="inv-framed-caption" style={{ marginTop: 12, color: captionColor }}>
               <span className="inv-gold-royal-title" style={{ color: effectiveAccentColor }}>
-                OUR WEDDING CELEBRATION
+                CELEBRATION OF LOVE
               </span>
               <span className="inv-framed-names" style={{ fontFamily: 'serif', color: captionColor }}>
                 {hostNames}
@@ -702,7 +713,7 @@ export default function InvitationCardRenderer({
     const rawPhoto = customMainPhoto || defaultThemePhoto;
     const heroPhoto = (defaultImg: string) => resolveAssetUrl(customMainPhoto || defaultImg);
 
-    // 사용자가 'full' 이외의 프레임 스타일(아치형, 감성사진형, 둥근형, 네모형, 인생네컷형)을 선택한 경우
+    // 사용자가 'full' 이외의 프레임 스타일(아치형, 감성사진형, 둥근형, 네모형, 4컷 필름형)을 선택한 경우
     if (frameStyle && frameStyle !== 'full') {
       return (
         <div className="inv-hero-framed-container">
@@ -712,7 +723,20 @@ export default function InvitationCardRenderer({
     }
 
     // 기본 'full' 풀커버 테마별 시그니처 히어로 (16종 전 테마 완벽 매핑)
-    switch (themePreset.heroType) {
+    const DIRECT_HERO_IDS = new Set([
+      'forest-fresh', 'green-canopy', 'botanical-garden',
+      'our-vow', 'the-wedding', 'cinematic-movie',
+      'warm-heart', 'with-love', 'photo-background',
+      'minimal-arch', 'cover-a', 'wax-seal', 'tape-card',
+      'typo-frame', 'script-card', 'center-line', 'quiet',
+      'spring-blossom', 'moonlight-garden', 'traditional-hanji',
+      'hanok-heritage', 'starlight-banquet', 'photo-only',
+    ]);
+    const heroKey = DIRECT_HERO_IDS.has(activeThemeId)
+      ? activeThemeId
+      : themePreset.heroType;
+    switch (heroKey) {
+      case 'forest-fresh':
       case 'green-canopy':
       case 'botanical-garden':
         return (
@@ -737,13 +761,44 @@ export default function InvitationCardRenderer({
           </div>
         );
 
-      case 'the-wedding':
-      case 'cinematic-movie':
+      case 'our-vow':
         return (
           <div className="inv-hero-sig inv-hero-sig--photo-full" style={{ backgroundImage: `url(${heroPhoto(imgSunset)})` }}>
             <div className="inv-real-photo-overlay inv-overlay--sunset" />
-            <div className="inv-cover-top-center-names">THE WEDDING OF</div>
-            <div className="inv-cover-center-script-huge">Our Wedding</div>
+            <div className="inv-cover-top-center-names">OUR SACRED VOW</div>
+            <div className="inv-cover-center-script-huge">Our Vow</div>
+            <div className="inv-sig-content inv-sig-content--floating">
+              <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
+              <div className="inv-sig-date" style={{ color: '#fed7aa' }}>
+                {displayTimeDot}
+              </div>
+              <div className="inv-sig-venue" style={{ color: 'rgba(255,255,255,0.85)' }}>{venueTitle}</div>
+            </div>
+          </div>
+        );
+
+      case 'the-wedding':
+        return (
+          <div className="inv-hero-sig inv-hero-sig--photo-full" style={{ backgroundImage: `url(${heroPhoto(imgSunset)})` }}>
+            <div className="inv-real-photo-overlay inv-overlay--sunset" />
+            <div className="inv-cover-top-center-names">WEDDING INVITATION</div>
+            <div className="inv-cover-center-script-huge">우리 둘의 약속</div>
+            <div className="inv-sig-content inv-sig-content--floating">
+              <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
+              <div className="inv-sig-date" style={{ color: '#fed7aa' }}>
+                {displayTimeDot}
+              </div>
+              <div className="inv-sig-venue" style={{ color: 'rgba(255,255,255,0.85)' }}>{venueTitle}</div>
+            </div>
+          </div>
+        );
+
+      case 'cinematic-movie':
+        return (
+          <div className="inv-hero-sig inv-hero-sig--photo-full inv-hero-sig--cinematic" style={{ backgroundImage: `url(${heroPhoto(imgSunset)})` }}>
+            <div className="inv-real-photo-overlay inv-overlay--sunset" />
+            <div className="inv-cover-top-center-names">CINEMATIC MOMENT</div>
+            <div className="inv-cover-center-script-huge">우리만의 상영</div>
             <div className="inv-sig-content inv-sig-content--floating">
               <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
               <div className="inv-sig-date" style={{ color: '#fed7aa' }}>
@@ -778,6 +833,7 @@ export default function InvitationCardRenderer({
           </div>
         );
 
+      case 'warm-heart':
       case 'with-love':
         return (
           <div className="inv-hero-sig inv-hero-sig--withlove">
@@ -789,7 +845,7 @@ export default function InvitationCardRenderer({
               <div className="inv-withlove-gradient-mask" />
             </div>
             <div className="inv-withlove-body">
-              <div className="inv-script-with-love">with love</div>
+              <div className="inv-script-with-love">warm heart</div>
               <h2 className="inv-sig-names" style={{ fontFamily: 'serif', marginTop: 6 }}>{hostNames}</h2>
               <div className="inv-sig-date">
                 {displayTimeKorean}
@@ -812,8 +868,15 @@ export default function InvitationCardRenderer({
             <div
               className="wax-seal-interactive-hotspot"
               onClick={() => setEnvelopeOpened(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setEnvelopeOpened(true);
+                }
+              }}
               role="button"
               tabIndex={0}
+              aria-label="왁스 씰 개봉"
               title="클릭하여 왁스 씰 개봉"
             />
             <div className="inv-wax-envelope-bottom-text">
@@ -853,7 +916,7 @@ export default function InvitationCardRenderer({
           <div className="inv-hero-sig inv-hero-sig--photo-full" style={{ backgroundImage: `url(${heroPhoto(imgGreenCanopy)})` }}>
             <div className="inv-real-photo-overlay inv-overlay--forest" />
             <div className="inv-typo-top-group">
-              <div className="inv-typo-sub-lead">{themePreset.heroType === 'script-card' ? 'OUR SPECIAL DAY' : 'THE WEDDING OF'}</div>
+              <div className="inv-typo-sub-lead">{themePreset.heroType === 'script-card' ? 'OUR SPECIAL DAY' : 'WEDDING INVITATION'}</div>
               <h1 className="inv-typo-headline">{themePreset.heroType === 'script-card' ? 'Our Day' : '결혼합니다'}</h1>
             </div>
             <div className="inv-sig-content inv-sig-content--floating">
@@ -886,7 +949,7 @@ export default function InvitationCardRenderer({
           <div className="inv-hero-sig inv-hero-sig--photo-full" style={{ backgroundImage: `url(${heroPhoto(imgBenchQuiet)})` }}>
             <div className="inv-real-photo-overlay inv-overlay--subtle" />
             <div className="inv-sig-content inv-sig-content--floating">
-              <span className="inv-photo-only-sub">OUR WEDDING DAY</span>
+              <span className="inv-photo-only-sub">INVITATION</span>
               <h2 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h2>
               <div className="inv-sig-date" style={{ color: '#f8fafc' }}>
                 {displayTimeDot}
@@ -1014,6 +1077,10 @@ export default function InvitationCardRenderer({
       case 'schedule': {
         const title = custom?.title || '예식 일시 & 달력';
         const activeCalendarStyle = custom?.calendarStyle || calendarStyle || 'classic_table';
+        const badgeSurface = isDarkTheme ? '#161423' : '#ffffff';
+        const badgeBg = badgeSurface;
+        const badgeInk = ensureLegibleColor(accent, badgeSurface, 4.5);
+        const badgeLabel = getContrastingTextColor(badgeSurface);
 
         return (
           <section key="schedule" className="inv-content-section" style={sectionStyle}>
@@ -1026,17 +1093,17 @@ export default function InvitationCardRenderer({
               {/* 모던 박스 뱃지 스타일 (box_badge) */}
               {activeCalendarStyle === 'box_badge' && (
                 <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 14 }}>
-                  <div style={{ padding: '8px 12px', background: 'var(--paper, #ffffff)', border: `2px solid ${accent}`, borderRadius: 8, textAlign: 'center' }}>
-                    <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600 }}>YEAR</div>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: accent }}>{year}</div>
+                  <div style={{ padding: '8px 12px', background: badgeBg, border: `2px solid ${accent}`, borderRadius: 8, textAlign: 'center' }}>
+                    <div style={{ fontSize: 10, color: badgeLabel, opacity: 0.75, fontWeight: 700, letterSpacing: '0.04em' }}>YEAR</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: badgeInk }}>{year}</div>
                   </div>
-                  <div style={{ padding: '8px 12px', background: 'var(--paper, #ffffff)', border: `2px solid ${accent}`, borderRadius: 8, textAlign: 'center' }}>
-                    <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600 }}>DATE</div>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: accent }}>{month}월 {day}일</div>
+                  <div style={{ padding: '8px 12px', background: badgeBg, border: `2px solid ${accent}`, borderRadius: 8, textAlign: 'center' }}>
+                    <div style={{ fontSize: 10, color: badgeLabel, opacity: 0.75, fontWeight: 700, letterSpacing: '0.04em' }}>DATE</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: badgeInk }}>{month}월 {day}일</div>
                   </div>
-                  <div style={{ padding: '8px 12px', background: 'var(--paper, #ffffff)', border: `2px solid ${accent}`, borderRadius: 8, textAlign: 'center' }}>
-                    <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600 }}>TIME</div>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: accent }}>{ampm} {displayHour}시{minutes > 0 ? ` ${minutes}분` : ''}</div>
+                  <div style={{ padding: '8px 12px', background: badgeBg, border: `2px solid ${accent}`, borderRadius: 8, textAlign: 'center' }}>
+                    <div style={{ fontSize: 10, color: badgeLabel, opacity: 0.75, fontWeight: 700, letterSpacing: '0.04em' }}>TIME</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: badgeInk }}>{ampm} {displayHour}시{minutes > 0 ? ` ${minutes}분` : ''}</div>
                   </div>
                 </div>
               )}
@@ -1212,11 +1279,11 @@ export default function InvitationCardRenderer({
               </div>
             )}
 
-            {/* 인생네컷 필름 모드 */}
+            {/* 4컷 필름 모드 */}
             {activeGalMode === 'life4cut_strip' && (
               <div className="inv-life4cut-strip-wrap">
                 <div className="inv-life4cut-film" style={{ borderColor: frameColor }}>
-                  <div className="inv-life4cut-header">★ LIFE 4 CUT WEDDING ★</div>
+                  <div className="inv-life4cut-header">★ 4-CUT WEDDING ★</div>
                   {officialPhotos.slice(0, 4).map((it, idx) => (
                     <div key={idx} className="inv-life4cut-cell" style={{ height: 110, overflow: 'hidden', padding: 0 }}>
                       <img src={resolveAssetUrl(it.img)} alt={it.caption} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -1382,10 +1449,6 @@ export default function InvitationCardRenderer({
 
       case 'location': {
         const title = custom?.title || '오시는 길 & 약도';
-        const naverUrl = `https://map.naver.com/v5/search/${encodeURIComponent(venueAddress)}`;
-        const kakaoUrl = `https://map.kakao.com/link/search/${encodeURIComponent(venueAddress)}`;
-        const googleUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venueAddress)}`;
-        const tmapUrl = `https://surl.tmobiapi.com/search?query=${encodeURIComponent(venueAddress)}`;
 
         return (
           <section key="location" className="inv-content-section" style={sectionStyle}>
@@ -1433,46 +1496,6 @@ export default function InvitationCardRenderer({
                     📋 주소 복사하기
                   </button>
                 </div>
-              </div>
-
-              {/* 4대 내비게이션/지도 원클릭 연결 버튼 */}
-              <div className="inv-map-btn-row">
-                <a
-                  href={naverUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inv-btn-secondary inv-map-link-btn"
-                  style={{ textDecoration: 'none', color: '#03c75a' }}
-                >
-                  🟢 네이버 지도
-                </a>
-                <a
-                  href={kakaoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inv-btn-secondary inv-map-link-btn"
-                  style={{ textDecoration: 'none', color: '#f59e0b' }}
-                >
-                  🟡 카카오맵
-                </a>
-                <a
-                  href={tmapUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inv-btn-secondary inv-map-link-btn"
-                  style={{ textDecoration: 'none', color: '#0284c7' }}
-                >
-                  🔵 티맵 내비
-                </a>
-                <a
-                  href={googleUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inv-btn-secondary inv-map-link-btn"
-                  style={{ textDecoration: 'none', color: '#2563eb' }}
-                >
-                  🔴 구글 지도
-                </a>
               </div>
 
               {/* 교통편 & 식사 안내 배너 (notice) */}
@@ -1619,7 +1642,10 @@ export default function InvitationCardRenderer({
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') setGroomAccountOpen(!groomAccountOpen);
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setGroomAccountOpen(!groomAccountOpen);
+                    }
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1664,7 +1690,10 @@ export default function InvitationCardRenderer({
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') setBrideAccountOpen(!brideAccountOpen);
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setBrideAccountOpen(!brideAccountOpen);
+                    }
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1740,22 +1769,17 @@ export default function InvitationCardRenderer({
                     }
                     const token = invitation.sharingToken?.trim() || '';
                     const g = guestToken?.trim() || '';
-                    if (g) {
-                      // g가 있을 때만 RSVP 회신 폼으로 이동 (INV-003)
+                    if (token && g) {
                       const params = new URLSearchParams();
-                      if (token) params.set('t', token);
+                      params.set('t', token);
                       params.set('g', g);
                       router.push(`/invitations/rsvp/?${params.toString()}`);
-                    } else {
-                      // g가 없는 공개 카드에서는 회신(/invitations/rsvp/)으로 보내지 않고 공개 경로(/invitations/p/?t=)를 유지
-                      setCopyNotice(
-                        '참석 회신은 청첩장에 동봉된 개인별 하객 링크(g)로 접속했을 때만 가능해요.',
-                      );
-                      setTimeout(() => setCopyNotice(null), 3000);
-                      if (token) {
-                        router.push(invitationGuestHref(token));
-                      }
+                      return;
                     }
+                    setCopyNotice(
+                      '참석 회신은 청첩장에 동봉된 개인별 하객 링크(g)로 접속했을 때만 가능해요.',
+                    );
+                    setTimeout(() => setCopyNotice(null), 3000);
                   }}
                 >
                   🌸 참석합니다
@@ -1789,10 +1813,11 @@ export default function InvitationCardRenderer({
 
   return (
     <div
-      className={`inv-render-canvas inv-theme--${activeThemeId} inv-layout--${activeLayout} ${
+      className={`inv-render-canvas inv-theme--${themePreset.id} inv-theme--${activeThemeId} inv-layout--${activeLayout} ${
         isDarkTheme ? 'inv-mode--dark' : 'inv-mode--light'
       }`}
-      data-invite-theme={activeThemeId}
+      data-invite-theme={themePreset.id}
+      data-invite-theme-alias={activeThemeId}
       style={dynamicBackgroundStyle}
     >
       {/* 사용자 음원 오디오 태그 */}
@@ -1806,10 +1831,21 @@ export default function InvitationCardRenderer({
         <div className="inv-envelope-intro-overlay">
           <div className="inv-envelope-intro-box">
             <div className="inv-envelope-top-flap" />
-            <div className="inv-envelope-seal" onClick={() => setEnvelopeOpened(true)}>
+            <button
+              type="button"
+              className="inv-envelope-seal"
+              onClick={() => setEnvelopeOpened(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setEnvelopeOpened(true);
+                }
+              }}
+              aria-label="봉투 열기"
+            >
               <span className="inv-envelope-seal__wax">💍</span>
               <span className="inv-envelope-seal__click-text">탭하여 봉투 열기</span>
-            </div>
+            </button>
             <div className="inv-envelope-body">
               <div style={{ fontFamily: 'serif', fontSize: 14, fontWeight: 700 }}>
                 WEDDING INVITATION
