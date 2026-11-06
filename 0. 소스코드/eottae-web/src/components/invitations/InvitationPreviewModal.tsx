@@ -1183,7 +1183,7 @@ export default function InvitationPreviewModal({
                           <button
                             type="button"
                             className="inv-accordion-toggle-btn"
-                            style={{ fontSize: 11, padding: '2px 6px', color: '#dc2626' }}
+                            style={{ fontSize: 11, padding: '2px 6px', color: 'var(--warn-ink)' }}
                             onClick={(e) => {
                               e.stopPropagation();
                               setSectionOrder((prev) => prev.filter((k) => k !== secKey));

@@ -45,19 +45,19 @@
 
 /* 사이버펑크 및 다크 테마에서 밝은 브랜드 색상 위의 텍스트 묻힘 방지 */
 [data-theme='cyberpunk'] .inv-badge-chip {
-  color: var(--bg, #0a0a14) !important;
+  color: var(--bg) !important;
   font-weight: 800;
 }
 
 [data-theme='dark'] .inv-badge-chip,
 .inv-mode--dark .inv-badge-chip {
-  color: var(--bg, #161423) !important;
+  color: var(--bg) !important;
   font-weight: 800;
 }
 
 @media (prefers-color-scheme: dark) {
   :root[data-theme='system'] .inv-badge-chip {
-    color: var(--bg, #161423) !important;
+    color: var(--bg) !important;
     font-weight: 800;
   }
 }
@@ -156,8 +156,8 @@
   gap: 6px;
   min-height: 44px;
   padding: 0 16px;
-  background: var(--paper, #ffffff);
-  color: var(--ink, #111827);
+  background: var(--paper);
+  color: var(--ink);
   font-weight: 600;
   font-size: 13px;
   border-radius: 10px;
@@ -1384,8 +1384,8 @@
 /* 반투명 제거: 완전한 솔리드 흰색/다크 모달 본체 (와이드 확장 스튜디오 - 테마 토큰 적용) */
 .inv-modal-shell,
 .inv-modal-container {
-  background: var(--paper, #ffffff) !important;
-  border: 1px solid var(--line, #e2e8f0);
+  background: var(--paper) !important;
+  border: 1px solid var(--line);
   border-radius: 28px;
   max-width: 1440px !important;
   width: 96vw !important;
@@ -1404,8 +1404,8 @@
 [data-theme='dark'] .inv-modal-container,
 [data-theme='cyberpunk'] .inv-modal-shell,
 [data-theme='cyberpunk'] .inv-modal-container {
-  background: var(--paper, #1e293b) !important;
-  border-color: var(--line, #334155);
+  background: var(--paper) !important;
+  border-color: var(--line);
 }
 
 .inv-modal-header {
@@ -1413,15 +1413,15 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 28px;
-  background: var(--paper, #ffffff);
-  border-bottom: 1px solid var(--line, #e2e8f0);
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
   gap: 16px;
 }
 
 [data-theme='dark'] .inv-modal-header,
 [data-theme='cyberpunk'] .inv-modal-header {
-  background: var(--paper, #1e293b);
-  border-bottom-color: var(--line, #334155);
+  background: var(--paper);
+  border-bottom-color: var(--line);
 }
 
 .inv-modal-title-area {
@@ -1474,8 +1474,8 @@
 .inv-modal-toolbar {
   width: 460px;
   max-width: 100%;
-  background: var(--paper, #ffffff);
-  border-right: 1px solid var(--line, #e2e8f0);
+  background: var(--paper);
+  border-right: 1px solid var(--line);
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -1485,25 +1485,25 @@
 
 [data-theme='dark'] .inv-modal-toolbar,
 [data-theme='cyberpunk'] .inv-modal-toolbar {
-  background: var(--paper, #1e293b);
-  border-right-color: var(--line, #334155);
+  background: var(--paper);
+  border-right-color: var(--line);
 }
 
 @media (prefers-color-scheme: dark) {
   :root[data-theme='system'] .inv-modal-shell,
   :root[data-theme='system'] .inv-modal-container {
-    background: var(--paper, #1e293b) !important;
-    border-color: var(--line, #334155);
+    background: var(--paper) !important;
+    border-color: var(--line);
   }
 
   :root[data-theme='system'] .inv-modal-header {
-    background: var(--paper, #1e293b);
-    border-bottom-color: var(--line, #334155);
+    background: var(--paper);
+    border-bottom-color: var(--line);
   }
 
   :root[data-theme='system'] .inv-modal-toolbar {
-    background: var(--paper, #1e293b);
-    border-right-color: var(--line, #334155);
+    background: var(--paper);
+    border-right-color: var(--line);
   }
 }
 
@@ -1514,7 +1514,7 @@
     max-width: 100% !important;
     max-height: 280px;
     border-right: none;
-    border-bottom: 1px solid var(--line, #e2e8f0);
+    border-bottom: 1px solid var(--line);
     padding: 16px;
   }
 }
@@ -2015,8 +2015,8 @@
   border-radius: 8px;
   font-size: 12px;
   font-weight: 700;
-  border: 1px solid var(--line, #cbd5e1);
-  background: var(--paper, #ffffff);
+  border: 1px solid var(--line);
+  background: var(--paper);
   color: var(--ink);
   cursor: pointer;
   white-space: nowrap;
@@ -2025,8 +2025,8 @@
 }
 
 [data-theme='dark'] .inv-accordion-toggle-btn {
-  background: var(--paper, #1e293b);
-  border-color: var(--line, #475569);
+  background: var(--paper);
+  border-color: var(--line);
 }
 
 .inv-accordion-toggle-btn:hover {
@@ -4655,6 +4655,9 @@
   .inv-envelope-seal,
   .inv-envelope-seal:hover,
   .inv-accordion-drawer,
+  .inv-emoji-chip,
+  .inv-emoji-chip:hover,
+  .inv-emoji-chip--active,
   .inv-toast {
     animation: none !important;
     transition: none !important;
@@ -5120,14 +5123,6 @@
 }
 
 /* 동적 인디케이터 점 (접근성 터치 영역 44x44px 보장, 시각 점 7px/22px) */
-.inv-carousel-indicator-dots {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  margin-top: 12px;
-}
-
 .inv-carousel-indicator-dot {
   position: relative;
   display: inline-flex;
@@ -5149,13 +5144,13 @@
   width: 7px;
   height: 7px;
   border-radius: 9999px;
-  background: var(--line, #cbd5e1);
+  background: var(--line);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .inv-carousel-indicator-dot--active::before {
   width: 22px;
-  background: var(--brand, #7c3aed);
+  background: var(--brand);
 }
 
 /* ============================================================
@@ -5354,7 +5349,7 @@
 .inv-life4cut-cell--quote strong {
   margin-top: 4px;
   font-size: 11.5px;
-  color: var(--brand, #e11d48);
+  color: var(--brand);
 }
 
 .inv-life4cut-bottom-watermark {
@@ -5541,14 +5536,14 @@
 }
 
 .inv-frame-card-btn:hover {
-  border-color: var(--brand, #6366f1);
+  border-color: var(--brand);
   background: #f8fafc;
 }
 
 .inv-frame-card-btn--active {
-  border-color: var(--brand, #6366f1) !important;
+  border-color: var(--brand) !important;
   background: #eff6ff !important;
-  box-shadow: 0 0 0 1px var(--brand, #6366f1);
+  box-shadow: 0 0 0 1px var(--brand);
 }
 
 .inv-frame-card-btn__icon {
@@ -5729,6 +5724,7 @@
 /* 실시간 방명록 이모지 셀렉터 */
 .inv-emoji-selector-row {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: 8px;
   margin-bottom: 8px;
@@ -5740,8 +5736,8 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  border: 1.5px solid var(--line, #e2e8f0);
-  background: var(--paper, #ffffff);
+  border: 1.5px solid var(--line);
+  background: var(--paper);
   font-size: 18px;
   display: inline-flex;
   align-items: center;
@@ -5755,15 +5751,16 @@
 }
 
 .inv-emoji-chip--active {
-  border-color: var(--brand, #e11d48) !important;
-  background: var(--soft, #ffe4e6) !important;
+  border-color: var(--brand) !important;
+  background: var(--soft) !important;
   transform: scale(1.15);
 }
 
 .inv-badge-new {
   font-size: 9px;
-  background: #ef4444;
-  color: #ffffff;
+  background: var(--warn-bg);
+  color: var(--warn-ink);
+  border: 1px solid var(--warn-line);
   padding: 1px 5px;
   border-radius: 4px;
   font-weight: 800;
@@ -6463,6 +6460,7 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
+  margin-top: 12px;
   padding: 4px 0;
 }
 
