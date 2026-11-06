@@ -28,7 +28,7 @@ npm run build
 - `README_테스트배포.md` — 실행·검증·배포 단계와 PWA 점검 표
 
 ## 라우트
-`/` 통합 허브 / `/match` 매칭 소개(본문은 열림) / `/match/onboarding` `/match/recommend` `/match/qna` `/match/common` `/match/chat` 매칭 자식(목업 단계 DEC-11의 공개 빌드는 만 19세 시연 확인 후 데모로 열림. 기록이 없으면 시연 확인 화면. 바이패스가 `'1'`이 아니면 「본인 확인이 연결되지 않아 열 수 없어요」. 실데이터 단계에서 fail-closed로 되돌림. 세션 조회 실패·미인증은 `gateMessage`. 성인 검증이 끝난 `live` 세션은 자식 경로가 열림) / `/activities` 데이트·소모임 브라우저 데모 / `/invitations` 청첩장 본 기능은 3차 준비중, 테마 모의 결제는 저장소에 있음 / `/settings` 설정(테마·계정 안내) / `/safety` 안전 정책 / `/privacy` 개인정보·계정 삭제 안내 / `/offline` PWA 오프라인 폴백 / `/api/health` 개발 헬스 체크. `not-found`·`error`·`loading` 공통 경계 포함.
+`/` 통합 허브 / `/match` 매칭 소개(본문은 열림) / `/match/onboarding` `/match/recommend` `/match/qna` `/match/common` `/match/chat` 매칭 자식(목업 단계 DEC-11의 공개 빌드는 만 19세 시연 확인 후 데모로 열림. 기록이 없으면 시연 확인 화면. 바이패스가 `'1'`이 아니면 「본인 확인이 연결되지 않아 열 수 없어요」. 실데이터 단계에서 fail-closed로 되돌림. 세션 조회 실패·미인증은 `gateMessage`. 성인 검증이 끝난 `live` 세션은 자식 경로가 열림) / `/activities` 데이트·소모임 브라우저 데모 / `/invitations` 청첩장 허브·테마 컬렉션·테마 모의 결제(브라우저 데모) / `/invitations/new` 만들기 · `/invitations/?edit=<id>` 편집(소유자만) · `/invitations/sample` 샘플 미리보기 / `/invitations/p/?t=<공유 토큰>` 공개 하객 화면(noindex, 명단 비공개) / `/invitations/rsvp/?t=&g=` 하객 RSVP(두 토큰 모두 유효할 때만) · `?host=<id>` 소유자 회신 목록 / `/settings` 설정(테마·계정 안내) / `/safety` 안전 정책 / `/privacy` 개인정보·계정 삭제 안내 / `/offline` PWA 오프라인 폴백 / `/api/health` 개발 헬스 체크. `not-found`·`error`·`loading` 공통 경계 포함.
 
 ## 구조
 - `src/app/layout.tsx` — 공통 shell, 메타데이터(manifest·theme-color·apple), 스킵 링크

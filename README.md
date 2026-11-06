@@ -48,7 +48,8 @@
 | 매칭 | [`/match`](https://sterran123.github.io/eottae/match/) | 온보딩·추천·문답(40문항)·공통 질문·1:1 채팅·신고/차단 |
 | 데이트·소모임 | [`/activities`](https://sterran123.github.io/eottae/activities/) · [`/activities/new`](https://sterran123.github.io/eottae/activities/new/) | 코스·소모임 탐색, 참가 요청(중복 방지), 일정 투표, 모임 만들기 |
 | 모바일 청첩장 | [`/invitations`](https://sterran123.github.io/eottae/invitations/) · [`/invitations/new`](https://sterran123.github.io/eottae/invitations/new/) · [`/invitations/sample`](https://sterran123.github.io/eottae/invitations/sample/) | 테마 컬렉션, 만들기·편집·미리보기, 샘플 미리보기, 테마 모의 결제 |
-| 청첩장 하객·회신 | `/invitations/p/?t=…` · `/invitations/rsvp/?t=…&g=…` | 공개 하객 화면(명단 비공개·검색엔진 미노출), 공유 토큰 `t`와 하객 토큰 `g`가 모두 유효할 때만 RSVP |
+| 청첩장 하객·회신 | `/invitations/p/?t=…` · `/invitations/rsvp/?t=…&g=…` | 공개 하객 화면(명단 비공개·검색엔진 미노출), 공유 토큰 `t`와 하객 토큰 `g`가 모두 유효할 때만 하객 RSVP 폼 |
+| 청첩장 소유자 회신 목록 | [`/invitations/rsvp/?host=demo-inv-1`](https://sterran123.github.io/eottae/invitations/rsvp/?host=demo-inv-1) | 소유자 시연용 회신 목록(읽기 전용) — 하객 토큰 없이 소유자 예시 청첩장의 회신만 표시 |
 | 설정 | [`/settings`](https://sterran123.github.io/eottae/settings/) | 6테마 선택, 데모 데이터 삭제, 안전·앱 정보 |
 | 로그인 | [`/auth/login`](https://sterran123.github.io/eottae/auth/login/) | 데모 로그인 · 이메일 가입/로그인(인증 서버) |
 | 오프라인 | [`/offline`](https://sterran123.github.io/eottae/offline/) | 네트워크 끊김 안내 (서비스워커 폴백) |
@@ -62,7 +63,7 @@
 
 <table>
   <tr>
-    <td align="center" valign="top" width="33%"><img src="3.%20구현%20이미지(5장이상)/20_청첩장_테마목록_모바일.png" alt="청첩장 테마 목록" width="240"><br><sub>테마 컬렉션</sub></td>
+    <td align="center" valign="top" width="33%"><img src="3.%20구현%20이미지(5장이상)/20_청첩장_테마목록_모바일.png" alt="청첩장 허브 테마 컬렉션" width="240"><br><sub>청첩장 허브 · 테마 컬렉션</sub></td>
     <td align="center" valign="top" width="33%"><img src="3.%20구현%20이미지(5장이상)/21_청첩장_샘플미리보기_모바일.png" alt="청첩장 샘플 미리보기" width="240"><br><sub>샘플 미리보기</sub></td>
     <td align="center" valign="top" width="33%"><img src="3.%20구현%20이미지(5장이상)/22_청첩장_하객공개_명단없음_모바일.png" alt="샘플 미리보기 명단 비공개" width="240"><br><sub>샘플 미리보기 · 명단 비공개</sub></td>
   </tr>
