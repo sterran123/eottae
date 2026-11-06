@@ -526,9 +526,9 @@ function InvitationsHubContent() {
             어때? 3차 모바일 청첩장 데모 스튜디오입니다. 실시간 체험 테스트에서 테마 선택, 드래그 순서 변경, 아코디언 편집, 웨딩 애니메이션을 자유롭게 확인하실 수 있습니다.
           </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8, flex: '1 1 100%', flexWrap: 'wrap' }}>
           <span className="inv-badge-chip">별개 플랫폼 · 연계</span>
-          <span>
+          <span style={{ minWidth: 0 }}>
             모바일 청첩장은 「어때?」와 연계된 별개 서비스입니다. 소개팅앱에서 커플이 탄생하면 무료로 이용 가능하고, 무료 체험 후 사진 업로드가 일정 수를 넘으면 유료 전환됩니다 (시연 안내 · 실결제 없음).
           </span>
         </div>

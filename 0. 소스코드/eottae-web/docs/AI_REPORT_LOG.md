@@ -1636,7 +1636,7 @@
 
 ### 변경
 - `InvitationsHub.tsx`: 상단 데모 배너에 「별개 플랫폼 · 연계」 칩 추가 — 커플 성사 시 무료 이용·프리미엄 전환 구조 안내(시연·실결제 없음 명시).
-- `InvitationPreviewModal.tsx`: 커버 사진 업로드 영역에 무료 한도 표시 — `customMainPhoto` 실제 상태로 N/10장 카운팅, 초과 시 유료 전환 안내 문구.
+- `InvitationPreviewModal.tsx`: 커버 사진 업로드 영역에 프리미엄 구조 안내 — 정적 문구(일정 수 초과 시 유료 전환·커플 성사 무료 연계). 실제 업로드 수를 세는 카운터가 없어 N/10 표기는 넣지 않음(한도 숫자 미정).
 
 ### 검증
 - `npm run typecheck` 통과.
