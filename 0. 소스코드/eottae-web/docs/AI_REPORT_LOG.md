@@ -1619,12 +1619,25 @@
 - 이슈 #90 잔여: `(확인 필요)` 문구를 실제 코드·스키마 대조 결과로 확정.
 
 ### 확인한 것
-- `signUpWithEmail`→`sanitize_new_auth_user`→`activate_user`(0002:205-211) 경로: 가입 시 `public.users`에 `full_name`·`birth_year` 저장, `birth_date` 원본은 메타데이터에서 제거. 동의 3건은 `public.consents`.
-- `nickname`은 가입 경로에서 채우지 않고 `updateNickname` 시에만 저장.
-- 화면의 성인 확인은 `demo-adult.ts`(브라우저)만 사용 — `adult_verified` 서버 기록 없음. 공개 빌드는 `NEXT_PUBLIC_DEMO_ADULT_BYPASS=1`이라 방문자는 전원 시연 경로.
-- 시연 모드의 프로필·취향·관심·신고·차단은 브라우저 저장소(`match-service` demo 분기).
+- `signUpWithEmail`→`sanitize_new_auth_user`→`activate_user`(0002:205-211) 경로: 가입 INSERT는 `id`·상태만 넣고, `full_name`·`birth_year`·동의 3건(`public.consents`)은 이메일 확인 뒤 `activate_user`가 저장. `birth_date` 원본은 sanitize가 메타데이터에서 제거.
+- `nickname`은 가입 경로에서 채우지 않고 `updateNickname` 시에만 저장 — 현재 그 함수를 부르는 화면은 없음(데모 표시 이름은 `demo-session.ts` 고정 값, 브라우저).
+- 화면의 성인 확인은 `demo-adult.ts`(브라우저)만 사용 — `adult_verified` 서버 기록 없음. `NEXT_PUBLIC_DEMO_ADULT_BYPASS`는 **세션 없는 demo 모드**에서만 시연 확인을 열고, 로그인 세션이 있으면 시연 경로로 바꾸지 않음(`DemoEntryGuard`).
+- 저장소 분기(`match-service`): 세션 없음=demo(온보딩·관심·신고·차단 브라우저), 세션+정식 성인(`adult_verified`·만료 시각)=live(서버 기록), 가입 직후=unverified(`gateError` 거부·브라우저 시연 캐시 삭제).
 - 1차 문장(닉네임·성인 확인 뒤 서버 저장)은 스키마와 불일치 → AI 리뷰 제시 문구로 교체.
 
 ### 미실행
 - 클라우드 DB에 0002 트리거 적용 여부는 이 저장소 기록으로 미확인(`실제진행현황_기록부`에 db push 기록 없음). 문장은 코드 계약 기준.
 - 서버·Supabase 실연동 없음 (DEC-11 목업).
+
+## 2026-11-06 개인정보 문구 2차 — demo/live/unverified 분기 반영 (김민기 작업)
+
+### 요청
+- PR #111 머지 후 AI 리뷰 지적: 「브라우저에만」 표현이 로그인+정식 성인 확인 계정(live)을 누락. 분기별 저장 위치를 정확히 구분.
+
+### 변경
+- `privacy/page.tsx`: 시연(세션 없음)=브라우저 / 로그인+정식 성인 확인(만료 시각)=서버 저장 / 가입 직후(unverified)=미저장, 세 경우로 문장 분리. 닉네임(설정 화면 없음)·비밀번호(앱 미보관)·대화(실계정 서버 저장) 표현 교정.
+- `AI_REPORT_LOG.md`: 「가입 시 저장」→「activate_user가 이메일 확인 후 저장」 순서 교정, 「전원 시연 경로」→세션 분기로 교정.
+
+### 검증
+- 리뷰어가 코드 대조한 문구 적용. `npm run typecheck` 통과.
+- 미실행: 클라우드 DB 0002 적용 여부(이 저장소 기록으로 미확인).
