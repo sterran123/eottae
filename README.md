@@ -18,7 +18,7 @@
 </div>
 
 > **현재 단계: 3차 최종 제출 (목업)** — DEC-11(2026-11-03)에 따라 1·2·3차 서비스 모두 **예시 데이터로 동작하는 데모**로 완성했습니다.
-> 서버·실결제·실제 본인 확인 연동은 이번 범위가 아니며, 모든 입력은 **이 브라우저(localStorage)에만** 저장됩니다. 실제 회원 데이터는 수집하지 않습니다.
+> 실결제·실제 본인 확인 연동은 이번 범위가 아닙니다. 데모 경로(데모 로그인·매칭·소모임·청첩장)의 입력은 **이 브라우저(localStorage)에만** 저장됩니다. 이메일 회원가입·로그인은 인증 서버(Supabase)를 쓰며, 보내는 항목과 저장 위치는 [개인정보 안내](https://sterran123.github.io/eottae/privacy/)에 적어 두었습니다.
 
 ---
 
@@ -37,7 +37,7 @@
 1. [데모 사이트](https://sterran123.github.io/eottae/)를 엽니다. 홈·데이트·소모임·청첩장은 바로 둘러볼 수 있습니다.
 2. **매칭**은 로그인이 필요합니다. 상단 「로그인」 → **「데모로 로그인」** 을 누르면 이 브라우저에만 데모 세션이 생깁니다 (실제 서버에 접속하지 않음).
 3. 추천·문답·공통 질문·채팅에 처음 들어가면 **시연용 성인 확인**(생일 기준 만 19세 판정)이 나옵니다. 실제 본인 확인이 아니며, 생년월일 원본은 저장하지 않습니다.
-4. 청첩장 하객 화면은 공개 링크로 엽니다 — 예: [샘플 하객 화면](https://sterran123.github.io/eottae/invitations/p/?t=k7Qm2pL9xRt4vNw8aB3cYd6e). 토큰이 없거나 틀린 링크는 행사 정보를 보여 주지 않습니다.
+4. 청첩장 하객 화면은 공개 링크로 엽니다 — 예: [샘플 하객 화면](https://sterran123.github.io/eottae/invitations/p/?t=k7Qm2pL9xRt4vNw8aB3cYd6e). 토큰이 없거나 틀린 링크는 행사 정보를 보여 주지 않습니다. 참석 회신(RSVP) 폼은 공유 토큰 `t`와 하객 토큰 `g`가 **모두 유효할 때만** 열립니다 (`t`만 있는 위 링크는 행사 화면까지).
 5. 데모 기록은 **설정 → 계정 → 회원 탈퇴·데이터 삭제**에서 이 브라우저 기준으로 지울 수 있습니다.
 
 ### 둘러볼 수 있는 화면
@@ -48,9 +48,9 @@
 | 매칭 | [`/match`](https://sterran123.github.io/eottae/match/) | 온보딩·추천·문답(40문항)·공통 질문·1:1 채팅·신고/차단 |
 | 데이트·소모임 | [`/activities`](https://sterran123.github.io/eottae/activities/) · [`/activities/new`](https://sterran123.github.io/eottae/activities/new/) | 코스·소모임 탐색, 참가 요청(중복 방지), 일정 투표, 모임 만들기 |
 | 모바일 청첩장 | [`/invitations`](https://sterran123.github.io/eottae/invitations/) · [`/invitations/new`](https://sterran123.github.io/eottae/invitations/new/) · [`/invitations/sample`](https://sterran123.github.io/eottae/invitations/sample/) | 테마 컬렉션, 만들기·편집·미리보기, 샘플 미리보기, 테마 모의 결제 |
-| 청첩장 하객·회신 | `/invitations/p/?t=…` · `/invitations/rsvp/?t=…&g=…` | 공개 하객 화면(명단 비공개·검색엔진 미노출), 초대 토큰이 있을 때만 RSVP |
+| 청첩장 하객·회신 | `/invitations/p/?t=…` · `/invitations/rsvp/?t=…&g=…` | 공개 하객 화면(명단 비공개·검색엔진 미노출), 공유 토큰 `t`와 하객 토큰 `g`가 모두 유효할 때만 RSVP |
 | 설정 | [`/settings`](https://sterran123.github.io/eottae/settings/) | 6테마 선택, 데모 데이터 삭제, 안전·앱 정보 |
-| 로그인 | [`/auth/login`](https://sterran123.github.io/eottae/auth/login/) | 데모 로그인 (실계정 연동은 범위 밖) |
+| 로그인 | [`/auth/login`](https://sterran123.github.io/eottae/auth/login/) | 데모 로그인 · 이메일 가입/로그인(인증 서버) |
 | 오프라인 | [`/offline`](https://sterran123.github.io/eottae/offline/) | 네트워크 끊김 안내 (서비스워커 폴백) |
 | 안전센터 · 개인정보 | [`/safety`](https://sterran123.github.io/eottae/safety/) · [`/privacy`](https://sterran123.github.io/eottae/privacy/) | 안전 정책, 저장 위치·계정·데이터 삭제 안내 |
 
@@ -64,11 +64,11 @@
   <tr>
     <td align="center" valign="top" width="33%"><img src="3.%20구현%20이미지(5장이상)/20_청첩장_테마목록_모바일.png" alt="청첩장 테마 목록" width="240"><br><sub>테마 컬렉션</sub></td>
     <td align="center" valign="top" width="33%"><img src="3.%20구현%20이미지(5장이상)/21_청첩장_샘플미리보기_모바일.png" alt="청첩장 샘플 미리보기" width="240"><br><sub>샘플 미리보기</sub></td>
-    <td align="center" valign="top" width="33%"><img src="3.%20구현%20이미지(5장이상)/22_청첩장_하객공개_명단없음_모바일.png" alt="하객 공개 화면" width="240"><br><sub>하객 공개 화면 · 명단 비공개</sub></td>
+    <td align="center" valign="top" width="33%"><img src="3.%20구현%20이미지(5장이상)/22_청첩장_하객공개_명단없음_모바일.png" alt="샘플 미리보기 명단 비공개" width="240"><br><sub>샘플 미리보기 · 명단 비공개</sub></td>
   </tr>
   <tr>
     <td align="center" valign="top"><img src="3.%20구현%20이미지(5장이상)/23_청첩장_RSVP_회신폼_모바일.png" alt="RSVP 회신 폼" width="240"><br><sub>참석 회신(RSVP)</sub></td>
-    <td align="center" valign="top"><img src="3.%20구현%20이미지(5장이상)/24_청첩장_RSVP_토큰거절_모바일.png" alt="RSVP 토큰 거절" width="240"><br><sub>초대 토큰 없음 · 회신 거절</sub></td>
+    <td align="center" valign="top"><img src="3.%20구현%20이미지(5장이상)/24_청첩장_RSVP_토큰거절_모바일.png" alt="RSVP 토큰 거절" width="240"><br><sub>하객 토큰 누락 · 회신 거절</sub></td>
     <td align="center" valign="top"><img src="3.%20구현%20이미지(5장이상)/25_청첩장_비소유자_편집거절_모바일.png" alt="비소유자 편집 거절" width="240"><br><sub>비소유자 · 편집 거절</sub></td>
   </tr>
 </table>
