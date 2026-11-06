@@ -68,9 +68,19 @@ function GuestInvitationContent() {
         <span>💌 초대받은 하객 열람 화면입니다 (데모 데이터로 동작하는 3차 미리보기 · 가상 예식 정보 · 검색엔진에 노출되지 않음)</span>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <span style={{ fontSize: 11, background: 'var(--bg)', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--line)' }}>
-            robots: noindex
+            검색엔진에 노출되지 않는 링크예요
           </span>
-          <Link href="/invitations/" style={{ color: 'var(--brand)', textDecoration: 'none', fontWeight: 600 }}>
+          <Link
+            href="/invitations/"
+            style={{
+              color: 'var(--brand)',
+              textDecoration: 'none',
+              fontWeight: 600,
+              display: 'inline-flex',
+              alignItems: 'center',
+              minHeight: 44,
+            }}
+          >
             허브로 가기 →
           </Link>
         </div>
