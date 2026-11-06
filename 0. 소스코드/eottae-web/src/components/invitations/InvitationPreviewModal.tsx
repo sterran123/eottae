@@ -1186,8 +1186,7 @@ export default function InvitationPreviewModal({
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                           <button
                             type="button"
-                            className="inv-accordion-toggle-btn"
-                            style={{ fontSize: 11, padding: '2px 6px', color: 'var(--warn-ink)' }}
+                            className="inv-accordion-toggle-btn inv-accordion-toggle-btn--warn"
                             onClick={(e) => {
                               e.stopPropagation();
                               setSectionOrder((prev) => prev.filter((k) => k !== secKey));

@@ -1655,6 +1655,53 @@
 - `npm run typecheck` 통과.
 - 미실행: 실결제·정산(DEC-11 목업 범위 외), 서버·Supabase.
 
+## 2026-11-06 청첩장 공개 화면·편집기 접근성 마무리 (김민기 작업, Refs #117)
+
+### 요청
+- #117: 하객 공개 화면·편집기의 접근성 4건 — noindex 칩 평문, 44px 터치 대상, h1 부재, `/invitations/new/` 탭 제목.
+
+### 변경
+- `src/app/invitations/p/page.tsx`: 하객 안내 띠의 `robots: noindex` 기술 칩 → 평문 「검색엔진에 노출되지 않는 링크예요」(메타데이터 noindex는 `p/layout.tsx`에 그대로). 「허브로 가기 →」 링크를 `inline-flex`·`min-height:44px`로.
+- `src/app/invitations/new/layout.tsx`(신규): `new/page.tsx`가 클라이언트 페이지라 metadata가 없던 것을 레이아웃에서 `title: '새 청첩장 만들기'`로 보강.
+- `invitations.css`: `.inv-reset-btn` 44px·13px(11px·약 20px이던 것), `.inv-category-tab-btn` 44px(약 37px이던 것), `.inv-accordion-toggle-btn--warn` 신설(13px·`--warn-ink`).
+- `InvitationPreviewModal.tsx` 「숨김 ✕」: 인라인 11px·작은 패딩 제거 → `inv-accordion-toggle-btn--warn` 클래스(기본 44px 높이 상속).
+- `InvitationCardRenderer.tsx`: 공개 화면 `<h1>` 부재 — 히어로 변형(시그니처 13·프레임 5·스플릿·왁스·테이프·4컷)마다 신랑·신부 이름 줄을 `<h1>`으로. 클래스가 글꼴·여백을 모두 정한 곳은 태그만, 나머지는 `margin:0`·`font:inherit`로 UA 기본값을 비활성화해 시각 변화 없이 구조만 바꿈. 히어로는 변형당 하나만 렌더되므로 페이지 h1도 하나. 섹션 본문의 이름 언급(1294·1854행 등)은 그대로.
+- 리뷰 반영: `typo-frame`·`script-card` 히어로에는 장식용 `<h1 class="inv-typo-headline">결혼합니다/Our Day</h1>`이 선존재해 이름 줄과 h1이 둘로 겹쳤음 → 헤드라인을 `div`로 내려 h1은 이름 줄 하나만 유지(`.inv-typo-headline`은 클래스가 글꼴·여백을 다 정해서 시각 변화 없음). `polaroid-caption-names` 등 훅 전용 클래스는 CSS 규칙이 없어 `font:inherit` 인라인이 상속 글꼴을 지키는 올바른 선택임을 확인. 렌더러 쓰임새 조사: `/invitations/p/` 공개 화면과 `InvitationPreviewModal` 다이얼로그뿐 — 각각 독립 문서·대화상자라 h1 하나씩으로 올바름(허브·편집기 페이지는 렌더러 미사용).
+
+### 검증
+- `npm run typecheck`·`npm run build`(정적 27페이지) 통과.
+- 미실행: 360px 헤드리스 Chrome 실측·다크모드 대비 육안 확인(개발 서버 미기동) — 클래스 기반 스타일이라 시각 회귀 위험은 낮음.
+
+
+## 2026-11-06 life4cut 히어로 h1 스타일 회귀 수정 — 리뷰 반영 (김민기 작업, Refs #117)
+
+### 요청
+- 코드 리뷰 지적: `life4cut` 프레임 변형에서 이름 줄 `<strong>`→`<h1>` 교체 후 `.inv-life4cut-cell--quote strong` 선택자가 어긋나 브랜드색·11.5px·상단 4px 여백이 사라지는 시각 회귀 발생.
+
+### 변경
+- `invitations.css`: `.inv-life4cut-cell--quote strong` → `.inv-life4cut-cell--quote h1`(해당 셀에 strong 잔재 없음 확인), `margin-top: 4px` → `margin: 4px 0 0`으로 h1 UA 하단 여백까지 중화 — 교체 전 렌더와 동일 값.
+- `InvitationCardRenderer.tsx`: life4cut 이름 h1의 인라인 `margin:0·font:inherit` 제거 — 클래스가 여백·크기·색상을 모두 정하므로 불필요.
+- 히어로 컨테이너(`inv-sig-content`·`inv-cover-top-names`·`inv-polaroid-names-date`·`inv-framed-caption`·`inv-split-info-header`·`inv-wax-envelope-bottom-text`)의 요소 한정 선택자 전수 조사 — 회귀는 life4cut 한 곳뿐임을 확인.
+- 정정: 직전 로그의 「편집기 페이지는 렌더러 미사용」은 오기 — `InvitationEditor.tsx:579`가 미리보기로 렌더러를 사용(모달과 동일하게 h1 하나로 정상).
+
+### 검증
+- `npm run typecheck` 통과.
+- 미실행: life4cut 실제 렌더 육안 확인(개발 서버 미기동) — 원래 strong 규칙과 동일 값이라 시각 회귀 없음.
+
+
+## 2026-11-06 검증 스크립트 `.inv-reset-btn` 단언 갱신 — 리뷰 반영 (김민기 작업, Refs #117)
+
+### 요청
+- 코드 리뷰 지적: #117의 `.inv-reset-btn` 44px·13px 보강(57cb681) 이후 `verify-modal-and-card.ts` [검증 17]이 구 규칙 본문(`font-size: 11px; padding: 3px 8px`)을 그대로 단언해 51개 중 1개 FAIL — 저장소 표준 검증 게이트가 깨진 상태.
+
+### 변경
+- `scripts/verify-modal-and-card.ts`: [검증 17]의 `.inv-reset-btn` 기대 문자열을 현행 규칙(`min-height: 44px; font-size: 13px; padding: 8px 12px` + 기존 토큰 부분)으로 갱신, 단언 문구에 44px 터치 대상·13px(#117) 명시.
+- 전수 점검: 스크립트 내 `noindex`·`robots`·`inv-category-tab-btn`·`inv-accordion-toggle`·`life4cut`·`inv-sig-names`·`inv-framed-names`·`polaroid-caption`·`inv-typo` 관련 단언 없음 확인 — 추가 갱신 대상 없음.
+
+### 검증
+- `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (51/51 통과 — 갱신 전 50/51).
+- `npm run typecheck` 통과, `npm run build`(정적 27페이지) 통과.
+- 미실행: `verify-theme-contrast.ts`는 `theme-presets` 모듈 해석 실패(ERR_MODULE_NOT_FOUND)로 기존부터 미동작 — 본 변경과 무관, 별도 확인 필요.
 ## 2026-11-06 3차 최종 제출 — README·홈·설정 문구를 최종 상태로 정리 (김민기 작업)
 
 ### 요청
