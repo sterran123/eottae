@@ -15,7 +15,6 @@ import type {
   GalleryViewMode,
   ThemeCustomStyle,
 } from '@/lib/invitations/types';
-import { invitationGuestHref } from '@/lib/invitations/href';
 import { getThemePreset } from '@/lib/invitations/theme-presets';
 import {
   getContrastingTextColor,

@@ -687,7 +687,7 @@ export default function InvitationPreviewModal({
                 )}
               </div>
 
-              <p style={{ fontSize: 11, color: '#4b5563', margin: '0 0 10px', lineHeight: 1.45 }}>
+              <p style={{ fontSize: 11, color: 'var(--muted)', margin: '0 0 10px', lineHeight: 1.45 }}>
                 내 PC/스마트폰의 실제 웨딩 사진을 첨부하거나, 세련된 20대 비주얼 프리셋으로 즉시 교체해 보세요.
               </p>
 
@@ -729,7 +729,7 @@ export default function InvitationPreviewModal({
 
               {/* 20대 세련된 신랑신부 비주얼 프리셋 */}
               <div style={{ marginTop: 12 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#1f2937', display: 'block', marginBottom: 6 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink)', display: 'block', marginBottom: 6 }}>
                   ✨ 20대 세련된 신랑신부 비주얼 프리셋 (클릭 시 즉시 교체)
                 </span>
                 <div className="inv-preset-photos-grid">

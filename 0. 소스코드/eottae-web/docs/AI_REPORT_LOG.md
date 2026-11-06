@@ -1475,3 +1475,15 @@
 - [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
 - [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
 
+## 2026-11-06 PR #102 메인 사진 하이라이트 박스 테마 토큰화 및 안내 문구 가독성 개선 (Refs #84, Refs #102) (오하율 작업)
+- [요청] PR #102 Grok AI 리뷰 지적(다크·사이버펑크·시스템 다크 테마에서 메인 사진 하이라이트 제목 및 본문 가독성 결함) 완전 해결:
+  1) `invitations.css:4618`: `.inv-ctrl-group--highlight`의 고정 파스텔 그라데이션(`linear-gradient(#fdf4ff, ...)` 및 테두리 `#e9d5ff`)을 테마 토큰인 `background: var(--soft); border: 1.5px solid var(--line); box-shadow: 0 4px 14px color-mix(in srgb, var(--brand) 12%, transparent);`로 전환. 다크 계열 테마에서 `.inv-ctrl-label`(`color: var(--ink) !important`)과의 명도 대비를 최적으로 확보하여 제목 「📸 메인 사진 직접 첨부 & 교체」가 묻히는 결함 해결.
+  2) `InvitationPreviewModal.tsx:690, :732`: 하이라이트 박스 내부의 고정 hex 색상 본문(`color: '#4b5563'`)을 `color: 'var(--muted)'`로, 프리셋 섹션 라벨(`color: '#1f2937'`)을 `color: 'var(--ink)'`로 전환하여 다크/사이버펑크 테마에서도 선명한 가독성 보장.
+  3) `InvitationCardRenderer.tsx`: 미사용 `invitationGuestHref` import 제거.
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (42/42 통과)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
+
