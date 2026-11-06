@@ -1666,6 +1666,7 @@
 - `invitations.css`: `.inv-reset-btn` 44px·13px(11px·약 20px이던 것), `.inv-category-tab-btn` 44px(약 37px이던 것), `.inv-accordion-toggle-btn--warn` 신설(13px·`--warn-ink`).
 - `InvitationPreviewModal.tsx` 「숨김 ✕」: 인라인 11px·작은 패딩 제거 → `inv-accordion-toggle-btn--warn` 클래스(기본 44px 높이 상속).
 - `InvitationCardRenderer.tsx`: 공개 화면 `<h1>` 부재 — 히어로 변형(시그니처 13·프레임 5·스플릿·왁스·테이프·4컷)마다 신랑·신부 이름 줄을 `<h1>`으로. 클래스가 글꼴·여백을 모두 정한 곳은 태그만, 나머지는 `margin:0`·`font:inherit`로 UA 기본값을 비활성화해 시각 변화 없이 구조만 바꿈. 히어로는 변형당 하나만 렌더되므로 페이지 h1도 하나. 섹션 본문의 이름 언급(1294·1854행 등)은 그대로.
+- 리뷰 반영: `typo-frame`·`script-card` 히어로에는 장식용 `<h1 class="inv-typo-headline">결혼합니다/Our Day</h1>`이 선존재해 이름 줄과 h1이 둘로 겹쳤음 → 헤드라인을 `div`로 내려 h1은 이름 줄 하나만 유지(`.inv-typo-headline`은 클래스가 글꼴·여백을 다 정해서 시각 변화 없음). `polaroid-caption-names` 등 훅 전용 클래스는 CSS 규칙이 없어 `font:inherit` 인라인이 상속 글꼴을 지키는 올바른 선택임을 확인. 렌더러 쓰임새 조사: `/invitations/p/` 공개 화면과 `InvitationPreviewModal` 다이얼로그뿐 — 각각 독립 문서·대화상자라 h1 하나씩으로 올바름(허브·편집기 페이지는 렌더러 미사용).
 
 ### 검증
 - `npm run typecheck`·`npm run build`(정적 27페이지) 통과.

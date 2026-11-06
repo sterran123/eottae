@@ -917,7 +917,7 @@ export default function InvitationCardRenderer({
             <div className="inv-real-photo-overlay inv-overlay--forest" />
             <div className="inv-typo-top-group">
               <div className="inv-typo-sub-lead">{themePreset.heroType === 'script-card' ? 'OUR SPECIAL DAY' : 'WEDDING INVITATION'}</div>
-              <h1 className="inv-typo-headline">{themePreset.heroType === 'script-card' ? 'Our Day' : '결혼합니다'}</h1>
+              <div className="inv-typo-headline">{themePreset.heroType === 'script-card' ? 'Our Day' : '결혼합니다'}</div>
             </div>
             <div className="inv-sig-content inv-sig-content--floating">
               <h1 className="inv-sig-names" style={{ color: '#ffffff' }}>{hostNames}</h1>
