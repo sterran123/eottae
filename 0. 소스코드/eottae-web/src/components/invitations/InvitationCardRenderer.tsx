@@ -1077,6 +1077,8 @@ export default function InvitationCardRenderer({
       case 'schedule': {
         const title = custom?.title || '예식 일시 & 달력';
         const activeCalendarStyle = custom?.calendarStyle || calendarStyle || 'classic_table';
+        const badgeBg = isDarkTheme ? 'var(--paper, #161423)' : 'var(--paper, #ffffff)';
+        const badgeInk = ensureLegibleColor(accent, badgeBg, 4.5);
 
         return (
           <section key="schedule" className="inv-content-section" style={sectionStyle}>
@@ -1089,17 +1091,17 @@ export default function InvitationCardRenderer({
               {/* 모던 박스 뱃지 스타일 (box_badge) */}
               {activeCalendarStyle === 'box_badge' && (
                 <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 14 }}>
-                  <div style={{ padding: '8px 12px', background: 'var(--paper, #ffffff)', border: `2px solid ${accent}`, borderRadius: 8, textAlign: 'center' }}>
+                  <div style={{ padding: '8px 12px', background: badgeBg, border: `2px solid ${accent}`, borderRadius: 8, textAlign: 'center' }}>
                     <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600 }}>YEAR</div>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: accent }}>{year}</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: badgeInk }}>{year}</div>
                   </div>
-                  <div style={{ padding: '8px 12px', background: 'var(--paper, #ffffff)', border: `2px solid ${accent}`, borderRadius: 8, textAlign: 'center' }}>
+                  <div style={{ padding: '8px 12px', background: badgeBg, border: `2px solid ${accent}`, borderRadius: 8, textAlign: 'center' }}>
                     <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600 }}>DATE</div>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: accent }}>{month}월 {day}일</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: badgeInk }}>{month}월 {day}일</div>
                   </div>
-                  <div style={{ padding: '8px 12px', background: 'var(--paper, #ffffff)', border: `2px solid ${accent}`, borderRadius: 8, textAlign: 'center' }}>
+                  <div style={{ padding: '8px 12px', background: badgeBg, border: `2px solid ${accent}`, borderRadius: 8, textAlign: 'center' }}>
                     <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600 }}>TIME</div>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: accent }}>{ampm} {displayHour}시{minutes > 0 ? ` ${minutes}분` : ''}</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: badgeInk }}>{ampm} {displayHour}시{minutes > 0 ? ` ${minutes}분` : ''}</div>
                   </div>
                 </div>
               )}

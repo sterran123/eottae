@@ -144,7 +144,7 @@
   color: var(--match-avatar-ink);
 }
 .mt-rec__photo--revealed .mt-rec__avatar {
-  color: var(--match-on-accent);
+  color: rgba(255, 255, 255, 0.85);
 }
 .mt-rec__blur {
   position: absolute;

@@ -1526,3 +1526,15 @@
 - [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
 - [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
 - [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
+
+
+## 2026-11-06 PR #102 일정 box_badge 배지 배경 기준 명도 대비(badgeInk) 및 매칭 공개 실루엣 색상 복원 (Refs #84, Refs #102) (오하율 작업)
+- [요청] PR #102 AI 리뷰 지적 2개 항목 완전 해결:
+  1) `InvitationCardRenderer.tsx:1092`: `box_badge` 일정 칸 배경(`--paper`, `badgeBg`) 기준으로 날짜 숫자 색상을 보정하지 않아 카드 배경 기준 accent(#f59e0b) 사용 시 흰 배지 배경에서 대비 미달(2.1:1)이 발생하던 결함 해결. `badgeBg = isDarkTheme ? 'var(--paper, #161423)' : 'var(--paper, #ffffff)'`를 기준으로 `badgeInk = ensureLegibleColor(accent, badgeBg, 4.5)`를 도입하고 날짜/시간 숫자 색상을 `color: badgeInk`로 교체하여 WCAG 2.1 AA 4.5:1 이상의 가독성을 보장.
+  2) `match-recommend.css:147`: 공개 사진 실루엣(`.mt-rec__photo--revealed .mt-rec__avatar`)에 솔리드 버튼/칩 배경 전용 토큰인 `var(--match-on-accent)`가 잘못 적용되어 다크 모드(#2a1218)에서 어두운 와인 사진 배경과 겹쳐 사라지던 결함 해결. 사진 그라디언트 배경에 적합한 반투명 흰색 실루엣(`rgba(255, 255, 255, 0.85)`)으로 복원하여 전 테마에서 선명하게 노출되도록 보장.
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (44/44 통과, 검증 15 추가)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)

@@ -395,6 +395,24 @@ assert(
   '풀커버 시그니처 히어로 분기가 DIRECT_HERO_IDS를 통해 별칭 테마(spring-card 등)를 정규 테마로 올바르게 분기함'
 );
 
+// 15. [PR #102 추가 피드백] 일정 box_badge 배지 명도 대비 & 공개 사진 실루엣 색상 검증
+console.log('\n[검증 15] 일정 box_badge 명도 대비(badgeInk) & 매칭 공개 사진 실루엣 검증');
+const matchCssPath = path.resolve(process.cwd(), 'src/app/match/recommend/match-recommend.css');
+const matchCssCode = fs.readFileSync(matchCssPath, 'utf-8');
+
+assert(
+  rendererCode.includes("const badgeBg = isDarkTheme ? 'var(--paper, #161423)' : 'var(--paper, #ffffff)';") &&
+  rendererCode.includes('const badgeInk = ensureLegibleColor(accent, badgeBg, 4.5);') &&
+  rendererCode.includes('color: badgeInk'),
+  '일정 box_badge 배지 배경(badgeBg) 기준으로 badgeInk = ensureLegibleColor(accent, badgeBg, 4.5) 적용됨'
+);
+
+assert(
+  matchCssCode.includes('.mt-rec__photo--revealed .mt-rec__avatar {\n  color: rgba(255, 255, 255, 0.85);\n}') &&
+  !matchCssCode.includes('.mt-rec__photo--revealed .mt-rec__avatar {\n  color: var(--match-on-accent);\n}'),
+  '공개 사진 실루엣에 솔리드 버튼용 var(--match-on-accent) 대신 배경에 최적화된 rgba(255, 255, 255, 0.85) 적용됨'
+);
+
 console.log('\n============================================================');
 console.log(` 검증 결과: 총 ${passCount + failCount}개 중 ${passCount}개 통과 (실패: ${failCount}개)`);
 console.log('============================================================');
