@@ -90,6 +90,7 @@ export default function Home() {
           <div className="notice">
             팀 프로젝트 3차 최종 제출(목업) — 매칭·데이트·소모임·모바일 청첩장 모두 데모 데이터로
             체험할 수 있어요. 데모 기록은 이 브라우저에만 남고, 실제 결제·본인 확인은 연결하지 않았어요.
+            이메일 가입 시 저장 범위는 <Link href="/privacy">개인정보 안내</Link>에서 확인할 수 있어요.
           </div>
         </div>
       </section>
