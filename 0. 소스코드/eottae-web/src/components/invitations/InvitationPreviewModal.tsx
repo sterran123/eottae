@@ -763,8 +763,8 @@ export default function InvitationPreviewModal({
               </div>
 
               {/* [사용자 핵심 요구] 사진 프레임 형태 (아치형, 감성사진형, 둥근형, 네모형 등) & 테두리 색상 선택 */}
-              <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid #e5e7eb' }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#1f2937', display: 'block', marginBottom: 6 }}>
+              <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--line)' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink)', display: 'block', marginBottom: 6 }}>
                   🖼️ 섹션 0번 포토 프레임 스타일 (6종) &amp; 테두리 색상
                 </span>
                 <div className="inv-frame-style-grid">
@@ -793,7 +793,7 @@ export default function InvitationPreviewModal({
                 </div>
 
                 <div className="inv-frame-color-picker-row" style={{ marginTop: 8 }}>
-                  <span style={{ fontSize: 11, color: '#4b5563', marginRight: 6 }}>프레임 테두리:</span>
+                  <span style={{ fontSize: 11, color: 'var(--muted)', marginRight: 6 }}>프레임 테두리:</span>
                   {[
                     { color: '#ffffff', label: '화이트' },
                     { color: '#0f172a', label: '블랙' },
@@ -1053,7 +1053,7 @@ export default function InvitationPreviewModal({
                         if (e.key === 'Enter') setHeroSectionExpanded(!heroSectionExpanded);
                       }}
                     >
-                      <span className="inv-section-name" style={{ fontWeight: 800, color: '#4f46e5' }}>
+                      <span className="inv-section-name" style={{ fontWeight: 800, color: 'var(--brand)' }}>
                         0. 신랑·신부 메인 웨딩 사진 &amp; 프레임 (아치/감성/둥근/네모)
                       </span>
                     </div>
@@ -1310,8 +1310,8 @@ export default function InvitationPreviewModal({
 
                 {/* 숨겨진 섹션 다시 추가 */}
                 {ALL_AVAILABLE_SECTIONS.filter((s) => !sectionOrder.includes(s)).length > 0 && (
-                  <div style={{ marginTop: 12, padding: '10px 12px', background: '#f8fafc', borderRadius: 8, border: '1px dashed #cbd5e1' }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', marginBottom: 6 }}>
+                  <div style={{ marginTop: 12, padding: '10px 12px', background: 'var(--soft)', borderRadius: 8, border: '1px dashed var(--line)' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', marginBottom: 6 }}>
                       숨겨진 섹션 다시 추가
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>

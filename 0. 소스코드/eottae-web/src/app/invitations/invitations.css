@@ -112,7 +112,7 @@
 }
 
 [data-theme='cyberpunk'] .inv-category-tab-btn--active,
-[data-theme='cyberpunk'] .inv-copy-chip,
+[data-theme='cyberpunk'] .inv-mode--light .inv-copy-chip,
 [data-theme='cyberpunk'] .inv-font-btn--active,
 [data-theme='cyberpunk'] .inv-choice-pill--active,
 [data-theme='cyberpunk'] .inv-accordion-toggle-btn--active,
@@ -120,7 +120,7 @@
 [data-theme='cyberpunk'] .inv-toast,
 [data-theme='cyberpunk'] .inv-chip-btn--active,
 [data-theme='dark'] .inv-category-tab-btn--active,
-[data-theme='dark'] .inv-copy-chip,
+[data-theme='dark'] .inv-mode--light .inv-copy-chip,
 [data-theme='dark'] .inv-font-btn--active,
 [data-theme='dark'] .inv-choice-pill--active,
 [data-theme='dark'] .inv-accordion-toggle-btn--active,
@@ -132,7 +132,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root[data-theme='system'] .inv-category-tab-btn--active,
-  :root[data-theme='system'] .inv-copy-chip,
+  :root[data-theme='system'] .inv-mode--light .inv-copy-chip,
   :root[data-theme='system'] .inv-font-btn--active,
   :root[data-theme='system'] .inv-choice-pill--active,
   :root[data-theme='system'] .inv-accordion-toggle-btn--active,
@@ -2702,9 +2702,17 @@
   animation: inv-accordion-down 0.2s ease-out;
 }
 
-[data-theme='dark'] .inv-accordion-drawer {
+[data-theme='dark'] .inv-accordion-drawer,
+[data-theme='cyberpunk'] .inv-accordion-drawer {
   background: #1e293b;
   border-top-color: #334155;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-accordion-drawer {
+    background: #1e293b;
+    border-top-color: #334155;
+  }
 }
 
 @keyframes inv-accordion-down {
@@ -2744,8 +2752,17 @@
 }
 
 [data-theme='dark'] .inv-field-input,
-[data-theme='dark'] .inv-field-textarea {
+[data-theme='dark'] .inv-field-textarea,
+[data-theme='cyberpunk'] .inv-field-input,
+[data-theme='cyberpunk'] .inv-field-textarea {
   border-color: #475569;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-field-input,
+  :root[data-theme='system'] .inv-field-textarea {
+    border-color: #475569;
+  }
 }
 
 .inv-field-input:focus,
@@ -2772,9 +2789,17 @@
   transition: all 0.15s ease;
 }
 
-[data-theme='dark'] .inv-font-btn {
+[data-theme='dark'] .inv-font-btn,
+[data-theme='cyberpunk'] .inv-font-btn {
   background: #0f172a;
   border-color: #475569;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-font-btn {
+    background: #0f172a;
+    border-color: #475569;
+  }
 }
 
 .inv-font-btn--active {
@@ -5120,6 +5145,17 @@
   margin-bottom: 6px !important;
 }
 
+[data-theme='dark'] .inv-accordion-drawer .inv-field-label,
+[data-theme='cyberpunk'] .inv-accordion-drawer .inv-field-label {
+  color: #94a3b8 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-accordion-drawer .inv-field-label {
+    color: #94a3b8 !important;
+  }
+}
+
 .inv-main-heading {
   font-size: 20px !important;
   font-weight: 800 !important;
@@ -5836,7 +5872,7 @@
 [data-theme='dark'] .inv-my-card .inv-btn-secondary,
 [data-theme='dark'] .inv-my-card-row .inv-btn-secondary,
 [data-theme='dark'] .inv-editor-toolbar .inv-btn-secondary,
-[data-theme='dark'] .inv-modal-toolbar .inv-btn-secondary,
+.inv-modal-toolbar--dark .inv-btn-secondary,
 .inv-mode--dark .inv-btn-secondary {
   background: rgba(255, 255, 255, 0.16) !important;
   color: #ffffff !important;
@@ -5847,7 +5883,7 @@
 [data-theme='dark'] .inv-my-card .inv-btn-secondary:hover,
 [data-theme='dark'] .inv-my-card-row .inv-btn-secondary:hover,
 [data-theme='dark'] .inv-editor-toolbar .inv-btn-secondary:hover,
-[data-theme='dark'] .inv-modal-toolbar .inv-btn-secondary:hover,
+.inv-modal-toolbar--dark .inv-btn-secondary:hover,
 .inv-mode--dark .inv-btn-secondary:hover {
   background: rgba(255, 255, 255, 0.26) !important;
   color: #ffffff !important;
@@ -5864,10 +5900,20 @@
   color: #ffffff !important;
 }
 
-.inv-mode--dark .inv-copy-chip {
+.inv-mode--dark .inv-copy-chip,
+[data-theme='dark'] .inv-mode--dark .inv-copy-chip,
+[data-theme='cyberpunk'] .inv-mode--dark .inv-copy-chip {
   background: rgba(255, 255, 255, 0.2) !important;
   color: #ffffff !important;
   border: 1px solid rgba(255, 255, 255, 0.32) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-mode--dark .inv-copy-chip {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.32) !important;
+  }
 }
 
 .inv-mode--dark .inv-address-copy-btn {

@@ -1513,3 +1513,16 @@
 - [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
 - [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
 
+
+
+## 2026-11-06 PR #102 다크 청첩장 복사 칩 흰 글자 격리·미리보기 툴바 토큰 정규화·서랍 다크 테마 연동 (Refs #84, Refs #102) (오하율 작업)
+- [요청] PR #102 Grok AI 리뷰 FAIL 3개 항목 완전 해결:
+  1) `invitations.css:115, :133, :5867`: 다크 청첩장(우리 둘의 서약 등 defaultBgColor #09090b) 계좌 「복사」 칩(`.inv-copy-chip`)이 앱 테마 `dark`·`cyberpunk`의 `color: var(--bg) !important`에 의해 검게 덮여 배경에 묻히는 결함 해결. 상단 전역 규칙의 선택자를 `.inv-mode--light .inv-copy-chip`으로 스코핑하여 다크 카드를 완전 분리하고, 다크 카드(`.inv-mode--dark .inv-copy-chip`)에 `background: rgba(255, 255, 255, 0.2) !important; color: #ffffff !important;`를 명시하여 테마 전환 시에도 흰 글자가 선명하게 유지되도록 보장.
+  2) `InvitationPreviewModal.tsx:767, :796, :1056, :1313`, `invitations.css:5839`: 미리보기 툴바 배경이 `var(--paper)`(#161423 in dark, #141222 in cyberpunk)인 상황에서 보조 버튼(`.inv-btn-secondary`) 텍스트가 흰색(#ffffff)으로 강제 고정되던 문제를 `.inv-modal-toolbar--dark .inv-btn-secondary`로 한정. 또한 모달 내부의 하드코딩된 hex 색상(`#1f2937`, `#4b5563`, `#4f46e5`, `#f8fafc`, `#cbd5e1`, `#64748b`)을 시맨틱 CSS 변수(`var(--ink)`, `var(--muted)`, `var(--brand)`, `var(--soft)`, `var(--line)`)로 전면 전환하여 다크/사이버펑크 환경에서도 배경 대비와 가독성을 보장.
+  3) `invitations.css:2702, :2752, :2789, :5145`: 아코디언 서랍(`.inv-accordion-drawer`) 배경이 `[data-theme='dark']`에만 `#1e293b`로 지정되어 cyberpunk 및 시스템 다크에서 `#ffffff`로 노출되던 결함 수정. `[data-theme='cyberpunk']` 및 `@media (prefers-color-scheme: dark) :root[data-theme='system']`에도 동일한 서랍 배경(`#1e293b`), 폰트 버튼 배경(`#0f172a`), 입력 테두리(`#475569`)를 확장 적용하고, 서랍 내부 필드 라벨(`.inv-field-label`)의 글자색을 `#94a3b8 !important`로 지정하여 다크 모드 가독성을 완벽 확보.
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (42/42 통과)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
