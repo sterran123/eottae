@@ -1655,6 +1655,93 @@
 - `npm run typecheck` 통과.
 - 미실행: 실결제·정산(DEC-11 목업 범위 외), 서버·Supabase.
 
+## 2026-11-06 작업자 루프 작업 완료 시 카카오톡 "나에게 보내기" 알림 (김민기 작업)
+
+### 요청
+- 루프 작업(tools/grok_review_worker.mjs의 큐 작업)이 하나 완료될 때마다 카카오톡 전송.
+
+### 변경
+- `tools/kakao_notify.mjs`(신규): 카카오 REST API "나에게 보내기" 모듈 — access_token은 `REVIEW_ROOT/kakao_token.json`(클론 밖)에 두고 만료 전 재사용·refresh_token으로 갱신 저장. 설정 없음·전송 실패는 로그만(미설정 큐잉·재시도 없음), 작업자는 계속. DRY_RUN이면 미전송 출력만. CLI: `--code {인증코드}` 토큰 교환·저장, 임의 인자 시험 전송, 인자 없으면 설정 안내.
+- `tools/grok_review_worker.mjs`: 큐 작업 종료 직후 `notifyKakao`(성공 ✅/실패 ⚠️·대상·종료 코드·소요, `link`는 PR·댓글 html_url) 호출 — 종료 3(계정 문제) 알림도 멈추기 전에 간다. `runIn` 반환을 `{code, sec}`로 바꿔 소요 시간을 알림에 쓴다. 준비 실패(체크아웃 등)도 끝난 것으로 알린다. 머리말 선택 항목에 알림 설정 안내 추가.
+- 설정: 카카오 디벨로퍼스 앱(talk_message 동의)·`KAKAO_REST_API_KEY`(.env·환경변수) 필요 — 없으면 한 줄 로그만 남기고 조용히 건너뜀(선택 기능).
+
+### 검증
+- `node --check` 두 파일 통과.
+- `node tools/kakao_notify.mjs` 인자 없음 → 설정 안내 출력, `DRY_RUN=2 ... "테스트"` → 전송 없이 출력만, 미설정 상태 전송 시도 → 한 줄 로그 후 정상 종료(예외 없음), import 시 부작용 없음 확인.
+- 미실행: 실제 카카오톡 발송(앱 등록·계정 동의 등 최초 한 번 설정 필요 — 머리말 절차), 작업자 실사이클 종단 확인.
+
+## 2026-11-06 카카오 알림 link 필수 항목·웹 도메인 설정 보강 — 리뷰 반영 (김민기 작업)
+
+### 변경
+- `tools/kakao_notify.mjs` `notifyKakao`: `link`를 항상 넣게 고침 — 카카오 텍스트 템플릿에서 link는 필수 항목이라, 없으면 발송이 400으로 실패했다(머리말 시험 전송 절차가 그대로 깨지는 결함). 인자가 없으면 저장소 주소(`GITHUB_REPOSITORY` 또는 기본값)로 대체하고 `[DRY]` 출력에도 링크를 표시.
+- 같은 파일 머리말 설정 절차에 "플랫폼 → Web에 https://github.com 등록" 단계 추가 — 카카오는 기본 템플릿 링크를 [제품 링크 관리] 등록 웹 도메인만 허용해, 빠뜨리면 GitHub 링크가 붙은 메모 전송이 전부 실패한다. `KAKAO_REFRESH_TOKEN` 환경 대안도 문구에 추가.
+- 본문 자르기를 코드 포인트 기준으로 바꿈(`String.slice`는 이모지 쌍을 자를 수 있음).
+
+### 검증
+- `node --check` 통과. `DRY_RUN=2` 시험 전송 → `[DRY] ... → https://github.com/sterran123/eottae` 링크 대체 확인, `GITHUB_REPOSITORY=foo/bar` → 해당 주소로 대체 확인.
+- 미실행: 실제 카카오톡 발송(최초 한 번 설정 필요 — 머리말 절차).
+## 2026-11-06 청첩장 웨딩 사진 출처 기록·미확인 사진 일러스트 교체 (김민기 작업, Refs #118)
+
+### 요청
+- #118: `public/invitations/wedding-*.jpg` 11장의 출처·라이선스 기록, 확인 불가 시 일러스트 교체.
+
+### 판단
+- PR #97에서 추가된 실사 부부 사진 — 본문·커밋·로그·캡션 어디에도 출처가 없고, PR AI 리뷰에서도 「포토리얼 인물 — 출처 미확인」 지적이 두 차례 있었다. AI 생성 여부도 저장소 자료로는 확인 불가 → 이슈 기준대로 「출처 확인 불가 = 실존 인물로 간주해 교체」.
+
+### 변경
+- `public/invitations/wedding-*.jpg` 11장 삭제 — `InvitationsHub`·`InvitationPreviewModal`·`InvitationCardRenderer`의 `img*` 상수를 자체 일러스트(`scene-*.svg`·`cover-evening.svg`·`map-hall.svg`, PR #93 제작)로 일대일 교체.
+- `public/invitations/CREDITS.md` 신설 — 현재 파일 전원의 출처·라이선스와 제거 사진·대체 매핑 기록. 하율님이 출처를 확인하면 기록 후 되돌릴 수 있게 안내.
+- 후속: 청첩장 캡처 20~24번(2026-11-05)이 교체 전 화면이라 재촬영 필요 — CREDITS.md에 도구·절차 기록.
+
+### 검증
+- `grep` JPG 참조 잔여 없음 확인.
+## 2026-11-06 청첩장 공개 화면·편집기 접근성 마무리 (김민기 작업, Refs #117)
+
+### 요청
+- #117: 하객 공개 화면·편집기의 접근성 4건 — noindex 칩 평문, 44px 터치 대상, h1 부재, `/invitations/new/` 탭 제목.
+
+### 변경
+- `src/app/invitations/p/page.tsx`: 하객 안내 띠의 `robots: noindex` 기술 칩 → 평문 「검색엔진에 노출되지 않는 링크예요」(메타데이터 noindex는 `p/layout.tsx`에 그대로). 「허브로 가기 →」 링크를 `inline-flex`·`min-height:44px`로.
+- `src/app/invitations/new/layout.tsx`(신규): `new/page.tsx`가 클라이언트 페이지라 metadata가 없던 것을 레이아웃에서 `title: '새 청첩장 만들기'`로 보강.
+- `invitations.css`: `.inv-reset-btn` 44px·13px(11px·약 20px이던 것), `.inv-category-tab-btn` 44px(약 37px이던 것), `.inv-accordion-toggle-btn--warn` 신설(13px·`--warn-ink`).
+- `InvitationPreviewModal.tsx` 「숨김 ✕」: 인라인 11px·작은 패딩 제거 → `inv-accordion-toggle-btn--warn` 클래스(기본 44px 높이 상속).
+- `InvitationCardRenderer.tsx`: 공개 화면 `<h1>` 부재 — 히어로 변형(시그니처 13·프레임 5·스플릿·왁스·테이프·4컷)마다 신랑·신부 이름 줄을 `<h1>`으로. 클래스가 글꼴·여백을 모두 정한 곳은 태그만, 나머지는 `margin:0`·`font:inherit`로 UA 기본값을 비활성화해 시각 변화 없이 구조만 바꿈. 히어로는 변형당 하나만 렌더되므로 페이지 h1도 하나. 섹션 본문의 이름 언급(1294·1854행 등)은 그대로.
+- 리뷰 반영: `typo-frame`·`script-card` 히어로에는 장식용 `<h1 class="inv-typo-headline">결혼합니다/Our Day</h1>`이 선존재해 이름 줄과 h1이 둘로 겹쳤음 → 헤드라인을 `div`로 내려 h1은 이름 줄 하나만 유지(`.inv-typo-headline`은 클래스가 글꼴·여백을 다 정해서 시각 변화 없음). `polaroid-caption-names` 등 훅 전용 클래스는 CSS 규칙이 없어 `font:inherit` 인라인이 상속 글꼴을 지키는 올바른 선택임을 확인. 렌더러 쓰임새 조사: `/invitations/p/` 공개 화면과 `InvitationPreviewModal` 다이얼로그뿐 — 각각 독립 문서·대화상자라 h1 하나씩으로 올바름(허브·편집기 페이지는 렌더러 미사용).
+
+### 검증
+- `npm run typecheck`·`npm run build`(정적 27페이지) 통과.
+- 미실행: 360px 헤드리스 Chrome 실측·다크모드 대비 육안 확인(개발 서버 미기동) — 클래스 기반 스타일이라 시각 회귀 위험은 낮음.
+
+
+## 2026-11-06 life4cut 히어로 h1 스타일 회귀 수정 — 리뷰 반영 (김민기 작업, Refs #117)
+
+### 요청
+- 코드 리뷰 지적: `life4cut` 프레임 변형에서 이름 줄 `<strong>`→`<h1>` 교체 후 `.inv-life4cut-cell--quote strong` 선택자가 어긋나 브랜드색·11.5px·상단 4px 여백이 사라지는 시각 회귀 발생.
+
+### 변경
+- `invitations.css`: `.inv-life4cut-cell--quote strong` → `.inv-life4cut-cell--quote h1`(해당 셀에 strong 잔재 없음 확인), `margin-top: 4px` → `margin: 4px 0 0`으로 h1 UA 하단 여백까지 중화 — 교체 전 렌더와 동일 값.
+- `InvitationCardRenderer.tsx`: life4cut 이름 h1의 인라인 `margin:0·font:inherit` 제거 — 클래스가 여백·크기·색상을 모두 정하므로 불필요.
+- 히어로 컨테이너(`inv-sig-content`·`inv-cover-top-names`·`inv-polaroid-names-date`·`inv-framed-caption`·`inv-split-info-header`·`inv-wax-envelope-bottom-text`)의 요소 한정 선택자 전수 조사 — 회귀는 life4cut 한 곳뿐임을 확인.
+- 정정: 직전 로그의 「편집기 페이지는 렌더러 미사용」은 오기 — `InvitationEditor.tsx:579`가 미리보기로 렌더러를 사용(모달과 동일하게 h1 하나로 정상).
+
+### 검증
+- `npm run typecheck` 통과.
+- 미실행: life4cut 실제 렌더 육안 확인(개발 서버 미기동) — 원래 strong 규칙과 동일 값이라 시각 회귀 없음.
+
+
+## 2026-11-06 검증 스크립트 `.inv-reset-btn` 단언 갱신 — 리뷰 반영 (김민기 작업, Refs #117)
+
+### 요청
+- 코드 리뷰 지적: #117의 `.inv-reset-btn` 44px·13px 보강(57cb681) 이후 `verify-modal-and-card.ts` [검증 17]이 구 규칙 본문(`font-size: 11px; padding: 3px 8px`)을 그대로 단언해 51개 중 1개 FAIL — 저장소 표준 검증 게이트가 깨진 상태.
+
+### 변경
+- `scripts/verify-modal-and-card.ts`: [검증 17]의 `.inv-reset-btn` 기대 문자열을 현행 규칙(`min-height: 44px; font-size: 13px; padding: 8px 12px` + 기존 토큰 부분)으로 갱신, 단언 문구에 44px 터치 대상·13px(#117) 명시.
+- 전수 점검: 스크립트 내 `noindex`·`robots`·`inv-category-tab-btn`·`inv-accordion-toggle`·`life4cut`·`inv-sig-names`·`inv-framed-names`·`polaroid-caption`·`inv-typo` 관련 단언 없음 확인 — 추가 갱신 대상 없음.
+
+### 검증
+- `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (51/51 통과 — 갱신 전 50/51).
+- `npm run typecheck` 통과, `npm run build`(정적 27페이지) 통과.
+- 미실행: `verify-theme-contrast.ts`는 `theme-presets` 모듈 해석 실패(ERR_MODULE_NOT_FOUND)로 기존부터 미동작 — 본 변경과 무관, 별도 확인 필요.
 ## 2026-11-06 3차 최종 제출 — README·홈·설정 문구를 최종 상태로 정리 (김민기 작업)
 
 ### 요청
