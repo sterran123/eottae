@@ -159,9 +159,9 @@ assert(
   modalCode.includes("label: '감성사진형'") &&
   modalCode.includes("label: '둥근형'") &&
   modalCode.includes("label: '네모형'") &&
-  modalCode.includes("label: '인생네컷형'") &&
+  modalCode.includes("label: '4컷 필름형'") &&
   modalCode.includes("label: '풀커버형'"),
-  '모달에 6가지 프레임 스타일(아치형, 감성사진형, 둥근형, 네모형, 인생네컷형, 풀커버형) 선택 UI 완벽 반영'
+  '모달에 6가지 프레임 스타일(아치형, 감성사진형, 둥근형, 네모형, 4컷 필름형, 풀커버형) 선택 UI 완벽 반영'
 );
 
 assert(
@@ -173,10 +173,10 @@ assert(
 // 6. 테마 허브 카드 인물과 모달 미리보기 인물 100% 일치 검증
 console.log('\n[검증 6] 테마 카드 인물과 미리보기 모달 인물 100% 일치 검증');
 const all16Themes = [
-  'green-canopy',
-  'the-wedding',
+  'forest-fresh',
+  'our-vow',
   'photo-background',
-  'with-love',
+  'warm-heart',
   'wax-seal',
   'tape-card',
   'typo-frame',
@@ -278,6 +278,206 @@ assert(
   previewCssCode.includes('.invite-stage') &&
   previewCssCode.includes('.invite-card'),
   '360px 모바일 화면 최적화 미디어 쿼리 및 가로 스크롤 완전 차단 패딩 적용'
+);
+
+// 10. [PR #102 피드백] 시네마틱 무비 히어로 분기 분리 및 상용 템플릿 문구 부재 검증
+console.log('\n[검증 10] 시네마틱 무비 히어로 분기 분리 및 상용 템플릿 문구 부재 검증');
+assert(
+  rendererCode.includes("case 'cinematic-movie':") &&
+  rendererCode.includes('inv-hero-sig--cinematic') &&
+  rendererCode.includes('CINEMATIC MOMENT') &&
+  rendererCode.includes('우리만의 상영'),
+  'cinematic-movie 테마가 독자적인 시그니처 히어로(CINEMATIC MOMENT / 우리만의 상영)로 분리되어 렌더링됨'
+);
+
+assert(
+  !rendererCode.includes('THE WEDDING OF') &&
+  !hubCode.includes('THE WEDDING OF') &&
+  !rendererCode.includes('OUR WEDDING DAY') &&
+  !hubCode.includes('OUR WEDDING DAY') &&
+  !rendererCode.includes('OUR WEDDING STORY') &&
+  !rendererCode.includes('OUR WEDDING CELEBRATION'),
+  'THE WEDDING OF, OUR WEDDING DAY 등 상용 템플릿/샘플 문구가 전면 제거되고 고유 문구로 대체됨'
+);
+
+// 11. [PR #102 피드백] 어두운 청첩장 카드 주소 복사하기 호버 대비 검증
+console.log('\n[검증 11] 어두운 청첩장 카드 주소 복사하기 호버 명도 대비 검증');
+assert(
+  !cssCode.includes("[data-theme='cyberpunk'] .inv-address-copy-btn:hover") &&
+  !cssCode.includes("[data-theme='dark'] .inv-address-copy-btn:hover") &&
+  !cssCode.includes(":root[data-theme='system'] .inv-address-copy-btn:hover"),
+  '.inv-address-copy-btn:hover가 color: var(--bg) !important 오버라이드 목록에서 완전 배제됨'
+);
+
+assert(
+  cssCode.includes('.inv-mode--dark .inv-address-copy-btn:hover') &&
+  cssCode.includes('.inv-mode--dark .inv-address-copy-btn:hover {\n  background: rgba(255, 255, 255, 0.25) !important;\n  color: #ffffff !important;\n}'),
+  '어두운 카드(.inv-mode--dark)의 주소 복사하기 버튼 호버 시 color: #ffffff !important로 밝은 글자색이 보장됨'
+);
+
+// 12. [PR #102 피드백] 청첩장 지도·장소 카드 고정 색 제거 및 globals 다크 토큰 연동 검증
+console.log('\n[검증 12] 청첩장 지도·장소 카드 고정 색 제거 및 globals 다크 토큰 연동 검증');
+assert(
+  !cssCode.includes('rgba(124, 58, 237, 0.08)') &&
+  !cssCode.includes('.inv-interactive-map-frame {\n  width: 100%;\n  border-radius: 14px;\n  overflow: hidden;\n  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);\n  margin-bottom: 12px;\n  border: 1px solid #e2e8f0;'),
+  '.inv-address-copy-btn 및 .inv-interactive-map-frame에서 고정 색(보라 0.08, #e2e8f0)이 완전히 제거됨'
+);
+
+assert(
+  cssCode.includes('.inv-address-copy-btn {\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  padding: 8px 18px;\n  border-radius: 20px;\n  border: 1px solid var(--brand);\n  background: var(--soft);') &&
+  cssCode.includes('.inv-address-copy-btn:hover {\n  background: var(--brand);\n  color: var(--bg);'),
+  '.inv-address-copy-btn이 background: var(--soft) 및 호버 시 color: var(--bg)로 globals 테마 토큰을 연동함'
+);
+
+// 13. [PR #102 피드백] 밝은 카드 주소 복사 명도 대비 · 보조 버튼 격리 · 44px · 키보드 포커스 · 왁스 씰 접근성 검증
+console.log('\n[검증 13] 밝은 카드 주소 복사 명도 대비 · 보조 버튼 격리 · 44px · 키보드 포커스 · 왁스 씰 접근성 검증');
+assert(
+  cssCode.includes('.inv-mode--light') &&
+  cssCode.includes('--inv-surface: #f8fafc;') &&
+  cssCode.includes('--inv-ink: #1f2937;') &&
+  cssCode.includes('.inv-mode--light .inv-address-copy-btn {\n  background: var(--inv-surface);\n  color: var(--inv-ink);\n  border: 1px solid var(--inv-ink);\n  min-height: 44px;\n}'),
+  '밝은 카드(.inv-mode--light)의 주소 복사 버튼이 카드 전용 토큰(--inv-surface, --inv-ink)으로 전 테마 최적 가독성을 보장함'
+);
+
+assert(
+  cssCode.includes('.inv-mode--light .inv-address-copy-btn:hover {\n  background: var(--inv-ink);\n  color: var(--inv-surface);\n}'),
+  '밝은 카드(.inv-mode--light)의 주소 복사 버튼 호버 시 background: var(--inv-ink) 및 color: var(--inv-surface)로 반전 대비를 보장함'
+);
+
+assert(
+  cssCode.includes("[data-theme='dark'] .inv-hub .inv-mode--light .inv-btn-secondary") &&
+  cssCode.includes("[data-theme='dark'] .inv-editor-shell .inv-mode--light .inv-btn-secondary") &&
+  cssCode.includes('.inv-mode--light .inv-btn-secondary') &&
+  cssCode.includes('background: var(--inv-surface) !important;') &&
+  cssCode.includes('color: var(--inv-ink) !important;') &&
+  !cssCode.includes("[data-theme='dark'] .inv-hub .inv-btn-secondary") &&
+  !cssCode.includes("[data-theme='dark'] .inv-editor-shell .inv-btn-secondary"),
+  '밝은 카드(.inv-mode--light)의 보조 버튼이 허브·에디터 셸 스코프 포함 고특이성 선택자로 다크 오버라이드를 완전 차단하고 고대비를 보장함'
+);
+
+assert(
+  cssCode.includes('.inv-address-copy-btn:focus-visible') &&
+  cssCode.includes('.inv-copy-chip:focus-visible') &&
+  cssCode.includes('.inv-bgm-floating:focus-visible') &&
+  cssCode.includes('.inv-modal-close-btn:focus-visible') &&
+  cssCode.includes('.wax-seal-interactive-hotspot:focus-visible') &&
+  cssCode.includes('.inv-account-row:focus-visible'),
+  ':focus-visible 목록에 주소 복사 버튼, 복사 칩, BGM 플로팅 버튼, 모달 닫기 버튼, 왁스 씰 핫스팟, 계좌 아코디언 행이 포함됨'
+);
+
+assert(
+  rendererCode.includes('aria-label="왁스 씰 개봉"') &&
+  rendererCode.includes("e.key === 'Enter' || e.key === ' '"),
+  '왁스 씰 인터랙티브 핫스팟에 키보드 접근성(Enter/Space onKeyDown 및 aria-label)이 적용됨'
+);
+
+// 14. [PR #102 피드백] 모달 툴바 라벨 토큰화 · 테마 칩 전 테마 연동 · 히어로 별칭 정규화 검증
+console.log('\n[검증 14] 모달 툴바 라벨 토큰화 · 테마 칩 전 테마 연동 · 히어로 별칭 정규화 검증');
+assert(
+  cssCode.includes('.inv-ctrl-label {\n  font-size: 13px !important;\n  font-weight: 700 !important;\n  color: var(--ink) !important;') &&
+  cssCode.includes('.inv-field-label {\n  font-size: 12px !important;\n  font-weight: 700 !important;\n  color: var(--muted) !important;'),
+  '미리보기 모달 툴바 라벨(.inv-ctrl-label, .inv-field-label)이 고정 hex 대신 테마 토큰(var(--ink), var(--muted))을 사용함'
+);
+
+assert(
+  cssCode.includes("[data-theme='cyberpunk'] .inv-theme-choice-btn") &&
+  cssCode.includes(":root[data-theme='system'] .inv-theme-choice-btn") &&
+  cssCode.includes('.inv-theme-choice-btn {\n  min-height: 54px;\n  padding: 8px 12px;\n  display: flex;\n  align-items: center;\n  gap: 10px;\n  border-radius: 12px;\n  border: 1px solid var(--line);\n  background: var(--soft);\n  color: var(--ink);') &&
+  cssCode.includes('.inv-theme-icon {\n  font-size: 20px;\n  line-height: 1;\n  flex-shrink: 0;\n  width: 28px;\n  height: 28px;\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  background: var(--soft);') &&
+  cssCode.includes("[data-theme='cyberpunk'] .inv-theme-icon") &&
+  cssCode.includes("[data-theme='cyberpunk'] .inv-color-preset-card"),
+  '테마 선택 칩, 테마 아이콘, 프리셋 카드가 var(--soft)/var(--paper)/var(--ink)를 사용하고 사이버펑크 및 시스템 다크 테마와 완벽 연동됨'
+);
+
+assert(
+  rendererCode.includes('const DIRECT_HERO_IDS = new Set(') &&
+  rendererCode.includes('const heroKey = DIRECT_HERO_IDS.has(activeThemeId)\n      ? activeThemeId\n      : themePreset.heroType;'),
+  '풀커버 시그니처 히어로 분기가 DIRECT_HERO_IDS를 통해 별칭 테마(spring-card 등)를 정규 테마로 올바르게 분기함'
+);
+
+// 15. [PR #102 추가 피드백] 일정 box_badge 배지 명도 대비 & 공개 사진 실루엣 색상 검증
+console.log('\n[검증 15] 일정 box_badge 명도 대비(badgeInk & badgeLabel) & 매칭 공개 사진 실루엣 검증');
+const matchCssPath = path.resolve(process.cwd(), 'src/app/match/recommend/match-recommend.css');
+const matchCssCode = fs.readFileSync(matchCssPath, 'utf-8');
+const matchTokensPath = path.resolve(process.cwd(), 'src/app/match/match-tokens.css');
+const matchTokensCode = fs.readFileSync(matchTokensPath, 'utf-8');
+
+assert(
+  rendererCode.includes("const badgeSurface = isDarkTheme ? '#161423' : '#ffffff';") &&
+  rendererCode.includes('const badgeBg = badgeSurface;') &&
+  rendererCode.includes('const badgeInk = ensureLegibleColor(accent, badgeSurface, 4.5);') &&
+  rendererCode.includes('const badgeLabel = getContrastingTextColor(badgeSurface);') &&
+  rendererCode.includes('background: badgeBg') &&
+  rendererCode.includes('color: badgeInk') &&
+  rendererCode.includes('color: badgeLabel'),
+  '일정 box_badge 실제 칠해지는 배경(badgeSurface) 기준으로 badgeInk 및 badgeLabel(YEAR/DATE/TIME) 일치 적용됨'
+);
+
+assert(
+  matchCssCode.includes('.mt-rec__photo--revealed .mt-rec__avatar {\n  color: var(--match-avatar-on-photo, #6b2d45);\n}') &&
+  matchCssCode.includes('color: #fff5f7;') &&
+  matchTokensCode.includes('--match-avatar-on-photo: #6b2d45;') &&
+  matchTokensCode.includes('--match-avatar-on-photo: #fff5f7;'),
+  '공개 사진 실루엣이 라이트에서는 #6b2d45(약 6.6:1), 다크에서는 #fff5f7로 전 테마 가독성 보장'
+);
+
+// 16. [PR #102 데이터봇 리뷰] var(--card) 미정의 토큰 제거, 공개 하객 ?t 누락 분기, prefers-reduced-motion 보강 검증
+console.log('\n[검증 16] var(--card) 토큰 정규화 · 공개 하객 t 누락 분기 · 애니메이션 감축 모션 검증');
+const pPagePath = path.resolve(process.cwd(), 'src/app/invitations/p/page.tsx');
+const pPageCode = fs.readFileSync(pPagePath, 'utf-8');
+const expiredViewPath = path.resolve(process.cwd(), 'src/components/invitations/InvitationExpiredView.tsx');
+const expiredViewCode = fs.readFileSync(expiredViewPath, 'utf-8');
+
+assert(
+  !cssCode.includes('var(--card)') &&
+  !pPageCode.includes('var(--card)') &&
+  pPageCode.includes("background: 'var(--soft)'"),
+  'globals.css에 정의되지 않은 var(--card)가 invitations.css 및 p/page.tsx에서 전면 제거되고 var(--soft)/var(--paper)로 정규화됨'
+);
+
+assert(
+  pPageCode.includes('if (!token)') &&
+  pPageCode.includes('reason="not-found"') &&
+  expiredViewCode.includes("reason === 'not-found'") &&
+  expiredViewCode.includes('초대 링크 토큰이 누락되었습니다'),
+  '공개 하객 화면(/invitations/p/)에서 ?t= 토큰 누락 시 만료(expired) 대신 전용 안내(not-found)로 명확히 분기됨'
+);
+
+assert(
+  cssCode.includes('.inv-accordion-drawer') &&
+  cssCode.includes('.inv-toast') &&
+  cssCode.includes('@media (prefers-reduced-motion: reduce)'),
+  'prefers-reduced-motion 미디어 쿼리에 아코디언 드로어(.inv-accordion-drawer) 및 토스트(.inv-toast) 애니메이션 감축 규칙 적용됨'
+);
+
+// 17. [PR #102 청첩장 테마 AI 리뷰] .inv-reset-btn 및 달력/갤러리 선택 토큰화 & WeddingPlatform 제거 검증
+console.log('\n[검증 17] 초기화 버튼·달력/갤러리 선택 테마 토큰화 & WeddingPlatform 제거 검증');
+
+assert(
+  cssCode.includes('.inv-reset-btn {\n  font-size: 11px;\n  font-weight: 700;\n  padding: 3px 8px;\n  border-radius: 6px;\n  border: 1px solid var(--line);\n  background: var(--soft);\n  color: var(--muted);') &&
+  cssCode.includes("[data-theme='dark'] .inv-reset-btn,") &&
+  cssCode.includes("[data-theme='cyberpunk'] .inv-reset-btn") &&
+  cssCode.includes(":root[data-theme='system'] .inv-reset-btn"),
+  '.inv-reset-btn이 밝은 고정색 대신 시맨틱 토큰(var(--line), var(--soft), var(--muted)) 및 다크·사이버펑크·시스템 다크 고대비 규칙을 적용함'
+);
+
+assert(
+  modalCode.includes('setCustomThemeStyle({\n                      bgColor: preset.defaultBgColor,\n                      textColor: preset.defaultTextColor,\n                      accentColor: preset.defaultAccentColor,\n                      primaryColor: preset.defaultTextColor,\n                    });') &&
+  !modalCode.includes("bgColor: '#ffffff',\n                      primaryColor: '#111827'"),
+  'InvitationPreviewModal 기본색 초기화 시 하드코딩된 #ffffff 대신 현재 선택된 테마의 defaultBgColor/defaultTextColor로 정확히 초기화됨'
+);
+
+assert(
+  cssCode.includes('.inv-cal-choice-btn,\n.inv-gal-mode-btn {\n  min-height: 44px;\n  padding: 8px 10px;\n  border-radius: 10px;\n  border: 1.5px solid var(--line);\n  background: var(--paper);') &&
+  cssCode.includes('.inv-cal-choice-btn--active,\n.inv-gal-mode-btn--active {\n  border: 1.5px solid var(--brand) !important;\n  background: var(--soft) !important;') &&
+  cssCode.includes("[data-theme='dark'] .inv-cal-choice-btn--active,"),
+  '달력·갤러리 선택(.inv-cal-choice-btn, .inv-gal-mode-btn)이 border: 1.5px solid var(--line) 및 active 시 var(--brand)/var(--soft)로 전 테마 토큰화됨'
+);
+
+assert(
+  !cssCode.includes('WeddingPlatform') &&
+  !modalCode.includes('WeddingPlatform'),
+  'invitations.css 및 InvitationPreviewModal.tsx 주석에서 WeddingPlatform 키워드가 완전히 제거됨'
 );
 
 console.log('\n============================================================');

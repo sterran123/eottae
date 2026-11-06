@@ -48,12 +48,12 @@ const imgLuxuryHotel = `${basePath}/invitations/wedding-luxury-hotel.jpg`;
 const DESIGN_COLLECTION: DesignCoverItem[] = [
   // 1열: 최신 웨딩 트렌드 (실사 포토/타이포)
   {
-    id: 'green-canopy',
+    id: 'forest-fresh',
     name: '숲속의 싱그러움',
     category: 'photo',
-    themeId: 'green-canopy',
+    themeId: 'forest-fresh',
     layoutStyle: 'classic',
-    coverClass: 'inv-cover--green-canopy',
+    coverClass: 'inv-cover--forest-fresh',
     tag: 'BEST',
     hostNames: '차진우 · 황슬기',
     renderCover: () => (
@@ -73,19 +73,19 @@ const DESIGN_COLLECTION: DesignCoverItem[] = [
     ),
   },
   {
-    id: 'the-wedding',
+    id: 'our-vow',
     name: '우리 둘의 서약',
     category: 'photo',
-    themeId: 'the-wedding',
+    themeId: 'our-vow',
     layoutStyle: 'modern',
-    coverClass: 'inv-cover--the-wedding',
+    coverClass: 'inv-cover--our-vow',
     tag: 'CINEMA',
     hostNames: '이시우 · 정유린',
     renderCover: () => (
       <div className="inv-real-photo-cover" style={{ backgroundImage: `url(${imgSunset})` }}>
         <div className="inv-real-photo-overlay inv-overlay--sunset" />
         <div className="inv-cover-top-center-names">SIWOO &amp; YURIN</div>
-        <div className="inv-cover-center-script-huge">Our Wedding</div>
+        <div className="inv-cover-center-script-huge">Our Vow</div>
         <div className="inv-cover-bottom-date">2027.11.13</div>
       </div>
     ),
@@ -121,12 +121,12 @@ const DESIGN_COLLECTION: DesignCoverItem[] = [
     ),
   },
   {
-    id: 'with-love',
+    id: 'warm-heart',
     name: '사랑을 담아',
     category: 'emotional',
-    themeId: 'with-love',
+    themeId: 'warm-heart',
     layoutStyle: 'classic',
-    coverClass: 'inv-cover--with-love',
+    coverClass: 'inv-cover--warm-heart',
     tag: 'ROMANTIC',
     hostNames: '홍민석 · 표하영',
     renderCover: () => (
@@ -139,7 +139,7 @@ const DESIGN_COLLECTION: DesignCoverItem[] = [
           <div className="inv-fade-bottom-gradient" />
         </div>
         <div className="inv-fade-content">
-          <div className="inv-script-with-love">with love</div>
+          <div className="inv-script-with-love">warm heart</div>
           <div className="inv-fade-info">
             <div>2027년 4월 17일 토요일 오후 2시</div>
             <div style={{ marginTop: 2 }}>한들시 숲속의아침 가든볼룸</div>
@@ -206,7 +206,7 @@ const DESIGN_COLLECTION: DesignCoverItem[] = [
       <div className="inv-real-photo-cover" style={{ backgroundImage: `url(${imgGreenCanopy})` }}>
         <div className="inv-real-photo-overlay inv-overlay--forest" />
         <div className="inv-typo-top-group">
-          <div className="inv-typo-sub-lead">THE WEDDING OF</div>
+          <div className="inv-typo-sub-lead">WEDDING INVITATION</div>
           <div className="inv-typo-headline">결혼합니다</div>
         </div>
         <div className="inv-typo-bottom-group">
@@ -315,7 +315,7 @@ const DESIGN_COLLECTION: DesignCoverItem[] = [
     renderCover: () => (
       <div className="inv-quiet-container">
         <div className="inv-quiet-top-text">
-          <span className="inv-quiet-label">OUR WEDDING DAY</span>
+          <span className="inv-quiet-label">INVITATION</span>
           <div className="inv-quiet-names">김도윤 ♥ 송하은</div>
         </div>
         <div className="inv-quiet-photo-wrap" style={{ backgroundImage: `url(${imgBenchQuiet})` }} />

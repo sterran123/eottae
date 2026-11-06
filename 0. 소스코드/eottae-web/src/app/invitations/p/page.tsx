@@ -12,7 +12,7 @@ import '../invitations.css';
 function GuestInvitationContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('t') || '';
-  const guestToken = searchParams.get('g') || '';
+  const guestToken = searchParams.get('g') || undefined;
 
   const [invitation, setInvitation] = useState<Invitation | null>(null);
   const [loaded, setLoaded] = useState<boolean>(false);
@@ -36,6 +36,15 @@ function GuestInvitationContent() {
     );
   }
 
+  if (!token) {
+    return (
+      <InvitationExpiredView
+        reason="not-found"
+        message="초대 링크에 토큰(?t=...)이 포함되어 있지 않습니다. 전달받으신 초대장 전체 링크를 다시 확인해 주세요."
+      />
+    );
+  }
+
   if (!invitation) {
     return <InvitationExpiredView reason="expired" />;
   }
@@ -45,7 +54,7 @@ function GuestInvitationContent() {
       {/* 상단 하객 열람 안내 띠 (검색엔진 미노출 robots: noindex + 하객 명단 비공개) */}
       <div style={{
         width: '100%',
-        background: 'var(--card)',
+        background: 'var(--soft)',
         borderBottom: '1px solid var(--line)',
         padding: '8px 16px',
         fontSize: 12,
@@ -56,7 +65,7 @@ function GuestInvitationContent() {
         flexWrap: 'wrap',
         gap: 8,
       }}>
-        <span>💌 초대받은 하객 열람 화면입니다 (가상 예식 정보 · 검색엔진에 노출되지 않음)</span>
+        <span>💌 초대받은 하객 열람 화면입니다 (데모 데이터로 동작하는 3차 미리보기 · 가상 예식 정보 · 검색엔진에 노출되지 않음)</span>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <span style={{ fontSize: 11, background: 'var(--bg)', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--line)' }}>
             robots: noindex

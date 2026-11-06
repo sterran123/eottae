@@ -22,7 +22,7 @@
   flex-wrap: wrap;
   gap: 12px;
   padding: 14px 20px;
-  background: var(--card);
+  background: var(--soft);
   border: 1px solid var(--line);
   border-radius: 16px;
   font-size: 13px;
@@ -36,7 +36,7 @@
   gap: 4px;
   padding: 4px 10px;
   background: var(--brand);
-  color: #ffffff;
+  color: var(--bg);
   font-size: 11px;
   font-weight: 700;
   border-radius: 20px;
@@ -45,19 +45,19 @@
 
 /* 사이버펑크 및 다크 테마에서 밝은 브랜드 색상 위의 텍스트 묻힘 방지 */
 [data-theme='cyberpunk'] .inv-badge-chip {
-  color: #0a0a14 !important;
+  color: var(--bg, #0a0a14) !important;
   font-weight: 800;
 }
 
 [data-theme='dark'] .inv-badge-chip,
 .inv-mode--dark .inv-badge-chip {
-  color: #161423 !important;
+  color: var(--bg, #161423) !important;
   font-weight: 800;
 }
 
 @media (prefers-color-scheme: dark) {
   :root[data-theme='system'] .inv-badge-chip {
-    color: #161423 !important;
+    color: var(--bg, #161423) !important;
     font-weight: 800;
   }
 }
@@ -95,7 +95,7 @@
   min-height: 44px;
   padding: 0 22px;
   background: var(--brand);
-  color: #ffffff;
+  color: var(--bg);
   font-weight: 600;
   font-size: 14px;
   border-radius: 12px;
@@ -106,42 +106,25 @@
   transition: all 0.2s ease;
 }
 
-/* 사이버펑크 및 다크/시스템 다크 테마에서 버튼 글자색 대비 보장 (밝은 브랜드색 배경) */
-/* .inv-mode--dark 는 제외: 카드 다크 모드가 아닌 앱 다크 테마의 브랜드 버튼만 어둡게 */
-[data-theme='dark'] .inv-btn-primary,
-[data-theme='cyberpunk'] .inv-btn-primary {
-  color: var(--bg) !important;
-  font-weight: 700;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root[data-theme='system'] .inv-btn-primary {
-    color: var(--bg) !important;
-    font-weight: 700;
-  }
-}
-
 /* 사이버펑크 및 다크 테마에서 브랜드 배경 요소들의 글자색 대비 보장 */
 .inv-toast {
   color: #ffffff;
 }
 
 [data-theme='cyberpunk'] .inv-category-tab-btn--active,
-[data-theme='cyberpunk'] .inv-copy-chip,
+[data-theme='cyberpunk'] .inv-mode--light .inv-copy-chip,
 [data-theme='cyberpunk'] .inv-font-btn--active,
 [data-theme='cyberpunk'] .inv-choice-pill--active,
 [data-theme='cyberpunk'] .inv-accordion-toggle-btn--active,
 [data-theme='cyberpunk'] .inv-frame-btn--active,
-[data-theme='cyberpunk'] .inv-address-copy-btn:hover,
 [data-theme='cyberpunk'] .inv-toast,
 [data-theme='cyberpunk'] .inv-chip-btn--active,
 [data-theme='dark'] .inv-category-tab-btn--active,
-[data-theme='dark'] .inv-copy-chip,
+[data-theme='dark'] .inv-mode--light .inv-copy-chip,
 [data-theme='dark'] .inv-font-btn--active,
 [data-theme='dark'] .inv-choice-pill--active,
 [data-theme='dark'] .inv-accordion-toggle-btn--active,
 [data-theme='dark'] .inv-frame-btn--active,
-[data-theme='dark'] .inv-address-copy-btn:hover,
 [data-theme='dark'] .inv-toast,
 [data-theme='dark'] .inv-chip-btn--active {
   color: var(--bg) !important;
@@ -149,12 +132,11 @@
 
 @media (prefers-color-scheme: dark) {
   :root[data-theme='system'] .inv-category-tab-btn--active,
-  :root[data-theme='system'] .inv-copy-chip,
+  :root[data-theme='system'] .inv-mode--light .inv-copy-chip,
   :root[data-theme='system'] .inv-font-btn--active,
   :root[data-theme='system'] .inv-choice-pill--active,
   :root[data-theme='system'] .inv-accordion-toggle-btn--active,
   :root[data-theme='system'] .inv-frame-btn--active,
-  :root[data-theme='system'] .inv-address-copy-btn:hover,
   :root[data-theme='system'] .inv-toast,
   :root[data-theme='system'] .inv-chip-btn--active {
     color: var(--bg) !important;
@@ -174,8 +156,8 @@
   gap: 6px;
   min-height: 44px;
   padding: 0 16px;
-  background: var(--card);
-  color: var(--ink);
+  background: var(--paper, #ffffff);
+  color: var(--ink, #111827);
   font-weight: 600;
   font-size: 13px;
   border-radius: 10px;
@@ -374,7 +356,7 @@
   z-index: 2;
 }
 
-/* Our Wedding 필기체 영문 */
+/* 시그니처 상단 영문 */
 .inv-cover-top-center-names {
   text-align: center;
   font-size: 10px;
@@ -1259,7 +1241,7 @@
 
 .inv-category-tab-btn {
   padding: 8px 18px;
-  background: var(--card);
+  background: var(--paper);
   color: var(--muted);
   border: 1px solid var(--line);
   border-radius: 20px;
@@ -1331,7 +1313,7 @@
   flex-wrap: wrap;
   gap: 16px;
   padding: 18px 24px;
-  background: var(--card);
+  background: var(--paper);
   border: 1px solid var(--line);
   border-radius: 16px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
@@ -1568,17 +1550,27 @@
   align-items: center;
   gap: 10px;
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
+  border: 1px solid var(--line);
+  background: var(--soft);
   color: var(--ink);
   cursor: pointer;
   text-align: left;
   transition: all 0.2s ease;
 }
 
-[data-theme='dark'] .inv-theme-choice-btn {
-  border-color: #334155;
-  background: #0f172a;
+[data-theme='dark'] .inv-theme-choice-btn,
+[data-theme='cyberpunk'] .inv-theme-choice-btn {
+  border-color: var(--line);
+  background: var(--soft);
+  color: var(--ink);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-theme-choice-btn {
+    border-color: var(--line);
+    background: var(--soft);
+    color: var(--ink);
+  }
 }
 
 .inv-theme-choice-btn:hover {
@@ -1586,13 +1578,23 @@
 }
 
 .inv-theme-choice-btn--active {
-  background: #ffffff !important;
+  background: var(--paper) !important;
+  color: var(--ink) !important;
   border: 2px solid var(--brand) !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
-[data-theme='dark'] .inv-theme-choice-btn--active {
-  background: #1e293b !important;
+[data-theme='dark'] .inv-theme-choice-btn--active,
+[data-theme='cyberpunk'] .inv-theme-choice-btn--active {
+  background: var(--paper) !important;
+  color: var(--ink) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-theme-choice-btn--active {
+    background: var(--paper) !important;
+    color: var(--ink) !important;
+  }
 }
 
 .inv-theme-choice-btn__icon {
@@ -1614,16 +1616,24 @@
 /* 세그먼트 버튼 (레이아웃, BGM) */
 .inv-segment-group {
   display: flex;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  background: var(--soft);
+  border: 1px solid var(--line);
   border-radius: 12px;
   padding: 4px;
   gap: 4px;
 }
 
-[data-theme='dark'] .inv-segment-group {
-  background: #0f172a;
-  border-color: #334155;
+[data-theme='dark'] .inv-segment-group,
+[data-theme='cyberpunk'] .inv-segment-group {
+  background: var(--soft);
+  border-color: var(--line);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-segment-group {
+    background: var(--soft);
+    border-color: var(--line);
+  }
 }
 
 .inv-segment-btn {
@@ -1649,15 +1659,23 @@
 }
 
 .inv-segment-btn--active {
-  background: #ffffff;
+  background: var(--paper);
   color: var(--ink);
   font-weight: 700;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
-[data-theme='dark'] .inv-segment-btn--active {
-  background: #1e293b;
-  color: #ffffff;
+[data-theme='dark'] .inv-segment-btn--active,
+[data-theme='cyberpunk'] .inv-segment-btn--active {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-segment-btn--active {
+    background: var(--paper);
+    color: var(--ink);
+  }
 }
 
 /* 섹션 순서 조작 및 아코디언 드래그앤드롭 */
@@ -1706,16 +1724,27 @@
   gap: 10px;
   padding: 10px 12px;
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
+  border: 1px solid var(--line);
+  background: var(--soft);
+  color: var(--ink);
   cursor: pointer;
   text-align: left;
   transition: all 0.15s ease;
 }
 
-[data-theme='dark'] .inv-fx-card-btn {
-  background: #0f172a;
-  border-color: #334155;
+[data-theme='dark'] .inv-fx-card-btn,
+[data-theme='cyberpunk'] .inv-fx-card-btn {
+  background: var(--soft);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-fx-card-btn {
+    background: var(--soft);
+    border-color: var(--line);
+    color: var(--ink);
+  }
 }
 
 .inv-fx-card-btn:hover {
@@ -1723,13 +1752,23 @@
 }
 
 .inv-fx-card-btn--active {
-  background: #ffffff !important;
+  background: var(--paper) !important;
+  color: var(--ink) !important;
   border: 2px solid var(--brand) !important;
   box-shadow: 0 4px 12px rgba(124, 58, 237, 0.12);
 }
 
-[data-theme='dark'] .inv-fx-card-btn--active {
-  background: #1e293b !important;
+[data-theme='dark'] .inv-fx-card-btn--active,
+[data-theme='cyberpunk'] .inv-fx-card-btn--active {
+  background: var(--paper) !important;
+  color: var(--ink) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-fx-card-btn--active {
+    background: var(--paper) !important;
+    color: var(--ink) !important;
+  }
 }
 
 .inv-fx-card-btn__icon {
@@ -1759,7 +1798,7 @@
 }
 
 /* ============================================================
- * [인생네컷 / 포토 프레임 테두리 디자인]
+ * [4컷 필름 / 포토 프레임 테두리 디자인]
  * ============================================================ */
 .inv-frame-choices-grid {
   display: grid;
@@ -1820,7 +1859,7 @@
   border: 3px solid #ffffff;
 }
 
-/* 2. 인생네컷 필름 프레임 */
+/* 2. 4컷 필름 프레임 */
 .inv-frame--life4cut {
   border-radius: 4px;
   border: 10px solid #ffffff;
@@ -1971,12 +2010,13 @@
 
 /* 화살표 버튼 완전 제거! 직관적인 편집/닫기 토글 버튼 */
 .inv-accordion-toggle-btn {
-  padding: 6px 12px;
+  min-height: 44px;
+  padding: 6px 14px;
   border-radius: 8px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
+  border: 1px solid var(--line, #cbd5e1);
+  background: var(--paper, #ffffff);
   color: var(--ink);
   cursor: pointer;
   white-space: nowrap;
@@ -1985,8 +2025,8 @@
 }
 
 [data-theme='dark'] .inv-accordion-toggle-btn {
-  background: #1e293b;
-  border-color: #475569;
+  background: var(--paper, #1e293b);
+  border-color: var(--line, #475569);
 }
 
 .inv-accordion-toggle-btn:hover {
@@ -2101,7 +2141,7 @@
 }
 
 /* ============================================================
- * [갤러리 모드: 캐러셀 / 인생네컷 스트립 / 인스타 그리드]
+ * [갤러리 모드: 캐러셀 / 4컷 필름 스트립 / 그리드]
  * ============================================================ */
 .inv-gallery-carousel-wrap {
   padding: 0 10px;
@@ -2143,13 +2183,7 @@
   transition: all 0.15s ease;
 }
 
-.inv-carousel-arrow-btn:hover {
-  background: var(--brand);
-  color: #ffffff;
-  border-color: var(--brand);
-}
-
-/* 인생네컷 스트립 */
+/* 4컷 필름 스트립 */
 .inv-life4cut-strip-wrap {
   display: flex;
   justify-content: center;
@@ -2292,15 +2326,16 @@
   overflow: hidden;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   margin-bottom: 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--line);
 }
 
 .inv-venue-info-card {
-  background: rgba(0, 0, 0, 0.02);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: var(--soft);
+  border: 1px solid var(--line);
   border-radius: 14px;
   padding: 14px;
   margin-bottom: 12px;
+  color: var(--ink);
 }
 
 .inv-address-copy-btn {
@@ -2310,17 +2345,19 @@
   padding: 8px 18px;
   border-radius: 20px;
   border: 1px solid var(--brand);
-  background: rgba(124, 58, 237, 0.08);
+  background: var(--soft);
   color: var(--brand);
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
+  min-height: 44px;
+  box-sizing: border-box;
 }
 
 .inv-address-copy-btn:hover {
   background: var(--brand);
-  color: #ffffff;
+  color: var(--bg);
 }
 
 .inv-map-link-btn {
@@ -2433,23 +2470,51 @@
 }
 
 /* ============================================================
- * [사용자 레포 WeddingPlatform 반영] 색상 테마 16종 프리셋
+ * [색상 테마 16종 프리셋] 청첩장 배경 및 텍스트 커스텀
  * ============================================================ */
 .inv-reset-btn {
   font-size: 11px;
   font-weight: 700;
   padding: 3px 8px;
   border-radius: 6px;
-  border: 1px solid #cbd5e1;
-  background: #f1f5f9;
+  border: 1px solid var(--line);
+  background: var(--soft);
   color: var(--muted);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .inv-reset-btn:hover {
-  background: #e2e8f0;
+  border-color: var(--brand);
+  background: var(--paper);
   color: var(--ink);
+}
+
+[data-theme='dark'] .inv-reset-btn,
+[data-theme='cyberpunk'] .inv-reset-btn {
+  border-color: var(--line);
+  background: var(--soft);
+  color: var(--muted);
+}
+
+[data-theme='dark'] .inv-reset-btn:hover,
+[data-theme='cyberpunk'] .inv-reset-btn:hover {
+  border-color: var(--brand);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-reset-btn {
+    border-color: var(--line);
+    background: var(--soft);
+    color: var(--muted);
+  }
+  :root[data-theme='system'] .inv-reset-btn:hover {
+    border-color: var(--brand);
+    background: var(--paper);
+    color: var(--ink);
+  }
 }
 
 .inv-color-theme-grid {
@@ -2665,9 +2730,17 @@
   animation: inv-accordion-down 0.2s ease-out;
 }
 
-[data-theme='dark'] .inv-accordion-drawer {
+[data-theme='dark'] .inv-accordion-drawer,
+[data-theme='cyberpunk'] .inv-accordion-drawer {
   background: #1e293b;
   border-top-color: #334155;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-accordion-drawer {
+    background: #1e293b;
+    border-top-color: #334155;
+  }
 }
 
 @keyframes inv-accordion-down {
@@ -2707,8 +2780,17 @@
 }
 
 [data-theme='dark'] .inv-field-input,
-[data-theme='dark'] .inv-field-textarea {
+[data-theme='dark'] .inv-field-textarea,
+[data-theme='cyberpunk'] .inv-field-input,
+[data-theme='cyberpunk'] .inv-field-textarea {
   border-color: #475569;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-field-input,
+  :root[data-theme='system'] .inv-field-textarea {
+    border-color: #475569;
+  }
 }
 
 .inv-field-input:focus,
@@ -2735,9 +2817,17 @@
   transition: all 0.15s ease;
 }
 
-[data-theme='dark'] .inv-font-btn {
+[data-theme='dark'] .inv-font-btn,
+[data-theme='cyberpunk'] .inv-font-btn {
   background: #0f172a;
   border-color: #475569;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-font-btn {
+    background: #0f172a;
+    border-color: #475569;
+  }
 }
 
 .inv-font-btn--active {
@@ -2841,8 +2931,17 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  background: transparent;
+  border: none;
+  padding: 0;
   cursor: pointer;
   transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.inv-envelope-seal:focus-visible {
+  outline: 3px solid var(--focus, var(--brand));
+  outline-offset: 4px;
+  border-radius: 8px;
 }
 
 .inv-envelope-seal:hover {
@@ -3314,7 +3413,7 @@
   min-height: 44px;
   border-radius: 10px;
   border: 1px solid var(--line);
-  background: var(--card);
+  background: var(--paper);
   color: var(--ink);
   font-size: 12px;
   font-weight: 600;
@@ -4132,8 +4231,8 @@
 }
 
 .inv-mode--dark .inv-address-copy-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
 }
 
 .inv-mode--dark .inv-map-link-btn {
@@ -4181,6 +4280,8 @@
 
 /* --- 라이트 모드 (Light Themes: green-canopy, with-love, wax-seal, tape-card, etc.) --- */
 .inv-mode--light {
+  --inv-surface: #f8fafc;
+  --inv-ink: #1f2937;
   color: #1f2937;
 }
 
@@ -4225,9 +4326,37 @@
 }
 
 .inv-mode--light .inv-venue-info-card {
-  background: #f8fafc;
+  background: var(--inv-surface);
   border: 1px solid #e2e8f0;
-  color: #1f2937;
+  color: var(--inv-ink);
+}
+
+.inv-mode--light .inv-address-copy-btn {
+  background: var(--inv-surface);
+  color: var(--inv-ink);
+  border: 1px solid var(--inv-ink);
+  min-height: 44px;
+}
+
+.inv-mode--light .inv-address-copy-btn:hover {
+  background: var(--inv-ink);
+  color: var(--inv-surface);
+}
+
+[data-theme='dark'] .inv-hub .inv-mode--light .inv-btn-secondary,
+[data-theme='dark'] .inv-editor-shell .inv-mode--light .inv-btn-secondary,
+.inv-mode--light .inv-btn-secondary {
+  background: var(--inv-surface) !important;
+  color: var(--inv-ink) !important;
+  border: 1px solid var(--inv-ink) !important;
+}
+
+[data-theme='dark'] .inv-hub .inv-mode--light .inv-btn-secondary:hover,
+[data-theme='dark'] .inv-editor-shell .inv-mode--light .inv-btn-secondary:hover,
+.inv-mode--light .inv-btn-secondary:hover {
+  background: var(--inv-ink) !important;
+  color: var(--inv-surface) !important;
+  border-color: var(--inv-ink) !important;
 }
 
 .inv-mode--light .inv-transport-guide {
@@ -4343,13 +4472,15 @@
   color: #fefae0 !important;
 }
 
-/* --- 2. Our Wedding & 시네마틱 무비 (Sunset / Dark Cinema - 다크 모드 전용 스코핑) --- */
+/* --- 2. our-vow & 시네마틱 무비 (Sunset / Dark Cinema - 다크 모드 전용 스코핑) --- */
+.inv-mode--dark.inv-theme--our-vow,
 .inv-mode--dark.inv-theme--the-wedding,
 .inv-mode--dark.inv-theme--cinematic-movie {
   background-color: #09090b;
   color: #f4f4f5;
 }
 
+.inv-mode--dark.inv-theme--our-vow.inv-layout--modern .inv-content-section,
 .inv-mode--dark.inv-theme--the-wedding.inv-layout--modern .inv-content-section,
 .inv-mode--dark.inv-theme--cinematic-movie.inv-layout--modern .inv-content-section {
   background: rgba(24, 24, 27, 0.88) !important;
@@ -4470,6 +4601,12 @@
 
 .inv-copy-chip {
   padding: 5px 12px;
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
   border-radius: 12px;
   background: var(--brand);
   color: #ffffff;
@@ -4513,10 +4650,20 @@
   .inv-radar-pulse,
   .inv-btn-primary:hover,
   .inv-btn-secondary:hover,
-  .inv-cover-viewport:hover {
+  .inv-cover-viewport:hover,
+  .inv-carousel-indicator-dot::before,
+  .inv-envelope-seal,
+  .inv-envelope-seal:hover,
+  .inv-accordion-drawer,
+  .inv-toast {
     animation: none !important;
     transition: none !important;
     transform: none !important;
+  }
+  .inv-carousel-arrow-btn,
+  .inv-carousel-arrow-btn:hover {
+    transition: none !important;
+    transform: translateY(-50%) !important;
   }
 }
 
@@ -4524,12 +4671,12 @@
  * [사용자 요구사항] 메인 커버 사진 직접 업로드 & 20대 프리셋 선택 UI
  * ============================================================ */
 .inv-ctrl-group--highlight {
-  background: linear-gradient(135deg, #fdf4ff 0%, #faf5ff 50%, #eff6ff 100%);
-  border: 1.5px solid #e9d5ff;
+  background: var(--soft);
+  border: 1.5px solid var(--line);
   border-radius: 16px;
   padding: 14px 14px 16px;
   margin-bottom: 20px;
-  box-shadow: 0 4px 14px rgba(168, 85, 247, 0.08);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--brand) 12%, transparent);
 }
 
 .inv-pill-tag {
@@ -4972,27 +5119,41 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
-/* 동적 인디케이터 점 */
+/* 동적 인디케이터 점 (접근성 터치 영역 44x44px 보장, 시각 점 7px/22px) */
 .inv-carousel-indicator-dots {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
+  gap: 2px;
   margin-top: 12px;
 }
 
 .inv-carousel-indicator-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 9999px;
-  background: #cbd5e1;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
+  background: transparent;
   border: none;
   padding: 0;
   cursor: pointer;
+}
+
+.inv-carousel-indicator-dot::before {
+  content: '';
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: var(--line, #cbd5e1);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.inv-carousel-indicator-dot--active {
+.inv-carousel-indicator-dot--active::before {
   width: 22px;
   background: var(--brand, #7c3aed);
 }
@@ -5003,15 +5164,26 @@
 .inv-ctrl-label {
   font-size: 13px !important;
   font-weight: 700 !important;
-  color: #0f172a !important;
+  color: var(--ink) !important;
   letter-spacing: -0.01em;
 }
 
 .inv-field-label {
   font-size: 12px !important;
   font-weight: 700 !important;
-  color: #1e293b !important;
+  color: var(--muted) !important;
   margin-bottom: 6px !important;
+}
+
+[data-theme='dark'] .inv-accordion-drawer .inv-field-label,
+[data-theme='cyberpunk'] .inv-accordion-drawer .inv-field-label {
+  color: #94a3b8 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-accordion-drawer .inv-field-label {
+    color: #94a3b8 !important;
+  }
 }
 
 .inv-main-heading {
@@ -5064,7 +5236,7 @@
 }
 
 /* ============================================================
- * [INV-001 고도화] 포토 프레임 5종 (아치, 인생네컷, 폴라로이드, 골드 앤틱, 스퀘어)
+ * [INV-001 고도화] 포토 프레임 5종 (아치, 4컷 필름, 폴라로이드, 골드 앤틱, 스퀘어)
  * ============================================================ */
 .inv-hero-framed-container {
   width: 100%;
@@ -5123,7 +5295,7 @@
   white-space: nowrap;
 }
 
-/* 2. 인생네컷 (Life 4-Cut) 세로 스트립 */
+/* 2. 4컷 필름 (4-Cut Film) 세로 스트립 */
 .inv-framed-life4cut-wrap {
   display: flex;
   justify-content: center;
@@ -5404,6 +5576,19 @@
   border: 1.5px solid #cbd5e1;
   cursor: pointer;
   transition: transform 0.15s ease;
+  position: relative;
+}
+
+.inv-frame-color-dot::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .inv-frame-color-dot:hover {
@@ -5444,7 +5629,9 @@
 }
 
 .inv-carousel-arrow-btn:hover {
-  background: #ffffff;
+  background: var(--brand);
+  color: var(--bg);
+  border-color: var(--brand);
   transform: translateY(-50%) scale(1.08);
 }
 
@@ -5548,13 +5735,15 @@
 }
 
 .inv-emoji-chip {
-  width: 32px;
-  height: 32px;
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  border: 1.5px solid #e2e8f0;
-  background: #ffffff;
-  font-size: 16px;
-  display: flex;
+  border: 1.5px solid var(--line, #e2e8f0);
+  background: var(--paper, #ffffff);
+  font-size: 18px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
@@ -5567,8 +5756,8 @@
 
 .inv-emoji-chip--active {
   border-color: var(--brand, #e11d48) !important;
-  background: #ffe4e6 !important;
-  transform: scale(1.2);
+  background: var(--soft, #ffe4e6) !important;
+  transform: scale(1.15);
 }
 
 .inv-badge-new {
@@ -5709,15 +5898,23 @@
 /* ============================================================
  * [다크 테마 고대비 보정 - WCAG 2.1 AA 100% 보장]
  * ============================================================ */
-.inv-mode--dark .inv-btn-secondary,
-[data-theme='dark'] .inv-btn-secondary {
+[data-theme='dark'] .inv-hub-header .inv-btn-secondary,
+[data-theme='dark'] .inv-my-card .inv-btn-secondary,
+[data-theme='dark'] .inv-my-card-row .inv-btn-secondary,
+[data-theme='dark'] .inv-editor-toolbar .inv-btn-secondary,
+.inv-modal-toolbar--dark .inv-btn-secondary,
+.inv-mode--dark .inv-btn-secondary {
   background: rgba(255, 255, 255, 0.16) !important;
   color: #ffffff !important;
   border: 1px solid rgba(255, 255, 255, 0.32) !important;
 }
 
-.inv-mode--dark .inv-btn-secondary:hover,
-[data-theme='dark'] .inv-btn-secondary:hover {
+[data-theme='dark'] .inv-hub-header .inv-btn-secondary:hover,
+[data-theme='dark'] .inv-my-card .inv-btn-secondary:hover,
+[data-theme='dark'] .inv-my-card-row .inv-btn-secondary:hover,
+[data-theme='dark'] .inv-editor-toolbar .inv-btn-secondary:hover,
+.inv-modal-toolbar--dark .inv-btn-secondary:hover,
+.inv-mode--dark .inv-btn-secondary:hover {
   background: rgba(255, 255, 255, 0.26) !important;
   color: #ffffff !important;
   border-color: rgba(255, 255, 255, 0.5) !important;
@@ -5733,10 +5930,20 @@
   color: #ffffff !important;
 }
 
-.inv-mode--dark .inv-copy-chip {
+.inv-mode--dark .inv-copy-chip,
+[data-theme='dark'] .inv-mode--dark .inv-copy-chip,
+[data-theme='cyberpunk'] .inv-mode--dark .inv-copy-chip {
   background: rgba(255, 255, 255, 0.2) !important;
   color: #ffffff !important;
   border: 1px solid rgba(255, 255, 255, 0.32) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-mode--dark .inv-copy-chip {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.32) !important;
+  }
 }
 
 .inv-mode--dark .inv-address-copy-btn {
@@ -5795,8 +6002,19 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #f8fafc;
+  background: var(--soft);
   border-radius: 8px;
+}
+
+[data-theme='dark'] .inv-theme-icon,
+[data-theme='cyberpunk'] .inv-theme-icon {
+  background: var(--soft);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-theme-icon {
+    background: var(--soft);
+  }
 }
 
 .inv-theme-info {
@@ -5838,23 +6056,36 @@
   gap: 6px;
   padding: 10px 6px;
   border-radius: 12px;
-  border: 1.5px solid #e2e8f0;
-  background: #ffffff;
+  border: 1.5px solid var(--line);
+  background: var(--paper);
   cursor: pointer;
   transition: all 0.16s ease;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
 }
 
 .inv-color-preset-card:hover {
-  border-color: #cbd5e1;
-  background: #f8fafc;
+  border-color: var(--brand);
+  background: var(--soft);
   transform: translateY(-1px);
 }
 
 .inv-color-preset-card--selected {
   border-color: var(--brand) !important;
-  background: #faf5ff !important;
+  background: var(--soft) !important;
   box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.16);
+}
+
+[data-theme='dark'] .inv-color-preset-card,
+[data-theme='cyberpunk'] .inv-color-preset-card {
+  background: var(--paper);
+  border-color: var(--line);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-color-preset-card {
+    background: var(--paper);
+    border-color: var(--line);
+  }
 }
 
 .inv-palette-dots {
@@ -5867,7 +6098,7 @@
 .inv-color-preset-name {
   font-size: 11px;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--ink);
   letter-spacing: -0.01em;
 }
 
@@ -5883,8 +6114,8 @@
   min-height: 46px;
   padding: 10px 14px;
   border-radius: 12px;
-  border: 1.5px solid #e2e8f0;
-  background: #ffffff;
+  border: 1.5px solid var(--line);
+  background: var(--paper);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -5895,26 +6126,39 @@
 }
 
 .inv-layout-choice-btn:hover {
-  border-color: #cbd5e1;
-  background: #f8fafc;
+  border-color: var(--brand);
+  background: var(--soft);
 }
 
 .inv-layout-choice-btn--active {
   border-color: var(--brand) !important;
-  background: #faf5ff !important;
+  background: var(--soft) !important;
   box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.15);
+}
+
+[data-theme='dark'] .inv-layout-choice-btn,
+[data-theme='cyberpunk'] .inv-layout-choice-btn {
+  background: var(--paper);
+  border-color: var(--line);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-layout-choice-btn {
+    background: var(--paper);
+    border-color: var(--line);
+  }
 }
 
 .inv-layout-choice-title {
   font-size: 13px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--ink);
 }
 
 .inv-layout-choice-desc {
   font-size: 11px;
   font-weight: 500;
-  color: #64748b;
+  color: var(--muted);
 }
 
 .inv-layout-choice-btn--active .inv-layout-choice-title {
@@ -5945,11 +6189,11 @@
   min-height: 44px;
   padding: 8px 10px;
   border-radius: 10px;
-  border: 1.5px solid #e2e8f0;
-  background: #ffffff;
+  border: 1.5px solid var(--line);
+  background: var(--paper);
   font-size: 12px;
   font-weight: 700;
-  color: #334155;
+  color: var(--ink);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -5960,16 +6204,65 @@
 
 .inv-cal-choice-btn:hover,
 .inv-gal-mode-btn:hover {
-  border-color: #cbd5e1;
-  background: #f8fafc;
+  border-color: var(--brand);
+  background: var(--soft);
+  color: var(--ink);
 }
 
 .inv-cal-choice-btn--active,
 .inv-gal-mode-btn--active {
-  border-color: var(--brand) !important;
-  background: #faf5ff !important;
+  border: 1.5px solid var(--brand) !important;
+  background: var(--soft) !important;
   color: var(--brand) !important;
-  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.14);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 20%, transparent);
+}
+
+[data-theme='dark'] .inv-cal-choice-btn,
+[data-theme='cyberpunk'] .inv-cal-choice-btn,
+[data-theme='dark'] .inv-gal-mode-btn,
+[data-theme='cyberpunk'] .inv-gal-mode-btn {
+  border: 1.5px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+[data-theme='dark'] .inv-cal-choice-btn:hover,
+[data-theme='cyberpunk'] .inv-cal-choice-btn:hover,
+[data-theme='dark'] .inv-gal-mode-btn:hover,
+[data-theme='cyberpunk'] .inv-gal-mode-btn:hover {
+  border-color: var(--brand);
+  background: var(--soft);
+  color: var(--ink);
+}
+
+[data-theme='dark'] .inv-cal-choice-btn--active,
+[data-theme='cyberpunk'] .inv-cal-choice-btn--active,
+[data-theme='dark'] .inv-gal-mode-btn--active,
+[data-theme='cyberpunk'] .inv-gal-mode-btn--active {
+  border: 1.5px solid var(--brand) !important;
+  background: var(--soft) !important;
+  color: var(--brand) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .inv-cal-choice-btn,
+  :root[data-theme='system'] .inv-gal-mode-btn {
+    border: 1.5px solid var(--line);
+    background: var(--paper);
+    color: var(--ink);
+  }
+  :root[data-theme='system'] .inv-cal-choice-btn:hover,
+  :root[data-theme='system'] .inv-gal-mode-btn:hover {
+    border-color: var(--brand);
+    background: var(--soft);
+    color: var(--ink);
+  }
+  :root[data-theme='system'] .inv-cal-choice-btn--active,
+  :root[data-theme='system'] .inv-gal-mode-btn--active {
+    border: 1.5px solid var(--brand) !important;
+    background: var(--soft) !important;
+    color: var(--brand) !important;
+  }
 }
 
 /* 6. 렌더러 본문 섹션 제목 / 인사말 / 혼주 / 달력 / 캐러셀 스타일 */
@@ -6385,6 +6678,189 @@
   flex-direction: column;
   align-items: center;
   gap: 12px;
+}
+
+/* ============================================================
+ * 6테마 완벽 지원 (globals.css 수정 없음, invitations.css 스코핑)
+ * 1) light (기본) 2) cupcake 3) cyberpunk 4) disney 5) dark 6) system
+ * ============================================================ */
+:root[data-theme='cupcake'] .inv-hub,
+:root[data-theme='cupcake'] .inv-hub-shell,
+:root[data-theme='cupcake'] .inv-editor-shell,
+:root[data-theme='cupcake'] .inv-modal-overlay,
+:root[data-theme='cupcake'] .inv-preview-modal-overlay {
+  --inv-theme-badge-bg: var(--brand);
+  --inv-theme-badge-color: var(--brand-dark, var(--ink));
+}
+
+:root[data-theme='cupcake'] .inv-design-cover-card,
+:root[data-theme='cupcake'] .inv-design-card,
+:root[data-theme='cupcake'] .inv-my-card-row,
+:root[data-theme='cupcake'] .inv-my-card,
+:root[data-theme='cupcake'] .inv-form-section,
+:root[data-theme='cupcake'] .inv-modal-toolbar {
+  border-color: var(--line);
+  background: var(--paper);
+}
+
+:root[data-theme='cupcake'] .inv-field-input,
+:root[data-theme='cupcake'] .inv-field-select,
+:root[data-theme='cupcake'] .inv-field-textarea {
+  background: var(--paper);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+:root[data-theme='disney'] .inv-hub,
+:root[data-theme='disney'] .inv-hub-shell,
+:root[data-theme='disney'] .inv-editor-shell,
+:root[data-theme='disney'] .inv-modal-overlay,
+:root[data-theme='disney'] .inv-preview-modal-overlay {
+  --inv-theme-badge-bg: var(--brand);
+  --inv-theme-badge-color: var(--bg);
+}
+
+:root[data-theme='disney'] .inv-design-cover-card,
+:root[data-theme='disney'] .inv-design-card,
+:root[data-theme='disney'] .inv-my-card-row,
+:root[data-theme='disney'] .inv-my-card,
+:root[data-theme='disney'] .inv-form-section,
+:root[data-theme='disney'] .inv-modal-toolbar {
+  border-color: var(--line);
+  background: var(--paper);
+}
+
+:root[data-theme='disney'] .inv-field-input,
+:root[data-theme='disney'] .inv-field-select,
+:root[data-theme='disney'] .inv-field-textarea {
+  background: var(--paper);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+:root[data-theme='cyberpunk'] .inv-design-cover-card,
+:root[data-theme='cyberpunk'] .inv-design-card,
+:root[data-theme='cyberpunk'] .inv-my-card-row,
+:root[data-theme='cyberpunk'] .inv-my-card,
+:root[data-theme='cyberpunk'] .inv-form-section,
+:root[data-theme='cyberpunk'] .inv-venue-info-card,
+:root[data-theme='cyberpunk'] .inv-interactive-map-frame {
+  border-color: var(--line);
+}
+
+:root[data-theme='dark'] .inv-design-cover-card,
+:root[data-theme='dark'] .inv-design-card,
+:root[data-theme='dark'] .inv-my-card-row,
+:root[data-theme='dark'] .inv-my-card,
+:root[data-theme='dark'] .inv-form-section,
+:root[data-theme='dark'] .inv-venue-info-card,
+:root[data-theme='dark'] .inv-interactive-map-frame {
+  border-color: var(--line);
+}
+
+/* ============================================================
+ * 버튼 및 인터랙티브 요소 공통 키보드 포커스 링 (접근성 WCAG 2.1 AA)
+ * ============================================================ */
+.inv-btn-primary:focus-visible,
+.inv-btn-secondary:focus-visible,
+.inv-reset-btn:focus-visible,
+.inv-cal-choice-btn:focus-visible,
+.inv-gal-mode-btn:focus-visible,
+.inv-accordion-toggle-btn:focus-visible,
+.inv-choice-pill:focus-visible,
+.inv-envelope-seal:focus-visible,
+.inv-emoji-chip:focus-visible,
+.inv-carousel-indicator-dot:focus-visible,
+.inv-field-input:focus-visible,
+.inv-field-select:focus-visible,
+.inv-field-textarea:focus-visible,
+.inv-card-action-btn:focus-visible,
+.inv-category-tab-btn:focus-visible,
+.inv-font-btn:focus-visible,
+.inv-frame-btn:focus-visible,
+.inv-address-copy-btn:focus-visible,
+.inv-copy-chip:focus-visible,
+.inv-bgm-floating:focus-visible,
+.inv-modal-close-btn:focus-visible,
+.wax-seal-interactive-hotspot:focus-visible,
+.inv-account-row:focus-visible {
+  outline: 2px solid var(--focus, var(--brand)) !important;
+  outline-offset: 2px !important;
+}
+
+/* ============================================================
+ * 360px 초소형 모바일 뷰포트 완벽 대응 (수평 스크롤 방지, 터치 영역 44px)
+ * ============================================================ */
+@media (max-width: 360px) {
+  .inv-hub,
+  .inv-hub-shell,
+  .inv-editor-shell,
+  .inv-modal-overlay,
+  .inv-preview-modal-overlay,
+  .inv-render-canvas,
+  .inv-card-screen {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  .inv-btn-primary,
+  .inv-btn-secondary,
+  .inv-choice-pill,
+  .inv-accordion-toggle-btn {
+    min-height: 44px !important;
+    font-size: 13px !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    box-sizing: border-box !important;
+  }
+
+  .inv-editor-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .inv-phone-mockup {
+    width: 100% !important;
+    max-width: 320px !important;
+  }
+
+  .inv-modal-toolbar {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    padding: 8px 10px !important;
+  }
+
+  .inv-modal-phone-shell {
+    width: 100% !important;
+    max-width: 320px !important;
+  }
+
+  .inv-section-header-row h2 {
+    font-size: 20px !important;
+  }
+
+  .inv-section-header-row p {
+    font-size: 13px !important;
+  }
+
+  .inv-palette-dots {
+    gap: 3px !important;
+  }
+
+  .inv-carousel-indicator-dot {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+
+  .inv-emoji-chip {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
 }
 
 

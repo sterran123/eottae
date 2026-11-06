@@ -53,6 +53,7 @@
   --match-photo-a: #ffd9c7;
   --match-photo-b: #ffc0d4;
   --match-avatar-ink: #eeb9c8;
+  --match-avatar-on-photo: #6b2d45; /* #ffc0d4 위 약 6.6:1 */
   --match-toast-shadow: rgba(230, 120, 140, 0.18);
   --match-dim: rgba(40, 30, 35, 0.45); /* 모달 ::backdrop 딤 */
   --match-tag-bg: rgba(255, 255, 255, 0.95);
@@ -95,6 +96,7 @@
   --match-photo-a: #5a3a44;
   --match-photo-b: #6b3a4f;
   --match-avatar-ink: #7a5560;
+  --match-avatar-on-photo: #fff5f7;
   --match-toast-shadow: rgba(0, 0, 0, 0.45);
   --match-dim: rgba(0, 0, 0, 0.6);
   --match-tag-bg: rgba(36, 26, 32, 0.92);
@@ -138,6 +140,7 @@
     --match-photo-a: #5a3a44;
     --match-photo-b: #6b3a4f;
     --match-avatar-ink: #7a5560;
+    --match-avatar-on-photo: #fff5f7;
     --match-toast-shadow: rgba(0, 0, 0, 0.45);
     --match-dim: rgba(0, 0, 0, 0.6);
     --match-tag-bg: rgba(36, 26, 32, 0.92);
@@ -156,5 +159,6 @@
   --match-photo-a: #3a2350;
   --match-photo-b: #5a1f48;
   --match-avatar-ink: #6e5590;
+  --match-avatar-on-photo: #fff5f7;
   --match-tag-bg: rgba(20, 18, 34, 0.92);
 }

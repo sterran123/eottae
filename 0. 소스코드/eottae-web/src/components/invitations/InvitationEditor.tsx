@@ -565,7 +565,7 @@ export default function InvitationEditor({ initialId }: InvitationEditorProps) {
             <button
               type="button"
               className="inv-btn-secondary"
-              style={{ minHeight: 36, fontSize: 12, padding: '0 10px' }}
+              style={{ minHeight: 44, fontSize: 12, padding: '0 12px' }}
               onClick={() => setIsPreviewOpen(true)}
             >
               전체 화면으로 보기 ↗

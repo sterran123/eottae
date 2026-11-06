@@ -823,7 +823,7 @@
 
 ## 2026-11-03 INV-001 모바일 청첩장 타입·데이터·스토리지 첫 PR (오하율 작업)
 - [요청] 3차(모바일 청첩장) INV-001 메인 담당. 주한태(#85)·손준혁(#86) 작업의 선행 조건인 `src/lib/invitations/`의 타입(`types.ts`), 예시 데이터(`demo-data.ts`), 브라우저 데모 스토리지(`demo-storage.ts`), URL 헬퍼(`href.ts`)를 작성하고 `clear-demo-device.ts`에 청첩장 데모 키를 등록하는 첫 PR.
-- [AI] Antigravity가 지시서(`3차_작업지시서.md`, `AGENT_오하율_INV_EDITOR.md`), DB 논리모델(INVITATION, GUEST, RSVP), 2차 활동 데모 패턴(`src/lib/activities/`), `clear-demo-device.ts`, `demo-themes.ts`를 분석. `WeddingPlatform`의 청첩장 데이터 구조(신랑신부, 장소, 일시, 인사말 등)를 참고하여 목업 스토리지/타입을 설계.
+- [AI] Antigravity가 지시서(`3차_작업지시서.md`, `AGENT_오하율_INV_EDITOR.md`), DB 논리모델(INVITATION, GUEST, RSVP), 2차 활동 데모 패턴(`src/lib/activities/`), `clear-demo-device.ts`, `demo-themes.ts`를 분석. 모바일 청첩장 데이터 구조(신랑신부, 장소, 일시, 인사말 등)를 참고하여 목업 스토리지/타입을 설계.
 - [신규] src/lib/invitations/types.ts | `Invitation`, `Guest`, `Rsvp`, `InvitationStatus`, `InvitationVisibility`, `RsvpResponse`, `InvitationThemeId` 및 타입 가드 정의. 전화번호 없는 개인정보 최소화 준수.
 - [신규] src/lib/invitations/demo-data.ts | 예시 청첩장 3건(내 청첩장 2건, 타인 열람용 1건 — DEMO_THEMES 연동), 예시 하객 4건, 예시 RSVP 3건. 실존 인물·실주소 배제(가상 지역 노을구·달동네·한들시 재사용).
 - [신규] src/lib/invitations/demo-storage.ts | localStorage 키 `eottae.invitations.demo.v1` 기반 CRUD 및 이벤트 구독. `loadInvitationsDemo`, `saveInvitationsDemo`, `resetInvitationsDemo`, `regenerateSharingToken`(INV-002 연동), `submitRsvp`(INV-003 연동) 헬퍼 제공.
@@ -1146,6 +1146,58 @@
 - [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
 - [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
 
+
+## 2026-11-05 청첩장 테마 ID 3종 고유화 및 이슈 #84 잔여 4개 항목 완결 (오하율 작업)
+- [요청] 이슈 #84 체크리스트 미완료 4개 항목(미리보기 테마 CSS 토큰만·globals.css 수정 없음, 공개 하객 행사 정보만·명단/RSVP 없음, 360px·44px·키보드·6테마, Refs #84 PR 머지) 및 상용 유사 테마 ID 3종(`the-wedding`, `green-canopy`, `with-love`) 고유화 피드백 반영:
+  1) **테마 ID 3종 고유화 및 하위 호환성 보장**:
+     - `the-wedding` -> `our-vow` ('우리 둘의 서약')
+     - `green-canopy` -> `forest-fresh` ('숲속의 싱그러움')
+     - `with-love` -> `warm-heart` ('사랑을 담아')
+     - `src/lib/invitations/types.ts`: 신규 테마 ID 등록 및 레거시 ID 하위 호환 배열 보존.
+     - `src/lib/invitations/theme-presets.ts`: `THEME_MASTER_PRESETS` 키 및 `heroType` 변경, `THEME_ALIASES`에 구 테마 ID 등록으로 기존 데이터 마이그레이션 호환 보장.
+     - `src/components/invitations/InvitationsHub.tsx`: `DESIGN_COLLECTION` ID, `themeId`, `coverClass` 매핑 갱신.
+     - `src/components/invitations/InvitationCardRenderer.tsx`: `getThemeDefaultPhoto`, 시그니처 히어로 분기에 신규 테마 ID 매핑.
+     - `src/components/invitations/InvitationPreviewModal.tsx`, `scripts/verify-modal-and-card.ts`: 테마 ID 갱신.
+  2) **공개 하객 화면(/invitations/p/?t=) 행사 정보 한정 렌더링**:
+     - `InvitationCardRenderer.tsx`: `previewMode === false` 시 `guestbook`·`guest_snap`(방명록·타인 스냅 사진 목록)을 엄격 제외하고, 하객 본인의 참석 회신(`rsvp_preview`) 및 기본 행사 정보(일정·장소·신랑신부)만 렌더링하여 개인정보 보호 및 인수 조건 충족.
+     - `rsvp_preview` 섹션 내 참석 회신 버튼을 유효한 공유 토큰이 있을 경우 `/invitations/rsvp/?t=${token}`으로 직결 링크.
+  3) **미리보기 테마 CSS 토큰만 사용 및 globals.css 수정 금지 준수**:
+     - `globals.css` 절대 미수정 (0 변경).
+     - `invitations.css`, `invite-preview.css`, `InvitationCardRenderer.tsx`, `InvitationPreviewModal.tsx`, `contrast-helper.ts`: 하드코딩된 hex 색상(#ffffff, #1f2937, #64748b 등)을 CSS 테마 토큰(`var(--paper)`, `var(--ink)`, `var(--brand)`, `var(--line)`, `var(--soft)`, `var(--muted)`)으로 전면 전환.
+     - `invitations.css`: 사이버펑크·다크 테마의 `.inv-btn-primary` 글자색 오버라이드를 카드 내부 버튼에 영향 주지 않도록 허브 및 모달 툴바로 스코프 한정.
+  4) **360px 뷰포트·44px 터치 타겟·키보드 접근성·6테마 완비**:
+     - `invitations.css`: `:root[data-theme='cupcake']`, `:root[data-theme='disney']`, `cyberpunk`, `dark`, `system`, `light` 6개 앱 테마를 자체 스코핑하여 완전 연동.
+     - `invitations.css`: `@media (max-width: 360px)` 쿼리를 신설하여 초소형 모바일 화면에서 가로 스크롤을 방지하고 입력창·버튼·패널 크기 100% 최적화.
+     - `invitations.css`: 모든 버튼, 링크, 입력창, 칩, 인디케이터에 공통 `:focus-visible` 키보드 포커스 링(`outline: 2px solid var(--focus)`) 일괄 적용.
+     - `InvitationEditor.tsx`: 「전체 화면으로 보기」 버튼 인라인 `minHeight: 36` -> `44` 상향.
+     - `invitations.css`: `.inv-accordion-toggle-btn`에 `min-height: 44px`, `.inv-carousel-indicator-dot`에 44x44px 터치 영역(7px/22px 시각 점 가상 요소 유지), `.inv-emoji-chip`에 `min-width: 44px; min-height: 44px;` 적용.
+     - `InvitationCardRenderer.tsx`: 봉투 오버레이(`.inv-envelope-seal`)를 `div`에서 `button`으로 전환하고 `onKeyDown`(Enter/Space) 및 `aria-label="봉투 열기"`, 키보드 포커스 링 적용.
+  5) **권장 사항 및 보안·데이터 무결성 강화**:
+     - `InvitationPreviewModal.tsx`: BGM 라벨을 가상 합성음 명칭(가상 축혼 행진곡, 가상 클래식 스트링 등)으로 변경, 노을 로맨스 설명 내 한강을 가상 지명 '노을강'으로 변경, 기본 약도 주소를 '한들시 노을구 달빛로 123'으로 변경, 모달 설정 저장 시 장소 상세 문구를 `venueLabel`에 보존.
+     - `demo-storage.ts`: `deleteInvitation` 및 `regenerateSharingToken`에 `viewerIsOwner === true` 및 `showcase-` 거절 검증 가드를 추가하여 비소유자 우회 차단.
+     - `new/page.tsx`, `p/page.tsx`: SubpageHero 및 상단 안내 띠에 `데모 데이터로 동작하는 3차 미리보기` 표준 배지 통일.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (package.json, tsconfig.json, globals.css, .github/ 등 변경 없음)
+- [미실행] 서버·Supabase 연동 없음 (3차 브라우저 목업 원칙 준수)
+
+
+## 2026-11-05 PR #102 1차 AI 코드 리뷰 반영 — 실측 hex 반환·venueLabel 길이 가드·클래스 선택자 보정 (Refs #84, Refs #102) (오하율 작업)
+- [요청] PR #102 Grok AI 리뷰 지적(반드시 고칠 것 2건 및 권장 3건) 완전 해결:
+  1) `contrast-helper.ts` & `InvitationCardRenderer.tsx` (필수 1): `getContrastingTextColor()`가 CSS 변수(`var(--paper)`, `var(--ink)`) 대신 실측 hex 리터럴(`'#ffffff' | '#111827'`)을 반환하도록 수정. 다크/사이버펑크 테마 등에서 부모 토큰 반전 시 카드 위 텍스트 명도 대비가 역전되는 현상을 근본 방지. `InvitationCardRenderer.tsx`에서 프레임 배경 밝기 기준 `cardTextColor = isDarkThemeBg(frameColor) ? '#f8fafc' : '#1e293b'`와 서브 캡션 색상을 안전하게 분리.
+  2) `InvitationPreviewModal.tsx` (필수 2): 설정 저장 시 `customConfigs.location.body`(오시는 길 상세 문구)를 `venueLabel`에 무조건 덮어쓰지 않고, 2~80자 단일행 요건을 충족할 때만 반영하도록 가드(`locationBody.length >= 2 && locationBody.length <= 80 && !locationBody.includes('\n') ? locationBody : invitation.venueLabel`) 적용. `demo-storage.ts`의 스키마 유효성 검증(최대 80자) 위반으로 저장이 거부되는 문제를 원천 차단하고, 상세 본문 `textarea`에 `maxLength={300}` 추가.
+  3) `invitations.css`: 6테마 및 360px 미디어 쿼리 선택자에 실제 렌더링 클래스(`.inv-hub`, `.inv-design-cover-card`, `.inv-my-card-row`, `.inv-modal-overlay`, `.inv-render-canvas`)를 추가 매핑. 포커스 링의 `#ff6b81` 레거시 폴백을 제거하여 순수 CSS 토큰(`var(--focus, var(--brand))`)으로 통일. `prefers-reduced-motion`에 `.inv-carousel-indicator-dot::before` 및 `.inv-envelope-seal` 애니메이션/트랜지션 해제 추가.
+  4) `InviteSampleStudio.tsx`: 테마 선택 탭 렌더링 대상을 `INVITATION_THEME_IDS` 대신 4대 프리셋 샘플인 `DEMO_THEMES`로 직접 매핑하여 중복 라디오 버튼 노출 방지.
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (package.json, tsconfig.json, globals.css, .github/ 등 변경 없음)
+- [미실행] 서버·Supabase 연동 없음 (3차 브라우저 목업 원칙 준수)
+
+
+
+
+
+
 ## 2026-11-05 3차 모바일 청첩장 행사/하객/공개 정책 목업 및 옛 토큰 만료 뷰 구현 (이슈 #85, INV-002, TC-015) (주한태 작업)
 - [요청] 이슈 #85(INV-002, TC-015): 3차 모바일 청첩장 목업 화면에서 소유자만 편집, 공개 링크 토큰 재발급, 옛 토큰 만료 화면, 보존 기간 안내, 하객 개인정보 비노출(ADR-004)을 구현. 서버 API·RLS·마이그레이션·Edge Function은 없음. 오하율의 INV-001 타입·데이터(`src/lib/invitations/`)만 사용하며 새 types 파일을 만들지 않음.
 - [AI] Antigravity가 `AGENT_주한태_INV_POLICY.md`, `3차_작업지시서.md`, `src/lib/invitations/types.ts`·`demo-storage.ts`·`href.ts`를 분석하고, Grok 봇이 지적했던 "하객 목록 거절 화면 누락" 및 "토큰 재발급 후 옛 토큰 만료 흐름 부재", "44px 및 6테마 완벽 대응"을 전면 해결.
@@ -1159,6 +1211,7 @@
 - [검증] `src/components/invitations/*.tsx` 내 하드코딩 hex(#) 색상 0건 및 6테마 CSS 변수(`var(...)`) 100% 토큰화 확인.
 - [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수), `package.json`, `FILE_INDEX.csv`, `MANIFEST.sha256`는 수정하지 않음.
 
+
 ## 2026-11-05 INV-003 하객 카드 RSVP 버튼 연동 및 TC-016 테스트 기록 추가 (손준혁 작업, Refs #86)
 - [요청] 이슈 #22 피드백 및 Grok 코멘트(issue #22 comment 6650663244) 지침에 따른 INV-003 하객 카드 RSVP 연동 및 TC-016 테스트 마스터 기록 반영:
   1) `InvitationCardRenderer.tsx` 및 `/invitations/p/page.tsx`: 공개 하객 청첩장 URL에서 `g` (하객 토큰) 쿼리스트링을 추출하여 `InvitationCardRenderer`에 전달. 하객 카드의 "🌸 참석합니다" 버튼 클릭 시 `router.push('/invitations/rsvp/?t=' + token + '&g=' + guestToken)`으로 회신 폼 이동 연결 (토큰 부재 시 거부 화면 `/invitations/rsvp/?t=`로 안전하게 분기). "마음으로 축하하기" 안내를 `(제안 · P1)`로 통일하고 `#86 연동 준비 중` 임시 각주 완전 제거.
@@ -1169,6 +1222,7 @@
 - [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
 - [검증] `npm run build` PASS (Next.js 15.5.28 정적 페이지 export 100% 성공)
 - [미실행] 서버·Supabase 연동 없음 (3차 목업 단계 원칙 준수)
+
 
 ## 2026-11-05 PR #101 1차 AI 코드 리뷰 지적 해결 (손준혁 작업, Refs #86)
 - [요청] PR #101 AI 리뷰 지적(InvitationCardRenderer.tsx:1732 필수 해결 및 권장 사항) 반영:
@@ -1293,6 +1347,199 @@
 - [검증] `npm run build` PASS (Next.js 15.5.28 정적 페이지 27/27 export 100% 성공).
 - [미실행] 서버 실연동 없음 (DEC-11 3차 목업 종결 원칙 준수).
 
+## 2026-11-05 PR #102 AI 리뷰 지적 해결 및 main 충돌 해결 (오하율 작업)
+- [요청] PR #102 main 충돌 해결 및 AI 코드 리뷰 FAIL 2건(공개 하객 화면 참석 회신 버튼 미노출·TC-016 클릭 동작 불일치) 및 권장사항 5건 해결:
+  1) `AI_REPORT_LOG.md`: main 브랜치 머지 시 충돌난 멘션 접수 로그와 주한태·손준혁의 3차 정책/RSVP 목업 로그 4개 절을 통합 보존하여 충돌 해소.
+  2) `InvitationCardRenderer.tsx`: 공개 하객 화면(`previewMode === false`)에서 `activeSections`를 필터링할 때 `PUBLIC_HIDDEN` Set(`guestbook`, `guest_snap`)을 도입하여 하객 개인정보 비노출(ADR-004)을 지키면서 `rsvp_preview`·`gallery`·`account` 섹션 및 참석 회신 버튼이 온전히 그려지도록 개선.
+  3) `InvitationCardRenderer.tsx`: 참석 회신 버튼 클릭 핸들러를 TC-016 명세와 동일하게 `if (token && g)` 분기로 일치화. 불필요한 사전 차단을 배제하고 `/invitations/rsvp/?t=&g=` 이동을 정식 위임하며, `g` 부재 시 안내 토스트 노출.
+  4) `scripts/verify-modal-and-card.ts`: 4컷 필름형 모달 라벨 변경에 맞춰 검증 문자열을 `4컷 필름형`으로 일치화하여 28개 검증 항목 100% PASS 달성.
+  5) `InvitationPreviewModal.tsx`: 오시는 길 본문이 80자를 넘거나 줄바꿈이 있는 경우에도 저장을 일체 중단하지 않고, 본문이 2~80자의 단일 줄일 때만 `venueLabel`로 반영하고 길면 기존 `invitation.venueLabel`을 안전하게 유지하여 테마·레이아웃·BGM 저장이 계속 진행되도록 개선.
+  6) `invitations.css`: 다크·사이버펑크·시스템 다크 테마에서 `.inv-hub .inv-btn-primary` 글자색을 명도 대비가 보장되는 색상(다크/시스템 다크 `#ffffff`, 사이버펑크 `#05050d`)으로 변경하고 `!important`를 제거하여 버튼 글자가 배경에 묻히지 않도록 수정.
+  7) `demo-storage.ts`: `deleteInvitation` 및 `regenerateSharingToken`에 `saveInvitation`과 동일한 소유자 검증(`viewerIsOwner === true || (ownerId && ownerId === 'user-demo-me')`) 적용.
+  8) `src/app/invitations/new/page.tsx`, `InvitationCardRenderer.tsx`, `InvitationsHub.tsx`: 에디터 상태 칩 편집/생성 문구 복원(`청첩장 수정 (데모)` / `새 청첩장 만들기 (데모)`), 테마 ID 고유화에 맞춘 영문 문구(`Our Vow`, `warm heart`) 일치화.
+- [AI] Antigravity가 main 충돌 해결 및 InvitationCardRenderer.tsx, demo-storage.ts 등 수정, 타입체크 및 정적 빌드 테스트 통과.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (28/28 통과)
+- [검증] `npm run typecheck` PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 정적 페이지 export 100% 성공)
+- [미실행] 서버·Supabase 연동 없음(목업 단계 원칙 준수)
+
+## 2026-11-05 PR #102 버튼 글자색 토큰 전환(`var(--bg)`) 및 스코프 규칙 정리 (Refs #84, Refs #102) (오하율 작업)
+- [요청] PR #102 AI 리뷰 지적(기본 버튼 color: var(--bg) 전환 및 사이버펑크/다크 개별 스코프 규칙 제거):
+  1) `invitations.css`: `.inv-btn-primary`의 글자색을 `color: var(--bg)`로 전환. 모든 앱 테마(light, dark, cyberpunk, cupcake, disney, system)에서 각 테마의 배경색(`--bg`)과 브랜드색(`--brand`) 간의 확실한 명도 대비를 보장하고, 에디터 및 모달 전역의 버튼들이 일관된 시각적 대비를 갖도록 개선.
+  2) `invitations.css`: 허브·헤더·모달 툴바에 개별 적용되었던 `#ffffff` 및 `#05050d` 스코프 오버라이드 규칙을 완전히 제거하여 카드 인라인 액센트 색상과 자연스럽게 조화되도록 정리.
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (28/28 통과)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개
+- [미실행] 서버·Supabase 연동 없음 (3차 목업 단계 원칙 준수)
+
+## 2026-11-05 PR #102 시네마틱 무비 히어로 분기 분리 및 상용 템플릿 문구 전면 고유화 (Refs #84, Refs #102) (오하율 작업)
+- [요청] PR #102 AI 리뷰 지적(시네마틱 무비 풀커버 히어로 분기 분리 및 THE WEDDING OF, Our Wedding 등 상용 템플릿 샘플 문구 고유화) 해결:
+  1) `InvitationCardRenderer.tsx`: `renderSignatureThemeHero`에서 `our-vow`, `the-wedding`, `cinematic-movie`가 동일한 JSX로 묶여 시네마틱 무비 선택 시 'Our Vow'가 노출되던 결함을 해결. `cinematic-movie`를 독립 분기(`inv-hero-sig--cinematic`, 상단 `CINEMATIC MOMENT`, 중앙 `우리만의 상영`)로 분리하고, 레거시 `the-wedding` 또한 `WEDDING INVITATION` / `우리 둘의 약속`으로 각각 독자적인 JSX로 렌더링되도록 구현.
+  2) `InvitationCardRenderer.tsx`, `InvitationsHub.tsx`: 상용 템플릿/샘플 문구 전수 점검 및 고유화 대체:
+     - `THE WEDDING OF` -> `WEDDING INVITATION` (헤로 서브 타이포 및 허브 커버)
+     - `OUR WEDDING DAY` -> `INVITATION` (콰이어트 테마 및 허브 커버)
+     - `OUR WEDDING STORY` -> `SPECIAL MOMENT` (4컷 필름형 워터마크)
+     - `OUR WEDDING CELEBRATION` -> `CELEBRATION OF LOVE` (골드 링 프레임 캡션)
+  3) `invitations.css`: 주석 내 잔여 상용 문구(`Our Wedding 필기체 영문`)를 `시그니처 상단 영문` 및 `our-vow`로 현행화.
+  4) `scripts/verify-modal-and-card.ts`: [검증 10] 신설하여 시네마틱 무비 독자 렌더링 및 상용 템플릿 문구 부재를 자동 검증(30/30 PASS).
+- [AI] Antigravity가 해당 파일들 수정 후 TypeScript 컴파일, 자동 검증 스크립트 실행, Next.js 정적 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (30/30 통과)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 무수정 원칙 준수
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
+
+## 2026-11-05 PR #102 어두운 청첩장 카드 주소 복사하기 호버 명도 대비 해결 (Refs #84, Refs #102) (오하율 작업)
+- [요청] PR #102 AI 리뷰 지적(다크·사이버펑크·시스템 다크에서 어두운 카드의 「주소 복사하기」 호버 시 글자 식별 불가 및 반투명 배경 명도 대비 깨짐) 해결:
+  1) `invitations.css`: `:114-146`의 다크/사이버펑크/시스템 다크 `color: var(--bg) !important` 일괄 규칙에서 `.inv-address-copy-btn:hover` 셀렉터를 완전히 제거. 어두운 배경에서 글자색이 `var(--bg)`(어두운 색)으로 덮여 마우스 호버 시 글자가 사라지는 결함 원천 차단.
+  2) `invitations.css`: 어두운 카드(`.inv-mode--dark`)의 `.inv-address-copy-btn:hover`에 `background: rgba(255, 255, 255, 0.25) !important`, `color: #ffffff !important`를 명시적으로 부여하여 호버 시 항상 선명한 흰색 텍스트와 확실한 명도 대비를 보장.
+  3) `scripts/verify-modal-and-card.ts`: [검증 11] 신설하여 `.inv-address-copy-btn:hover`의 `var(--bg)` 배제 및 `.inv-mode--dark` 호버 시 `color: #ffffff !important` 보장을 자동 검증(32/32 PASS).
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (32/32 통과)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 무수정 원칙 준수
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
+
+## 2026-11-05 PR #102 청첩장 지도·장소 카드 고정 색 제거 및 globals 다크 토큰 연동 (Refs #84, Refs #102) (오하율 작업)
+- [요청] PR #102 AI 리뷰 지적(invitations.css:2289, :2304 고정 색상 제거 및 globals.css:70, :205 다크 테마 토큰 연동):
+  1) `invitations.css`: 지도 프레임(`.inv-interactive-map-frame`)의 `border: 1px solid #e2e8f0` 고정 색상을 `var(--line)` 테마 토큰으로 전환.
+  2) `invitations.css`: 장소 안내 카드(`.inv-venue-info-card`)의 `background: rgba(0, 0, 0, 0.02)` 및 `border: 1px solid rgba(0, 0, 0, 0.06)` 고정 색상을 각각 `var(--soft)`, `var(--line)` 및 `color: var(--ink)` 테마 토큰으로 전환.
+  3) `invitations.css`: 주소 복사 버튼(`.inv-address-copy-btn`)의 고정 보라색 배경(`rgba(124, 58, 237, 0.08)`)을 `background: var(--soft)`로 전환하고, 호버 시 고정 흰색(`color: #ffffff`)을 `color: var(--bg)` 테마 토큰으로 전환하여 앱 테마가 dark(`globals.css:70`) 또는 cyberpunk(`globals.css:205`)일 때 `--brand` 배경 위에서 최적의 명도 대비를 보장.
+  4) `invitations.css`: `:root[data-theme='cyberpunk']` 및 `:root[data-theme='dark']` 스코프에 `.inv-venue-info-card`, `.inv-interactive-map-frame`의 `border-color: var(--line)` 연결.
+  5) `scripts/verify-modal-and-card.ts`: [검증 12] 신설하여 지도·장소 카드 고정 색 부재 및 테마 토큰 연동 자동 검증(34/34 PASS).
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (34/34 통과)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
+
+## 2026-11-05 PR #102 청첩장 밝은 카드 주소 복사 대비·키보드 포커스 및 왁스 씰 접근성 보강 (Refs #84, Refs #102) (오하율 작업)
+- [요청] 청첩장 밝은 카드 주소 복사 버튼 명도 대비(`color: inherit`), 44px 터치 영역, 키보드 포커스 링(`.inv-address-copy-btn:focus-visible`, `.inv-copy-chip:focus-visible`, `.inv-bgm-floating:focus-visible`, `.inv-modal-close-btn:focus-visible`) 및 왁스 씰 키보드 조작 접근성 완비:
+  1) `invitations.css`: `.inv-mode--light .inv-address-copy-btn`에 `color: inherit; min-height: 44px;`, 호버 시 `background: var(--brand); color: var(--bg);` 지정으로 다크/사이버 테마 토큰 하에서도 밝은 카드 위 명도 대비 완전 보장.
+  2) `invitations.css`: `.inv-address-copy-btn` 기본 스타일에 `min-height: 44px; box-sizing: border-box;` 보장.
+  3) `invitations.css`: `:focus-visible` 공통 포커스 링 대상에 `.inv-address-copy-btn`, `.inv-copy-chip`, `.inv-bgm-floating`, `.inv-modal-close-btn` 추가.
+  4) `InvitationCardRenderer.tsx`: 왁스 씰 인터랙티브 핫스팟에 `onKeyDown`(Enter/Space) 및 `aria-label="왁스 씰 개봉"` 추가.
+  5) `AI_REPORT_LOG.md:1161`: 공개 화면 섹션 설명 정정(코드와 일치).
+  6) `scripts/verify-modal-and-card.ts`: [검증 13] 신설하여 밝은 카드 주소 복사 버튼, 44px, 키보드 포커스 링, 왁스 씰 접근성 자동 검증 (38/38 PASS).
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (38/38 통과)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
+
+## 2026-11-05 PR #102 밝은 청첩장 카드(--inv-surface/--inv-ink) 버튼 고대비 격리 및 다크 테마 오버라이드 정밀 차단 (Refs #84, Refs #102) (오하율 작업)
+- [요청] 다크·사이버펑크·시스템 다크 테마에서 밝은 청첩장(`inv-mode--light`, 숲속의 싱그러움·사랑을 담아 등)의 「주소 복사하기」 및 「마음으로 축하」 버튼 가독성 결함 해결:
+  1) `invitations.css:4228`: `.inv-mode--light`에 전용 토큰 `--inv-surface: #f8fafc;` 및 `--inv-ink: #1f2937;` 정의. 장소 안내 카드(`.inv-venue-info-card`) 및 주소 복사 버튼(`.inv-address-copy-btn`)이 앱 테마의 다크 토큰(`--soft`)에 영향받지 않고 항상 `--inv-surface` 배경과 `--inv-ink` 글자색/테두리를 사용하도록 격리. 호버 시 `--inv-ink` 배경과 `--inv-surface` 글자색으로 13:1 이상의 완전한 반전 가독성 확보.
+  2) `invitations.css:152`: `.inv-btn-secondary`의 미존재 토큰 `var(--card)`를 `var(--paper, #ffffff)` 및 `color: var(--ink, #111827)`로 안전화.
+  3) `invitations.css:5765`: `[data-theme='dark'] .inv-btn-secondary`의 흰색 반투명 유리 스타일 오버라이드를 카드 영역이 아닌 `.inv-hub`, `.inv-editor-shell`, `.inv-modal-toolbar`, `.inv-mode--dark`로 엄격 한정.
+  4) `invitations.css:4236`: `.inv-mode--light .inv-btn-secondary`에 `background: var(--inv-surface) !important; color: var(--inv-ink) !important; border: 1px solid var(--inv-ink) !important;`를 부여하여 밝은 카드 내부의 「💌 마음으로 축하」 버튼이 전 테마에서 선명하게 유지되도록 보장.
+  5) `invitations.css`: `.inv-copy-chip`에 `min-height: 44px; min-width: 44px; display: inline-flex;` 터치 영역 추가, `:focus-visible` 목록에 `.wax-seal-interactive-hotspot:focus-visible` 추가.
+  6) `InvitationCardRenderer.tsx`: 풀커버 시그니처 히어로 분기 키를 `activeThemeId || themePreset.heroType`로 보강.
+  7) `scripts/verify-modal-and-card.ts`: [검증 13]을 업데이트하여 `--inv-surface`, `--inv-ink`, 보조 버튼 다크 오버라이드 배제 자동 검증(39/39 PASS).
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (39/39 통과)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
+
+## 2026-11-06 PR #102 허브 크롬/카드 보조 버튼 선택자 분리 및 고특이성 밝은 카드 격리 (Refs #84, Refs #102) (오하율 작업)
+- [요청] `invitations.css:5765`: 다크 테마에서 허브 미리보기 모달 및 에디터 셸 내부 밝은 카드(`inv-mode--light`)의 보조 버튼(💌 마음으로 축하, 공식 사진 추가 등)이 허브 전역 크롬 오버라이드에 덮여 가독성이 저하되는 현상 완전 해결:
+  1) `invitations.css`: `[data-theme='dark'] .inv-hub .inv-btn-secondary`의 포괄적 조상 선택자를 제거하고, 실제 허브 크롬 UI(`.inv-hub-header`, `.inv-my-card`, `.inv-my-card-row`, `.inv-editor-toolbar`, `.inv-modal-toolbar`)로 선택자 범위를 정밀 분리.
+  2) `invitations.css`: 밝은 카드 보조 버튼에 `[data-theme='dark'] .inv-hub .inv-mode--light .inv-btn-secondary`, `[data-theme='dark'] .inv-editor-shell .inv-mode--light .inv-btn-secondary`의 고특이성(0,4,0) 선택자를 부여하고, 다크 오버라이드 규칙 뒤에도 배치하여 허브 모달 및 에디터 내 밝은 카드 보조 버튼이 항상 `--inv-surface` 및 `--inv-ink`로 13:1 이상의 고대비를 유지하도록 보장.
+  3) `InvitationCardRenderer.tsx`: 신랑/신부 계좌 아코디언 토글(`inv-account-row`)에 Space 키 핸들러(`e.key === ' '`) 및 `preventDefault()`를 추가하여 왁스 씰과 동일한 키보드 접근성 완비.
+  4) `scripts/verify-modal-and-card.ts`: [검증 13]을 갱신하여 포괄적 `.inv-hub` 다크 오버라이드 부재 및 고특이성 밝은 카드 선택자 적용 자동 검증 (39/39 PASS).
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (39/39 통과)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
+
+## 2026-11-06 PR #102 모달 툴바 라벨 토큰화·테마 칩 전 테마 연동·히어로 별칭 정규화 (Refs #84, Refs #102) (오하율 작업)
+- [요청] PR #102 AI 리뷰 지적(모달 툴바 라벨 테마 토큰화, 테마 칩/아이콘 배경 전 테마 연동, 별칭 테마 히어로 분기 정규화) 해결:
+  1) `invitations.css:5058`: 미리보기 모달 좌측 툴바 라벨(`.inv-ctrl-label`)의 `color: #0f172a !important` 고정 색상을 `color: var(--ink) !important`로, 필드 라벨(`.inv-field-label`)의 고정 색상을 `color: var(--muted) !important`로 전환하여 다크·사이버펑크·시스템 다크 테마 배경(`var(--paper)`) 위에서 최적의 가독성 확보.
+  2) `invitations.css:1546, :5940`: 테마 선택 칩(`.inv-theme-choice-btn`)의 고정 배경색(`#f8fafc`) 및 테두리(`#e2e8f0`)를 `var(--soft)` 및 `var(--line)` 테마 토큰으로 전환하고, `[data-theme='dark']`, `[data-theme='cyberpunk']`, `@media (prefers-color-scheme: dark) :root[data-theme='system']` 명시 규칙 연동. 세그먼트 버튼(`.inv-segment-group`, `.inv-segment-btn--active`), 효과 칩(`.inv-fx-card-btn`, `.inv-fx-card-btn--active`), 테마 아이콘(`.inv-theme-icon`), 프리셋 카드(`.inv-color-preset-card`, `.inv-color-preset-name`), 레이아웃 버튼(`.inv-layout-choice-btn`, `.inv-layout-choice-title`, `.inv-layout-choice-desc`) 전반에 일관된 테마 토큰 연동.
+  3) `InvitationCardRenderer.tsx:727`: 풀커버 히어로 분기에서 `activeThemeId` 기본값(`wax-seal`)으로 인해 별칭 테마(`spring-card`, `moon-garden`, `hanji` 등)가 `default:`로 누락되던 결함을 해결. `DIRECT_HERO_IDS` Set을 정의하여 스위치에 직접 존재하는 ID만 `activeThemeId`를 타고, 나머지는 정규화된 `themePreset.heroType`을 타도록 분기 정규화.
+  4) `invitations.css`: `:focus-visible` 목록에 `.inv-account-row:focus-visible` 추가하여 계좌 아코디언 행 키보드 포커스 링 접근성 보강.
+  5) `scripts/verify-modal-and-card.ts`: [검증 14] 신설하여 모달 툴바 라벨 토큰화, 테마/효과/아이콘 칩 전 테마 연동, `DIRECT_HERO_IDS` 정규 분기 자동 검증(42/42 PASS 달성).
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (42/42 통과)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
+
+## 2026-11-06 PR #102 갤러리 캐러셀 화살표 호버 단일화 및 캔버스 테마 클래스 정규화 (Refs #84, Refs #102) (오하율 작업)
+- [요청] PR #102 Grok AI 리뷰 지적(갤러리 화살표 호버 글자 소실 결함 필수 1건, 권장 3건) 완전 해결:
+  1) `invitations.css:2186, :5558` (필수): 갤러리 좌우 화살표(`.inv-carousel-arrow-btn`) 호버 시 `invitations.css:2186`의 `color: #ffffff`와 `:5558`의 `background: #ffffff`가 동일 특이도(0,1,0)로 합쳐져 흰 글자+흰 배경으로 사라지는 결함을 해결. 앞쪽 `:2186`의 호버 선언을 완전 제거하고, 뒤쪽 `:5558`에 `background: var(--brand); color: var(--bg); border-color: var(--brand); transform: translateY(-50%) scale(1.08);`로 단일화하여 다크·사이버펑크 등 6개 전 테마에서 브랜드 배경 대비 최적의 텍스트 가독성을 보장.
+  2) `InvitationCardRenderer.tsx:1813`: 캔버스 최상단 래퍼의 클래스명에 원본 `activeThemeId`뿐만 아니라 정규화된 `themePreset.id`(`inv-theme--${themePreset.id}`) 및 `data-invite-theme={themePreset.id}`를 명시하여, `moon-garden`·`hanji`·`spring-card` 등 별칭(alias) 테마에서도 정규 테마 CSS 규칙이 100% 매칭되도록 보정.
+  3) `invitations.css:5512`: 프레임 색상 선택 도트(`.inv-frame-color-dot`)에 `position: relative`와 44×44px 터치 타겟 가상 요소(`::after`)를 추가하여 44px 접근성 기준을 충족.
+  4) `invitations.css`: 중복 정의되어 있던 `.inv-mode--light .inv-btn-secondary` 호버 블록과 `.inv-mode--dark .inv-address-copy-btn:hover` 블록을 정리하여 단일 선언으로 일원화.
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (42/42 통과)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
+
+## 2026-11-06 PR #102 메인 사진 하이라이트 박스 테마 토큰화 및 안내 문구 가독성 개선 (Refs #84, Refs #102) (오하율 작업)
+- [요청] PR #102 Grok AI 리뷰 지적(다크·사이버펑크·시스템 다크 테마에서 메인 사진 하이라이트 제목 및 본문 가독성 결함) 완전 해결:
+  1) `invitations.css:4618`: `.inv-ctrl-group--highlight`의 고정 파스텔 그라데이션(`linear-gradient(#fdf4ff, ...)` 및 테두리 `#e9d5ff`)을 테마 토큰인 `background: var(--soft); border: 1.5px solid var(--line); box-shadow: 0 4px 14px color-mix(in srgb, var(--brand) 12%, transparent);`로 전환. 다크 계열 테마에서 `.inv-ctrl-label`(`color: var(--ink) !important`)과의 명도 대비를 최적으로 확보하여 제목 「📸 메인 사진 직접 첨부 & 교체」가 묻히는 결함 해결.
+  2) `InvitationPreviewModal.tsx:690, :732`: 하이라이트 박스 내부의 고정 hex 색상 본문(`color: '#4b5563'`)을 `color: 'var(--muted)'`로, 프리셋 섹션 라벨(`color: '#1f2937'`)을 `color: 'var(--ink)'`로 전환하여 다크/사이버펑크 테마에서도 선명한 가독성 보장.
+  3) `InvitationCardRenderer.tsx`: 미사용 `invitationGuestHref` import 제거.
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (42/42 통과)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
+
+## 2026-11-06 매칭 허브 MATCH 태그 제거·예시 조건 문구 정비 및 추천 CSS 테마 토큰화 (오하율 작업, Refs #83, Refs #84)
+- [요청] 디자인 검토(PR #83) 및 3차 목업 기준에 따른 매칭 허브/추천 화면 정비:
+  1) `src/app/match/page.tsx:19, :117`: 각 기능 카드 상단 칩의 내부 요구사항 티켓 번호(`MATCH-001`·`002`·`009`·`007`·`003`)를 제거하고 한국어 상태 표기(「데모」)로 일치화.
+  2) `src/app/match/page.tsx:26`: 카드 추천 설명의 입증되지 않은 알고리즘 수치 표현(「취향 일치율」)을 목업 및 브랜드 가이드 기준에 맞춰 「성인 확인과 취향 조건에 맞춰 고른 예시 상대 카드를 둘러봅니다.」로 정비.
+  3) `src/app/match/page.tsx:52, :82`: 허브 카드의 인라인 12px 스타일(`entryLinkStyle`)을 제거하고 공통 `.btn.outline` 스타일을 따르도록 일원화. 히어로 캐릭터 이미지의 미로딩 토큰(`var(--match-toast-shadow)`)을 공통 셸 토큰 `var(--shadow-card)`로 전환.
+  4) `src/app/match/recommend/match-recommend.css:147, :153, :164, :246`: 사진 공개 아바타 글자색을 `var(--match-on-accent)`로, 블러 오버레이 배경을 `color-mix(in srgb, var(--match-bg) 70%, transparent)`로, 태그 및 더보기 드롭다운 메뉴의 검은 그림자를 `var(--match-toast-shadow)`로 전환하여 다크/사이버펑크 테마에서 하드코딩 색상이 노출되지 않도록 전면 토큰화.
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (42/42 통과)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
+
+
+
+## 2026-11-06 PR #102 다크 청첩장 복사 칩 흰 글자 격리·미리보기 툴바 토큰 정규화·서랍 다크 테마 연동 (Refs #84, Refs #102) (오하율 작업)
+- [요청] PR #102 Grok AI 리뷰 FAIL 3개 항목 완전 해결:
+  1) `invitations.css:115, :133, :5867`: 다크 청첩장(우리 둘의 서약 등 defaultBgColor #09090b) 계좌 「복사」 칩(`.inv-copy-chip`)이 앱 테마 `dark`·`cyberpunk`의 `color: var(--bg) !important`에 의해 검게 덮여 배경에 묻히는 결함 해결. 상단 전역 규칙의 선택자를 `.inv-mode--light .inv-copy-chip`으로 스코핑하여 다크 카드를 완전 분리하고, 다크 카드(`.inv-mode--dark .inv-copy-chip`)에 `background: rgba(255, 255, 255, 0.2) !important; color: #ffffff !important;`를 명시하여 테마 전환 시에도 흰 글자가 선명하게 유지되도록 보장.
+  2) `InvitationPreviewModal.tsx:767, :796, :1056, :1313`, `invitations.css:5839`: 미리보기 툴바 배경이 `var(--paper)`(#161423 in dark, #141222 in cyberpunk)인 상황에서 보조 버튼(`.inv-btn-secondary`) 텍스트가 흰색(#ffffff)으로 강제 고정되던 문제를 `.inv-modal-toolbar--dark .inv-btn-secondary`로 한정. 또한 모달 내부의 하드코딩된 hex 색상(`#1f2937`, `#4b5563`, `#4f46e5`, `#f8fafc`, `#cbd5e1`, `#64748b`)을 시맨틱 CSS 변수(`var(--ink)`, `var(--muted)`, `var(--brand)`, `var(--soft)`, `var(--line)`)로 전면 전환하여 다크/사이버펑크 환경에서도 배경 대비와 가독성을 보장.
+  3) `invitations.css:2702, :2752, :2789, :5145`: 아코디언 서랍(`.inv-accordion-drawer`) 배경이 `[data-theme='dark']`에만 `#1e293b`로 지정되어 cyberpunk 및 시스템 다크에서 `#ffffff`로 노출되던 결함 수정. `[data-theme='cyberpunk']` 및 `@media (prefers-color-scheme: dark) :root[data-theme='system']`에도 동일한 서랍 배경(`#1e293b`), 폰트 버튼 배경(`#0f172a`), 입력 테두리(`#475569`)를 확장 적용하고, 서랍 내부 필드 라벨(`.inv-field-label`)의 글자색을 `#94a3b8 !important`로 지정하여 다크 모드 가독성을 완벽 확보.
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (42/42 통과)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
+
+
+## 2026-11-06 PR #102 일정 box_badge 배지 배경 기준 명도 대비(badgeInk) 및 매칭 공개 실루엣 색상 복원 (Refs #84, Refs #102) (오하율 작업)
+- [요청] PR #102 AI 리뷰 지적 2개 항목 완전 해결:
+  1) `InvitationCardRenderer.tsx:1092`: `box_badge` 일정 칸 배경(`--paper`, `badgeBg`) 기준으로 날짜 숫자 색상을 보정하지 않아 카드 배경 기준 accent(#f59e0b) 사용 시 흰 배지 배경에서 대비 미달(2.1:1)이 발생하던 결함 해결. `badgeBg = isDarkTheme ? 'var(--paper, #161423)' : 'var(--paper, #ffffff)'`를 기준으로 `badgeInk = ensureLegibleColor(accent, badgeBg, 4.5)`를 도입하고 날짜/시간 숫자 색상을 `color: badgeInk`로 교체하여 WCAG 2.1 AA 4.5:1 이상의 가독성을 보장.
+  2) `match-recommend.css:147`: 공개 사진 실루엣(`.mt-rec__photo--revealed .mt-rec__avatar`)에 솔리드 버튼/칩 배경 전용 토큰인 `var(--match-on-accent)`가 잘못 적용되어 다크 모드(#2a1218)에서 어두운 와인 사진 배경과 겹쳐 사라지던 결함 해결. 사진 그라디언트 배경에 적합한 반투명 흰색 실루엣(`rgba(255, 255, 255, 0.85)`)으로 복원하여 전 테마에서 선명하게 노출되도록 보장.
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (44/44 통과, 검증 15 추가)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
+
+
 ## 2026-11-06 목업 최종 지침에 따른 TC 장부 순화 및 DEC-11 종결 마무리 (주한태 작업, Refs #105)
 - [요청] 이슈 #105 남은 작업 검증 및 최종 목업 지침 반영:
   1) `2. 프로젝트 설계서/테스트_케이스_마스터.md`:
@@ -1303,3 +1550,44 @@
 - [검증] `npm run typecheck` PASS (0 errors).
 - [검증] `npm run build` PASS (정적 27개 라우트 정상 빌드 확인).
 - [미실행] 서버 실연동 없음 (DEC-10 '최종 제출 전' 무효 및 DEC-11 3차 목업 종결 원칙 철저 준수).
+
+
+## 2026-11-06 PR #102 일정 box_badge 실제 칠해지는 배경 기준 명도 대비(badgeSurface) 및 라이트/다크 공개 실루엣 토큰(match-avatar-on-photo) 정밀 보정 (Refs #84, Refs #102) (오하율 작업)
+- [요청] PR #102 AI 리뷰 지적 2개 항목 완전 해결:
+  1) `InvitationCardRenderer.tsx:1080`: `box_badge` 날짜 숫자 대비 계산 시 CSS `var(--paper, ...)`의 fallback 문자열 추출로 인해 브라우저의 실제 렌더링 배경과 대비 계산용 배경이 어긋나던 결함 수정. 실제로 칠해지는 배지 표면색 `badgeSurface = isDarkTheme ? '#161423' : '#ffffff'`를 정의하고, `badgeBg = badgeSurface` 및 `badgeInk = ensureLegibleColor(accent, badgeSurface, 4.5)`로 일치시켜 다크(#161423) 및 라이트(#ffffff) 환경에서 실제 그려지는 배경 기준 WCAG 2.1 AA 4.5:1 이상의 대비를 완벽 보장.
+  2) `match-recommend.css:147` & `match-tokens.css:56, :99, :143, :162`: 밝은 피치 그라디언트(`--match-photo-a`/`--match-photo-b`) 배경에서 반투명 흰색 실루엣이 묻히던 결함 해결. 라이트 모드에서는 전용 토큰 `--match-avatar-on-photo: #6b2d45`(#ffc0d4 위 대비 6.6:1)를 적용하고, 다크/사이버펑크/시스템 다크 테마에서는 `#fff5f7`를 적용하여 모든 테마 배경에서 최적의 실루엣 시인성 보장.
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (44/44 통과, 검증 15 갱신)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
+
+
+## 2026-11-06 PR #102 box_badge 라벨 표면 대비 일치·--card 토큰 정규화·공개 하객 ?t 누락 분기 및 모션 감축 보강 (Refs #84, Refs #102) (오하율 작업)
+- [요청] PR #102 데이터봇 리뷰 지적 사항 및 잔여 품질 보강:
+  1) `InvitationCardRenderer.tsx:1096, 1100, 1104`: `box_badge` YEAR/DATE/TIME 라벨이 앱 테마의 `var(--muted)`를 참조하여 다크 앱 테마 + 밝은 카드(또는 반대) 조합에서 배지 배경과 명도 대비가 무너지던 결함 해결. 배지 표면색 기준 `badgeLabel = getContrastingTextColor(badgeSurface)`를 도입하고 라벨에 `color: badgeLabel, opacity: 0.75, fontWeight: 700, letterSpacing: '0.04em'`를 적용하여 모든 카드/앱 테마 조합에서 WCAG 2.1 AA 기준을 만족하도록 보장.
+  2) `p/page.tsx:48` 및 `invitations.css:25, 1244, 1316, 3388`: `globals.css`에 정의되어 있지 않아 투명 배경으로 렌더링되던 `var(--card)` 토큰을 전면 제거하고 전역 시맨틱 토큰(`var(--soft)`, `var(--paper)`)으로 정규화.
+  3) `p/page.tsx:40` 및 `InvitationExpiredView.tsx:15, 23`: 초대 링크에서 `?t=` 토큰 파라미터가 누락된 경우 단순 만료(`expired`) 대신 전용 `not-found` 상태로 분기하고, 하객에게 공유받은 전체 링크를 다시 확인하도록 명확한 안내 문구 제공.
+  4) `invitations.css:4627`: `@media (prefers-reduced-motion: reduce)` 미디어 쿼리에 `.inv-accordion-drawer` 및 `.inv-toast`를 추가하여 애니메이션 및 전환 효과가 축소 모드에서 올바르게 비활성화되도록 웹 접근성 보강.
+  5) `verify-modal-and-card.ts`: `[검증 15]`에 `badgeLabel` 배지 표면 대비 검증을 추가하고, `[검증 16]`(var(--card) 완전 제거, ?t 누락 분기, 감축 모션 셀렉터)를 신규 작성하여 회귀 방지 자동화.
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (47/47 통과)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
+
+
+## 2026-11-06 PR #102 초기화 버튼·달력/갤러리 선택 테마 토큰화 및 공개 문서 주석 정제 (Refs #84, Refs #102) (오하율 작업)
+- [요청] PR #102 청첩장 테마 AI 코드 리뷰 지적 사항 3건 완전 해결:
+  1) `invitations.css:2475`, `InvitationPreviewModal.tsx:678, :851`: 「기본 사진 복원」「기본색 초기화」(`.inv-reset-btn`)에 존재하던 밝은 고정색(`#f1f5f9`, `#cbd5e1`, `#e2e8f0`)을 제거하고 시맨틱 토큰(`var(--line)`, `var(--soft)`, `var(--muted)`, `var(--paper)`, `var(--ink)`)으로 전환. 다크, 사이버펑크, 시스템 다크 테마(`[data-theme='dark']`, `[data-theme='cyberpunk']`, `:root[data-theme='system']`)에 고대비 규칙을 추가. 또한 「기본색 초기화」 클릭 시 고정된 `#ffffff`가 아닌 현재 선택된 테마의 `preset.defaultBgColor`, `preset.defaultTextColor`, `preset.defaultAccentColor`로 복원되도록 보정.
+  2) `invitations.css:6183`: 미리보기 모달의 달력 및 갤러리 선택 버튼(`.inv-cal-choice-btn`, `.inv-gal-mode-btn`)의 고정 테두리(`#e2e8f0`) 및 배경(`#ffffff`, `#faf5ff`)을 `border: 1.5px solid var(--line)`, `background: var(--paper)`, 활성 상태 시 `border: 1.5px solid var(--brand) !important; background: var(--soft) !important;`로 토큰화하고, 다크/사이버펑크/시스템 다크 테마 오버라이드를 적용.
+  3) `invitations.css`, `InvitationPreviewModal.tsx`, `AI_REPORT_LOG.md`: 공개 제출물 기준에 부합하도록 코드 내에 잔존하던 `WeddingPlatform` 및 `사용자 레포` 주석 키워드를 전면 정제 (0건 달성).
+  4) `verify-modal-and-card.ts`: `[검증 17]`을 신규 추가하여 초기화 버튼 토큰화, 동적 테마 기본색 복원, 달력/갤러리 선택 버튼 1.5px 토큰 및 WeddingPlatform 부재 검증 자동화.
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (51/51 통과)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
