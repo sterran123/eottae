@@ -1622,7 +1622,7 @@
 - `signUpWithEmail`→`sanitize_new_auth_user`→`activate_user`(0002:205-211) 경로: 가입 INSERT는 `id`·상태만 넣고, `full_name`·`birth_year`·동의 3건(`public.consents`)은 이메일 확인 뒤 `activate_user`가 저장. `birth_date` 원본은 sanitize가 메타데이터에서 제거.
 - `nickname`은 가입 경로에서 채우지 않고 `updateNickname` 시에만 저장 — 현재 그 함수를 부르는 화면은 없음(데모 표시 이름은 `demo-session.ts` 고정 값, 브라우저).
 - 화면의 성인 확인은 `demo-adult.ts`(브라우저)만 사용 — `adult_verified` 서버 기록 없음. `NEXT_PUBLIC_DEMO_ADULT_BYPASS`는 **세션 없는 demo 모드**에서만 시연 확인을 열고, 로그인 세션이 있으면 시연 경로로 바꾸지 않음(`DemoEntryGuard`).
-- 저장소 분기(`match-service`): 세션 없음=demo(온보딩·관심·신고·차단 브라우저), 세션+정식 성인(`adult_verified`·만료 시각)=live(서버 기록), 가입 직후=unverified(`gateError` 거부·브라우저 시연 캐시 삭제).
+- 저장소 분기(`match-service`): 데모 로그인(실계정 세션 없음)=demo(성인 확인 시연·프로필·취향·관심·신고·차단·대화 브라우저), 실계정+정식 성인(`adult_verified`·만료 시각)=live(서버 기록), 가입 직후=unverified(화면 거부). `clearSignedInMatchCache`가 지우는 것은 온보딩·문답·공통 질문 거절·`eottae_demo_adult_v1`·데모 세션뿐 — 관심·매칭·대화·신고·차단 데모 키는 로그인 뒤에도 남음.
 - 1차 문장(닉네임·성인 확인 뒤 서버 저장)은 스키마와 불일치 → AI 리뷰 제시 문구로 교체.
 
 ### 미실행
