@@ -3,10 +3,10 @@
 # 사용: python tools/gen_final_deliverables.py  (openpyxl 필요, PDF는 headless Chrome)
 # -*- coding: utf-8 -*-
 # #119 — 결과보고서 작성본(xlsx+md) + 최종 발표 PDF 생성기. 저장소 기록만 근거로 쓴다(가짜 PASS 금지).
-import subprocess, openpyxl
+import os, subprocess, openpyxl
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 
-R = r"C:\Users\defaultuser0\Documents\어때_TEAM_PROJECT_FINAL_v1"
+R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEMO = "https://sterran123.github.io/eottae/"
 
 # ── 결과보고서 내용 (양식 항목 + README_결과보고서_작성예정.md 추가 항목) ──
@@ -64,7 +64,7 @@ FIELDS = [
      "- 김민기(@sterran123, 총괄): CORE-001~004(홈·브랜드·반응형·PWA·설정), 2차 소모임 데모(#69), "
      "INV-004 테마 미리보기·모의 결제, DEC-13 청첩장 포지셔닝, Pages 배포·AI 리뷰·@grok 작업자·매니페스트 인프라, 문서 총괄\n"
      "- 오하율(@HaYul0611): MATCH-001·002·009(온보딩·추천 카드·공통 질문, #65), ACT-001 소모임 검색·필터, "
-     "INV-001 청첩장 에디터·미리보기·공개 화면(#93·#97)\n"
+     "INV-001 청첩장 에디터·미리보기·공개 화면(#93·#97·#102)\n"
      "- 주한태(@gksxogksxo1001-sketch): MATCH-003~006(가입·로그인 UI #57, 인증·성인 게이트·매칭 SQL 검증), "
      "ACT-002 모임 생성·참가·권한, INV-002 행사·게스트·공개 정책(#103), TC-003·004·007·013·017 데모 검증(#107~#110)\n"
      "- 손준혁(@sonjunhyek2): MATCH-007·008(채팅·신고 DTO·차단 가드 #47·#104), ACT-003 일정 투표·신고, "
@@ -78,6 +78,8 @@ FIELDS = [
      "- Supabase db push + 두 계정 실데이터 E2E(매칭·채팅·차단 서버 효력)\n"
      "- BBaton 정식 성인확인·PayApp 실결제 연동과 데모 바이패스 제거로 fail-closed 복귀\n"
      "- 신고 처리 운영 인력·정산 법무 검토(DEC-03, INV-004), 2차 위치·장소 공급자(DEC-05)\n"
+     "- 청첩장 스튜디오·디자인 고도화: 스튜디오 형태(에디터·미리보기) 반영은 완료되었으나, "
+     "현재 일러스트로 대체된 미리보기 예시 이미지는 과제 제출 후 전문 디자인 및 툴 변경을 통해 고품질 에셋으로 교체·고도화 진행 예정(오하율 피드백)\n"
      "- 청첩장 실사 사진 저작권 검증 체계(#118 CREDITS)와 캡처 재촬영 자동화"),
     ("시연 URL", DEMO + "\n(정적 데모 — 매칭·채팅·청첩장은 예시 데이터 목업, 실계정·실결제 없음)"),
 ]
@@ -231,7 +233,7 @@ th {{ background:#f4efe8; }} .foot {{ margin-top:auto; font-size:8.5pt; color:#a
 <li>Supabase 실데이터 적용·두 계정 E2E, Realtime 채팅·차단 서버 효력</li>
 <li>BBaton 정식 성인확인·PayApp 실결제, fail-closed 복귀</li>
 <li>신고 운영 인력(DEC-03)·정산 법무 검토, 위치 공급자(DEC-05)</li>
-<li>ACT-004 커플 퀘스트, 청첩장 실사진 라이선스 체계</li></ul></div>
+<li>ACT-004 커플 퀘스트, 청첩장 실사진 라이선스 체계 및 스튜디오 디자인·에셋 툴 고도화</li></ul></div>
 <div class="card"><h3>시연</h3><p>{DEMO}<br><span class="dim">정적 데모 — 예시 데이터 목업, 실계정·실결제 없음</span></p></div>
 </div></div><p class="foot">어때? 최종 발표 · 7/7</p></div>
 </body></html>"""
