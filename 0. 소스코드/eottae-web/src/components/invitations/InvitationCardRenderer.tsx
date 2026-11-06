@@ -1810,10 +1810,11 @@ export default function InvitationCardRenderer({
 
   return (
     <div
-      className={`inv-render-canvas inv-theme--${activeThemeId} inv-layout--${activeLayout} ${
+      className={`inv-render-canvas inv-theme--${themePreset.id} inv-theme--${activeThemeId} inv-layout--${activeLayout} ${
         isDarkTheme ? 'inv-mode--dark' : 'inv-mode--light'
       }`}
-      data-invite-theme={activeThemeId}
+      data-invite-theme={themePreset.id}
+      data-invite-theme-alias={activeThemeId}
       style={dynamicBackgroundStyle}
     >
       {/* 사용자 음원 오디오 태그 */}

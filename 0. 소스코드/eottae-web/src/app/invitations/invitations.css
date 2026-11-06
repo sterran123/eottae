@@ -2183,12 +2183,6 @@
   transition: all 0.15s ease;
 }
 
-.inv-carousel-arrow-btn:hover {
-  background: var(--brand);
-  color: #ffffff;
-  border-color: var(--brand);
-}
-
 /* 4컷 필름 스트립 */
 .inv-life4cut-strip-wrap {
   display: flex;
@@ -5516,6 +5510,19 @@
   border: 1.5px solid #cbd5e1;
   cursor: pointer;
   transition: transform 0.15s ease;
+  position: relative;
+}
+
+.inv-frame-color-dot::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .inv-frame-color-dot:hover {
@@ -5556,7 +5563,9 @@
 }
 
 .inv-carousel-arrow-btn:hover {
-  background: #ffffff;
+  background: var(--brand);
+  color: var(--bg);
+  border-color: var(--brand);
   transform: translateY(-50%) scale(1.08);
 }
 
@@ -5845,22 +5854,6 @@
   border-color: rgba(255, 255, 255, 0.5) !important;
 }
 
-[data-theme='dark'] .inv-hub .inv-mode--light .inv-btn-secondary,
-[data-theme='dark'] .inv-editor-shell .inv-mode--light .inv-btn-secondary,
-.inv-mode--light .inv-btn-secondary {
-  background: var(--inv-surface) !important;
-  color: var(--inv-ink) !important;
-  border: 1px solid var(--inv-ink) !important;
-}
-
-[data-theme='dark'] .inv-hub .inv-mode--light .inv-btn-secondary:hover,
-[data-theme='dark'] .inv-editor-shell .inv-mode--light .inv-btn-secondary:hover,
-.inv-mode--light .inv-btn-secondary:hover {
-  background: var(--inv-ink) !important;
-  color: var(--inv-surface) !important;
-  border-color: var(--inv-ink) !important;
-}
-
 .inv-mode--dark .inv-account-card {
   background: rgba(255, 255, 255, 0.08) !important;
   border: 1px solid rgba(255, 255, 255, 0.18) !important;
@@ -5881,11 +5874,6 @@
   background: rgba(255, 255, 255, 0.14) !important;
   color: #ffffff !important;
   border: 1px solid rgba(255, 255, 255, 0.26) !important;
-}
-
-.inv-mode--dark .inv-address-copy-btn:hover {
-  background: rgba(255, 255, 255, 0.25) !important;
-  color: #ffffff !important;
 }
 
 .inv-mode--dark .inv-map-link-btn {

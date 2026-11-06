@@ -1462,3 +1462,16 @@
 - [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
 - [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
 
+## 2026-11-06 PR #102 갤러리 캐러셀 화살표 호버 단일화 및 캔버스 테마 클래스 정규화 (Refs #84, Refs #102) (오하율 작업)
+- [요청] PR #102 Grok AI 리뷰 지적(갤러리 화살표 호버 글자 소실 결함 필수 1건, 권장 3건) 완전 해결:
+  1) `invitations.css:2186, :5558` (필수): 갤러리 좌우 화살표(`.inv-carousel-arrow-btn`) 호버 시 `invitations.css:2186`의 `color: #ffffff`와 `:5558`의 `background: #ffffff`가 동일 특이도(0,1,0)로 합쳐져 흰 글자+흰 배경으로 사라지는 결함을 해결. 앞쪽 `:2186`의 호버 선언을 완전 제거하고, 뒤쪽 `:5558`에 `background: var(--brand); color: var(--bg); border-color: var(--brand); transform: translateY(-50%) scale(1.08);`로 단일화하여 다크·사이버펑크 등 6개 전 테마에서 브랜드 배경 대비 최적의 텍스트 가독성을 보장.
+  2) `InvitationCardRenderer.tsx:1813`: 캔버스 최상단 래퍼의 클래스명에 원본 `activeThemeId`뿐만 아니라 정규화된 `themePreset.id`(`inv-theme--${themePreset.id}`) 및 `data-invite-theme={themePreset.id}`를 명시하여, `moon-garden`·`hanji`·`spring-card` 등 별칭(alias) 테마에서도 정규 테마 CSS 규칙이 100% 매칭되도록 보정.
+  3) `invitations.css:5512`: 프레임 색상 선택 도트(`.inv-frame-color-dot`)에 `position: relative`와 44×44px 터치 타겟 가상 요소(`::after`)를 추가하여 44px 접근성 기준을 충족.
+  4) `invitations.css`: 중복 정의되어 있던 `.inv-mode--light .inv-btn-secondary` 호버 블록과 `.inv-mode--dark .inv-address-copy-btn:hover` 블록을 정리하여 단일 선언으로 일원화.
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (42/42 통과)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
+
