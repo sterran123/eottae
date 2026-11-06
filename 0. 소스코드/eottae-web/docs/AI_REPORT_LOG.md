@@ -1540,6 +1540,18 @@
 - [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
 
 
+## 2026-11-06 목업 최종 지침에 따른 TC 장부 순화 및 DEC-11 종결 마무리 (주한태 작업, Refs #105)
+- [요청] 이슈 #105 남은 작업 검증 및 최종 목업 지침 반영:
+  1) `2. 프로젝트 설계서/테스트_케이스_마스터.md`:
+     - TC-008·009·010 기대결과 및 비고에서 서버 에러 코드(`403`, `SQLSTATE 42501`) 표현을 목업 지침에 따라 `데모 판정: ...`으로 순화 표기.
+     - 비고란의 `DEC-11의 실데이터 단계에서 다시 연다` 표현을 `이번 3차 목업 제출(DEC-11)로 마무리되어 서버 실연동 단계는 진행하지 않음`으로 일괄 정정하여 실연동 미존재 명시.
+     - TC-005, TC-008, TC-009, TC-010의 `서버 단계 없음(DEC-11)` 마무리 판정 확정.
+- [AI] Antigravity가 git rebase conflict 해결 및 정합성 검증 수행.
+- [검증] `npm run typecheck` PASS (0 errors).
+- [검증] `npm run build` PASS (정적 27개 라우트 정상 빌드 확인).
+- [미실행] 서버 실연동 없음 (DEC-10 '최종 제출 전' 무효 및 DEC-11 3차 목업 종결 원칙 철저 준수).
+
+
 ## 2026-11-06 PR #102 일정 box_badge 실제 칠해지는 배경 기준 명도 대비(badgeSurface) 및 라이트/다크 공개 실루엣 토큰(match-avatar-on-photo) 정밀 보정 (Refs #84, Refs #102) (오하율 작업)
 - [요청] PR #102 AI 리뷰 지적 2개 항목 완전 해결:
   1) `InvitationCardRenderer.tsx:1080`: `box_badge` 날짜 숫자 대비 계산 시 CSS `var(--paper, ...)`의 fallback 문자열 추출로 인해 브라우저의 실제 렌더링 배경과 대비 계산용 배경이 어긋나던 결함 수정. 실제로 칠해지는 배지 표면색 `badgeSurface = isDarkTheme ? '#161423' : '#ffffff'`를 정의하고, `badgeBg = badgeSurface` 및 `badgeInk = ensureLegibleColor(accent, badgeSurface, 4.5)`로 일치시켜 다크(#161423) 및 라이트(#ffffff) 환경에서 실제 그려지는 배경 기준 WCAG 2.1 AA 4.5:1 이상의 대비를 완벽 보장.
