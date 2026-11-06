@@ -454,11 +454,11 @@ assert(
 console.log('\n[검증 17] 초기화 버튼·달력/갤러리 선택 테마 토큰화 & WeddingPlatform 제거 검증');
 
 assert(
-  cssCode.includes('.inv-reset-btn {\n  font-size: 11px;\n  font-weight: 700;\n  padding: 3px 8px;\n  border-radius: 6px;\n  border: 1px solid var(--line);\n  background: var(--soft);\n  color: var(--muted);') &&
+  cssCode.includes('.inv-reset-btn {\n  min-height: 44px;\n  font-size: 13px;\n  font-weight: 700;\n  padding: 8px 12px;\n  border-radius: 6px;\n  border: 1px solid var(--line);\n  background: var(--soft);\n  color: var(--muted);') &&
   cssCode.includes("[data-theme='dark'] .inv-reset-btn,") &&
   cssCode.includes("[data-theme='cyberpunk'] .inv-reset-btn") &&
   cssCode.includes(":root[data-theme='system'] .inv-reset-btn"),
-  '.inv-reset-btn이 밝은 고정색 대신 시맨틱 토큰(var(--line), var(--soft), var(--muted)) 및 다크·사이버펑크·시스템 다크 고대비 규칙을 적용함'
+  '.inv-reset-btn이 밝은 고정색 대신 시맨틱 토큰(var(--line), var(--soft), var(--muted))·44px 터치 대상·13px(#117) 및 다크·사이버펑크·시스템 다크 고대비 규칙을 적용함'
 );
 
 assert(

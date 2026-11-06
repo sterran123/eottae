@@ -1687,3 +1687,18 @@
 ### 검증
 - `npm run typecheck` 통과.
 - 미실행: life4cut 실제 렌더 육안 확인(개발 서버 미기동) — 원래 strong 규칙과 동일 값이라 시각 회귀 없음.
+
+
+## 2026-11-06 검증 스크립트 `.inv-reset-btn` 단언 갱신 — 리뷰 반영 (김민기 작업, Refs #117)
+
+### 요청
+- 코드 리뷰 지적: #117의 `.inv-reset-btn` 44px·13px 보강(57cb681) 이후 `verify-modal-and-card.ts` [검증 17]이 구 규칙 본문(`font-size: 11px; padding: 3px 8px`)을 그대로 단언해 51개 중 1개 FAIL — 저장소 표준 검증 게이트가 깨진 상태.
+
+### 변경
+- `scripts/verify-modal-and-card.ts`: [검증 17]의 `.inv-reset-btn` 기대 문자열을 현행 규칙(`min-height: 44px; font-size: 13px; padding: 8px 12px` + 기존 토큰 부분)으로 갱신, 단언 문구에 44px 터치 대상·13px(#117) 명시.
+- 전수 점검: 스크립트 내 `noindex`·`robots`·`inv-category-tab-btn`·`inv-accordion-toggle`·`life4cut`·`inv-sig-names`·`inv-framed-names`·`polaroid-caption`·`inv-typo` 관련 단언 없음 확인 — 추가 갱신 대상 없음.
+
+### 검증
+- `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (51/51 통과 — 갱신 전 50/51).
+- `npm run typecheck` 통과, `npm run build`(정적 27페이지) 통과.
+- 미실행: `verify-theme-contrast.ts`는 `theme-presets` 모듈 해석 실패(ERR_MODULE_NOT_FOUND)로 기존부터 미동작 — 본 변경과 무관, 별도 확인 필요.
