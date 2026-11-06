@@ -692,7 +692,7 @@ export default function InvitationPreviewModal({
               </p>
 
               <p style={{ fontSize: 11, color: 'var(--muted)', margin: '0 0 8px', lineHeight: 1.45 }}>
-                무료 체험: 사진 업로드 {customMainPhoto ? 1 : 0}/10장 (시연) — 일정 수 초과 시 유료 전환. 「어때?」 커플 성사 연계 시 무료 이용 가능.
+                무료 체험: 사진 업로드 {customMainPhoto ? 1 : 0}/10장 — 일정 수 초과 시 유료 전환 · 「어때?」 커플 성사 연계 시 무료 이용 가능 (시연 안내 · 실결제 없음).
               </p>
 
               {/* 파일 직접 첨부 업로드 박스 */}
