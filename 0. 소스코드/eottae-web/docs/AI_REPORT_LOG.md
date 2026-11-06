@@ -1538,3 +1538,15 @@
 - [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
 - [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
 - [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)
+
+
+## 2026-11-06 PR #102 일정 box_badge 실제 칠해지는 배경 기준 명도 대비(badgeSurface) 및 라이트/다크 공개 실루엣 토큰(match-avatar-on-photo) 정밀 보정 (Refs #84, Refs #102) (오하율 작업)
+- [요청] PR #102 AI 리뷰 지적 2개 항목 완전 해결:
+  1) `InvitationCardRenderer.tsx:1080`: `box_badge` 날짜 숫자 대비 계산 시 CSS `var(--paper, ...)`의 fallback 문자열 추출로 인해 브라우저의 실제 렌더링 배경과 대비 계산용 배경이 어긋나던 결함 수정. 실제로 칠해지는 배지 표면색 `badgeSurface = isDarkTheme ? '#161423' : '#ffffff'`를 정의하고, `badgeBg = badgeSurface` 및 `badgeInk = ensureLegibleColor(accent, badgeSurface, 4.5)`로 일치시켜 다크(#161423) 및 라이트(#ffffff) 환경에서 실제 그려지는 배경 기준 WCAG 2.1 AA 4.5:1 이상의 대비를 완벽 보장.
+  2) `match-recommend.css:147` & `match-tokens.css:56, :99, :143, :162`: 밝은 피치 그라디언트(`--match-photo-a`/`--match-photo-b`) 배경에서 반투명 흰색 실루엣이 묻히던 결함 해결. 라이트 모드에서는 전용 토큰 `--match-avatar-on-photo: #6b2d45`(#ffc0d4 위 대비 6.6:1)를 적용하고, 다크/사이버펑크/시스템 다크 테마에서는 `#fff5f7`를 적용하여 모든 테마 배경에서 최적의 실루엣 시인성 보장.
+- [AI] Antigravity가 해당 파일 수정 후 스크립트 검증, TypeScript 컴파일 및 Next.js 빌드 성공.
+- [검증] `node --experimental-strip-types scripts/verify-modal-and-card.ts` PASS (44/44 통과, 검증 15 갱신)
+- [검증] `npm run typecheck` (`tsc --noEmit`) PASS (0 errors)
+- [검증] `npm run build` PASS (Next.js 15.5.28 27개 정적 페이지 export 100% 성공)
+- [보호영역] `git diff --name-only origin/main` 기준 보호 파일 0개 (`globals.css` 절대 무수정 원칙 준수)
+- [미실행] 서버·Supabase 실연동 없음 (3차 목업 단계 원칙 준수)

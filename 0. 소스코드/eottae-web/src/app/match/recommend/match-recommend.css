@@ -144,7 +144,16 @@
   color: var(--match-avatar-ink);
 }
 .mt-rec__photo--revealed .mt-rec__avatar {
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--match-avatar-on-photo, #6b2d45);
+}
+[data-theme='dark'] .mt-rec__photo--revealed .mt-rec__avatar,
+[data-theme='cyberpunk'] .mt-rec__photo--revealed .mt-rec__avatar {
+  color: #fff5f7;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] .mt-rec__photo--revealed .mt-rec__avatar {
+    color: #fff5f7;
+  }
 }
 .mt-rec__blur {
   position: absolute;

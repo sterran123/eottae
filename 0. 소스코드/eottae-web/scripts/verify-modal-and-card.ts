@@ -399,18 +399,24 @@ assert(
 console.log('\n[검증 15] 일정 box_badge 명도 대비(badgeInk) & 매칭 공개 사진 실루엣 검증');
 const matchCssPath = path.resolve(process.cwd(), 'src/app/match/recommend/match-recommend.css');
 const matchCssCode = fs.readFileSync(matchCssPath, 'utf-8');
+const matchTokensPath = path.resolve(process.cwd(), 'src/app/match/match-tokens.css');
+const matchTokensCode = fs.readFileSync(matchTokensPath, 'utf-8');
 
 assert(
-  rendererCode.includes("const badgeBg = isDarkTheme ? 'var(--paper, #161423)' : 'var(--paper, #ffffff)';") &&
-  rendererCode.includes('const badgeInk = ensureLegibleColor(accent, badgeBg, 4.5);') &&
+  rendererCode.includes("const badgeSurface = isDarkTheme ? '#161423' : '#ffffff';") &&
+  rendererCode.includes('const badgeBg = badgeSurface;') &&
+  rendererCode.includes('const badgeInk = ensureLegibleColor(accent, badgeSurface, 4.5);') &&
+  rendererCode.includes('background: badgeBg') &&
   rendererCode.includes('color: badgeInk'),
-  '일정 box_badge 배지 배경(badgeBg) 기준으로 badgeInk = ensureLegibleColor(accent, badgeBg, 4.5) 적용됨'
+  '일정 box_badge 실제 칠해지는 배경(badgeSurface, #161423/#ffffff) 기준으로 badgeInk = ensureLegibleColor(accent, badgeSurface, 4.5) 및 background: badgeBg 일치 적용됨'
 );
 
 assert(
-  matchCssCode.includes('.mt-rec__photo--revealed .mt-rec__avatar {\n  color: rgba(255, 255, 255, 0.85);\n}') &&
-  !matchCssCode.includes('.mt-rec__photo--revealed .mt-rec__avatar {\n  color: var(--match-on-accent);\n}'),
-  '공개 사진 실루엣에 솔리드 버튼용 var(--match-on-accent) 대신 배경에 최적화된 rgba(255, 255, 255, 0.85) 적용됨'
+  matchCssCode.includes('.mt-rec__photo--revealed .mt-rec__avatar {\n  color: var(--match-avatar-on-photo, #6b2d45);\n}') &&
+  matchCssCode.includes('color: #fff5f7;') &&
+  matchTokensCode.includes('--match-avatar-on-photo: #6b2d45;') &&
+  matchTokensCode.includes('--match-avatar-on-photo: #fff5f7;'),
+  '공개 사진 실루엣이 라이트에서는 #6b2d45(약 6.6:1), 다크에서는 #fff5f7로 전 테마 가독성 보장'
 );
 
 console.log('\n============================================================');

@@ -1077,8 +1077,9 @@ export default function InvitationCardRenderer({
       case 'schedule': {
         const title = custom?.title || '예식 일시 & 달력';
         const activeCalendarStyle = custom?.calendarStyle || calendarStyle || 'classic_table';
-        const badgeBg = isDarkTheme ? 'var(--paper, #161423)' : 'var(--paper, #ffffff)';
-        const badgeInk = ensureLegibleColor(accent, badgeBg, 4.5);
+        const badgeSurface = isDarkTheme ? '#161423' : '#ffffff';
+        const badgeBg = badgeSurface;
+        const badgeInk = ensureLegibleColor(accent, badgeSurface, 4.5);
 
         return (
           <section key="schedule" className="inv-content-section" style={sectionStyle}>
