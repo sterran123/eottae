@@ -32,17 +32,17 @@ interface DesignCoverItem {
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '/eottae';
 
-const imgGreenCanopy = `${basePath}/invitations/wedding-green-canopy.jpg`;
-const imgSunset = `${basePath}/invitations/wedding-sunset.jpg`;
-const imgStudioPeach = `${basePath}/invitations/wedding-studio-peach.jpg`;
-const imgCherryBlossom = `${basePath}/invitations/wedding-cherry-blossom.jpg`;
-const imgWaxEnvelope = `${basePath}/invitations/wedding-wax-envelope.jpg`;
-const imgTapeBw = `${basePath}/invitations/wedding-tape-bw.jpg`;
-const imgForestLaugh = `${basePath}/invitations/wedding-forest-laugh.jpg`;
-const imgBenchQuiet = `${basePath}/invitations/wedding-bench-quiet.jpg`;
-const imgNightGarden = `${basePath}/invitations/wedding-night-garden.jpg`;
-const imgHanbok = `${basePath}/invitations/wedding-hanbok.jpg`;
-const imgLuxuryHotel = `${basePath}/invitations/wedding-luxury-hotel.jpg`;
+const imgGreenCanopy = `${basePath}/invitations/scene-path.svg`;
+const imgSunset = `${basePath}/invitations/cover-evening.svg`;
+const imgStudioPeach = `${basePath}/invitations/scene-table.svg`;
+const imgCherryBlossom = `${basePath}/invitations/scene-arch.svg`;
+const imgWaxEnvelope = `${basePath}/invitations/scene-paper.svg`;
+const imgTapeBw = `${basePath}/invitations/scene-window.svg`;
+const imgForestLaugh = `${basePath}/invitations/scene-chairs.svg`;
+const imgBenchQuiet = `${basePath}/invitations/scene-bouquet.svg`;
+const imgNightGarden = `${basePath}/invitations/scene-night.svg`;
+const imgHanbok = `${basePath}/invitations/scene-door.svg`;
+const imgLuxuryHotel = `${basePath}/invitations/map-hall.svg`;
 
 // 어때? 프리미엄 감성 모바일 청첩장 16가지 디자인 컬렉션
 const DESIGN_COLLECTION: DesignCoverItem[] = [

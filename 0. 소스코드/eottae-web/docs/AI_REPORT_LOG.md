@@ -1655,6 +1655,21 @@
 - `npm run typecheck` 통과.
 - 미실행: 실결제·정산(DEC-11 목업 범위 외), 서버·Supabase.
 
+## 2026-11-06 청첩장 웨딩 사진 출처 기록·미확인 사진 일러스트 교체 (김민기 작업, Refs #118)
+
+### 요청
+- #118: `public/invitations/wedding-*.jpg` 11장의 출처·라이선스 기록, 확인 불가 시 일러스트 교체.
+
+### 판단
+- PR #97에서 추가된 실사 부부 사진 — 본문·커밋·로그·캡션 어디에도 출처가 없고, PR AI 리뷰에서도 「포토리얼 인물 — 출처 미확인」 지적이 두 차례 있었다. AI 생성 여부도 저장소 자료로는 확인 불가 → 이슈 기준대로 「출처 확인 불가 = 실존 인물로 간주해 교체」.
+
+### 변경
+- `public/invitations/wedding-*.jpg` 11장 삭제 — `InvitationsHub`·`InvitationPreviewModal`·`InvitationCardRenderer`의 `img*` 상수를 자체 일러스트(`scene-*.svg`·`cover-evening.svg`·`map-hall.svg`, PR #93 제작)로 일대일 교체.
+- `public/invitations/CREDITS.md` 신설 — 현재 파일 전원의 출처·라이선스와 제거 사진·대체 매핑 기록. 하율님이 출처를 확인하면 기록 후 되돌릴 수 있게 안내.
+- 후속: 청첩장 캡처 20~24번(2026-11-05)이 교체 전 화면이라 재촬영 필요 — CREDITS.md에 도구·절차 기록.
+
+### 검증
+- `grep` JPG 참조 잔여 없음 확인.
 ## 2026-11-06 청첩장 공개 화면·편집기 접근성 마무리 (김민기 작업, Refs #117)
 
 ### 요청
