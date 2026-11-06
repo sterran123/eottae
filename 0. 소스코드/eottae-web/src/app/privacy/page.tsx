@@ -5,11 +5,11 @@ import { MotifIcon } from '@/components/shared/motif-icon';
 import { isSupabaseConfigured } from '@/lib/supabase/client';
 
 const accountSentence = isSupabaseConfigured
-  ? '이메일 가입을 하면 이메일·이름·생년월일을 인증 서버로 보내요. 서버가 출생 연도만 남기는지, 성인 확인 뒤 프로필·취향·관심·신고·차단이 저장되는지는 이 안내에서 확인하지 못했어요. (확인 필요)'
+  ? '이메일 가입을 하면 이메일·이름·생년월일을 인증 서버로 보내요. 서버에는 이메일·출생 연도·닉네임이 계정으로 저장되고, 성인 확인 뒤 프로필·취향·관심·신고·차단이 계정에 붙어요. 생년월일 원본은 저장하지 않아요.'
   : '인증 설정 전에는 이메일 가입·로그인을 하지 않아, 계정을 서버에 만들지 않아요.';
 
 const accountTitle = isSupabaseConfigured
-  ? '데모는 이 기기, 서버 저장은 확인 필요'
+  ? '데모는 이 기기, 계정은 서버에 저장'
   : '데모는 이 기기, 서버 계정은 없음';
 
 export const metadata: Metadata = {
