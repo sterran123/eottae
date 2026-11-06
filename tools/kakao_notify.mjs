@@ -6,12 +6,16 @@
 // 최초 한 번 설정 (카카오 디벨로퍼스 앱 + 내 계정 동의 — 수 분 걸림):
 //   1. developers.kakao.com → 내 애플리케이션 → 앱 추가 → "카카오 로그인" 활성화·Redirect URI 등록
 //      (예 http://localhost:8080) → 동의항목에서 "카카오톡 메시지 전송(talk_message)"을 동의로 설정
-//   2. 저장소 루트 .env(또는 환경변수)에 KAKAO_REST_API_KEY={앱의 REST API 키}
-//      (.env는 .gitignore 대상 — 커밋 금지. 커스텀 URI를 썼으면 KAKAO_REDIRECT_URI도)
-//   3. 브라우저에서 아래 주소를 열어 동의 → 리다이렉트된 주소의 code= 값 복사
+//   2. 같은 앱의 플랫폼 → Web에 https://github.com 등록 — 카카오는 기본 템플릿의 링크를
+//      [제품 링크 관리]에 등록된 웹 도메인만 허용한다. 빠뜨리면 GitHub 링크가 붙은
+//      메모 전송이 전부 실패하니 꼭 한다(버튼으로 PR·댓글을 여는 링크가 github.com이다)
+//   3. 저장소 루트 .env(또는 환경변수)에 KAKAO_REST_API_KEY={앱의 REST API 키}
+//      (.env는 .gitignore 대상 — 커밋 금지. 커스텀 URI를 썼으면 KAKAO_REDIRECT_URI도,
+//      토큰 파일 없이 운영할 땐 KAKAO_REFRESH_TOKEN도 둘 수 있다)
+//   4. 브라우저에서 아래 주소를 열어 동의 → 리다이렉트된 주소의 code= 값 복사
 //      https://kauth.kakao.com/oauth/authorize?client_id={키}&redirect_uri={URI}&response_type=code&scope=talk_message
-//   4. node tools/kakao_notify.mjs --code {code}   → 토큰을 REVIEW_ROOT/kakao_token.json에 저장
-//   5. node tools/kakao_notify.mjs 테스트          → 나에게 도착하는지 확인
+//   5. node tools/kakao_notify.mjs --code {code}   → 토큰을 REVIEW_ROOT/kakao_token.json에 저장
+//   6. node tools/kakao_notify.mjs 테스트          → 나에게 도착하는지 확인
 // 토큰 파일은 클론 밖(REVIEW_ROOT, 작업자의 state.json과 같은 곳)에 둔다 — PR에 토큰이 섞이지 않게.
 //
 // 토큰 수명: access_token은 몇 시간, refresh_token은 약 두 달. 보낼 때 만료가 가까우면 refresh로 갱신해
@@ -85,10 +89,12 @@ async function accessToken() {
 }
 
 // 나에게 보내기(텍스트 메모). 성공 여부만 돌려준다 — 어떤 실패도 던지지 않는다.
+// 텍스트 템플릿의 link는 카카오 필수 항목 — 인자가 없으면 저장소 주소를 단다
 export async function notifyKakao(text, link) {
   try {
+    const url = link || `https://github.com/${process.env.GITHUB_REPOSITORY || "sterran123/eottae"}`;
     if (DRY) {
-      console.log(`[DRY] 카카오 알림: ${String(text).replace(/\n/g, " / ")}`);
+      console.log(`[DRY] 카카오 알림: ${String(text).replace(/\n/g, " / ")} → ${url}`);
       return true;
     }
     const at = await accessToken();
@@ -101,8 +107,9 @@ export async function notifyKakao(text, link) {
       {
         template_object: JSON.stringify({
           object_type: "text",
-          text: String(text).slice(0, 190), // 텍스트 메모 본문 상한(200자) 안쪽
-          ...(link ? { link: { web_url: link, mobile_web_url: link }, button_title: "GitHub에서 보기" } : {}),
+          text: [...String(text)].slice(0, 190).join(""), // 텍스트 메모 본문 상한(200자) 안쪽
+          link: { web_url: url, mobile_web_url: url },
+          button_title: "GitHub에서 보기",
         }),
       },
       { Authorization: `Bearer ${at}` },
